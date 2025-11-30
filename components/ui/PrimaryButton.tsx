@@ -6,16 +6,17 @@ import {
   ViewStyle,
   TextStyle,
   ActivityIndicator,
+  View,
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
   withSpring,
   withRepeat,
   withSequence,
+  withTiming,
   Easing,
   interpolate,
 } from 'react-native-reanimated';
@@ -48,34 +49,43 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 }) => {
   const { isDark, colors } = useThemeStore();
   const scale = useSharedValue(1);
-  const glowOpacity = useSharedValue(0.3);
+  const glowOpacity = useSharedValue(0.25);
   const pressProgress = useSharedValue(0);
+  const shimmer = useSharedValue(0);
 
   useEffect(() => {
     if (glowing && variant === 'primary' && !disabled) {
+      // Subtle pulsing glow
       glowOpacity.value = withRepeat(
         withSequence(
-          withTiming(0.6, { duration: 2000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-          withTiming(0.25, { duration: 2000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+          withTiming(0.5, { duration: 2500, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.2, { duration: 2500, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
+      );
+      
+      // Shimmer effect
+      shimmer.value = withRepeat(
+        withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        false
       );
     }
   }, [glowing, variant, disabled]);
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.96, { damping: 15, stiffness: 400 });
-    pressProgress.value = withTiming(1, { duration: 150 });
+    scale.value = withSpring(0.965, { damping: 12, stiffness: 350 });
+    pressProgress.value = withTiming(1, { duration: 100 });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
-    pressProgress.value = withTiming(0, { duration: 200 });
+    scale.value = withSpring(1, { damping: 12, stiffness: 350 });
+    pressProgress.value = withTiming(0, { duration: 180 });
   };
 
   const animatedStyle = useAnimatedStyle(() => {
-    const brightness = interpolate(pressProgress.value, [0, 1], [1, 0.9]);
+    const brightness = interpolate(pressProgress.value, [0, 1], [1, 0.92]);
     return {
       transform: [{ scale: scale.value }],
       opacity: brightness,
@@ -87,9 +97,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   }));
 
   const heights = {
-    small: 40,
-    medium: 48,
-    large: 54,
+    small: 42,
+    medium: 50,
+    large: 56,
   };
 
   const fontSizes = {
@@ -106,8 +116,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     }
     if (variant === 'secondary') {
       return isDark 
-        ? ['#6366F1', '#4F46E5', '#4338CA'] 
-        : ['#4F46E5', '#4338CA', '#3730A3'];
+        ? ['#06B6D4', '#0891B2', '#0E7490'] 
+        : ['#0891B2', '#0E7490', '#155E75'];
     }
     return ['transparent', 'transparent', 'transparent'];
   };
@@ -129,7 +139,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 ? (isDark ? 'rgba(139, 92, 246, 0.5)' : colors.primary)
                 : 'transparent',
               backgroundColor: variant === 'ghost' 
-                ? (isDark ? 'rgba(139, 92, 246, 0.1)' : 'rgba(99, 102, 241, 0.08)')
+                ? (isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(124, 58, 237, 0.08)')
                 : 'transparent',
               opacity: disabled ? 0.5 : 1,
             },
@@ -137,7 +147,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           ]}
         >
           {loading ? (
-            <ActivityIndicator color={isDark ? '#A78BFA' : colors.primary} size="small" />
+            <ActivityIndicator color={isDark ? '#8B5CF6' : colors.primary} size="small" />
           ) : (
             <>
               {icon}
@@ -145,7 +155,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 style={[
                   styles.outlineText,
                   { 
-                    color: isDark ? '#A78BFA' : colors.primary, 
+                    color: isDark ? '#FB923C' : colors.primary, 
                     fontSize: fontSizes[size],
                     marginLeft: icon ? 8 : 0,
                   },
@@ -166,7 +176,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       style={[
         styles.wrapper,
         {
-          shadowColor: isDark ? '#8B5CF6' : '#7C3AED',
+          shadowColor: isDark ? '#8B5CF6' : '#6D28D9',
         },
         glowStyle,
         animatedStyle,
@@ -189,13 +199,16 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          {/* Inner highlight */}
+          {/* Top inner highlight for depth */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.2)', 'transparent']}
+            colors={['rgba(255,255,255,0.28)', 'rgba(255,255,255,0.08)', 'transparent']}
             style={styles.innerHighlight}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
           />
+          
+          {/* Bottom edge shadow */}
+          <View style={styles.bottomShadow} />
           
           {loading ? (
             <ActivityIndicator color="#ffffff" size="small" />
@@ -224,17 +237,24 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 20,
-    elevation: 10,
+    borderRadius: 18,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 6 },
+        shadowRadius: 12,
+        shadowOpacity: 0.35,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   gradient: {
-    borderRadius: 16,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
     overflow: 'hidden',
   },
   innerHighlight: {
@@ -242,29 +262,42 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: '50%',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    height: '55%',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
+  bottomShadow: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
   },
   text: {
     color: '#ffffff',
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textShadowColor: 'rgba(0,0,0,0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   outlineButton: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
   },
   ghostButton: {
-    borderRadius: 16,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
   },
   outlineText: {
     fontWeight: '600',

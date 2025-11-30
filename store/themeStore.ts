@@ -3,12 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-// Light theme colors - Warm and beautiful
+// Light theme colors - Purple/Blue theme
 const lightColors = {
   // Backgrounds
-  background: '#FFFBF5',
-  backgroundGradientStart: '#FFF8F0',
-  backgroundGradientEnd: '#FFE4D6',
+  background: '#F8FAFC',
+  backgroundGradientStart: '#F8FAFC',
+  backgroundGradientEnd: '#E0E7FF',
   
   // Glass effects
   glassBackground: 'rgba(255, 255, 255, 0.72)',
@@ -16,19 +16,19 @@ const lightColors = {
   glassBackgroundStrong: 'rgba(255, 255, 255, 0.88)',
   
   // Text
-  textPrimary: '#1C1917',
-  textSecondary: '#57534E',
-  textMuted: '#A8A29E',
+  textPrimary: '#1E1E2E',
+  textSecondary: '#64748B',
+  textMuted: '#94A3B8',
   textInverse: '#ffffff',
   
-  // Primary accent - Warm Orange
-  primary: '#EA580C',
-  primaryLight: '#FB923C',
-  primaryDark: '#C2410C',
+  // Primary accent - Purple
+  primary: '#7C3AED',
+  primaryLight: '#8B5CF6',
+  primaryDark: '#6D28D9',
   
-  // Secondary - Amber
-  secondary: '#D97706',
-  secondaryLight: '#FBBF24',
+  // Secondary - Cyan
+  secondary: '#0891B2',
+  secondaryLight: '#06B6D4',
   
   // Status colors
   success: '#16A34A',
@@ -38,24 +38,24 @@ const lightColors = {
   
   // Input
   inputBackground: 'rgba(255, 255, 255, 0.65)',
-  inputBorder: 'rgba(234, 88, 12, 0.2)',
-  inputFocusBorder: '#EA580C',
-  placeholder: '#A8A29E',
+  inputBorder: 'rgba(124, 58, 237, 0.2)',
+  inputFocusBorder: '#7C3AED',
+  placeholder: '#94A3B8',
   
   // Card
   cardBackground: 'rgba(255, 255, 255, 0.78)',
   cardBorder: 'rgba(255, 255, 255, 0.9)',
   
   // Shadows
-  shadowColor: '#EA580C',
+  shadowColor: '#8B5CF6',
 };
 
-// Dark theme colors - Deep warm tones with glowing effects
+// Dark theme colors - Purple/Blue with glowing effects
 const darkColors = {
   // Backgrounds
-  background: '#0C0A09',
-  backgroundGradientStart: '#0C0A09',
-  backgroundGradientEnd: '#1C1410',
+  background: '#0F0F1A',
+  backgroundGradientStart: '#0F0F1A',
+  backgroundGradientEnd: '#1A1A2E',
   
   // Glass effects
   glassBackground: 'rgba(255, 255, 255, 0.06)',
@@ -63,19 +63,19 @@ const darkColors = {
   glassBackgroundStrong: 'rgba(255, 255, 255, 0.1)',
   
   // Text
-  textPrimary: '#FAFAF9',
-  textSecondary: '#D6D3D1',
-  textMuted: '#78716C',
-  textInverse: '#0C0A09',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#A0A0B2',
+  textMuted: '#6B6B80',
+  textInverse: '#0F0F1A',
   
-  // Primary accent - Warm Orange Glow
-  primary: '#FB923C',
-  primaryLight: '#FDBA74',
-  primaryDark: '#EA580C',
+  // Primary accent - Purple Glow
+  primary: '#8B5CF6',
+  primaryLight: '#A78BFA',
+  primaryDark: '#7C3AED',
   
-  // Secondary - Golden Amber
-  secondary: '#FBBF24',
-  secondaryLight: '#FDE68A',
+  // Secondary - Cyan
+  secondary: '#06B6D4',
+  secondaryLight: '#22D3EE',
   
   // Status colors
   success: '#4ADE80',
@@ -85,16 +85,16 @@ const darkColors = {
   
   // Input
   inputBackground: 'rgba(255, 255, 255, 0.04)',
-  inputBorder: 'rgba(251, 146, 60, 0.25)',
-  inputFocusBorder: '#FB923C',
-  placeholder: '#78716C',
+  inputBorder: 'rgba(139, 92, 246, 0.25)',
+  inputFocusBorder: '#8B5CF6',
+  placeholder: '#6B6B80',
   
   // Card
   cardBackground: 'rgba(255, 255, 255, 0.06)',
   cardBorder: 'rgba(255, 255, 255, 0.1)',
   
   // Shadows
-  shadowColor: '#EA580C',
+  shadowColor: '#8B5CF6',
 };
 
 interface ThemeState {

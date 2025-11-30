@@ -24,17 +24,15 @@ type UserTab = 'students' | 'teachers' | 'pending';
 interface Student {
   id: string;
   roll_number: string;
-  current_semester: number;
   current_status: string;
   profile: {
     full_name: string;
     phone: string;
-    profile_picture_url: string | null;
-  };
+  } | null;
   department: {
     name: string;
     code: string;
-  };
+  } | null;
 }
 
 interface Teacher {
@@ -45,12 +43,11 @@ interface Teacher {
   profile: {
     full_name: string;
     phone: string;
-    profile_picture_url: string | null;
-  };
+  } | null;
   department: {
     name: string;
     code: string;
-  };
+  } | null;
 }
 
 export default function UsersScreen() {
@@ -73,9 +70,8 @@ export default function UsersScreen() {
         .select(`
           id,
           roll_number,
-          current_semester,
           current_status,
-          profile:profiles!students_user_id_fkey(full_name, phone, profile_picture_url),
+          profile:profiles!students_user_id_fkey(full_name, phone),
           department:departments!students_department_id_fkey(name, code)
         `)
         .eq('current_status', 'active')
@@ -97,7 +93,7 @@ export default function UsersScreen() {
           employee_id,
           designation,
           is_active,
-          profile:profiles!teachers_user_id_fkey(full_name, phone, profile_picture_url),
+          profile:profiles!teachers_user_id_fkey(full_name, phone),
           department:departments!teachers_department_id_fkey(name, code)
         `)
         .eq('is_active', true)
@@ -117,9 +113,8 @@ export default function UsersScreen() {
         .select(`
           id,
           roll_number,
-          current_semester,
           current_status,
-          profile:profiles!students_user_id_fkey(full_name, phone, profile_picture_url),
+          profile:profiles!students_user_id_fkey(full_name, phone),
           department:departments!students_department_id_fkey(name, code)
         `)
         .eq('current_status', 'inactive')
@@ -250,12 +245,6 @@ export default function UsersScreen() {
                 <FontAwesome5 name="building" size={10} color={colors.textMuted} />
                 <Text style={[styles.metaText, { color: colors.textMuted }]}>
                   {student.department?.code || 'N/A'}
-                </Text>
-              </View>
-              <View style={styles.metaItem}>
-                <FontAwesome5 name="layer-group" size={10} color={colors.textMuted} />
-                <Text style={[styles.metaText, { color: colors.textMuted }]}>
-                  Sem {student.current_semester}
                 </Text>
               </View>
             </View>

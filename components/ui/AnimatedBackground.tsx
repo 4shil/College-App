@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Dimensions, StyleSheet } from 'react-native';
+import { View, Dimensions, StyleSheet, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -9,141 +9,349 @@ import Animated, {
   withTiming,
   withDelay,
   Easing,
+  interpolate,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 
 const { width, height } = Dimensions.get('window');
 
-// Glowing orb component for ambient lighting effect
-interface GlowOrbProps {
-  color: string;
-  size: number;
-  x: number;
-  y: number;
+// ============================================================
+// AURORA WAVE - Flowing gradient wave animation
+// ============================================================
+const AuroraWave: React.FC<{ 
+  isDark: boolean; 
   delay?: number;
-  intensity?: number;
-}
-
-export const GlowOrb: React.FC<GlowOrbProps> = ({
-  color,
-  size,
-  x,
-  y,
-  delay = 0,
-  intensity = 0.6,
-}) => {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(intensity * 0.5);
-  const translateX = useSharedValue(0);
+  colors: readonly [string, string, ...string[]];
+  duration?: number;
+  reverse?: boolean;
+}> = ({ isDark, delay = 0, colors, duration = 8000, reverse = false }) => {
+  const translateX = useSharedValue(reverse ? width : -width);
   const translateY = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
-    // Buttery smooth pulsing with longer duration
-    scale.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(1.2, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(0.85, { duration: 5000, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        true
-      )
-    );
+    // Fade in
+    opacity.value = withDelay(delay, withTiming(1, { duration: 1500 }));
 
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(intensity * 0.9, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(intensity * 0.35, { duration: 4000, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        true
-      )
-    );
-
-    // Very smooth drift movement
+    // Horizontal wave motion
     translateX.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(25, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(-25, { duration: 10000, easing: Easing.inOut(Easing.sin) })
+          withTiming(reverse ? -width : width, { duration, easing: Easing.inOut(Easing.sin) }),
+          withTiming(reverse ? width : -width, { duration, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
       )
     );
 
+    // Vertical drift
     translateY.value = withDelay(
       delay + 500,
       withRepeat(
         withSequence(
-          withTiming(-20, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(20, { duration: 8000, easing: Easing.inOut(Easing.sin) })
+          withTiming(50, { duration: duration * 0.7, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-50, { duration: duration * 0.7, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
       )
     );
+
+    // Breathing scale
+    scale.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1.2, { duration: duration * 0.6, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.9, { duration: duration * 0.6, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    return () => {
+      cancelAnimation(translateX);
+      cancelAnimation(translateY);
+      cancelAnimation(opacity);
+      cancelAnimation(scale);
+    };
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
     transform: [
       { translateX: translateX.value },
       { translateY: translateY.value },
       { scale: scale.value },
     ],
-    opacity: opacity.value,
   }));
 
   return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          left: x - size / 2,
-          top: y - size / 2,
-          width: size,
-          height: size,
-        },
-        animatedStyle,
-      ]}
-    >
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-          shadowColor: color,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 1,
-          shadowRadius: size / 2.5,
-          elevation: 0,
-        }}
+    <Animated.View style={[styles.auroraWave, animatedStyle]}>
+      <LinearGradient
+        colors={colors}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
       />
     </Animated.View>
   );
 };
 
-// Legacy FloatingBlob for backwards compatibility (not used in new design)
-export const FloatingBlob: React.FC<{
-  colors: string[];
-  size: number;
-  initialX: number;
-  initialY: number;
-  duration?: number;
-  delay?: number;
-}> = () => null;
+// ============================================================
+// SHIMMER OVERLAY - Diagonal light sweep effect
+// ============================================================
+const ShimmerOverlay: React.FC<{ isDark: boolean }> = React.memo(({ isDark }) => {
+  const translateX = useSharedValue(-width * 1.5);
 
+  useEffect(() => {
+    translateX.value = withRepeat(
+      withSequence(
+        withTiming(width * 1.5, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+        withDelay(1000, withTiming(-width * 1.5, { duration: 0 }))
+      ),
+      -1,
+      false
+    );
+
+    return () => cancelAnimation(translateX);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { rotate: '-20deg' },
+    ],
+  }));
+
+  return (
+    <Animated.View style={[styles.shimmerContainer, animatedStyle]} pointerEvents="none">
+      <LinearGradient
+        colors={
+          isDark
+            ? ['transparent', 'rgba(255, 255, 255, 0.03)', 'rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.03)', 'transparent']
+            : ['transparent', 'rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.6)', 'rgba(255, 255, 255, 0.3)', 'transparent']
+        }
+        style={styles.shimmerGradient}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        locations={[0, 0.3, 0.5, 0.7, 1]}
+      />
+    </Animated.View>
+  );
+});
+
+// ============================================================
+// BREATHING GLOW - Pulsing ambient light
+// ============================================================
+const BreathingGlow: React.FC<{ 
+  isDark: boolean;
+  position: 'top' | 'bottom' | 'center';
+  color: string;
+  delay?: number;
+}> = ({ isDark, position, color, delay = 0 }) => {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.8);
+
+  useEffect(() => {
+    opacity.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(0.8, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.3, { duration: 3000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    scale.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1.1, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.9, { duration: 4000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    return () => {
+      cancelAnimation(opacity);
+      cancelAnimation(scale);
+    };
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const positionStyle = {
+    top: { top: -height * 0.2, left: -width * 0.3 },
+    bottom: { bottom: -height * 0.2, right: -width * 0.3 },
+    center: { top: height * 0.3, left: width * 0.1 },
+  }[position];
+
+  return (
+    <Animated.View 
+      style={[styles.breathingGlow, positionStyle, animatedStyle]} 
+      pointerEvents="none"
+    >
+      <LinearGradient
+        colors={[color, 'transparent']}
+        style={styles.glowGradient}
+        start={{ x: 0.5, y: 0.5 }}
+        end={{ x: 1, y: 1 }}
+      />
+    </Animated.View>
+  );
+};
+
+// ============================================================
+// COLOR SHIFT BACKGROUND - Animating gradient colors
+// ============================================================
+const ColorShiftBackground: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withRepeat(
+      withTiming(1, { duration: 10000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+
+    return () => cancelAnimation(progress);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const rotate = interpolate(progress.value, [0, 1], [0, 15]);
+    const scale = interpolate(progress.value, [0, 0.5, 1], [1, 1.05, 1]);
+    
+    return {
+      transform: [
+        { rotate: `${rotate}deg` },
+        { scale },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={[StyleSheet.absoluteFillObject, animatedStyle]}>
+      <LinearGradient
+        colors={
+          isDark
+            ? ['#0a0a18', '#12122a', '#1a1040', '#12122a', '#0a0a18']
+            : ['#f8faff', '#ede9fe', '#e0e7ff', '#ede9fe', '#f8faff']
+        }
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        locations={[0, 0.25, 0.5, 0.75, 1]}
+      />
+    </Animated.View>
+  );
+};
+
+// ============================================================
+// MOVING GRADIENT MESH
+// ============================================================
+const GradientMesh: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const offset1 = useSharedValue(0);
+  const offset2 = useSharedValue(0);
+
+  useEffect(() => {
+    offset1.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 6000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+
+    offset2.value = withDelay(
+      2000,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: 8000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    return () => {
+      cancelAnimation(offset1);
+      cancelAnimation(offset2);
+    };
+  }, []);
+
+  const animatedStyle1 = useAnimatedStyle(() => ({
+    opacity: interpolate(offset1.value, [0, 0.5, 1], [0.3, 0.6, 0.3]),
+    transform: [
+      { translateY: interpolate(offset1.value, [0, 1], [-30, 30]) },
+    ],
+  }));
+
+  const animatedStyle2 = useAnimatedStyle(() => ({
+    opacity: interpolate(offset2.value, [0, 0.5, 1], [0.2, 0.5, 0.2]),
+    transform: [
+      { translateX: interpolate(offset2.value, [0, 1], [-20, 20]) },
+    ],
+  }));
+
+  return (
+    <>
+      <Animated.View style={[styles.meshLayer, animatedStyle1]} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['transparent', 'rgba(139, 92, 246, 0.15)', 'transparent']
+              : ['transparent', 'rgba(139, 92, 246, 0.08)', 'transparent']
+          }
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </Animated.View>
+      <Animated.View style={[styles.meshLayer, animatedStyle2]} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['transparent', 'rgba(59, 130, 246, 0.12)', 'transparent']
+              : ['transparent', 'rgba(59, 130, 246, 0.06)', 'transparent']
+          }
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
+      </Animated.View>
+    </>
+  );
+};
+
+// Legacy exports for backwards compatibility
+export const FloatingBlob: React.FC<any> = () => null;
+export const GlowOrb: React.FC<any> = () => null;
+
+// ============================================================
+// MAIN ANIMATED BACKGROUND COMPONENT
+// ============================================================
 interface AnimatedBackgroundProps {
   children: React.ReactNode;
   variant?: 'default' | 'auth' | 'minimal';
 }
 
-export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ 
+export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   children,
   variant = 'default',
 }) => {
@@ -151,103 +359,120 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   const fadeIn = useSharedValue(0);
 
   useEffect(() => {
-    fadeIn.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
+    fadeIn.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) });
+    return () => cancelAnimation(fadeIn);
   }, []);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: fadeIn.value,
   }));
 
-  // Dark theme gradient - warm deep brown/orange tones
-  const darkGradient: [string, string, string, string] = [
-    '#0C0A09', // Very dark warm black
-    '#1C1410', // Deep brown
-    '#231815', // Warm dark brown
-    '#0F0C0A', // Near black
-  ];
+  const isMinimal = variant === 'minimal';
 
-  // Light theme gradient - warm cream/peach
-  const lightGradient: [string, string, string, string] = [
-    '#FFFBF5',
-    '#FFF5EB', 
-    '#FFE8D6',
-    '#FFF8F0',
-  ];
+  // Aurora wave colors
+  const auroraColors1: readonly [string, string, ...string[]] = isDark
+    ? ['transparent', 'rgba(139, 92, 246, 0.2)', 'rgba(99, 102, 241, 0.15)', 'transparent']
+    : ['transparent', 'rgba(139, 92, 246, 0.1)', 'rgba(99, 102, 241, 0.08)', 'transparent'];
+  
+  const auroraColors2: readonly [string, string, ...string[]] = isDark
+    ? ['transparent', 'rgba(59, 130, 246, 0.18)', 'rgba(6, 182, 212, 0.12)', 'transparent']
+    : ['transparent', 'rgba(59, 130, 246, 0.08)', 'rgba(6, 182, 212, 0.05)', 'transparent'];
 
-  // Warm glow orbs - orange, amber, rose tones
-  const glowOrbs = isDark ? [
-    { color: 'rgba(251, 146, 60, 0.35)', size: 380, x: width * 0.15, y: height * 0.12, delay: 0, intensity: 0.55 },
-    { color: 'rgba(234, 88, 12, 0.3)', size: 320, x: width * 0.85, y: height * 0.28, delay: 800, intensity: 0.45 },
-    { color: 'rgba(251, 191, 36, 0.28)', size: 300, x: width * 0.08, y: height * 0.58, delay: 1600, intensity: 0.42 },
-    { color: 'rgba(248, 113, 113, 0.22)', size: 260, x: width * 0.92, y: height * 0.72, delay: 400, intensity: 0.35 },
-    { color: 'rgba(253, 186, 116, 0.25)', size: 290, x: width * 0.5, y: height * 0.88, delay: 1200, intensity: 0.4 },
-  ] : [
-    { color: 'rgba(251, 146, 60, 0.18)', size: 380, x: width * 0.15, y: height * 0.12, delay: 0, intensity: 0.28 },
-    { color: 'rgba(234, 88, 12, 0.14)', size: 320, x: width * 0.85, y: height * 0.28, delay: 800, intensity: 0.22 },
-    { color: 'rgba(251, 191, 36, 0.12)', size: 300, x: width * 0.08, y: height * 0.58, delay: 1600, intensity: 0.2 },
-  ];
+  const auroraColors3: readonly [string, string, ...string[]] = isDark
+    ? ['transparent', 'rgba(168, 85, 247, 0.15)', 'rgba(236, 72, 153, 0.1)', 'transparent']
+    : ['transparent', 'rgba(168, 85, 247, 0.06)', 'rgba(236, 72, 153, 0.04)', 'transparent'];
 
   return (
-    <View style={styles.container}>
-      {/* Main gradient background */}
-      <LinearGradient
-        colors={isDark ? darkGradient : lightGradient}
-        style={StyleSheet.absoluteFillObject}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        locations={[0, 0.35, 0.7, 1]}
-      />
+    <View style={[styles.container, { backgroundColor: isDark ? '#0a0a14' : '#F8FAFC' }]}>
+      {/* Animated color-shifting base */}
+      {!isMinimal && <ColorShiftBackground isDark={isDark} />}
 
-      {/* Secondary overlay gradient for depth - warm tones */}
-      <LinearGradient
-        colors={
-          isDark
-            ? ['transparent', 'rgba(251, 146, 60, 0.06)', 'rgba(234, 88, 12, 0.08)', 'transparent']
-            : ['transparent', 'rgba(251, 146, 60, 0.04)', 'rgba(251, 191, 36, 0.03)', 'transparent']
-        }
-        style={StyleSheet.absoluteFillObject}
-        start={{ x: 0, y: 0.2 }}
-        end={{ x: 1, y: 0.8 }}
-      />
+      {/* Static base gradient for minimal */}
+      {isMinimal && (
+        <LinearGradient
+          colors={isDark ? ['#0a0a14', '#0F0F1A', '#0a0a14'] : ['#F8FAFC', '#EEE8FF', '#F8FAFC']}
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      )}
 
-      {/* Animated glow orbs */}
+      {/* Animated layers */}
       <Animated.View style={[StyleSheet.absoluteFillObject, containerStyle]}>
-        {variant !== 'minimal' && glowOrbs.map((orb, index) => (
-          <GlowOrb
-            key={index}
-            color={orb.color}
-            size={orb.size}
-            x={orb.x}
-            y={orb.y}
-            delay={orb.delay}
-            intensity={orb.intensity}
-          />
-        ))}
+        {/* Moving gradient mesh */}
+        {!isMinimal && <GradientMesh isDark={isDark} />}
+
+        {/* Aurora waves - flowing gradients */}
+        {!isMinimal && (
+          <>
+            <AuroraWave isDark={isDark} colors={auroraColors1} delay={0} duration={10000} />
+            <AuroraWave isDark={isDark} colors={auroraColors2} delay={1500} duration={12000} reverse />
+            <AuroraWave isDark={isDark} colors={auroraColors3} delay={3000} duration={14000} />
+          </>
+        )}
+
+        {/* Breathing glows */}
+        {!isMinimal && (
+          <>
+            <BreathingGlow 
+              isDark={isDark} 
+              position="top" 
+              color={isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.12)'} 
+              delay={0}
+            />
+            <BreathingGlow 
+              isDark={isDark} 
+              position="bottom" 
+              color={isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)'} 
+              delay={1500}
+            />
+          </>
+        )}
+
+        {/* Shimmer effect */}
+        {!isMinimal && <ShimmerOverlay isDark={isDark} />}
       </Animated.View>
 
-      {/* Top warm radial glow */}
+      {/* Top static glow */}
+      <View style={styles.topGlow} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(139, 92, 246, 0.12)', 'rgba(99, 102, 241, 0.06)', 'transparent']
+              : ['rgba(139, 92, 246, 0.06)', 'rgba(99, 102, 241, 0.03)', 'transparent']
+          }
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+      </View>
+
+      {/* Bottom static glow */}
+      <View style={styles.bottomGlow} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['transparent', 'rgba(59, 130, 246, 0.08)', 'rgba(139, 92, 246, 0.12)']
+              : ['transparent', 'rgba(59, 130, 246, 0.04)', 'rgba(139, 92, 246, 0.06)']
+          }
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+      </View>
+
+      {/* Vignette */}
       {isDark && (
-        <View style={styles.topGlow}>
+        <View style={styles.vignette} pointerEvents="none">
           <LinearGradient
-            colors={['rgba(251, 146, 60, 0.12)', 'transparent']}
+            colors={['rgba(0, 0, 0, 0.25)', 'transparent', 'transparent', 'rgba(0, 0, 0, 0.2)']}
             style={StyleSheet.absoluteFillObject}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
+            locations={[0, 0.15, 0.85, 1]}
           />
         </View>
       )}
-
-      {/* Subtle noise texture overlay */}
-      <View 
-        style={[
-          StyleSheet.absoluteFillObject, 
-          { 
-            backgroundColor: isDark ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.015)',
-            opacity: 0.4,
-          }
-        ]} 
-        pointerEvents="none"
-      />
 
       {/* Content */}
       {children}
@@ -258,7 +483,6 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0C0A09',
   },
   topGlow: {
     position: 'absolute',
@@ -266,6 +490,47 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: height * 0.35,
+  },
+  bottomGlow: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.3,
+  },
+  vignette: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  shimmerContainer: {
+    position: 'absolute',
+    top: -height * 0.3,
+    left: -width * 0.5,
+    width: width * 0.8,
+    height: height * 1.6,
+  },
+  shimmerGradient: {
+    flex: 1,
+  },
+  auroraWave: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: width * 2,
+    height: height,
+  },
+  breathingGlow: {
+    position: 'absolute',
+    width: width * 1.2,
+    height: width * 1.2,
+  },
+  glowGradient: {
+    flex: 1,
+    borderRadius: width,
+  },
+  meshLayer: {
+    ...StyleSheet.absoluteFillObject,
   },
 });
 

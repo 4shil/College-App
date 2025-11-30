@@ -15,6 +15,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   FadeInDown,
   FadeInUp,
+  SlideInUp,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -141,8 +142,8 @@ export default function LoginScreen() {
     <AnimatedBackground>
       {/* Theme Toggle */}
       <Animated.View
-        entering={FadeInDown.delay(100).duration(400)}
-        style={[styles.themeToggleContainer, { top: insets.top + 10 }]}
+        entering={FadeInDown.delay(100).duration(500).springify()}
+        style={[styles.themeToggleContainer, { top: insets.top + 12 }]}
       >
         <ThemeToggle />
       </Animated.View>
@@ -154,20 +155,20 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 },
+            { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 24 },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Login Card */}
           <Animated.View
-            entering={FadeInUp.delay(200).duration(500)}
+            entering={SlideInUp.delay(150).duration(600).springify().damping(18)}
             style={styles.cardContainer}
           >
             <GlassCard style={styles.card}>
               {/* Logo */}
               <Animated.View
-                entering={FadeInDown.delay(300).duration(400)}
+                entering={FadeInDown.delay(250).duration(500).springify()}
                 style={styles.logoContainer}
               >
                 <LinearGradient
@@ -181,7 +182,7 @@ export default function LoginScreen() {
               </Animated.View>
 
               {/* Title */}
-              <Animated.View entering={FadeInDown.delay(350).duration(400)}>
+              <Animated.View entering={FadeInDown.delay(300).duration(500).springify()}>
                 <Text style={[styles.title, { color: colors.textPrimary }]}>
                   JPM College
                 </Text>
@@ -192,7 +193,7 @@ export default function LoginScreen() {
 
               {/* Role Selector - Only 2 tabs: Student and Staff */}
               <Animated.View
-                entering={FadeInDown.delay(400).duration(400)}
+                entering={FadeInDown.delay(350).duration(500).springify()}
                 style={styles.roleContainer}
               >
                 <Text style={[styles.roleLabel, { color: colors.textSecondary }]}>
@@ -209,15 +210,15 @@ export default function LoginScreen() {
                           backgroundColor:
                             selectedRole === role.key
                               ? isDark
-                                ? 'rgba(167, 139, 250, 0.15)'
-                                : 'rgba(139, 92, 246, 0.1)'
+                                ? 'rgba(139, 92, 246, 0.15)'
+                                : 'rgba(124, 58, 237, 0.1)'
                               : 'transparent',
                           borderColor:
                             selectedRole === role.key
                               ? colors.primary
                               : isDark
                               ? 'rgba(255,255,255,0.1)'
-                              : 'rgba(0,0,0,0.1)',
+                              : 'rgba(0,0,0,0.08)',
                         },
                       ]}
                       activeOpacity={0.7}
@@ -266,7 +267,7 @@ export default function LoginScreen() {
 
               {/* Input Fields */}
               <Animated.View
-                entering={FadeInDown.delay(450).duration(400)}
+                entering={FadeInDown.delay(400).duration(500).springify()}
                 style={styles.inputsContainer}
               >
                 <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
@@ -285,7 +286,7 @@ export default function LoginScreen() {
                 <Text
                   style={[
                     styles.inputLabel,
-                    { color: colors.textSecondary, marginTop: 16 },
+                    { color: colors.textSecondary, marginTop: 18 },
                   ]}
                 >
                   Password
@@ -302,7 +303,7 @@ export default function LoginScreen() {
                 {/* Error Message */}
                 {error && (
                   <Animated.Text
-                    entering={FadeInDown.duration(200)}
+                    entering={FadeInDown.duration(250).springify()}
                     style={styles.errorText}
                   >
                     {error}
@@ -313,6 +314,7 @@ export default function LoginScreen() {
                 <TouchableOpacity
                   style={styles.forgotPassword}
                   onPress={() => router.push('/(auth)/forgot-password')}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
                     Forgot password?
@@ -321,7 +323,7 @@ export default function LoginScreen() {
               </Animated.View>
 
               {/* Sign In Button */}
-              <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+              <Animated.View entering={FadeInDown.delay(450).duration(500).springify()}>
                 <PrimaryButton
                   title="Sign In"
                   onPress={handleLogin}
@@ -332,7 +334,7 @@ export default function LoginScreen() {
 
               {/* Register / Contact Admin */}
               <Animated.View
-                entering={FadeInDown.delay(550).duration(400)}
+                entering={FadeInDown.delay(500).duration(500).springify()}
                 style={styles.contactContainer}
               >
                 {selectedRole === 'student' ? (
@@ -391,23 +393,23 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: 22,
     shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 10,
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    elevation: 12,
   },
   logoGradient: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
+    width: 76,
+    height: 76,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 30,
+    fontWeight: '800',
     textAlign: 'center',
     letterSpacing: -0.5,
   },
@@ -415,20 +417,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     marginTop: 6,
-    marginBottom: 24,
+    marginBottom: 26,
   },
   roleContainer: {
-    marginBottom: 24,
+    marginBottom: 26,
   },
   roleLabel: {
     fontSize: 13,
-    fontWeight: '500',
-    marginBottom: 10,
+    fontWeight: '600',
+    marginBottom: 12,
     marginLeft: 4,
   },
   roleButtons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   roleButton: {
     flex: 1,
@@ -436,9 +438,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    borderRadius: 16,
     borderWidth: 1.5,
   },
   roleTextContainer: {
@@ -446,46 +448,47 @@ const styles = StyleSheet.create({
   },
   roleButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   roleDescription: {
     fontSize: 10,
-    marginTop: 2,
+    marginTop: 3,
   },
   inputsContainer: {
-    marginBottom: 20,
+    marginBottom: 22,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontWeight: '600',
+    marginBottom: 10,
     marginLeft: 4,
   },
   errorText: {
-    color: '#f87171',
+    color: '#F87171',
     fontSize: 13,
-    marginTop: 12,
+    marginTop: 14,
     marginLeft: 4,
+    fontWeight: '500',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginTop: 12,
+    marginTop: 14,
   },
   forgotPasswordText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   contactContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 22,
   },
   contactText: {
     fontSize: 14,
   },
   contactLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

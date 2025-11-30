@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
       title: 'Pending Approvals',
       icon: 'user-clock',
       iconType: 'fa5',
-      color: '#f59e0b',
+      color: '#F59E0B',
       route: '/(admin)/users/pending',
       badge: stats.pendingApprovals,
     },
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
       title: 'Manage Teachers',
       icon: 'chalkboard-teacher',
       iconType: 'fa5',
-      color: '#10b981',
+      color: '#16A34A',
       route: '/(admin)/users/teachers',
     },
     {
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
       title: 'Exam Cell',
       icon: 'file-document-edit',
       iconType: 'mci',
-      color: '#ef4444',
+      color: '#DC2626',
       route: '/(admin)/exams',
     },
     {
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
       title: 'Timetable',
       icon: 'calendar-alt',
       iconType: 'fa5',
-      color: '#8b5cf6',
+      color: '#06B6D4',
       route: '/(admin)/timetable',
     },
     {
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
       title: 'Library',
       icon: 'library',
       iconType: 'ion',
-      color: '#06b6d4',
+      color: '#6366F1',
       route: '/(admin)/library',
     },
     {
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
       title: 'Bus Routes',
       icon: 'bus-alt',
       iconType: 'fa5',
-      color: '#f97316',
+      color: '#7C3AED',
       route: '/(admin)/bus',
     },
     {
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
       title: 'Fee Management',
       icon: 'cash',
       iconType: 'ion',
-      color: '#22c55e',
+      color: '#16A34A',
       route: '/(admin)/fees',
     },
   ];
@@ -195,16 +195,16 @@ export default function AdminDashboard() {
     delay: number
   ) => (
     <Animated.View
-      entering={FadeInDown.delay(delay).duration(400)}
+      entering={FadeInDown.delay(delay).duration(500).springify().damping(16)}
       style={[styles.statCard, { width: cardWidth }]}
     >
       <LinearGradient
-        colors={isDark ? [`${color}20`, `${color}10`] : [`${color}15`, `${color}05`]}
+        colors={isDark ? [`${color}20`, `${color}08`] : [`${color}12`, `${color}05`]}
         style={styles.statCardGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={[styles.statIconContainer, { backgroundColor: `${color}20` }]}>
+        <View style={[styles.statIconContainer, { backgroundColor: `${color}18` }]}>
           <FontAwesome5 name={icon} size={20} color={color} />
         </View>
         <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
@@ -224,20 +224,20 @@ export default function AdminDashboard() {
     return (
       <Animated.View
         key={action.id}
-        entering={FadeInRight.delay(300 + index * 50).duration(300)}
+        entering={SlideInRight.delay(300 + index * 60).duration(400).springify().damping(18)}
       >
         <TouchableOpacity
           style={[
             styles.actionButton,
             {
               backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-              borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
             },
           ]}
           onPress={() => router.push(action.route as any)}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconContainer, { backgroundColor: `${action.color}15` }]}>
+          <View style={[styles.actionIconContainer, { backgroundColor: `${action.color}12` }]}>
             <IconComponent name={action.icon as any} size={22} color={action.color} />
           </View>
           <Text style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -259,7 +259,7 @@ export default function AdminDashboard() {
         style={styles.container}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100 },
+          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 110 },
         ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -267,13 +267,13 @@ export default function AdminDashboard() {
         }
       >
         {/* Header */}
-        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
+        <Animated.View entering={FadeInDown.delay(100).duration(500).springify()} style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>Welcome back,</Text>
             <Text style={[styles.userName, { color: colors.textPrimary }]}>
               {profile?.full_name || 'Admin'}
             </Text>
-            <View style={styles.roleTag}>
+            <View style={[styles.roleTag, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(124, 58, 237, 0.1)' }]}>
               <FontAwesome5 name="shield-alt" size={10} color={colors.primary} />
               <Text style={[styles.roleText, { color: colors.primary }]}>
                 {primaryRole?.replace('_', ' ').toUpperCase() || 'ADMIN'}
@@ -289,31 +289,31 @@ export default function AdminDashboard() {
         </Animated.View>
 
         {/* Stats Grid */}
-        <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
           <View style={styles.statsGrid}>
             {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200)}
-            {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#10b981', 250)}
-            {renderStatCard('Departments', stats.totalDepartments, 'building', '#A78BFA', 300)}
-            {renderStatCard('Courses', stats.totalCourses, 'book', '#ef4444', 350)}
+            {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260)}
+            {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320)}
+            {renderStatCard('Courses', stats.totalCourses, 'book', '#6366F1', 380)}
           </View>
         </Animated.View>
 
         {/* Pending Approvals Alert */}
         {stats.pendingApprovals > 0 && (
-          <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+          <Animated.View entering={FadeInDown.delay(440).duration(500).springify()}>
             <TouchableOpacity
               style={styles.alertCard}
               onPress={() => router.push('/(admin)/users/pending' as any)}
             >
               <LinearGradient
-                colors={['#f59e0b20', '#f59e0b10']}
+                colors={isDark ? ['rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.05)'] : ['rgba(245, 158, 11, 0.12)', 'rgba(245, 158, 11, 0.04)']}
                 style={styles.alertGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
                 <View style={styles.alertIcon}>
-                  <FontAwesome5 name="exclamation-circle" size={24} color="#f59e0b" />
+                  <FontAwesome5 name="exclamation-circle" size={24} color="#F59E0B" />
                 </View>
                 <View style={styles.alertContent}>
                   <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Quick Actions */}
-        <Animated.View entering={FadeInDown.delay(450).duration(400)} style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(500).duration(500).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
             {quickActions.map((action, index) => renderQuickAction(action, index))}
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
         </Animated.View>
 
         {/* Recent Activity */}
-        <Animated.View entering={FadeInDown.delay(500).duration(400)} style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(560).duration(500).springify()} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
             <TouchableOpacity>
@@ -347,7 +347,7 @@ export default function AdminDashboard() {
           </View>
           <GlassCard style={styles.activityCard}>
             <View style={styles.activityItem}>
-              <View style={[styles.activityDot, { backgroundColor: '#10b981' }]} />
+              <View style={[styles.activityDot, { backgroundColor: '#16A34A' }]} />
               <View style={styles.activityContent}>
                 <Text style={[styles.activityText, { color: colors.textPrimary }]}>
                   New student registration
@@ -364,8 +364,8 @@ export default function AdminDashboard() {
                 <Text style={[styles.activityTime, { color: colors.textMuted }]}>1 hour ago</Text>
               </View>
             </View>
-            <View style={styles.activityItem}>
-              <View style={[styles.activityDot, { backgroundColor: '#f59e0b' }]} />
+            <View style={[styles.activityItem, { borderBottomWidth: 0 }]}>
+              <View style={[styles.activityDot, { backgroundColor: '#F59E0B' }]} />
               <View style={styles.activityContent}>
                 <Text style={[styles.activityText, { color: colors.textPrimary }]}>
                   Fee reminder sent to 45 students
@@ -391,57 +391,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   greeting: {
     fontSize: 14,
+    fontWeight: '500',
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 2,
+    fontSize: 26,
+    fontWeight: '800',
+    marginTop: 3,
+    letterSpacing: -0.3,
   },
   roleTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-    borderRadius: 12,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
     alignSelf: 'flex-start',
   },
   roleText: {
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   logoutBtn: {
-    padding: 8,
+    padding: 10,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
+    fontSize: 19,
+    fontWeight: '800',
+    marginBottom: 18,
+    letterSpacing: -0.2,
   },
   seeAll: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -449,52 +451,54 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   statCard: {
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   statCardGradient: {
-    padding: 16,
-    borderRadius: 16,
+    padding: 18,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   statIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
+    letterSpacing: -0.5,
   },
   statTitle: {
     fontSize: 13,
-    marginTop: 4,
+    marginTop: 5,
+    fontWeight: '500',
   },
   alertCard: {
-    marginBottom: 24,
-    borderRadius: 16,
+    marginBottom: 28,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   alertGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
+    padding: 18,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.2)',
+    borderColor: 'rgba(245, 158, 11, 0.18)',
   },
   alertIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 16,
   },
   alertContent: {
     flex: 1,
@@ -505,40 +509,40 @@ const styles = StyleSheet.create({
   },
   alertSubtitle: {
     fontSize: 13,
-    marginTop: 2,
+    marginTop: 3,
   },
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 14,
   },
   actionButton: {
     width: cardWidth,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
+    padding: 16,
+    borderRadius: 18,
     borderWidth: 1,
   },
   actionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   actionTitle: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   badge: {
-    backgroundColor: '#ef4444',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 24,
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 12,
+    minWidth: 26,
     alignItems: 'center',
   },
   badgeText: {
@@ -552,25 +556,25 @@ const styles = StyleSheet.create({
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   activityDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 12,
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    marginRight: 14,
   },
   activityContent: {
     flex: 1,
   },
   activityText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   activityTime: {
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 3,
   },
 });
