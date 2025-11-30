@@ -1,1188 +1,659 @@
-# 🔵 DEON's DEVELOPMENT GUIDE
-## Role: Team Member / Student & Testing
+# 🟣 DEON's VIBE GUIDE
+## Role: Student Features + Testing Lead
+## Target: 3-4 screens + tests per day
 
 ---
 
 ## 🎯 YOUR RESPONSIBILITIES
 
-1. **Student Module Screens** - Attendance, Assignments, Library, Bus, Feedback, Settings
-2. **Teacher Module Screens** - Attendance Marking, Diary, Coordinator
-3. **Admin Screens** - Exam Management, Settings, Bus Management
-4. **Testing** - E2E tests, Integration tests
+1. **Student Screens** - Attendance, Library, Bus, Feedback, Settings
+2. **Teacher Screens** - Coordinator, Mentor views
+3. **Admin Screens** - Exam management, Bus, Reports
+4. **Testing** - E2E + Component testing for all modules
 
 ---
 
-## 📅 YOUR TIMELINE
+# WEEK 1: AUTH + STUDENT FOUNDATION
 
-### PHASE 2-3 (Week 3-6): Admin Screens
-
-#### Exam Management
-**Create `app/(admin)/exams/index.tsx`:**
+## Day 1 - Register + OTP Screens
 ```typescript
-import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { GlassCard, PrimaryButton } from '@/components/ui';
+// app/(auth)/register.tsx
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { GlassCard, GlassInput, PrimaryButton, AnimatedBackground } from '@/components/ui';
+import { useAuthStore } from '@/store/authStore';
 
-export default function ExamManagement() {
+export default function Register() {
+  const { role } = useLocalSearchParams<{ role?: 'student' | 'teacher' }>();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    // Student specific
+    admissionNumber: '',
+    // Teacher specific
+    employeeId: '',
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useAuthStore();
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.fullName) errs.fullName = 'Name is required';
+    if (!formData.email) errs.email = 'Email is required';
+    if (!formData.email.includes('@')) errs.email = 'Invalid email';
+    if (formData.password.length < 6) errs.password = 'Min 6 characters';
+    if (formData.password !== formData.confirmPassword) errs.confirmPassword = 'Passwords do not match';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleRegister = async () => {
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      await signUp(formData.email, formData.password, {
+        full_name: formData.fullName,
+        phone: formData.phone,
+        role: role || 'student',
+        admission_number: formData.admissionNumber,
+        employee_id: formData.employeeId,
+      });
+      router.push({ pathname: '/verify-otp', params: { email: formData.email } });
+    } catch (e: any) {
+      setErrors({ general: e.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <GlassCard style={styles.section}>
-        <PrimaryButton
-          title="Create Exam"
-          onPress={() => router.push('/exams/create')}
-        />
-        <PrimaryButton
-          title="View All Exams"
-          onPress={() => router.push('/exams/list')}
-          variant="outline"
-        />
-      </GlassCard>
-
-      <GlassCard style={styles.section}>
-        <PrimaryButton
-          title="Exam Schedule"
-          onPress={() => router.push('/exams/schedule')}
-        />
-        <PrimaryButton
-          title="Room Allocation"
-          onPress={() => router.push('/exams/rooms')}
-          variant="secondary"
-        />
-      </GlassCard>
-
-      <GlassCard style={styles.section}>
-        <PrimaryButton
-          title="Results Management"
-          onPress={() => router.push('/exams/results')}
-        />
-      </GlassCard>
-    </ScrollView>
+    <AnimatedBackground>
+      <ScrollView contentContainerStyle={styles.container}>
+        <GlassCard>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>{role === 'teacher' ? 'Teacher Registration' : 'Student Registration'}</Text>
+          
+          <GlassInput label="Full Name" icon="person" value={formData.fullName} onChangeText={(v) => setFormData({ ...formData, fullName: v })} error={errors.fullName} testID="input-fullname" />
+          <GlassInput label="Email" icon="mail" keyboardType="email-address" autoCapitalize="none" value={formData.email} onChangeText={(v) => setFormData({ ...formData, email: v })} error={errors.email} testID="input-email" />
+          <GlassInput label="Phone" icon="call" keyboardType="phone-pad" value={formData.phone} onChangeText={(v) => setFormData({ ...formData, phone: v })} testID="input-phone" />
+          <GlassInput label="Password" icon="lock-closed" secureTextEntry value={formData.password} onChangeText={(v) => setFormData({ ...formData, password: v })} error={errors.password} testID="input-password" />
+          <GlassInput label="Confirm Password" icon="lock-closed" secureTextEntry value={formData.confirmPassword} onChangeText={(v) => setFormData({ ...formData, confirmPassword: v })} error={errors.confirmPassword} testID="input-confirm-password" />
+          
+          {role !== 'teacher' && (
+            <GlassInput label="Admission Number" icon="card" value={formData.admissionNumber} onChangeText={(v) => setFormData({ ...formData, admissionNumber: v })} testID="input-admission" />
+          )}
+          {role === 'teacher' && (
+            <GlassInput label="Employee ID" icon="card" value={formData.employeeId} onChangeText={(v) => setFormData({ ...formData, employeeId: v })} testID="input-employee" />
+          )}
+          
+          {errors.general && <Text style={styles.error}>{errors.general}</Text>}
+          
+          <PrimaryButton title="Register" onPress={handleRegister} loading={loading} testID="btn-register" />
+          <Text style={styles.link} onPress={() => router.push('/login')}>Already have an account? Login</Text>
+        </GlassCard>
+      </ScrollView>
+    </AnimatedBackground>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  section: { marginBottom: 16, gap: 12 },
-});
-```
+// app/(auth)/verify-otp.tsx
+export default function VerifyOTP() {
+  const { email } = useLocalSearchParams<{ email: string }>();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const inputs = useRef([]);
+  const { verifyOtp, resendOtp } = useAuthStore();
 
-#### Create Exam Screen
-**Create `app/(admin)/exams/create.tsx`:**
-```typescript
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
-import { router } from 'expo-router';
-import { useMutation } from 'urql';
-import { GlassCard, GlassInput, PrimaryButton, DatePicker } from '@/components/ui';
+  useEffect(() => {
+    const timer = countdown > 0 && setInterval(() => setCountdown(c => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
 
-const CREATE_EXAM = /* GraphQL */ `
-  mutation CreateExam($object: exams_insert_input!) {
-    insert_exams_one(object: $object) {
-      id
-      name
-    }
-  }
-`;
+  const handleChange = (value, index) => {
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < 5) inputs.current[index + 1]?.focus();
+  };
 
-export default function CreateExam() {
-  const [form, setForm] = useState({
-    name: '',
-    type: 'internal',
-    courseId: '',
-    semesterNumber: 1,
-    startDate: new Date(),
-    endDate: new Date(),
-  });
-
-  const [, createExam] = useMutation(CREATE_EXAM);
-
-  const handleSubmit = async () => {
-    const result = await createExam({
-      object: {
-        name: form.name,
-        type: form.type,
-        course_id: form.courseId,
-        semester_number: form.semesterNumber,
-        start_date: form.startDate.toISOString().split('T')[0],
-        end_date: form.endDate.toISOString().split('T')[0],
-        status: 'draft',
-      },
-    });
-
-    if (result.data) {
-      Alert.alert('Success', 'Exam created');
-      router.back();
+  const handleVerify = async () => {
+    setLoading(true);
+    try {
+      await verifyOtp(email, otp.join(''));
+      router.replace('/');
+    } catch (e) {
+      // show error
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleResend = async () => {
+    setResending(true);
+    await resendOtp(email);
+    setResending(false);
+    setCountdown(60);
+  };
+
+  return (
+    <AnimatedBackground>
+      <GlassCard>
+        <Ionicons name="mail-open" size={60} color="#6366F1" style={styles.icon} />
+        <Text style={styles.title}>Verify Email</Text>
+        <Text style={styles.subtitle}>Enter the 6-digit code sent to {email}</Text>
+        
+        <View style={styles.otpContainer}>
+          {otp.map((digit, i) => (
+            <TextInput
+              key={i}
+              ref={el => inputs.current[i] = el}
+              style={styles.otpInput}
+              maxLength={1}
+              keyboardType="number-pad"
+              value={digit}
+              onChangeText={(v) => handleChange(v, i)}
+              testID={`otp-input-${i}`}
+            />
+          ))}
+        </View>
+        
+        <PrimaryButton title="Verify" onPress={handleVerify} loading={loading} disabled={otp.some(d => !d)} testID="btn-verify" />
+        
+        <TouchableOpacity onPress={handleResend} disabled={countdown > 0 || resending}>
+          <Text style={styles.resend}>
+            {countdown > 0 ? `Resend in ${countdown}s` : resending ? 'Sending...' : 'Resend Code'}
+          </Text>
+        </TouchableOpacity>
+      </GlassCard>
+    </AnimatedBackground>
+  );
+}
+```
+
+## Day 2 - Student Layout + Dashboard
+```typescript
+// app/(student)/_layout.tsx
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function StudentLayout() {
+  return (
+    <Tabs screenOptions={{
+      tabBarStyle: { backgroundColor: '#1A1A2E', borderTopColor: 'rgba(255,255,255,0.1)' },
+      tabBarActiveTintColor: '#6366F1',
+      headerStyle: { backgroundColor: '#1A1A2E' },
+      headerTintColor: '#FFF',
+    }}>
+      <Tabs.Screen name="dashboard" options={{ title: 'Home', tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} /> }} />
+      <Tabs.Screen name="attendance" options={{ title: 'Attendance', tabBarIcon: ({ color }) => <Ionicons name="checkmark-circle" size={24} color={color} /> }} />
+      <Tabs.Screen name="academics" options={{ title: 'Academics', tabBarIcon: ({ color }) => <Ionicons name="school" size={24} color={color} /> }} />
+      <Tabs.Screen name="services" options={{ title: 'Services', tabBarIcon: ({ color }) => <Ionicons name="apps" size={24} color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} /> }} />
+    </Tabs>
+  );
+}
+
+// app/(student)/dashboard.tsx
+export default function StudentDashboard() {
+  const { user, profile } = useAuthStore();
+  const { attendance, todayClasses, assignments, notices } = useStudentDashboardStore();
+
+  useEffect(() => {
+    // Fetch dashboard data
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
       <GlassCard>
-        <GlassInput
-          label="Exam Name"
-          value={form.name}
-          onChangeText={(name) => setForm((f) => ({ ...f, name }))}
-          placeholder="e.g., Mid-Term Examination 2025"
-        />
-        {/* Course & Semester Dropdowns */}
-        {/* Exam Type Selector */}
-        <DatePicker
-          label="Start Date"
-          value={form.startDate}
-          onChange={(d) => setForm((f) => ({ ...f, startDate: d }))}
-        />
-        <DatePicker
-          label="End Date"
-          value={form.endDate}
-          onChange={(d) => setForm((f) => ({ ...f, endDate: d }))}
-        />
-        <PrimaryButton title="Create Exam" onPress={handleSubmit} />
+        <View style={styles.header}>
+          <Avatar source={profile?.photo_url} name={profile?.full_name} size={50} />
+          <View>
+            <Text style={styles.greeting}>Hello, {profile?.full_name?.split(' ')[0]}</Text>
+            <Text style={styles.subtitle}>{profile?.course?.name} - Sem {profile?.current_semester}</Text>
+          </View>
+        </View>
+      </GlassCard>
+
+      <GlassCard style={styles.attendanceCard}>
+        <Text style={styles.cardTitle}>Attendance</Text>
+        <CircularProgress percentage={attendance?.overall || 0} />
+        <Text style={styles.attendanceText}>{attendance?.overall}%</Text>
+      </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.cardTitle}>Today's Classes</Text>
+        {todayClasses.map(cls => (
+          <View key={cls.id} style={styles.classItem}>
+            <Text style={styles.classTime}>{format(new Date(cls.start_time), 'HH:mm')}</Text>
+            <Text style={styles.className}>{cls.subject?.name}</Text>
+            <Text style={styles.classTeacher}>{cls.teacher?.profile?.full_name}</Text>
+          </View>
+        ))}
+      </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.cardTitle}>Pending Assignments</Text>
+        {assignments.filter(a => a.status === 'pending').slice(0, 3).map(a => (
+          <View key={a.id} style={styles.assignmentItem}>
+            <Text style={styles.assignmentTitle}>{a.title}</Text>
+            <Badge variant={isPast(new Date(a.due_date)) ? 'error' : 'warning'}>
+              Due {format(new Date(a.due_date), 'MMM d')}
+            </Badge>
+          </View>
+        ))}
+      </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.cardTitle}>Latest Notices</Text>
+        {notices.slice(0, 3).map(n => (
+          <TouchableOpacity key={n.id} onPress={() => router.push(`/notices/${n.id}`)}>
+            <Text style={styles.noticeTitle}>{n.title}</Text>
+            <Text style={styles.noticeDate}>{format(new Date(n.published_at), 'MMM d')}</Text>
+          </TouchableOpacity>
+        ))}
       </GlassCard>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-});
 ```
 
-#### Bus Management
-**Create `app/(admin)/bus/index.tsx`:**
+## Day 3 - Student Attendance + Profile
 ```typescript
-import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { GlassCard, PrimaryButton } from '@/components/ui';
+// app/(student)/attendance/index.tsx
+export default function StudentAttendance() {
+  const { attendance, monthlyAttendance, fetchAttendance } = useStudentAttendanceStore();
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-export default function BusManagement() {
+  useEffect(() => { fetchAttendance(selectedMonth); }, [selectedMonth]);
+
   return (
-    <ScrollView style={styles.container}>
-      <GlassCard style={styles.section}>
-        <PrimaryButton
-          title="Routes"
-          onPress={() => router.push('/bus/routes')}
-        />
-        <PrimaryButton
-          title="Stops"
-          onPress={() => router.push('/bus/stops')}
-          variant="outline"
+    <ScrollView>
+      <GlassCard>
+        <Text style={styles.title}>Overall Attendance</Text>
+        <CircularProgress percentage={attendance?.overall || 0} size={120} />
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{attendance?.present || 0}</Text>
+            <Text style={styles.statLabel}>Present</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{attendance?.absent || 0}</Text>
+            <Text style={styles.statLabel}>Absent</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{attendance?.late || 0}</Text>
+            <Text style={styles.statLabel}>Late</Text>
+          </View>
+        </View>
+      </GlassCard>
+
+      <GlassCard>
+        <View style={styles.monthPicker}>
+          <TouchableOpacity onPress={() => setSelectedMonth(subMonths(selectedMonth, 1))}>
+            <Ionicons name="chevron-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.monthText}>{format(selectedMonth, 'MMMM yyyy')}</Text>
+          <TouchableOpacity onPress={() => setSelectedMonth(addMonths(selectedMonth, 1))}>
+            <Ionicons name="chevron-forward" size={24} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+        
+        <Calendar
+          current={format(selectedMonth, 'yyyy-MM-dd')}
+          markedDates={monthlyAttendance.reduce((acc, day) => ({
+            ...acc,
+            [day.date]: { marked: true, dotColor: day.status === 'present' ? '#10B981' : day.status === 'absent' ? '#EF4444' : '#F59E0B' }
+          }), {})}
         />
       </GlassCard>
 
-      <GlassCard style={styles.section}>
-        <PrimaryButton
-          title="Pending Subscriptions"
-          onPress={() => router.push('/bus/subscriptions')}
-        />
-      </GlassCard>
-    </ScrollView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  section: { marginBottom: 16, gap: 12 },
-});
-```
-
-#### Admin Settings
-**Create `app/(admin)/settings/index.tsx`:**
-```typescript
-import React from 'react';
-import { View, ScrollView, StyleSheet, Switch, Text } from 'react-native';
-import { useQuery, useMutation } from 'urql';
-import { GlassCard, GlassInput, PrimaryButton } from '@/components/ui';
-
-const GET_SETTINGS = /* GraphQL */ `
-  query GetSettings {
-    app_settings {
-      id
-      key
-      value
-      category
-    }
-  }
-`;
-
-const UPDATE_SETTING = /* GraphQL */ `
-  mutation UpdateSetting($id: uuid!, $value: jsonb!) {
-    update_app_settings_by_pk(pk_columns: { id: $id }, _set: { value: $value }) {
-      id
-    }
-  }
-`;
-
-export default function AdminSettings() {
-  const [{ data }] = useQuery({ query: GET_SETTINGS });
-  const [, updateSetting] = useMutation(UPDATE_SETTING);
-
-  const settings = data?.app_settings || [];
-  const grouped = settings.reduce((acc: any, s: any) => {
-    if (!acc[s.category]) acc[s.category] = [];
-    acc[s.category].push(s);
-    return acc;
-  }, {});
-
-  return (
-    <ScrollView style={styles.container}>
-      {Object.entries(grouped).map(([category, items]: [string, any]) => (
-        <GlassCard key={category} style={styles.section}>
-          <Text style={styles.category}>{category}</Text>
-          {items.map((setting: any) => (
-            <View key={setting.id} style={styles.settingRow}>
-              <Text>{setting.key}</Text>
-              {/* Render appropriate input based on value type */}
+      <GlassCard>
+        <Text style={styles.cardTitle}>Subject-wise Attendance</Text>
+        {attendance?.bySubject?.map(sub => (
+          <View key={sub.subject_id} style={styles.subjectRow}>
+            <Text style={styles.subjectName}>{sub.subject_name}</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progress, { width: `${sub.percentage}%` }]} />
             </View>
-          ))}
-        </GlassCard>
-      ))}
+            <Text style={styles.percentage}>{sub.percentage}%</Text>
+          </View>
+        ))}
+      </GlassCard>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  section: { marginBottom: 16, padding: 16 },
-  category: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
-  settingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
-});
-```
-
----
-
-### PHASE 4-5 (Week 7-10): Teacher Screens
-
-#### Attendance Marking
-**Create `app/(teacher)/attendance/mark.tsx`:**
-```typescript
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Alert, Text } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useQuery, useMutation } from 'urql';
-import { GlassCard, PrimaryButton, Badge } from '@/components/ui';
-import { useAttendanceStore } from '@/store/attendanceStore';
-
-const GET_STUDENTS = /* GraphQL */ `
-  query GetStudents($courseId: uuid!, $semester: Int!, $division: String!) {
-    students(
-      where: {
-        course_id: { _eq: $courseId }
-        current_semester: { _eq: $semester }
-        division: { _eq: $division }
-        status: { _eq: "active" }
-      }
-      order_by: { roll_number: asc }
-    ) {
-      id
-      roll_number
-      profile {
-        full_name
-        photo_url
-      }
-    }
-  }
-`;
-
-export default function MarkAttendance() {
-  const params = useLocalSearchParams();
-  const { records, setStatus, markAllPresent, saveAttendance, saving } = useAttendanceStore();
-
-  const [{ data }] = useQuery({
-    query: GET_STUDENTS,
-    variables: {
-      courseId: params.courseId,
-      semester: parseInt(params.semester as string),
-      division: params.division,
-    },
-  });
-
-  const students = data?.students || [];
-
-  const handleSave = async () => {
-    try {
-      await saveAttendance();
-      Alert.alert('Success', 'Attendance saved');
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'P': return 'success';
-      case 'A': return 'error';
-      case 'L': return 'warning';
-      default: return 'default';
-    }
-  };
+// app/(student)/profile/index.tsx
+export default function StudentProfile() {
+  const { profile, updateProfile, uploadPhoto } = useStudentProfileStore();
+  const [editing, setEditing] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <PrimaryButton title="All Present" onPress={markAllPresent} size="small" />
-        <PrimaryButton title="Save" onPress={handleSave} loading={saving} />
-      </View>
-
-      <FlatList
-        data={students}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => {
-          const record = records.find((r) => r.studentId === item.id);
-          const status = record?.status || 'P';
-
-          return (
-            <GlassCard style={styles.studentCard}>
-              <View style={styles.studentInfo}>
-                <Text style={styles.rollNo}>{item.roll_number}</Text>
-                <Text style={styles.name}>{item.profile.full_name}</Text>
-              </View>
-              <View style={styles.statusButtons}>
-                {['P', 'A', 'L'].map((s) => (
-                  <Badge
-                    key={s}
-                    variant={status === s ? getStatusColor(s) : 'default'}
-                    onPress={() => setStatus(item.id, s as 'P' | 'A' | 'L')}
-                  >
-                    {s}
-                  </Badge>
-                ))}
-              </View>
-            </GlassCard>
-          );
-        }}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  studentCard: { marginBottom: 8, padding: 12, flexDirection: 'row', alignItems: 'center' },
-  studentInfo: { flex: 1 },
-  rollNo: { fontSize: 14, fontWeight: '700' },
-  name: { fontSize: 13, color: '#6B7280' },
-  statusButtons: { flexDirection: 'row', gap: 8 },
-});
-```
-
-#### Teacher Diary
-**Create `app/(teacher)/diary/index.tsx`:**
-```typescript
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text } from 'react-native';
-import { router } from 'expo-router';
-import { useQuery } from 'urql';
-import { GlassCard, PrimaryButton, FAB, DatePicker } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-import { format } from 'date-fns';
-
-const GET_DIARY_ENTRIES = /* GraphQL */ `
-  query GetDiaryEntries($teacherId: uuid!, $date: date!) {
-    teacher_diary(
-      where: {
-        teacher_id: { _eq: $teacherId }
-        date: { _eq: $date }
-      }
-      order_by: { period_number: asc }
-    ) {
-      id
-      period_number
-      topic_covered
-      homework_assigned
-      remarks
-      subject {
-        name
-        code
-      }
-    }
-  }
-`;
-
-export default function TeacherDiary() {
-  const { user } = useAuthStore();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-
-  const [{ data }] = useQuery({
-    query: GET_DIARY_ENTRIES,
-    variables: {
-      teacherId: user?.teacherId,
-      date: format(selectedDate, 'yyyy-MM-dd'),
-    },
-  });
-
-  return (
-    <View style={styles.container}>
-      <DatePicker
-        value={selectedDate}
-        onChange={setSelectedDate}
-        label="Select Date"
-      />
-
-      <FlatList
-        data={data?.teacher_diary || []}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <GlassCard style={styles.entryCard}>
-            <View style={styles.header}>
-              <Text style={styles.period}>Period {item.period_number}</Text>
-              <Text style={styles.subject}>{item.subject.code}</Text>
-            </View>
-            <Text style={styles.topic}>{item.topic_covered}</Text>
-            {item.homework_assigned && (
-              <Text style={styles.homework}>HW: {item.homework_assigned}</Text>
-            )}
-          </GlassCard>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.empty}>No entries for this date</Text>
-        }
-      />
-
-      <FAB
-        icon="add"
-        onPress={() => router.push(`/diary/add?date=${format(selectedDate, 'yyyy-MM-dd')}`)}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  entryCard: { marginBottom: 12, padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  period: { fontWeight: '700' },
-  subject: { color: '#6366F1' },
-  topic: { fontSize: 15, marginBottom: 4 },
-  homework: { fontSize: 13, color: '#6B7280', fontStyle: 'italic' },
-  empty: { textAlign: 'center', marginTop: 40, color: '#9CA3AF' },
-});
-```
-
-#### Coordinator Dashboard
-**Create `app/(teacher)/coordinator/index.tsx`:**
-```typescript
-import React from 'react';
-import { View, ScrollView, StyleSheet, Text } from 'react-native';
-import { useQuery } from 'urql';
-import { GlassCard, PrimaryButton, Badge } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-
-const GET_COORDINATOR_DATA = /* GraphQL */ `
-  query GetCoordinatorData($departmentId: uuid!) {
-    pending_approvals: exam_schedule_aggregate(
-      where: {
-        exam: { department_id: { _eq: $departmentId } }
-        status: { _eq: "pending" }
-      }
-    ) {
-      aggregate { count }
-    }
-    upcoming_exams: exams(
-      where: {
-        department_id: { _eq: $departmentId }
-        start_date: { _gte: "now()" }
-      }
-      limit: 5
-    ) {
-      id
-      name
-      start_date
-      status
-    }
-  }
-`;
-
-export default function CoordinatorDashboard() {
-  const { user } = useAuthStore();
-
-  const [{ data }] = useQuery({
-    query: GET_COORDINATOR_DATA,
-    variables: { departmentId: user?.departmentId },
-  });
-
-  return (
-    <ScrollView style={styles.container}>
-      <GlassCard style={styles.statsCard} color="primary">
-        <Text style={styles.statLabel}>Pending Schedule Approvals</Text>
-        <Text style={styles.statValue}>
-          {data?.pending_approvals.aggregate.count || 0}
-        </Text>
+    <ScrollView>
+      <GlassCard style={styles.header}>
+        <TouchableOpacity onPress={uploadPhoto}>
+          <Avatar source={profile?.photo_url} name={profile?.full_name} size={100} />
+          <View style={styles.editIcon}><Ionicons name="camera" size={20} color="#FFF" /></View>
+        </TouchableOpacity>
+        <Text style={styles.name}>{profile?.full_name}</Text>
+        <Text style={styles.email}>{profile?.email}</Text>
       </GlassCard>
 
-      <Text style={styles.sectionTitle}>Upcoming Exams</Text>
-      {data?.upcoming_exams.map((exam: any) => (
-        <GlassCard key={exam.id} style={styles.examCard}>
-          <Text style={styles.examName}>{exam.name}</Text>
-          <Badge>{exam.status}</Badge>
-        </GlassCard>
-      ))}
+      <GlassCard>
+        <Text style={styles.sectionTitle}>Personal Information</Text>
+        <InfoRow label="Admission No" value={profile?.admission_number} />
+        <InfoRow label="Date of Birth" value={format(new Date(profile?.dob), 'MMM d, yyyy')} />
+        <InfoRow label="Phone" value={profile?.phone} />
+        <InfoRow label="Blood Group" value={profile?.blood_group} />
+      </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.sectionTitle}>Academic Information</Text>
+        <InfoRow label="Course" value={profile?.course?.name} />
+        <InfoRow label="Department" value={profile?.department?.name} />
+        <InfoRow label="Semester" value={profile?.current_semester} />
+        <InfoRow label="Section" value={profile?.section} />
+        <InfoRow label="Batch" value={`${profile?.batch_start} - ${profile?.batch_end}`} />
+      </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.sectionTitle}>Guardian Information</Text>
+        <InfoRow label="Name" value={profile?.guardian_name} />
+        <InfoRow label="Phone" value={profile?.guardian_phone} />
+        <InfoRow label="Relation" value={profile?.guardian_relation} />
+      </GlassCard>
+
+      <PrimaryButton title="Edit Profile" onPress={() => setEditing(true)} />
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  statsCard: { marginBottom: 20, padding: 20, alignItems: 'center' },
-  statLabel: { color: '#FFF', fontSize: 14 },
-  statValue: { color: '#FFF', fontSize: 36, fontWeight: '700' },
-  sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
-  examCard: { marginBottom: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between' },
-  examName: { fontSize: 15, fontWeight: '600' },
-});
 ```
 
----
-
-### PHASE 6-8 (Week 11-16): Student Module Screens
-
-#### Attendance View
-**Create `app/(student)/attendance/index.tsx`:**
+## Day 4 - Library + Bus Screens
 ```typescript
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Text } from 'react-native';
-import { useQuery } from 'urql';
-import { GlassCard, ProgressBar, Tabs } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
+// app/(student)/services/library.tsx
+export default function StudentLibrary() {
+  const { borrowedBooks, searchBooks, reserveBook, renewBook } = useStudentLibraryStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
 
-const GET_ATTENDANCE = /* GraphQL */ `
-  query GetAttendance($studentId: uuid!) {
-    attendance_summary: attendance_records_aggregate(
-      where: { student_id: { _eq: $studentId } }
-    ) {
-      aggregate { count }
-      nodes { status }
-    }
-    subject_attendance: attendance_records(
-      where: { student_id: { _eq: $studentId } }
-    ) {
-      status
-      session {
-        subject {
-          id
-          name
-          code
-        }
-      }
-    }
-  }
-`;
-
-export default function AttendanceScreen() {
-  const { profile } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('overview');
-
-  const [{ data }] = useQuery({
-    query: GET_ATTENDANCE,
-    variables: { studentId: profile?.studentId },
-  });
-
-  const records = data?.attendance_summary?.nodes || [];
-  const present = records.filter((r: any) => r.status === 'P').length;
-  const total = records.length;
-  const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
-
-  // Calculate per-subject
-  const subjectMap: Record<string, { present: number; total: number; name: string }> = {};
-  (data?.subject_attendance || []).forEach((r: any) => {
-    const subId = r.session.subject.id;
-    if (!subjectMap[subId]) {
-      subjectMap[subId] = { present: 0, total: 0, name: r.session.subject.name };
-    }
-    subjectMap[subId].total++;
-    if (r.status === 'P') subjectMap[subId].present++;
-  });
-
-  return (
-    <View style={styles.container}>
-      <Tabs
-        tabs={[
-          { key: 'overview', label: 'Overview' },
-          { key: 'subjects', label: 'By Subject' },
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      {activeTab === 'overview' ? (
-        <GlassCard style={styles.overviewCard}>
-          <Text style={styles.percentageLabel}>Overall Attendance</Text>
-          <Text style={styles.percentage}>{percentage}%</Text>
-          <ProgressBar value={percentage} color={percentage >= 75 ? 'success' : 'error'} />
-          <Text style={styles.detail}>
-            {present} present out of {total} classes
-          </Text>
-        </GlassCard>
-      ) : (
-        <ScrollView>
-          {Object.entries(subjectMap).map(([id, data]) => {
-            const pct = Math.round((data.present / data.total) * 100);
-            return (
-              <GlassCard key={id} style={styles.subjectCard}>
-                <Text style={styles.subjectName}>{data.name}</Text>
-                <ProgressBar value={pct} color={pct >= 75 ? 'success' : 'error'} />
-                <Text style={styles.subjectDetail}>{pct}% ({data.present}/{data.total})</Text>
-              </GlassCard>
-            );
-          })}
-        </ScrollView>
-      )}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  overviewCard: { alignItems: 'center', padding: 24 },
-  percentageLabel: { fontSize: 14, color: '#6B7280' },
-  percentage: { fontSize: 48, fontWeight: '700', color: '#6366F1' },
-  detail: { marginTop: 8, color: '#6B7280' },
-  subjectCard: { marginBottom: 12, padding: 16 },
-  subjectName: { fontWeight: '600', marginBottom: 8 },
-  subjectDetail: { marginTop: 4, fontSize: 12, color: '#6B7280' },
-});
-```
-
-#### Assignments Screen
-**Create `app/(student)/assignments/index.tsx`:**
-```typescript
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text } from 'react-native';
-import { router } from 'expo-router';
-import { useQuery } from 'urql';
-import { GlassCard, Badge, Tabs, PrimaryButton } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-import { format, isPast } from 'date-fns';
-
-const GET_ASSIGNMENTS = /* GraphQL */ `
-  query GetAssignments($studentId: uuid!, $courseId: uuid!, $semester: Int!) {
-    assignments(
-      where: {
-        subject: {
-          course_subjects: {
-            course_id: { _eq: $courseId }
-            semester_number: { _eq: $semester }
-          }
-        }
-      }
-      order_by: { due_date: asc }
-    ) {
-      id
-      title
-      description
-      due_date
-      max_marks
-      subject { name code }
-      submissions(where: { student_id: { _eq: $studentId } }) {
-        id
-        submitted_at
-        marks_obtained
-      }
-    }
-  }
-`;
-
-export default function AssignmentsScreen() {
-  const { profile } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('pending');
-
-  const [{ data }] = useQuery({
-    query: GET_ASSIGNMENTS,
-    variables: {
-      studentId: profile?.studentId,
-      courseId: profile?.course?.id,
-      semester: profile?.current_semester,
-    },
-  });
-
-  const assignments = data?.assignments || [];
-  const pending = assignments.filter((a: any) => a.submissions.length === 0 && !isPast(new Date(a.due_date)));
-  const submitted = assignments.filter((a: any) => a.submissions.length > 0);
-  const overdue = assignments.filter((a: any) => a.submissions.length === 0 && isPast(new Date(a.due_date)));
-
-  const getList = () => {
-    switch (activeTab) {
-      case 'pending': return pending;
-      case 'submitted': return submitted;
-      case 'overdue': return overdue;
-      default: return [];
-    }
+  const handleSearch = async () => {
+    const results = await searchBooks(searchQuery);
+    setSearchResults(results);
   };
 
   return (
     <View style={styles.container}>
-      <Tabs
-        tabs={[
-          { key: 'pending', label: `Pending (${pending.length})` },
-          { key: 'submitted', label: `Submitted (${submitted.length})` },
-          { key: 'overdue', label: `Overdue (${overdue.length})` },
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      <FlatList
-        data={getList()}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <GlassCard style={styles.card}>
-            <Badge>{item.subject.code}</Badge>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.due}>Due: {format(new Date(item.due_date), 'MMM d, h:mm a')}</Text>
-            {item.submissions.length > 0 ? (
-              <Text style={styles.marks}>
-                Marks: {item.submissions[0].marks_obtained ?? 'Pending'} / {item.max_marks}
-              </Text>
-            ) : (
-              <PrimaryButton
-                title="Submit"
-                size="small"
-                onPress={() => router.push(`/assignments/${item.id}/submit`)}
-              />
-            )}
-          </GlassCard>
-        )}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  card: { marginBottom: 12, padding: 16 },
-  title: { fontSize: 16, fontWeight: '600', marginTop: 8, marginBottom: 4 },
-  due: { fontSize: 13, color: '#6B7280', marginBottom: 8 },
-  marks: { fontSize: 14, color: '#10B981' },
-});
-```
-
-#### Library Screen
-**Create `app/(student)/library/index.tsx`:**
-```typescript
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text } from 'react-native';
-import { useQuery } from 'urql';
-import { GlassCard, SearchBar, Tabs, Badge } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-
-const GET_LIBRARY_DATA = /* GraphQL */ `
-  query GetLibraryData($studentId: uuid!, $search: String) {
-    my_books: book_issues(
-      where: { student_id: { _eq: $studentId } }
-      order_by: { issue_date: desc }
-    ) {
-      id
-      issue_date
-      due_date
-      return_date
-      book { title author isbn }
-    }
-    catalog: books(
-      where: { title: { _ilike: $search } }
-      limit: 20
-    ) {
-      id
-      title
-      author
-      available_copies
-    }
-  }
-`;
-
-export default function LibraryScreen() {
-  const { profile } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('mybooks');
-  const [search, setSearch] = useState('');
-
-  const [{ data }] = useQuery({
-    query: GET_LIBRARY_DATA,
-    variables: {
-      studentId: profile?.studentId,
-      search: `%${search}%`,
-    },
-  });
-
-  return (
-    <View style={styles.container}>
-      <Tabs
-        tabs={[
-          { key: 'mybooks', label: 'My Books' },
-          { key: 'catalog', label: 'Catalog' },
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      {activeTab === 'catalog' && (
-        <SearchBar value={search} onChangeText={setSearch} placeholder="Search books..." />
-      )}
-
-      <FlatList
-        data={activeTab === 'mybooks' ? data?.my_books : data?.catalog}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <GlassCard style={styles.card}>
-            {activeTab === 'mybooks' ? (
-              <>
-                <Text style={styles.bookTitle}>{item.book.title}</Text>
-                <Text style={styles.author}>{item.book.author}</Text>
-                <Badge variant={item.return_date ? 'success' : 'warning'}>
-                  {item.return_date ? 'Returned' : 'Borrowed'}
+      <GlassCard>
+        <Text style={styles.cardTitle}>My Books</Text>
+        {borrowedBooks.length === 0 ? (
+          <Text style={styles.empty}>No books borrowed</Text>
+        ) : (
+          borrowedBooks.map(book => (
+            <View key={book.id} style={styles.bookItem}>
+              <View>
+                <Text style={styles.bookTitle}>{book.book.title}</Text>
+                <Text style={styles.bookAuthor}>{book.book.author}</Text>
+                <Badge variant={isPast(new Date(book.due_date)) ? 'error' : 'default'}>
+                  Due: {format(new Date(book.due_date), 'MMM d')}
                 </Badge>
-              </>
-            ) : (
-              <>
-                <Text style={styles.bookTitle}>{item.title}</Text>
-                <Text style={styles.author}>{item.author}</Text>
-                <Text>Available: {item.available_copies}</Text>
-              </>
-            )}
-          </GlassCard>
+              </View>
+              {!isPast(new Date(book.due_date)) && book.renewals_left > 0 && (
+                <PrimaryButton title="Renew" size="small" onPress={() => renewBook(book.id)} />
+              )}
+            </View>
+          ))
         )}
-      />
+      </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.cardTitle}>Search Books</Text>
+        <View style={styles.searchRow}>
+          <GlassInput placeholder="Search by title, author, ISBN..." value={searchQuery} onChangeText={setSearchQuery} style={styles.searchInput} />
+          <PrimaryButton title="Search" onPress={handleSearch} size="small" />
+        </View>
+        
+        {searchResults.map(book => (
+          <View key={book.id} style={styles.bookItem}>
+            <View>
+              <Text style={styles.bookTitle}>{book.title}</Text>
+              <Text style={styles.bookAuthor}>{book.author}</Text>
+              <Badge variant={book.available_copies > 0 ? 'success' : 'error'}>
+                {book.available_copies > 0 ? `${book.available_copies} available` : 'Not available'}
+              </Badge>
+            </View>
+            {book.available_copies > 0 && (
+              <PrimaryButton title="Reserve" size="small" onPress={() => reserveBook(book.id)} />
+            )}
+          </View>
+        ))}
+      </GlassCard>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  card: { marginBottom: 12, padding: 16 },
-  bookTitle: { fontSize: 16, fontWeight: '600' },
-  author: { fontSize: 13, color: '#6B7280', marginBottom: 8 },
-});
-```
+// app/(student)/services/bus.tsx
+export default function StudentBus() {
+  const { busPass, routes, applyForPass, trackBus } = useBusStore();
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [busLocation, setBusLocation] = useState(null);
 
-#### Bus Subscription
-**Create `app/(student)/bus/index.tsx`:**
-```typescript
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, Alert } from 'react-native';
-import { useQuery, useMutation } from 'urql';
-import { GlassCard, PrimaryButton, Badge } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-import { Picker } from '@react-native-picker/picker';
-
-const GET_BUS_DATA = /* GraphQL */ `
-  query GetBusData($studentId: uuid!) {
-    my_subscription: bus_subscriptions(
-      where: { student_id: { _eq: $studentId }, status: { _neq: "cancelled" } }
-      limit: 1
-    ) {
-      id
-      status
-      route { route_name }
-      stop { stop_name }
+  useEffect(() => {
+    if (busPass?.route_id) {
+      const unsubscribe = trackBus(busPass.route_id, setBusLocation);
+      return () => unsubscribe?.();
     }
-    routes: bus_routes(where: { is_active: { _eq: true } }) {
-      id
-      route_name
-      stops { id stop_name fee }
-    }
-  }
-`;
-
-const SUBSCRIBE = /* GraphQL */ `
-  mutation Subscribe($object: bus_subscriptions_insert_input!) {
-    insert_bus_subscriptions_one(object: $object) { id }
-  }
-`;
-
-export default function BusScreen() {
-  const { profile } = useAuthStore();
-  const [selectedRoute, setSelectedRoute] = useState('');
-  const [selectedStop, setSelectedStop] = useState('');
-
-  const [{ data }, refetch] = useQuery({
-    query: GET_BUS_DATA,
-    variables: { studentId: profile?.studentId },
-  });
-
-  const [, subscribe] = useMutation(SUBSCRIBE);
-
-  const subscription = data?.my_subscription?.[0];
-  const routes = data?.routes || [];
-  const stops = routes.find((r: any) => r.id === selectedRoute)?.stops || [];
-
-  const handleSubscribe = async () => {
-    const result = await subscribe({
-      object: {
-        student_id: profile?.studentId,
-        route_id: selectedRoute,
-        stop_id: selectedStop,
-      },
-    });
-    if (result.data) {
-      Alert.alert('Success', 'Subscription request submitted');
-      refetch();
-    }
-  };
+  }, [busPass]);
 
   return (
-    <ScrollView style={styles.container}>
-      {subscription ? (
-        <GlassCard style={styles.subscriptionCard}>
-          <Text style={styles.label}>Current Subscription</Text>
-          <Text style={styles.value}>{subscription.route.route_name}</Text>
-          <Text>Stop: {subscription.stop.stop_name}</Text>
-          <Badge variant={subscription.status === 'approved' ? 'success' : 'warning'}>
-            {subscription.status}
-          </Badge>
-        </GlassCard>
+    <ScrollView>
+      {busPass ? (
+        <>
+          <GlassCard>
+            <Text style={styles.cardTitle}>My Bus Pass</Text>
+            <View style={styles.passCard}>
+              <Text style={styles.passRoute}>{busPass.route.name}</Text>
+              <Text style={styles.passStops}>{busPass.route.start_point} → {busPass.route.end_point}</Text>
+              <Badge variant={busPass.status === 'active' ? 'success' : 'error'}>{busPass.status}</Badge>
+              <Text style={styles.validity}>Valid till: {format(new Date(busPass.valid_till), 'MMM d, yyyy')}</Text>
+            </View>
+          </GlassCard>
+
+          <GlassCard>
+            <Text style={styles.cardTitle}>Track Bus</Text>
+            <MapView style={styles.map} initialRegion={{ latitude: 10.0, longitude: 76.0, latitudeDelta: 0.05, longitudeDelta: 0.05 }}>
+              {busLocation && <Marker coordinate={busLocation} title="Bus" />}
+              {busPass.route.stops.map(stop => <Marker key={stop.id} coordinate={{ latitude: stop.lat, longitude: stop.lng }} title={stop.name} />)}
+            </MapView>
+            <Text style={styles.eta}>ETA: ~{busLocation?.eta || '--'} mins</Text>
+          </GlassCard>
+
+          <GlassCard>
+            <Text style={styles.cardTitle}>Route Stops</Text>
+            {busPass.route.stops.map((stop, i) => (
+              <View key={stop.id} style={styles.stopItem}>
+                <View style={[styles.dot, i === 0 && styles.firstDot, i === busPass.route.stops.length - 1 && styles.lastDot]} />
+                <Text style={styles.stopName}>{stop.name}</Text>
+                <Text style={styles.stopTime}>{stop.arrival_time}</Text>
+              </View>
+            ))}
+          </GlassCard>
+        </>
       ) : (
         <GlassCard>
-          <Text style={styles.label}>Subscribe to Bus</Text>
+          <Text style={styles.cardTitle}>Apply for Bus Pass</Text>
           <Picker selectedValue={selectedRoute} onValueChange={setSelectedRoute}>
-            <Picker.Item label="Select Route" value="" />
-            {routes.map((r: any) => (
-              <Picker.Item key={r.id} label={r.route_name} value={r.id} />
-            ))}
+            {routes.map(r => <Picker.Item key={r.id} label={r.name} value={r.id} />)}
           </Picker>
-          {selectedRoute && (
-            <Picker selectedValue={selectedStop} onValueChange={setSelectedStop}>
-              <Picker.Item label="Select Stop" value="" />
-              {stops.map((s: any) => (
-                <Picker.Item key={s.id} label={`${s.stop_name} - ₹${s.fee}`} value={s.id} />
-              ))}
-            </Picker>
-          )}
-          <PrimaryButton
-            title="Subscribe"
-            onPress={handleSubscribe}
-            disabled={!selectedRoute || !selectedStop}
-          />
+          <PrimaryButton title="Apply" onPress={() => applyForPass(selectedRoute)} disabled={!selectedRoute} />
         </GlassCard>
       )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  subscriptionCard: { padding: 20 },
-  label: { fontSize: 14, color: '#6B7280', marginBottom: 4 },
-  value: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
-});
 ```
 
-#### Feedback Screen
-**Create `app/(student)/feedback/index.tsx`:**
+## Day 5 - Feedback + Settings
 ```typescript
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Text } from 'react-native';
-import { useMutation, useQuery } from 'urql';
-import { GlassCard, GlassInput, PrimaryButton } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-import { Picker } from '@react-native-picker/picker';
-
-const SUBMIT_FEEDBACK = /* GraphQL */ `
-  mutation SubmitFeedback($object: feedback_insert_input!) {
-    insert_feedback_one(object: $object) { id }
-  }
-`;
-
-export default function FeedbackScreen() {
-  const { profile } = useAuthStore();
-  const [form, setForm] = useState({
-    category: 'general',
-    subject: '',
-    message: '',
-    isAnonymous: false,
-  });
-
-  const [, submitFeedback] = useMutation(SUBMIT_FEEDBACK);
-
-  const handleSubmit = async () => {
-    if (!form.subject || !form.message) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
-
-    const result = await submitFeedback({
-      object: {
-        student_id: form.isAnonymous ? null : profile?.studentId,
-        category: form.category,
-        subject: form.subject,
-        message: form.message,
-        is_anonymous: form.isAnonymous,
-      },
-    });
-
-    if (result.data) {
-      Alert.alert('Success', 'Feedback submitted');
-      setForm({ category: 'general', subject: '', message: '', isAnonymous: false });
-    }
-  };
+// app/(student)/services/feedback.tsx
+export default function StudentFeedback() {
+  const { activeFeedbacks, submitFeedback, getPendingFeedbacks } = useFeedbackStore();
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [ratings, setRatings] = useState({});
+  const [comments, setComments] = useState({});
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <GlassCard>
-        <Picker
-          selectedValue={form.category}
-          onValueChange={(category) => setForm((f) => ({ ...f, category }))}
-        >
-          <Picker.Item label="General" value="general" />
-          <Picker.Item label="Academic" value="academic" />
-          <Picker.Item label="Infrastructure" value="infrastructure" />
-          <Picker.Item label="Faculty" value="faculty" />
-          <Picker.Item label="Suggestion" value="suggestion" />
-        </Picker>
-
-        <GlassInput
-          label="Subject"
-          value={form.subject}
-          onChangeText={(subject) => setForm((f) => ({ ...f, subject }))}
-        />
-
-        <GlassInput
-          label="Message"
-          value={form.message}
-          onChangeText={(message) => setForm((f) => ({ ...f, message }))}
-          multiline
-          numberOfLines={5}
-        />
-
-        <View style={styles.checkboxRow}>
-          <Text>Submit Anonymously</Text>
-          {/* Checkbox component */}
-        </View>
-
-        <PrimaryButton title="Submit Feedback" onPress={handleSubmit} />
+        <Text style={styles.cardTitle}>Active Feedback Forms</Text>
+        {activeFeedbacks.map(fb => (
+          <TouchableOpacity key={fb.id} style={styles.feedbackItem} onPress={() => setSelectedFeedback(fb)}>
+            <Text style={styles.feedbackTitle}>{fb.title}</Text>
+            <Text style={styles.feedbackDate}>Deadline: {format(new Date(fb.deadline), 'MMM d')}</Text>
+            <Badge variant={fb.submitted ? 'success' : 'warning'}>{fb.submitted ? 'Submitted' : 'Pending'}</Badge>
+          </TouchableOpacity>
+        ))}
       </GlassCard>
+
+      {selectedFeedback && !selectedFeedback.submitted && (
+        <Modal visible={true} onClose={() => setSelectedFeedback(null)} title={selectedFeedback.title}>
+          <ScrollView>
+            {selectedFeedback.questions.map(q => (
+              <View key={q.id} style={styles.question}>
+                <Text style={styles.questionText}>{q.question}</Text>
+                {q.type === 'rating' && (
+                  <View style={styles.ratingRow}>
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <TouchableOpacity key={n} onPress={() => setRatings({ ...ratings, [q.id]: n })}>
+                        <Ionicons name={ratings[q.id] >= n ? 'star' : 'star-outline'} size={30} color="#F59E0B" />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+                {q.type === 'text' && (
+                  <GlassInput multiline value={comments[q.id] || ''} onChangeText={(v) => setComments({ ...comments, [q.id]: v })} />
+                )}
+              </View>
+            ))}
+            <PrimaryButton title="Submit Feedback" onPress={() => submitFeedback(selectedFeedback.id, { ratings, comments })} />
+          </ScrollView>
+        </Modal>
+      )}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 12 },
-});
-```
-
-#### Student Settings
-**Create `app/(student)/settings/index.tsx`:**
-```typescript
-import React from 'react';
-import { View, ScrollView, StyleSheet, Switch, Text, Alert } from 'react-native';
-import { useQuery, useMutation } from 'urql';
-import { GlassCard, PrimaryButton } from '@/components/ui';
-import { useAuthStore } from '@/store/authStore';
-import { useThemeStore } from '@/store/themeStore';
-import { supabase } from '@/lib/supabase';
-
-const GET_SETTINGS = /* GraphQL */ `
-  query GetSettings($studentId: uuid!) {
-    student_settings(where: { student_id: { _eq: $studentId } }) {
-      notification_attendance
-      notification_assignments
-      notification_exams
-      notification_announcements
-    }
-  }
-`;
-
-const UPDATE_SETTINGS = /* GraphQL */ `
-  mutation UpdateSettings($studentId: uuid!, $settings: student_settings_set_input!) {
-    update_student_settings(where: { student_id: { _eq: $studentId } }, _set: $settings) {
-      affected_rows
-    }
-  }
-`;
-
-export default function SettingsScreen() {
-  const { profile, signOut } = useAuthStore();
-  const { isDark, toggleTheme } = useThemeStore();
-
-  const [{ data }, refetch] = useQuery({
-    query: GET_SETTINGS,
-    variables: { studentId: profile?.studentId },
-  });
-
-  const [, updateSettings] = useMutation(UPDATE_SETTINGS);
-
-  const settings = data?.student_settings?.[0] || {};
-
-  const handleToggle = async (key: string, value: boolean) => {
-    await updateSettings({
-      studentId: profile?.studentId,
-      settings: { [key]: value },
-    });
-    refetch();
-  };
-
-  const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: signOut },
-    ]);
-  };
+// app/(student)/profile/settings.tsx
+export default function StudentSettings() {
+  const { theme, toggleTheme } = useThemeStore();
+  const { notifications, updateNotifications } = useSettingsStore();
+  const { signOut } = useAuthStore();
 
   return (
-    <ScrollView style={styles.container}>
-      <GlassCard style={styles.section}>
+    <ScrollView>
+      <GlassCard>
         <Text style={styles.sectionTitle}>Appearance</Text>
-        <View style={styles.row}>
-          <Text>Dark Mode</Text>
-          <Switch value={isDark} onValueChange={toggleTheme} />
-        </View>
+        <SettingRow label="Dark Mode" value={theme === 'dark'} onToggle={toggleTheme} />
       </GlassCard>
 
-      <GlassCard style={styles.section}>
+      <GlassCard>
         <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.row}>
-          <Text>Attendance Alerts</Text>
-          <Switch
-            value={settings.notification_attendance}
-            onValueChange={(v) => handleToggle('notification_attendance', v)}
-          />
-        </View>
-        <View style={styles.row}>
-          <Text>Assignment Reminders</Text>
-          <Switch
-            value={settings.notification_assignments}
-            onValueChange={(v) => handleToggle('notification_assignments', v)}
-          />
-        </View>
-        <View style={styles.row}>
-          <Text>Exam Alerts</Text>
-          <Switch
-            value={settings.notification_exams}
-            onValueChange={(v) => handleToggle('notification_exams', v)}
-          />
-        </View>
+        <SettingRow label="Push Notifications" value={notifications.push} onToggle={(v) => updateNotifications({ push: v })} />
+        <SettingRow label="Email Notifications" value={notifications.email} onToggle={(v) => updateNotifications({ email: v })} />
+        <SettingRow label="Assignment Reminders" value={notifications.assignments} onToggle={(v) => updateNotifications({ assignments: v })} />
+        <SettingRow label="Exam Reminders" value={notifications.exams} onToggle={(v) => updateNotifications({ exams: v })} />
       </GlassCard>
 
-      <GlassCard style={styles.section}>
-        <PrimaryButton title="Logout" onPress={handleLogout} variant="danger" />
+      <GlassCard>
+        <Text style={styles.sectionTitle}>Security</Text>
+        <TouchableOpacity style={styles.settingButton} onPress={() => router.push('/change-password')}>
+          <Text style={styles.settingLabel}>Change Password</Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        </TouchableOpacity>
       </GlassCard>
+
+      <GlassCard>
+        <Text style={styles.sectionTitle}>Support</Text>
+        <TouchableOpacity style={styles.settingButton} onPress={() => router.push('/help')}>
+          <Text style={styles.settingLabel}>Help & FAQ</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingButton} onPress={() => router.push('/contact')}>
+          <Text style={styles.settingLabel}>Contact Support</Text>
+        </TouchableOpacity>
+      </GlassCard>
+
+      <PrimaryButton title="Logout" variant="outline" onPress={signOut} />
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  section: { marginBottom: 16, padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-});
 ```
 
 ---
 
-### PHASE 9-10 (Week 17-20): Testing
+# WEEK 2: TEACHER SCREENS + ADMIN
 
-#### E2E Test Setup
-```bash
-npm install --save-dev detox jest
+## Day 6-7 - Coordinator + Mentor
+```typescript
+// app/(teacher)/coordinator/index.tsx
+// app/(teacher)/coordinator/sections.tsx
+// app/(teacher)/coordinator/reports.tsx
+// app/(teacher)/mentor/index.tsx - Mentee list
+// app/(teacher)/mentor/mentee.tsx - Individual mentee view
 ```
 
-#### Sample E2E Test
-**Create `e2e/login.test.ts`:**
+## Day 8-9 - Admin Exams + Bus
 ```typescript
-import { device, element, by, expect } from 'detox';
+// app/(admin)/exams/index.tsx - Exam list
+// app/(admin)/exams/schedule.tsx - Create/edit schedule
+// app/(admin)/exams/rooms.tsx - Room allocation
+// app/(admin)/bus/index.tsx - Routes management
+// app/(admin)/bus/passes.tsx - Pass approvals
+// app/(admin)/bus/tracking.tsx - Fleet tracking
+```
 
-describe('Login Flow', () => {
+## Day 10 - Admin Reports
+```typescript
+// app/(admin)/reports/index.tsx
+// app/(admin)/reports/attendance.tsx
+// app/(admin)/reports/exams.tsx
+// app/(admin)/reports/fees.tsx
+```
+
+---
+
+# WEEK 3-4: TESTING
+
+## Day 11-15 - E2E Setup + Auth Tests
+```typescript
+// Install Detox
+// npm install -D detox @types/detox jest
+
+// detox.config.js
+module.exports = {
+  testRunner: { args: { $0: 'jest', config: 'e2e/jest.config.js' }, jest: { setupTimeout: 120000 } },
+  apps: {
+    'android.debug': { type: 'android.apk', build: 'cd android && ./gradlew assembleDebug', binaryPath: 'android/app/build/outputs/apk/debug/app-debug.apk' },
+    'ios.debug': { type: 'ios.app', build: 'xcodebuild...', binaryPath: '...' },
+  },
+  devices: {
+    emulator: { type: 'android.emulator', device: { avdName: 'Pixel_4_API_30' } },
+    simulator: { type: 'ios.simulator', device: { type: 'iPhone 14' } },
+  },
+  configurations: {
+    'android.debug': { device: 'emulator', app: 'android.debug' },
+    'ios.debug': { device: 'simulator', app: 'ios.debug' },
+  },
+};
+
+// e2e/auth.test.ts
+describe('Authentication', () => {
   beforeAll(async () => {
     await device.launchApp();
   });
@@ -1192,66 +663,242 @@ describe('Login Flow', () => {
   });
 
   it('should show login screen', async () => {
-    await expect(element(by.text('Login'))).toBeVisible();
+    await expect(element(by.text('Welcome Back'))).toBeVisible();
+    await expect(element(by.id('input-email'))).toBeVisible();
+    await expect(element(by.id('input-password'))).toBeVisible();
   });
 
-  it('should login with valid credentials', async () => {
-    await element(by.id('email-input')).typeText('student@test.com');
-    await element(by.id('password-input')).typeText('password123');
-    await element(by.id('login-button')).tap();
-    await expect(element(by.text('Dashboard'))).toBeVisible();
+  it('should show validation errors for empty fields', async () => {
+    await element(by.id('btn-login')).tap();
+    await expect(element(by.text('Email is required'))).toBeVisible();
+  });
+
+  it('should login successfully with valid credentials', async () => {
+    await element(by.id('input-email')).typeText('test@jpmcollege.edu');
+    await element(by.id('input-password')).typeText('password123');
+    await element(by.id('btn-login')).tap();
+    await waitFor(element(by.text('Dashboard'))).toBeVisible().withTimeout(5000);
   });
 
   it('should show error for invalid credentials', async () => {
-    await element(by.id('email-input')).typeText('wrong@test.com');
-    await element(by.id('password-input')).typeText('wrongpass');
-    await element(by.id('login-button')).tap();
+    await element(by.id('input-email')).typeText('wrong@email.com');
+    await element(by.id('input-password')).typeText('wrongpassword');
+    await element(by.id('btn-login')).tap();
     await expect(element(by.text('Invalid credentials'))).toBeVisible();
+  });
+
+  it('should navigate to register screen', async () => {
+    await element(by.text('Create Account')).tap();
+    await expect(element(by.text('Register'))).toBeVisible();
+  });
+
+  it('should navigate to forgot password', async () => {
+    await element(by.text('Forgot Password?')).tap();
+    await expect(element(by.text('Reset Password'))).toBeVisible();
+  });
+});
+
+// e2e/register.test.ts
+describe('Registration', () => {
+  it('should register new student', async () => {
+    await element(by.text('Create Account')).tap();
+    await element(by.id('input-fullname')).typeText('Test Student');
+    await element(by.id('input-email')).typeText('newstudent@email.com');
+    await element(by.id('input-phone')).typeText('9876543210');
+    await element(by.id('input-password')).typeText('password123');
+    await element(by.id('input-confirm-password')).typeText('password123');
+    await element(by.id('input-admission')).typeText('2024001');
+    await element(by.id('btn-register')).tap();
+    await waitFor(element(by.text('Verify Email'))).toBeVisible().withTimeout(5000);
+  });
+
+  it('should show password mismatch error', async () => {
+    await element(by.text('Create Account')).tap();
+    await element(by.id('input-password')).typeText('password123');
+    await element(by.id('input-confirm-password')).typeText('password456');
+    await element(by.id('btn-register')).tap();
+    await expect(element(by.text('Passwords do not match'))).toBeVisible();
+  });
+});
+```
+
+## Day 16-20 - Student Module Tests
+```typescript
+// e2e/student/dashboard.test.ts
+describe('Student Dashboard', () => {
+  beforeAll(async () => {
+    await device.launchApp();
+    await loginAs('student@test.com', 'password123');
+  });
+
+  it('should display student info', async () => {
+    await expect(element(by.id('student-name'))).toBeVisible();
+    await expect(element(by.id('attendance-percentage'))).toBeVisible();
+  });
+
+  it('should show today classes', async () => {
+    await expect(element(by.id('today-classes'))).toBeVisible();
+  });
+
+  it('should navigate to attendance', async () => {
+    await element(by.id('tab-attendance')).tap();
+    await expect(element(by.text('Overall Attendance'))).toBeVisible();
+  });
+});
+
+// e2e/student/attendance.test.ts
+describe('Student Attendance', () => {
+  it('should display attendance calendar', async () => {
+    await element(by.id('tab-attendance')).tap();
+    await expect(element(by.id('attendance-calendar'))).toBeVisible();
+  });
+
+  it('should navigate between months', async () => {
+    await element(by.id('btn-prev-month')).tap();
+    // Verify month changed
+    await element(by.id('btn-next-month')).tap();
+  });
+
+  it('should show subject-wise attendance', async () => {
+    await expect(element(by.id('subject-attendance-list'))).toBeVisible();
+  });
+});
+
+// e2e/student/library.test.ts
+describe('Student Library', () => {
+  it('should search for books', async () => {
+    await element(by.id('tab-services')).tap();
+    await element(by.text('Library')).tap();
+    await element(by.id('search-input')).typeText('computer');
+    await element(by.id('btn-search')).tap();
+    await waitFor(element(by.id('search-results'))).toBeVisible().withTimeout(3000);
+  });
+
+  it('should reserve available book', async () => {
+    // After search
+    await element(by.id('btn-reserve-0')).tap();
+    await expect(element(by.text('Book reserved successfully'))).toBeVisible();
+  });
+});
+
+// e2e/student/bus.test.ts
+describe('Student Bus', () => {
+  it('should display bus pass if exists', async () => {
+    await element(by.id('tab-services')).tap();
+    await element(by.text('Bus')).tap();
+    // Check if pass exists or show apply form
+  });
+
+  it('should show route stops', async () => {
+    await expect(element(by.id('route-stops'))).toBeVisible();
+  });
+});
+```
+
+## Day 21-25 - Teacher & Admin Tests
+```typescript
+// e2e/teacher/attendance.test.ts
+describe('Teacher Attendance', () => {
+  beforeAll(async () => {
+    await loginAs('teacher@test.com', 'password123');
+  });
+
+  it('should select class and date', async () => {
+    await element(by.id('tab-attendance')).tap();
+    await element(by.id('class-picker')).tap();
+    await element(by.text('CS101 - Section A')).tap();
+  });
+
+  it('should mark attendance', async () => {
+    await element(by.id('student-row-0')).tap(); // Toggle present/absent
+    await element(by.id('btn-submit-attendance')).tap();
+    await expect(element(by.text('Attendance saved'))).toBeVisible();
+  });
+});
+
+// e2e/admin/users.test.ts
+describe('Admin Users', () => {
+  beforeAll(async () => {
+    await loginAs('admin@test.com', 'password123');
+  });
+
+  it('should list students', async () => {
+    await element(by.id('tab-users')).tap();
+    await expect(element(by.id('users-list'))).toBeVisible();
+  });
+
+  it('should add new student', async () => {
+    await element(by.id('fab-add')).tap();
+    // Fill form
+    await element(by.id('btn-save')).tap();
+    await expect(element(by.text('User created'))).toBeVisible();
+  });
+});
+```
+
+## Day 26-30 - Component Tests
+```typescript
+// __tests__/components/GlassCard.test.tsx
+import { render } from '@testing-library/react-native';
+import { GlassCard } from '@/components/ui/GlassCard';
+
+describe('GlassCard', () => {
+  it('renders children correctly', () => {
+    const { getByText } = render(<GlassCard><Text>Hello</Text></GlassCard>);
+    expect(getByText('Hello')).toBeTruthy();
+  });
+
+  it('applies custom style', () => {
+    const { getByTestId } = render(<GlassCard style={{ padding: 50 }} testID="card"><Text>Test</Text></GlassCard>);
+    // Check style applied
+  });
+});
+
+// __tests__/components/PrimaryButton.test.tsx
+describe('PrimaryButton', () => {
+  it('shows loading indicator', () => {
+    const { getByTestId } = render(<PrimaryButton title="Submit" loading testID="btn" onPress={() => {}} />);
+    expect(getByTestId('activity-indicator')).toBeTruthy();
+  });
+
+  it('is disabled when disabled prop is true', () => {
+    const onPress = jest.fn();
+    const { getByTestId } = render(<PrimaryButton title="Submit" disabled onPress={onPress} testID="btn" />);
+    fireEvent.press(getByTestId('btn'));
+    expect(onPress).not.toHaveBeenCalled();
+  });
+});
+
+// __tests__/store/authStore.test.ts
+describe('authStore', () => {
+  beforeEach(() => {
+    useAuthStore.getState().reset();
+  });
+
+  it('should sign in user', async () => {
+    await useAuthStore.getState().signIn('test@email.com', 'password');
+    expect(useAuthStore.getState().user).toBeTruthy();
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  });
+
+  it('should sign out user', async () => {
+    await useAuthStore.getState().signIn('test@email.com', 'password');
+    await useAuthStore.getState().signOut();
+    expect(useAuthStore.getState().user).toBeNull();
   });
 });
 ```
 
 ---
 
-## ✅ YOUR CHECKLIST
+# ✅ DAILY CHECKLIST
 
-### Week 3-6: Admin Screens
-- [ ] Exam management index
-- [ ] Create exam screen
-- [ ] Exam schedule builder
-- [ ] Bus management
-- [ ] Admin settings
-
-### Week 7-10: Teacher Screens
-- [ ] Attendance marking UI
-- [ ] Teacher diary
-- [ ] Coordinator dashboard
-
-### Week 11-16: Student Module
-- [ ] Attendance view
-- [ ] Assignments list + submit
-- [ ] Library (my books + catalog)
-- [ ] Bus subscription
-- [ ] Feedback form
-- [ ] Student settings
-
-### Week 17-20: Testing
-- [ ] Detox setup
-- [ ] Login flow tests
-- [ ] Student flow tests
-- [ ] Teacher flow tests
-- [ ] Admin flow tests
+- [ ] 3-4 screens completed
+- [ ] Add testIDs to all interactive elements
+- [ ] Write tests for completed features
+- [ ] Check console for errors
+- [ ] Commit with clear messages
 
 ---
 
-## 🚨 CRITICAL REMINDERS
-
-1. **Use Christo's components** - Import from `@/components/ui`
-2. **Use Abin's stores** - Don't duplicate state logic
-3. **Add testIDs** - All interactive elements need `testID`
-4. **Test on device** - Especially attendance marking
-5. **Coordinate on overlap** - Settings, feedback may overlap with Christo
-
----
-
-*Guide for Deon - Last Updated: November 30, 2025*
+*Vibe Coder Deon - Test Everything, Trust Nothing! 🧪*
