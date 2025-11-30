@@ -1372,7 +1372,1083 @@ CREATE TABLE audit_logs (
 
 ---
 
-## 🗄 Database Schema
+## 🎓 STUDENT MODULE — COMPLETE FEATURE SPECIFICATION (2025)
+
+### ⚡ System Rules Applied
+- ✅ **Mobile OTP registration** (Student creates account with OTP)
+- ✅ **Email login after registration**
+- ✅ **Students upload external marks** (Teachers upload internal only)
+- ✅ **Bus selection requires admin approval**
+- ✅ **Event attendance via QR** (optional)
+- ✅ **Honors/Major-Minor system** with credits tracking
+- ✅ **Pre-order canteen tokens**
+
+---
+
+### ⭐ 1. AUTHENTICATION & PROFILE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Create Account | Mobile OTP verification |
+| Login/Logout | Email + Password after registration |
+| Forgot Password | Reset via email/OTP |
+| Profile View | Complete student profile |
+| Profile Edit | Update allowed fields |
+| Photo Upload | Upload/change profile photo |
+| Auto-sync | Course + Year + Department auto-linked |
+
+#### Functions
+```typescript
+// Auth Functions
+registerWithMobileOTP(mobile, otp)
+verifyOTP(mobile, otp)
+completeRegistration(profileData)
+loginWithEmail(email, password)
+logout()
+forgotPassword(email)
+resetPassword(token, newPassword)
+
+// Profile Functions
+getProfile(studentId) → StudentProfile
+updateProfile(studentId, updates)
+uploadProfilePhoto(studentId, file) → photoUrl
+syncAcademicInfo(studentId) // Auto-sync course/year/dept
+```
+
+---
+
+### ⭐ 2. DASHBOARD (HOME)
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Today's Timetable | Current day class schedule |
+| Quick Attendance % | Overall attendance percentage |
+| Assignment Alerts | Pending/due assignments |
+| Internal Marks Snapshot | Latest marks overview |
+| Canteen Menu | Today's menu items |
+| Bus Arrival Time | Expected bus time (if subscribed) |
+| Library Shortcut | Borrowed books quick view |
+| Notifications Hub | All notifications in one place |
+
+#### Functions
+```typescript
+// Dashboard Functions
+getDashboardData(studentId) → {
+  todayTimetable: Period[],
+  attendancePercentage: number,
+  pendingAssignments: Assignment[],
+  recentMarks: Marks[],
+  todayMenu: MenuItem[],
+  busArrivalTime: string | null,
+  borrowedBooks: Book[],
+  notifications: Notification[]
+}
+
+refreshDashboard(studentId)
+markNotificationRead(notificationId)
+```
+
+---
+
+### ⭐ 3. ATTENDANCE MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Subject-wise % | Attendance percentage per subject |
+| Daily Timeline | Detailed daily attendance log |
+| Monthly Calendar | Calendar view with P/A/L markers |
+| Shortage Alerts | Alerts when below threshold |
+| Rules Display | 80% minimum rule, consequences |
+
+#### Functions
+```typescript
+// Attendance Functions
+getSubjectWiseAttendance(studentId, semesterId) → SubjectAttendance[]
+getDailyAttendance(studentId, date) → DailyAttendance
+getMonthlyCalendar(studentId, month, year) → CalendarData
+getAttendanceShortages(studentId) → ShortageAlert[]
+getAttendanceRules() → Rules
+
+// Types
+interface SubjectAttendance {
+  courseId: string;
+  courseName: string;
+  totalClasses: number;
+  present: number;
+  absent: number;
+  percentage: number;
+  isShortage: boolean;
+}
+```
+
+---
+
+### ⭐ 4. TIMETABLE MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Day-wise View | Today's schedule |
+| Weekly View | Full week timetable |
+| Substitution Alerts | Teacher substitution notices |
+| Class Info | Classroom & teacher details |
+
+#### Functions
+```typescript
+// Timetable Functions
+getDailyTimetable(sectionId, date) → Period[]
+getWeeklyTimetable(sectionId) → WeeklySchedule
+getSubstitutionAlerts(sectionId) → Substitution[]
+
+// Types
+interface Period {
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  courseName: string;
+  teacherName: string;
+  classroom: string;
+  isSubstitute: boolean;
+  substituteTeacher?: string;
+}
+```
+
+---
+
+### ⭐ 5. ASSIGNMENTS MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Subject-wise List | Assignments grouped by subject |
+| Due Dates Calendar | Calendar with assignment due dates |
+| Upload Submission | Submit PDF/Photo |
+| Status Tracking | Pending/Submitted/Graded |
+| Teacher Feedback | View grades and comments |
+
+#### Functions
+```typescript
+// Assignment Functions
+getAssignments(studentId, filters?) → Assignment[]
+getAssignmentDetails(assignmentId) → AssignmentDetail
+uploadSubmission(assignmentId, file: PDF | Image) → Submission
+getSubmissionStatus(assignmentId, studentId) → Status
+getTeacherFeedback(submissionId) → Feedback
+
+// Types
+interface Assignment {
+  id: string;
+  title: string;
+  courseName: string;
+  dueDate: Date;
+  status: 'pending' | 'submitted' | 'graded' | 'late';
+  marks?: number;
+  maxMarks: number;
+}
+```
+
+---
+
+### ⭐ 6. ACADEMIC MATERIALS MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Subject-wise Materials | Materials organized by subject |
+| Material Types | Notes, PPT, PDFs, Videos, Links |
+| Downloads Section | Downloaded materials offline |
+| Search | Search within subjects |
+
+#### Functions
+```typescript
+// Materials Functions
+getMaterials(courseId) → Material[]
+getMaterialsBySubject(studentId) → { [courseId]: Material[] }
+downloadMaterial(materialId) → FileBlob
+searchMaterials(query, courseId?) → Material[]
+getDownloadedMaterials() → Material[] // Offline
+
+// Types
+interface Material {
+  id: string;
+  title: string;
+  description: string;
+  type: 'notes' | 'ppt' | 'pdf' | 'video' | 'link';
+  fileUrl: string;
+  uploadedBy: string;
+  uploadedAt: Date;
+  fileSize: number;
+}
+```
+
+---
+
+### ⭐ 7. INTERNAL MARKS MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| CAT/Series Marks | Continuous Assessment Test marks |
+| Assignment Marks | Marks from assignments |
+| Attendance Marks | Marks based on attendance |
+| Final Internal | Calculated final internal marks |
+| Semester Breakdown | Semester-wise marks history |
+
+#### Functions
+```typescript
+// Internal Marks Functions
+getInternalMarks(studentId, semesterId) → InternalMarks[]
+getMarkBreakdown(studentId, courseId) → MarkBreakdown
+getSemesterHistory(studentId) → SemesterMarks[]
+
+// Types
+interface InternalMarks {
+  courseId: string;
+  courseName: string;
+  cat1: number;
+  cat2: number;
+  cat3: number;
+  assignmentMarks: number;
+  attendanceMarks: number;
+  totalInternal: number;
+  maxInternal: number;
+}
+
+interface MarkBreakdown {
+  courseId: string;
+  components: {
+    name: string;
+    marks: number;
+    maxMarks: number;
+    weightage: number;
+  }[];
+  finalInternal: number;
+}
+```
+
+---
+
+### ⭐ 8. LIBRARY MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Search Books | Search by title, author, ISBN |
+| Borrowed Books | Currently borrowed list |
+| Due Dates | Return due dates |
+| Renew Book | Renew if eligible |
+| Fine Details | Outstanding fines |
+| Book Request | Request unavailable books |
+| Reservation | Reserve books (if allowed) |
+
+#### Functions
+```typescript
+// Library Functions
+searchBooks(query, filters?) → Book[]
+getBorrowedBooks(studentId) → BorrowedBook[]
+getBookDueDates(studentId) → DueDate[]
+renewBook(transactionId) → RenewalResult
+getFineDetails(studentId) → Fine[]
+requestBook(bookId, studentId) → Request
+reserveBook(bookId, studentId) → Reservation
+
+// Types
+interface BorrowedBook {
+  transactionId: string;
+  bookId: string;
+  title: string;
+  author: string;
+  issuedDate: Date;
+  dueDate: Date;
+  isOverdue: boolean;
+  fineAmount: number;
+  canRenew: boolean;
+}
+```
+
+---
+
+### ⭐ 9. EXAM SECTION
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Exam Timetable | Upcoming exam schedule |
+| Hall Ticket | Download hall ticket PDF |
+| Internal Results | View internal marks |
+| External Results | View external exam results |
+| Pass/Fail Indicators | Clear status indicators |
+| Grade Points | Subject-wise grade points |
+| SGPA/CGPA | Semester and cumulative GPA |
+
+#### Functions
+```typescript
+// Exam Functions
+getExamTimetable(studentId, examType?) → ExamSchedule[]
+downloadHallTicket(studentId, examId) → PDFBlob
+getInternalResults(studentId, semesterId) → InternalResult[]
+getExternalResults(studentId, semesterId) → ExternalResult[]
+uploadExternalMarks(studentId, examId, marks) → Result // Student uploads
+getGradePoints(studentId, semesterId) → GradePoint[]
+getSGPA(studentId, semesterId) → number
+getCGPA(studentId) → number
+
+// Types
+interface ExamResult {
+  courseId: string;
+  courseName: string;
+  internalMarks: number;
+  externalMarks: number;
+  totalMarks: number;
+  grade: string;
+  gradePoint: number;
+  credits: number;
+  status: 'pass' | 'fail' | 'withheld';
+}
+```
+
+---
+
+### ⭐ 10. CANTEEN MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Daily Menu | Today's available items |
+| Pre-Order Tokens | Order food in advance |
+| Token History | Past orders |
+| Payment History | Payment records (if integrated) |
+| Availability Indicator | "Sold Out" / "Available" status |
+
+#### Functions
+```typescript
+// Canteen Functions
+getDailyMenu(date?) → MenuItem[]
+preOrderToken(items: OrderItem[]) → Token
+getTokenHistory(studentId) → Token[]
+getPaymentHistory(studentId) → Payment[]
+checkAvailability(itemId) → AvailabilityStatus
+
+// Types
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: 'breakfast' | 'lunch' | 'snacks' | 'beverages';
+  isAvailable: boolean;
+  soldOut: boolean;
+  image?: string;
+}
+
+interface Token {
+  tokenNumber: string;
+  items: OrderItem[];
+  totalAmount: number;
+  status: 'pending' | 'ready' | 'collected' | 'cancelled';
+  orderTime: Date;
+  pickupTime?: Date;
+}
+```
+
+---
+
+### ⭐ 11. BUS MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Bus Selection | Select bus route (once, needs approval) |
+| Route Overview | View route map/stops |
+| Arrival Time | Expected bus arrival time |
+| Payment Alerts | Fee payment reminders |
+| Holiday Alerts | Bus holiday notifications |
+| **NO** driver/conductor details | Privacy restriction |
+| **NO** pickup/drop listing | Privacy restriction |
+
+#### Functions
+```typescript
+// Bus Functions
+getAvailableRoutes() → BusRoute[]
+selectBusRoute(studentId, routeId, pickupStop) → PendingApproval
+getBusSubscription(studentId) → BusSubscription | null
+getRouteOverview(routeId) → RouteOverview
+getArrivalTime(routeId, stopId) → ArrivalTime
+getBusPaymentAlerts(studentId) → PaymentAlert[]
+getHolidayAlerts() → HolidayAlert[]
+
+// Types
+interface BusSubscription {
+  routeId: string;
+  routeName: string;
+  pickupStop: string;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  feePaid: boolean;
+  academicYear: string;
+}
+
+interface RouteOverview {
+  routeId: string;
+  routeName: string;
+  stops: string[]; // Stop names only, no specific timing
+  vehicleNumber: string;
+  estimatedDuration: string;
+}
+```
+
+---
+
+### ⭐ 12. NOTICES & ANNOUNCEMENTS
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| College Notices | General college announcements |
+| Department Notices | Department-specific notices |
+| Exam Notifications | Exam-related updates |
+| Event Updates | Event announcements |
+| Push Notifications | Real-time push alerts |
+
+#### Functions
+```typescript
+// Notice Functions
+getNotices(filters?: NoticeFilters) → Notice[]
+getCollegeNotices() → Notice[]
+getDepartmentNotices(departmentId) → Notice[]
+getExamNotifications(studentId) → Notice[]
+getEventUpdates() → Notice[]
+markNoticeRead(noticeId, studentId)
+
+// Push Notification Functions
+registerPushToken(studentId, token)
+getUnreadCount(studentId) → number
+
+// Types
+interface Notice {
+  id: string;
+  title: string;
+  content: string;
+  category: 'college' | 'department' | 'exam' | 'event';
+  postedBy: string;
+  postedAt: Date;
+  expiresAt?: Date;
+  isPinned: boolean;
+  attachments: string[];
+  isRead: boolean;
+}
+```
+
+---
+
+### ⭐ 13. EVENTS & ACTIVITIES MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Upcoming Events | List of upcoming events |
+| Event Registration | Register for events |
+| Attendance QR | QR-based attendance (if used) |
+| Certificate Download | Download participation certificates |
+
+#### Functions
+```typescript
+// Event Functions
+getUpcomingEvents() → Event[]
+getEventDetails(eventId) → EventDetail
+registerForEvent(eventId, studentId) → Registration
+getMyRegistrations(studentId) → Registration[]
+scanAttendanceQR(eventId, qrCode) → AttendanceResult
+downloadCertificate(eventId, studentId) → PDFBlob
+
+// Types
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  eventType: 'cultural' | 'technical' | 'sports' | 'workshop' | 'seminar';
+  date: Date;
+  venue: string;
+  registrationDeadline: Date;
+  isRegistered: boolean;
+  hasAttended: boolean;
+  hasCertificate: boolean;
+}
+```
+
+---
+
+### ⭐ 14. FEEDBACK & COMPLAINTS
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Teacher Feedback | Submit feedback for teachers |
+| College Feedback | General college feedback |
+| Complaint Ticket | Raise issue/complaint |
+| Status Tracking | Track complaint resolution |
+
+#### Functions
+```typescript
+// Feedback Functions
+submitTeacherFeedback(teacherId, feedback) → Result
+submitCollegeFeedback(feedback) → Result
+getMyFeedbackHistory(studentId) → Feedback[]
+
+// Complaint Functions
+raiseComplaint(complaintData) → Ticket
+getMyComplaints(studentId) → Ticket[]
+getComplaintStatus(ticketId) → TicketStatus
+addComplaintComment(ticketId, comment) → Result
+
+// Types
+interface Ticket {
+  ticketId: string;
+  category: 'academic' | 'infrastructure' | 'hostel' | 'transport' | 'other';
+  subject: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+  resolvedAt?: Date;
+  comments: Comment[];
+}
+```
+
+---
+
+### ⭐ 15. FEE MODULE
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Semester Fee Details | Fee breakdown per semester |
+| Paid Receipts | Download payment receipts |
+| Upcoming Dues | Pending fee payments |
+| Online Payment | Payment gateway (if integrated) |
+
+#### Functions
+```typescript
+// Fee Functions
+getSemesterFees(studentId, semesterId) → FeeDetails
+getPaymentHistory(studentId) → Payment[]
+downloadReceipt(paymentId) → PDFBlob
+getUpcomingDues(studentId) → Due[]
+initiatePayment(studentId, feeId, amount) → PaymentSession
+verifyPayment(paymentId, transactionId) → PaymentResult
+
+// Types
+interface FeeDetails {
+  semesterId: string;
+  totalFee: number;
+  components: {
+    name: string;
+    amount: number;
+    type: 'tuition' | 'exam' | 'library' | 'lab' | 'other';
+  }[];
+  paidAmount: number;
+  pendingAmount: number;
+  dueDate: Date;
+  status: 'paid' | 'partial' | 'pending' | 'overdue';
+}
+```
+
+---
+
+### ⭐ 16. HONORS/MAJOR-MINOR SYSTEM
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Major View | View major (from course) |
+| Minor Subjects | Available minor options |
+| Selection Window | Apply during selection period |
+| Approval Status | Track approval status |
+| Credits Tracking | Track minor credits |
+
+#### Functions
+```typescript
+// Honors/Minor Functions
+getMajor(studentId) → Major
+getAvailableMinors(studentId) → Minor[]
+selectMinor(studentId, minorId) → Application
+getMinorApplication(studentId) → MinorApplication | null
+getCreditsProgress(studentId) → CreditsProgress
+
+// Types
+interface MinorApplication {
+  id: string;
+  minorId: string;
+  minorName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  appliedAt: Date;
+  approvedAt?: Date;
+  remarks?: string;
+}
+
+interface CreditsProgress {
+  majorCredits: {
+    required: number;
+    completed: number;
+  };
+  minorCredits: {
+    required: number;
+    completed: number;
+  };
+  electiveCredits: {
+    required: number;
+    completed: number;
+  };
+  totalCredits: number;
+}
+```
+
+---
+
+### ⭐ 17. SETTINGS
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Dark/Light Mode | Theme toggle |
+| Notification Control | Enable/disable notifications |
+| Update Mobile | Change mobile number |
+| About/Version | App version info |
+
+#### Functions
+```typescript
+// Settings Functions
+getSettings(studentId) → Settings
+updateTheme(studentId, theme: 'light' | 'dark' | 'system')
+updateNotificationPreferences(studentId, prefs)
+updateMobileNumber(studentId, newMobile, otp) → Result
+getAppVersion() → VersionInfo
+
+// Types
+interface Settings {
+  theme: 'light' | 'dark' | 'system';
+  notifications: {
+    push: boolean;
+    email: boolean;
+    assignment: boolean;
+    attendance: boolean;
+    exam: boolean;
+    notices: boolean;
+  };
+  mobileNumber: string;
+}
+```
+
+---
+
+### ⭐ 18. SUPPORT
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Contact College | College contact information |
+| Helpdesk | Chat support (optional) |
+| FAQs | Frequently asked questions |
+
+#### Functions
+```typescript
+// Support Functions
+getCollegeContacts() → Contact[]
+getFAQs(category?) → FAQ[]
+searchFAQs(query) → FAQ[]
+startChatSession(studentId) → ChatSession // Optional
+sendChatMessage(sessionId, message) → Result
+
+// Types
+interface Contact {
+  department: string;
+  name: string;
+  email: string;
+  phone?: string;
+  timing?: string;
+}
+
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  helpful: number;
+}
+```
+
+---
+
+### 📱 Student Module - Screen Architecture
+
+```
+app/(student)/
+├── _layout.tsx                    ✅ Built
+├── dashboard.tsx                  ⚠️ Basic (needs enhancement)
+├── profile.tsx                    ❌ TODO
+│
+├── attendance/
+│   ├── index.tsx                  ❌ TODO - Subject-wise %
+│   ├── daily.tsx                  ❌ TODO - Daily timeline
+│   ├── calendar.tsx               ❌ TODO - Monthly calendar
+│   └── alerts.tsx                 ❌ TODO - Shortage alerts
+│
+├── timetable/
+│   ├── index.tsx                  ❌ TODO - Today's schedule
+│   ├── weekly.tsx                 ❌ TODO - Weekly view
+│   └── substitutions.tsx          ❌ TODO - Substitution alerts
+│
+├── assignments/
+│   ├── index.tsx                  ❌ TODO - All assignments
+│   ├── [assignmentId].tsx         ❌ TODO - Assignment detail
+│   ├── submit.tsx                 ❌ TODO - Upload submission
+│   └── calendar.tsx               ❌ TODO - Due dates calendar
+│
+├── materials/
+│   ├── index.tsx                  ❌ TODO - Subject-wise materials
+│   ├── [courseId].tsx             ❌ TODO - Course materials
+│   ├── downloads.tsx              ❌ TODO - Downloaded files
+│   └── search.tsx                 ❌ TODO - Search materials
+│
+├── marks/
+│   ├── index.tsx                  ❌ TODO - Internal marks
+│   ├── [courseId].tsx             ❌ TODO - Mark breakdown
+│   └── history.tsx                ❌ TODO - Semester history
+│
+├── library/
+│   ├── index.tsx                  ❌ TODO - Library home
+│   ├── search.tsx                 ❌ TODO - Search books
+│   ├── borrowed.tsx               ❌ TODO - My books
+│   ├── fines.tsx                  ❌ TODO - Fine details
+│   └── request.tsx                ❌ TODO - Book request
+│
+├── exams/
+│   ├── index.tsx                  ❌ TODO - Exam home
+│   ├── timetable.tsx              ❌ TODO - Exam schedule
+│   ├── hallticket.tsx             ❌ TODO - Hall ticket
+│   ├── results.tsx                ❌ TODO - All results
+│   ├── upload-external.tsx        ❌ TODO - Upload external marks
+│   └── gpa.tsx                    ❌ TODO - SGPA/CGPA view
+│
+├── canteen/
+│   ├── index.tsx                  ❌ TODO - Daily menu
+│   ├── order.tsx                  ❌ TODO - Pre-order token
+│   ├── tokens.tsx                 ❌ TODO - Token history
+│   └── payments.tsx               ❌ TODO - Payment history
+│
+├── bus/
+│   ├── index.tsx                  ❌ TODO - Bus home
+│   ├── select.tsx                 ❌ TODO - Select route
+│   ├── route.tsx                  ❌ TODO - Route overview
+│   └── alerts.tsx                 ❌ TODO - Payment/holiday alerts
+│
+├── notices/
+│   ├── index.tsx                  ❌ TODO - All notices
+│   ├── [noticeId].tsx             ❌ TODO - Notice detail
+│   └── notifications.tsx          ❌ TODO - Notification hub
+│
+├── events/
+│   ├── index.tsx                  ❌ TODO - Upcoming events
+│   ├── [eventId].tsx              ❌ TODO - Event detail
+│   ├── registered.tsx             ❌ TODO - My registrations
+│   └── certificates.tsx           ❌ TODO - Certificates
+│
+├── feedback/
+│   ├── index.tsx                  ❌ TODO - Feedback home
+│   ├── teacher.tsx                ❌ TODO - Teacher feedback
+│   ├── college.tsx                ❌ TODO - College feedback
+│   └── complaints.tsx             ❌ TODO - Complaints
+│
+├── fees/
+│   ├── index.tsx                  ❌ TODO - Fee details
+│   ├── receipts.tsx               ❌ TODO - Payment receipts
+│   ├── dues.tsx                   ❌ TODO - Upcoming dues
+│   └── pay.tsx                    ❌ TODO - Payment gateway
+│
+├── honors/
+│   ├── index.tsx                  ❌ TODO - Honors home
+│   ├── minor.tsx                  ❌ TODO - Minor selection
+│   └── credits.tsx                ❌ TODO - Credits tracking
+│
+├── settings/
+│   ├── index.tsx                  ❌ TODO - Settings home
+│   ├── notifications.tsx          ❌ TODO - Notification prefs
+│   └── mobile.tsx                 ❌ TODO - Update mobile
+│
+└── support/
+    ├── index.tsx                  ❌ TODO - Support home
+    ├── contacts.tsx               ❌ TODO - College contacts
+    ├── faq.tsx                    ❌ TODO - FAQs
+    └── chat.tsx                   ❌ TODO - Helpdesk chat
+```
+
+---
+
+### 🗄️ Student Module - Database Tables
+
+#### New Tables Required
+
+```sql
+-- 1. Canteen Menu
+CREATE TABLE canteen_menu (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  category VARCHAR(20), -- breakfast/lunch/snacks/beverages
+  image_url TEXT,
+  is_available BOOLEAN DEFAULT true,
+  available_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Canteen Orders (Tokens)
+CREATE TABLE canteen_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES students(id),
+  token_number VARCHAR(20) UNIQUE,
+  items JSONB NOT NULL, -- [{itemId, name, quantity, price}]
+  total_amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending', -- pending/ready/collected/cancelled
+  order_time TIMESTAMPTZ DEFAULT NOW(),
+  pickup_time TIMESTAMPTZ,
+  payment_status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Events
+CREATE TABLE events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  event_type VARCHAR(20), -- cultural/technical/sports/workshop/seminar
+  event_date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  venue VARCHAR(200),
+  max_participants INT,
+  registration_deadline DATE,
+  is_registration_open BOOLEAN DEFAULT true,
+  has_certificate BOOLEAN DEFAULT false,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Event Registrations
+CREATE TABLE event_registrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID REFERENCES events(id),
+  student_id UUID REFERENCES students(id),
+  registered_at TIMESTAMPTZ DEFAULT NOW(),
+  attended BOOLEAN DEFAULT false,
+  attendance_time TIMESTAMPTZ,
+  certificate_url TEXT,
+  UNIQUE(event_id, student_id)
+);
+
+-- 5. Feedback
+CREATE TABLE feedback (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES students(id),
+  feedback_type VARCHAR(20), -- teacher/college/course
+  target_id UUID, -- teacher_id or null for college
+  rating INT CHECK (rating >= 1 AND rating <= 5),
+  comments TEXT,
+  is_anonymous BOOLEAN DEFAULT false,
+  semester_id UUID,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. Complaints
+CREATE TABLE complaints (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_number VARCHAR(20) UNIQUE,
+  student_id UUID REFERENCES students(id),
+  category VARCHAR(30), -- academic/infrastructure/hostel/transport/other
+  subject VARCHAR(200) NOT NULL,
+  description TEXT NOT NULL,
+  priority VARCHAR(10) DEFAULT 'medium', -- low/medium/high
+  status VARCHAR(20) DEFAULT 'open', -- open/in_progress/resolved/closed
+  assigned_to UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ
+);
+
+-- 7. Complaint Comments
+CREATE TABLE complaint_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  complaint_id UUID REFERENCES complaints(id),
+  user_id UUID REFERENCES profiles(id),
+  comment TEXT NOT NULL,
+  is_internal BOOLEAN DEFAULT false, -- Admin-only comments
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 8. Minor Programs
+CREATE TABLE minor_programs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL,
+  short_name VARCHAR(20),
+  department_id UUID REFERENCES departments(id),
+  total_credits INT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Minor Applications
+CREATE TABLE minor_applications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES students(id),
+  minor_program_id UUID REFERENCES minor_programs(id),
+  academic_year_id UUID,
+  status VARCHAR(20) DEFAULT 'pending', -- pending/approved/rejected
+  applied_at TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_by UUID REFERENCES profiles(id),
+  reviewed_at TIMESTAMPTZ,
+  remarks TEXT,
+  UNIQUE(student_id, minor_program_id, academic_year_id)
+);
+
+-- 10. Student Credits
+CREATE TABLE student_credits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES students(id),
+  course_id UUID REFERENCES courses(id),
+  credit_type VARCHAR(20), -- major/minor/elective/honors
+  credits_earned DECIMAL(3,1),
+  semester_id UUID,
+  verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 11. FAQs
+CREATE TABLE faqs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  category VARCHAR(50),
+  order_index INT DEFAULT 0,
+  helpful_count INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 12. College Contacts
+CREATE TABLE college_contacts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  department VARCHAR(100) NOT NULL,
+  contact_name VARCHAR(100),
+  email VARCHAR(100),
+  phone VARCHAR(20),
+  timing VARCHAR(50),
+  order_index INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT true
+);
+
+-- 13. Student Settings
+CREATE TABLE student_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES students(id) UNIQUE,
+  theme VARCHAR(10) DEFAULT 'system', -- light/dark/system
+  push_notifications BOOLEAN DEFAULT true,
+  email_notifications BOOLEAN DEFAULT true,
+  assignment_alerts BOOLEAN DEFAULT true,
+  attendance_alerts BOOLEAN DEFAULT true,
+  exam_alerts BOOLEAN DEFAULT true,
+  notice_alerts BOOLEAN DEFAULT true,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 14. External Marks Upload (Student uploads)
+CREATE TABLE external_marks_uploads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES students(id),
+  exam_id UUID REFERENCES exams(id),
+  course_id UUID REFERENCES courses(id),
+  marks_obtained DECIMAL(5,2),
+  max_marks DECIMAL(5,2) DEFAULT 100,
+  proof_url TEXT, -- Screenshot/document proof
+  status VARCHAR(20) DEFAULT 'pending', -- pending/verified/rejected
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  verified_by UUID REFERENCES profiles(id),
+  verified_at TIMESTAMPTZ,
+  remarks TEXT
+);
+```
+
+---
+
+### 📊 Student Module - Zustand Stores
+
+```
+store/
+├── studentDashboardStore.ts       ❌ TODO
+│   - dashboardData
+│   - fetchDashboard(), refreshDashboard()
+│
+├── attendanceStore.ts             ❌ TODO (shared)
+│   - subjectAttendance, dailyAttendance
+│   - getSubjectWise(), getMonthly()
+│
+├── timetableStore.ts              ❌ TODO
+│   - todaySchedule, weeklySchedule
+│   - substitutions
+│
+├── assignmentStore.ts             ❌ TODO (shared)
+│   - assignments, submissions
+│   - uploadSubmission()
+│
+├── materialsStore.ts              ❌ TODO
+│   - materials, downloads
+│   - downloadMaterial(), searchMaterials()
+│
+├── marksStore.ts                  ❌ TODO
+│   - internalMarks, externalMarks
+│   - uploadExternalMarks()
+│
+├── libraryStore.ts                ❌ TODO
+│   - borrowedBooks, fines
+│   - searchBooks(), renewBook()
+│
+├── examStore.ts                   ❌ TODO (shared)
+│   - examSchedule, results, gpa
+│
+├── canteenStore.ts                ❌ TODO
+│   - menu, orders
+│   - preOrder(), getTokens()
+│
+├── busStore.ts                    ❌ TODO
+│   - subscription, routes
+│   - selectRoute(), getArrivalTime()
+│
+├── noticeStore.ts                 ❌ TODO (shared)
+│   - notices, unreadCount
+│   - markRead()
+│
+├── eventStore.ts                  ❌ TODO
+│   - events, registrations
+│   - register(), getCertificates()
+│
+├── feedbackStore.ts               ❌ TODO
+│   - feedback, complaints
+│   - submitFeedback(), raiseComplaint()
+│
+├── feeStore.ts                    ❌ TODO
+│   - fees, payments, dues
+│   - initiatePayment()
+│
+├── honorsStore.ts                 ❌ TODO
+│   - major, minors, credits
+│   - applyMinor()
+│
+└── settingsStore.ts               ❌ TODO (shared)
+    - settings
+    - updateTheme(), updateNotifications()
+```
+
+---
 
 ### Core Tables
 
@@ -1985,7 +3061,137 @@ on_fee_paid          → Update payment status
 - [ ] Override substitutions
 - [ ] Department announcements
 
-### Module 6: Attendance ❌ TODO
+### Module 6: Student Module ❌ TODO (DETAILED ABOVE)
+
+#### 6.1 Authentication & Profile
+- [ ] Mobile OTP registration
+- [ ] Email login/logout
+- [ ] Forgot password/reset
+- [ ] Profile view & edit
+- [ ] Photo upload
+- [ ] Course/Year/Dept auto-sync
+
+#### 6.2 Dashboard
+- [ ] Today's timetable widget
+- [ ] Quick attendance %
+- [ ] Assignment alerts
+- [ ] Internal marks snapshot
+- [ ] Canteen menu today
+- [ ] Bus arrival time
+- [ ] Library borrowed books
+- [ ] Notifications hub
+
+#### 6.3 Attendance
+- [ ] Subject-wise attendance %
+- [ ] Daily attendance timeline
+- [ ] Monthly calendar view
+- [ ] Shortage alerts
+- [ ] Rules display (80% minimum)
+
+#### 6.4 Timetable
+- [ ] Day-wise timetable
+- [ ] Weekly timetable
+- [ ] Substitution alerts
+- [ ] Classroom & teacher info
+
+#### 6.5 Assignments
+- [ ] Subject-wise assignment list
+- [ ] Due dates calendar
+- [ ] Upload submission (PDF/Photo)
+- [ ] Status tracking (Pending/Submitted/Graded)
+- [ ] Teacher feedback view
+
+#### 6.6 Academic Materials
+- [ ] Subject-wise materials
+- [ ] Notes/PPT/PDF/Videos
+- [ ] Downloads section (offline)
+- [ ] Search within subjects
+
+#### 6.7 Internal Marks
+- [ ] CAT/Series marks
+- [ ] Assignment marks
+- [ ] Attendance marks
+- [ ] Final internal calculation
+- [ ] Semester-wise breakdown
+
+#### 6.8 Library
+- [ ] Search books
+- [ ] Borrowed books list
+- [ ] Due dates
+- [ ] Renew book
+- [ ] Fine details
+- [ ] Book request
+- [ ] Book reservation
+
+#### 6.9 Exams
+- [ ] Exam timetable
+- [ ] Hall ticket download
+- [ ] Internal results
+- [ ] External results (student upload)
+- [ ] Pass/Fail indicators
+- [ ] Grade points
+- [ ] SGPA/CGPA view
+
+#### 6.10 Canteen
+- [ ] Daily menu
+- [ ] Pre-order token system
+- [ ] Token history
+- [ ] Payment history
+- [ ] Availability indicator
+
+#### 6.11 Bus
+- [ ] Bus selection (once, admin approval)
+- [ ] Route overview
+- [ ] Bus arrival time
+- [ ] Payment alerts
+- [ ] Holiday alerts
+- [ ] NO driver/conductor details
+- [ ] NO pickup/drop listing
+
+#### 6.12 Notices & Announcements
+- [ ] College notices
+- [ ] Department notices
+- [ ] Exam notifications
+- [ ] Event updates
+- [ ] Push notifications
+
+#### 6.13 Events & Activities
+- [ ] Upcoming events
+- [ ] Event registration
+- [ ] Attendance QR (optional)
+- [ ] Certificate download
+
+#### 6.14 Feedback & Complaints
+- [ ] Teacher feedback
+- [ ] College feedback
+- [ ] Complaint/Issue ticket
+- [ ] Status tracking
+
+#### 6.15 Fees
+- [ ] Semester fee details
+- [ ] Paid receipts
+- [ ] Upcoming dues
+- [ ] Online payment gateway
+
+#### 6.16 Honors/Major-Minor
+- [ ] View major (from course)
+- [ ] Available minor subjects
+- [ ] Selection window
+- [ ] Approval status
+- [ ] Credits tracking
+
+#### 6.17 Settings
+- [ ] Dark/Light mode
+- [ ] Notification control
+- [ ] Update mobile number
+- [ ] About/App version
+
+#### 6.18 Support
+- [ ] Contact college
+- [ ] Helpdesk chat (optional)
+- [ ] FAQs
+
+### Module 7: Attendance ❌ TODO
 - [ ] Take attendance (Teacher - subject-wise)
 - [ ] Edit within grace window
 - [ ] View attendance history (Teacher)
@@ -2183,6 +3389,9 @@ on_fee_paid          → Update payment status
 | GET | `/fees/student/{id}` | Get student fees |
 | POST | `/fees/payment` | Record payment |
 | GET | `/fees/report` | Fee collection report |
+| GET | `/fees/receipts/{id}` | Download receipt |
+| POST | `/fees/initiate-payment` | Start online payment |
+| POST | `/fees/verify-payment` | Verify payment |
 
 ### Notices
 | Method | Endpoint | Description |
@@ -2191,6 +3400,107 @@ on_fee_paid          → Update payment status
 | POST | `/notices` | Create notice |
 | GET | `/notices/{id}` | Get notice detail |
 | DELETE | `/notices/{id}` | Delete notice |
+| PATCH | `/notices/{id}/read` | Mark as read |
+
+### Student Dashboard
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/student/dashboard` | Get dashboard data |
+| GET | `/student/dashboard/refresh` | Refresh dashboard |
+
+### Student Assignments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/student/assignments` | My assignments |
+| GET | `/student/assignments/{id}` | Assignment details |
+| POST | `/student/assignments/{id}/submit` | Upload submission |
+| GET | `/student/assignments/{id}/feedback` | Get teacher feedback |
+
+### Student Materials
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/student/materials` | All materials |
+| GET | `/student/materials/{courseId}` | Course materials |
+| GET | `/student/materials/search` | Search materials |
+| POST | `/student/materials/{id}/download` | Download material |
+
+### Student Library
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/library/search` | Search books |
+| GET | `/library/borrowed` | My borrowed books |
+| POST | `/library/{transactionId}/renew` | Renew book |
+| GET | `/library/fines` | My fines |
+| POST | `/library/request` | Request book |
+| POST | `/library/reserve` | Reserve book |
+
+### Student Exams
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/student/exams/timetable` | Exam timetable |
+| GET | `/student/exams/hallticket/{id}` | Download hall ticket |
+| GET | `/student/results` | All results |
+| POST | `/student/results/external` | Upload external marks |
+| GET | `/student/gpa` | SGPA/CGPA |
+
+### Canteen
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/canteen/menu` | Daily menu |
+| POST | `/canteen/order` | Pre-order token |
+| GET | `/canteen/orders` | My orders |
+| GET | `/canteen/orders/{id}` | Order details |
+| PATCH | `/canteen/orders/{id}/cancel` | Cancel order |
+
+### Bus
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/bus/routes` | Available routes |
+| POST | `/bus/select` | Select route |
+| GET | `/bus/subscription` | My subscription |
+| GET | `/bus/routes/{id}` | Route overview |
+| GET | `/bus/arrival` | Arrival time |
+| GET | `/bus/alerts` | Holiday/payment alerts |
+
+### Events
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/events` | Upcoming events |
+| GET | `/events/{id}` | Event details |
+| POST | `/events/{id}/register` | Register for event |
+| GET | `/events/registered` | My registrations |
+| POST | `/events/{id}/attendance` | QR attendance |
+| GET | `/events/{id}/certificate` | Download certificate |
+
+### Feedback & Complaints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/feedback/teacher` | Submit teacher feedback |
+| POST | `/feedback/college` | Submit college feedback |
+| GET | `/feedback/history` | My feedback history |
+| POST | `/complaints` | Raise complaint |
+| GET | `/complaints` | My complaints |
+| GET | `/complaints/{id}` | Complaint details |
+| POST | `/complaints/{id}/comment` | Add comment |
+
+### Honors/Minor
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/student/major` | Get major |
+| GET | `/student/minors/available` | Available minors |
+| POST | `/student/minors/apply` | Apply for minor |
+| GET | `/student/minors/application` | Application status |
+| GET | `/student/credits` | Credits progress |
+
+### Settings & Support
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/settings` | Get settings |
+| PATCH | `/settings` | Update settings |
+| PATCH | `/settings/mobile` | Update mobile |
+| GET | `/support/contacts` | College contacts |
+| GET | `/support/faq` | FAQs |
+| POST | `/support/chat` | Start chat session |
 
 ### Audit
 | Method | Endpoint | Description |
@@ -2246,35 +3556,46 @@ on_fee_paid          → Update payment status
 - [ ] HoD features
 - [ ] Department analytics
 
-### Phase 6: Student Module ❌ TODO
-**Timeline: Week 12-13**
-- [ ] Student dashboard
-- [ ] View attendance
-- [ ] View results
-- [ ] Upload external marks
-- [ ] View timetable
-- [ ] Profile management
+### Phase 6: Student Module - Core ❌ TODO
+**Timeline: Week 12-14**
+- [ ] Student dashboard (enhanced)
+- [ ] Profile view & edit
+- [ ] Attendance module (subject-wise, calendar, alerts)
+- [ ] Timetable module (daily, weekly, substitutions)
+- [ ] Assignments module (list, submit, feedback)
+- [ ] Academic materials (download, search)
 
-### Phase 7: Advanced Features ❌ TODO
-**Timeline: Week 14-15**
-- [ ] Exam management
-- [ ] Fee management
+### Phase 7: Student Module - Academic ❌ TODO
+**Timeline: Week 15-16**
+- [ ] Internal marks module
+- [ ] External marks upload (student)
+- [ ] Exam section (timetable, hall ticket, results)
+- [ ] SGPA/CGPA calculation
 - [ ] Library module
-- [ ] Transport module
-- [ ] Reports & Analytics
+- [ ] Honors/Major-Minor system
 
-### Phase 8: System Features ❌ TODO
-**Timeline: Week 16-17**
+### Phase 8: Student Module - Utilities ❌ TODO
+**Timeline: Week 17-18**
+- [ ] Canteen module (menu, pre-order tokens)
+- [ ] Bus module (selection, arrival, alerts)
+- [ ] Fees module (details, receipts, payment)
+- [ ] Events & Activities module
+- [ ] Feedback & Complaints
+
+### Phase 9: Communication & System ❌ TODO
+**Timeline: Week 19-20**
+- [ ] Notices & Announcements
 - [ ] Push notifications
-- [ ] Offline support (attendance, marks, diary, planner)
-- [ ] Audit logging
-- [ ] Auto-sync
+- [ ] Settings (theme, notifications, mobile)
+- [ ] Support (contacts, FAQ, chat)
+- [ ] Offline support
 
-### Phase 9: Polish & Launch ❌ TODO
-**Timeline: Week 18-20**
+### Phase 10: Polish & Launch ❌ TODO
+**Timeline: Week 21-24**
 - [ ] Performance optimization
 - [ ] Testing & bug fixes
 - [ ] Security audit
+- [ ] Audit logging
 - [ ] App store deployment
 
 ---
@@ -2283,7 +3604,7 @@ on_fee_paid          → Update payment status
 
 ### Overall Progress
 ```
-██████░░░░░░░░░░░░░░ 30%
+██████░░░░░░░░░░░░░░ 25%
 ```
 
 ### By Module
@@ -2299,13 +3620,22 @@ on_fee_paid          → Update payment status
 | ↳ Mentor | ❌ Not Started | 0% |
 | ↳ Coordinator | ❌ Not Started | 0% |
 | ↳ HoD | ❌ Not Started | 0% |
-| Attendance | ❌ Not Started | 0% |
-| Exams & Results | ❌ Not Started | 0% |
-| Fees | ❌ Not Started | 0% |
+| **Student Module** | ❌ Not Started | 0% |
+| ↳ Dashboard | ❌ Not Started | 0% |
+| ↳ Attendance | ❌ Not Started | 0% |
+| ↳ Timetable | ❌ Not Started | 0% |
+| ↳ Assignments | ❌ Not Started | 0% |
+| ↳ Materials | ❌ Not Started | 0% |
+| ↳ Internal Marks | ❌ Not Started | 0% |
+| ↳ Exams | ❌ Not Started | 0% |
+| ↳ Library | ❌ Not Started | 0% |
+| ↳ Canteen | ❌ Not Started | 0% |
+| ↳ Bus | ❌ Not Started | 0% |
+| ↳ Fees | ❌ Not Started | 0% |
+| ↳ Events | ❌ Not Started | 0% |
+| ↳ Feedback | ❌ Not Started | 0% |
+| ↳ Honors/Minor | ❌ Not Started | 0% |
 | Notices | ⚠️ Partial | 30% |
-| Library | ❌ Not Started | 0% |
-| Transport | ❌ Not Started | 0% |
-| Profile | ❌ Not Started | 0% |
 | Reports | ❌ Not Started | 0% |
 | System Features | ❌ Not Started | 0% |
 
@@ -2315,10 +3645,10 @@ on_fee_paid          → Update payment status
 | Auth Screens | 4 | 0 | 4 |
 | Admin Screens | 5 | 15 | 20 |
 | Teacher Screens | 1 | 35 | 36 |
-| Student Screens | 1 | 10 | 11 |
-| UI Components | 6 | 15 | 21 |
-| Database Tables | 10 | 11 | 21 |
-| Zustand Stores | 3 | 10 | 13 |
+| Student Screens | 1 | 55 | 56 |
+| UI Components | 6 | 20 | 26 |
+| Database Tables | 10 | 25 | 35 |
+| Zustand Stores | 3 | 18 | 21 |
 
 ---
 
