@@ -26,7 +26,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   AnimatedBackground,
-  GlassCard,
   GlassInput,
   PrimaryButton,
   ThemeToggle,
@@ -981,26 +980,24 @@ export default function RegisterScreen() {
         >
           <Animated.View
             entering={FadeInUp.delay(200).duration(500)}
-            style={styles.cardContainer}
+            style={styles.contentContainer}
           >
-            <GlassCard style={styles.card}>
-              {/* Step Indicator */}
-              {renderStepIndicator()}
+            {/* Step Indicator */}
+            {renderStepIndicator()}
 
-              {/* Step Content */}
-              {renderStepContent()}
+            {/* Step Content */}
+            {renderStepContent()}
 
-              {/* Error Message */}
-              {error && (
-                <Animated.View
-                  entering={FadeInDown.duration(200)}
-                  style={styles.errorContainer}
-                >
-                  <Ionicons name="alert-circle" size={18} color="#f87171" />
-                  <Text style={styles.errorText}>{error}</Text>
-                </Animated.View>
-              )}
-            </GlassCard>
+            {/* Error Message */}
+            {error && (
+              <Animated.View
+                entering={FadeInDown.duration(200)}
+                style={styles.errorContainer}
+              >
+                <Ionicons name="alert-circle" size={18} color="#f87171" />
+                <Text style={styles.errorText}>{error}</Text>
+              </Animated.View>
+            )}
           </Animated.View>
         </ScrollView>
 
@@ -1082,13 +1079,10 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  cardContainer: {
+  contentContainer: {
     width: '100%',
     maxWidth: 500,
     alignSelf: 'center',
-  },
-  card: {
-    width: '100%',
   },
   stepIndicator: {
     flexDirection: 'row',

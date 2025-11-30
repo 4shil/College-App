@@ -9,7 +9,6 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,8 +24,6 @@ interface GlassInputProps extends TextInputProps {
   containerStyle?: ViewStyle;
   error?: boolean;
 }
-
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 export const GlassInput: React.FC<GlassInputProps> = ({
   icon,
@@ -62,61 +59,29 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           focusProgress.value,
           [0, 1],
           [
-            isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(148, 163, 184, 0.3)',
-            isDark ? 'rgba(139, 92, 246, 0.6)' : 'rgba(124, 58, 237, 0.5)',
+            isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            isDark ? 'rgba(139, 92, 246, 0.6)' : 'rgba(59, 130, 246, 0.5)',
           ]
         );
-    const shadowOpacity = interpolate(focusProgress.value, [0, 1], [0, 0.25]);
     
     return {
       borderColor,
-      shadowOpacity,
     };
   });
 
-  const animatedGlowStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(focusProgress.value, [0, 1], [0, 1]),
-    transform: [{ scale: interpolate(focusProgress.value, [0, 1], [0.98, 1]) }],
-  }));
-
   return (
     <Animated.View style={[styles.wrapper, animatedContainerStyle, containerStyle]}>
-      {/* Outer glow effect when focused */}
-      <Animated.View
-        style={[
-          styles.outerGlow,
-          {
-            shadowColor: error ? colors.error : '#8B5CF6',
-          },
-          animatedGlowStyle,
-        ]}
-      />
-
       <Animated.View
         style={[
           styles.container,
           {
-            backgroundColor: Platform.OS === 'android'
-              ? isDark
-                ? 'rgba(30, 30, 50, 0.9)'
-                : 'rgba(255, 255, 255, 0.85)'
-              : isDark
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(255, 255, 255, 0.7)',
-            shadowColor: '#8B5CF6',
+            backgroundColor: isDark
+              ? 'rgba(255, 255, 255, 0.08)'
+              : 'rgba(0, 0, 0, 0.05)',
           },
           animatedBorderStyle,
         ]}
       >
-        {/* Inner blur effect - iOS only */}
-        {Platform.OS === 'ios' && (
-          <BlurView
-            intensity={isDark ? 20 : 30}
-            tint={isDark ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
-        
         <View style={styles.innerContent}>
           {icon && (
             <Ionicons
@@ -124,8 +89,8 @@ export const GlassInput: React.FC<GlassInputProps> = ({
               size={20}
               color={
                 isFocused
-                  ? isDark ? '#8B5CF6' : '#7C3AED'
-                  : isDark ? 'rgba(255,255,255,0.45)' : 'rgba(100,116,139,0.6)'
+                  ? isDark ? '#8B5CF6' : '#3B82F6'
+                  : isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)'
               }
               style={styles.icon}
             />
@@ -134,15 +99,15 @@ export const GlassInput: React.FC<GlassInputProps> = ({
             style={[
               styles.input,
               {
-                color: colors.textPrimary,
+                color: isDark ? '#FFFFFF' : '#1F2937',
               },
             ]}
-            placeholderTextColor={isDark ? '#6B6B80' : '#94A3B8'}
+            placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
             secureTextEntry={isPassword && !showPassword}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             autoCapitalize="none"
-            selectionColor={isDark ? '#8B5CF6' : '#7C3AED'}
+            selectionColor={isDark ? '#8B5CF6' : '#3B82F6'}
             {...props}
           />
           {isPassword && (
@@ -154,7 +119,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
               <Ionicons
                 name={showPassword ? 'eye' : 'eye-off'}
                 size={20}
-                color={isDark ? 'rgba(255,255,255,0.45)' : 'rgba(100,116,139,0.6)'}
+                color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}
               />
             </TouchableOpacity>
           )}
@@ -168,38 +133,11 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'relative',
   },
-  outerGlow: {
-    position: 'absolute',
-    top: -3,
-    left: -3,
-    right: -3,
-    bottom: -3,
-    borderRadius: 18,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 12,
-        shadowOpacity: 0.3,
-      },
-      android: {},
-    }),
-  },
   container: {
-    borderRadius: 16,
-    borderWidth: 1.5,
-    height: 54,
+    borderRadius: 14,
+    borderWidth: 1,
+    height: 52,
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        shadowOpacity: 0.1,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   innerContent: {
     flex: 1,

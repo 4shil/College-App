@@ -39,7 +39,7 @@ interface SettingSection {
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark, toggleTheme } = useThemeStore();
+  const { colors, isDark, toggleTheme, animationsEnabled, toggleAnimations } = useThemeStore();
   const { user, profile, primaryRole, logout } = useAuthStore();
 
   const [notifications, setNotifications] = useState(true);
@@ -139,6 +139,17 @@ export default function SettingsScreen() {
           type: 'toggle',
           value: isDark,
           action: toggleTheme,
+        },
+        {
+          id: 'animations',
+          title: 'Background Animations',
+          subtitle: 'Enable animated background effects',
+          icon: 'sparkles',
+          iconType: 'ion',
+          color: '#f59e0b',
+          type: 'toggle',
+          value: animationsEnabled,
+          action: toggleAnimations,
         },
         {
           id: 'notifications',

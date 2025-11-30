@@ -3,32 +3,32 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-// Light theme colors - Purple/Blue theme
+// Light theme colors - Clean white with blue accents
 const lightColors = {
-  // Backgrounds
-  background: '#F8FAFC',
-  backgroundGradientStart: '#F8FAFC',
-  backgroundGradientEnd: '#E0E7FF',
+  // Backgrounds - pure white
+  background: '#FFFFFF',
+  backgroundGradientStart: '#FFFFFF',
+  backgroundGradientEnd: '#EFF6FF',
   
   // Glass effects
-  glassBackground: 'rgba(255, 255, 255, 0.72)',
-  glassBorder: 'rgba(255, 255, 255, 0.85)',
-  glassBackgroundStrong: 'rgba(255, 255, 255, 0.88)',
+  glassBackground: 'rgba(255, 255, 255, 0.85)',
+  glassBorder: 'rgba(0, 0, 0, 0.08)',
+  glassBackgroundStrong: 'rgba(255, 255, 255, 0.95)',
   
-  // Text
-  textPrimary: '#1E1E2E',
-  textSecondary: '#64748B',
-  textMuted: '#94A3B8',
+  // Text - darker for better contrast
+  textPrimary: '#1F2937',
+  textSecondary: '#4B5563',
+  textMuted: '#9CA3AF',
   textInverse: '#ffffff',
   
-  // Primary accent - Purple
-  primary: '#7C3AED',
-  primaryLight: '#8B5CF6',
-  primaryDark: '#6D28D9',
+  // Primary accent - blue
+  primary: '#3B82F6',
+  primaryLight: '#60A5FA',
+  primaryDark: '#2563EB',
   
-  // Secondary - Cyan
-  secondary: '#0891B2',
-  secondaryLight: '#06B6D4',
+  // Secondary - sky blue
+  secondary: '#0EA5E9',
+  secondaryLight: '#38BDF8',
   
   // Status colors
   success: '#16A34A',
@@ -37,17 +37,17 @@ const lightColors = {
   info: '#0891B2',
   
   // Input
-  inputBackground: 'rgba(255, 255, 255, 0.65)',
-  inputBorder: 'rgba(124, 58, 237, 0.2)',
-  inputFocusBorder: '#7C3AED',
-  placeholder: '#94A3B8',
+  inputBackground: 'rgba(0, 0, 0, 0.03)',
+  inputBorder: 'rgba(0, 0, 0, 0.1)',
+  inputFocusBorder: '#3B82F6',
+  placeholder: '#9CA3AF',
   
   // Card
-  cardBackground: 'rgba(255, 255, 255, 0.78)',
-  cardBorder: 'rgba(255, 255, 255, 0.9)',
+  cardBackground: 'rgba(255, 255, 255, 0.9)',
+  cardBorder: 'rgba(0, 0, 0, 0.06)',
   
   // Shadows
-  shadowColor: '#8B5CF6',
+  shadowColor: '#000000',
 };
 
 // Dark theme colors - Purple/Blue with glowing effects
@@ -101,10 +101,12 @@ interface ThemeState {
   mode: ThemeMode;
   isDark: boolean;
   colors: typeof lightColors;
+  animationsEnabled: boolean;
   
   // Actions
   setMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
+  toggleAnimations: () => void;
   setSystemTheme: (isDark: boolean) => void;
 }
 
@@ -114,6 +116,7 @@ export const useThemeStore = createStore<ThemeState>(
       mode: 'dark' as ThemeMode,
       isDark: true,
       colors: darkColors,
+      animationsEnabled: true,
 
       setMode: (mode: ThemeMode) => {
         const isDark = mode === 'dark' || (mode === 'system' && get().isDark);
@@ -132,6 +135,10 @@ export const useThemeStore = createStore<ThemeState>(
           isDark: newMode === 'dark',
           colors: newMode === 'dark' ? darkColors : lightColors,
         });
+      },
+
+      toggleAnimations: () => {
+        set({ animationsEnabled: !get().animationsEnabled });
       },
 
       setSystemTheme: (systemIsDark: boolean) => {

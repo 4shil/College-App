@@ -8,22 +8,18 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  TextInput,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, {
   FadeInDown,
-  FadeInUp,
-  SlideInUp,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   AnimatedBackground,
-  GlassCard,
-  GlassInput,
-  PrimaryButton,
   ThemeToggle,
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
@@ -45,7 +41,8 @@ export default function LoginScreen() {
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRoleCategory>('student');
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRoleCategory>('staff');
   const [loading, setLoadingState] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -160,209 +157,184 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Login Card */}
-          <Animated.View
-            entering={SlideInUp.delay(150).duration(600).springify().damping(18)}
-            style={styles.cardContainer}
-          >
-            <GlassCard style={styles.card}>
-              {/* Logo */}
-              <Animated.View
-                entering={FadeInDown.delay(250).duration(500).springify()}
-                style={styles.logoContainer}
+          {/* Content Container - No Card */}
+          <View style={styles.contentContainer}>
+            {/* Logo - College graduation cap */}
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={isDark ? ['#A78BFA', '#8B5CF6', '#7C3AED'] : ['#60A5FA', '#3B82F6', '#2563EB']}
+                style={styles.logoGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                <LinearGradient
-                  colors={isDark ? ['#A78BFA', '#8B5CF6', '#7C3AED'] : ['#8B5CF6', '#7C3AED', '#6D28D9']}
-                  style={styles.logoGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <FontAwesome5 name="graduation-cap" size={32} color="#fff" />
-                </LinearGradient>
-              </Animated.View>
+                <FontAwesome5 name="graduation-cap" size={32} color="#fff" />
+              </LinearGradient>
+            </View>
 
-              {/* Title */}
-              <Animated.View entering={FadeInDown.delay(300).duration(500).springify()}>
-                <Text style={[styles.title, { color: colors.textPrimary }]}>
-                  JPM College
-                </Text>
-                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                  Sign in to continue
-                </Text>
-              </Animated.View>
+            {/* Title */}
+            <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1F2937' }]}>JPM College</Text>
+            <Text style={[styles.subtitle, { color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)' }]}>Sign in to continue</Text>
 
-              {/* Role Selector - Only 2 tabs: Student and Staff */}
-              <Animated.View
-                entering={FadeInDown.delay(350).duration(500).springify()}
-                style={styles.roleContainer}
-              >
-                <Text style={[styles.roleLabel, { color: colors.textSecondary }]}>
-                  Login as
-                </Text>
-                <View style={styles.roleButtons}>
-                  {roles.map((role) => (
-                    <TouchableOpacity
-                      key={role.key}
-                      onPress={() => setSelectedRole(role.key)}
-                      style={[
-                        styles.roleButton,
-                        {
-                          backgroundColor:
-                            selectedRole === role.key
-                              ? isDark
-                                ? 'rgba(139, 92, 246, 0.15)'
-                                : 'rgba(124, 58, 237, 0.1)'
-                              : 'transparent',
-                          borderColor:
-                            selectedRole === role.key
-                              ? colors.primary
-                              : isDark
-                              ? 'rgba(255,255,255,0.1)'
-                              : 'rgba(0,0,0,0.08)',
-                        },
-                      ]}
-                      activeOpacity={0.7}
-                    >
-                      <FontAwesome5
-                        name={role.icon}
-                        size={18}
-                        color={
-                          selectedRole === role.key
-                            ? colors.primary
-                            : colors.textMuted
-                        }
-                      />
-                      <View style={styles.roleTextContainer}>
-                        <Text
-                          style={[
-                            styles.roleButtonText,
-                            {
-                              color:
-                                selectedRole === role.key
-                                  ? colors.primary
-                                  : colors.textMuted,
-                            },
-                          ]}
-                        >
-                          {role.label}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.roleDescription,
-                            {
-                              color:
-                                selectedRole === role.key
-                                  ? colors.textSecondary
-                                  : colors.textMuted,
-                            },
-                          ]}
-                        >
-                          {role.description}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </Animated.View>
+            {/* Role Selector */}
+            <View style={styles.roleContainer}>
+              <Text style={[styles.roleLabel, { color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)' }]}>Login as</Text>
+              <View style={styles.roleButtons}>
+                {roles.map((role) => (
+                  <TouchableOpacity
+                    key={role.key}
+                    onPress={() => setSelectedRole(role.key)}
+                    style={[
+                      styles.roleButton,
+                      { 
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      },
+                      selectedRole === role.key && {
+                        backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <FontAwesome5
+                      name={role.icon}
+                      size={18}
+                      color={selectedRole === role.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
+                    />
+                    <View style={styles.roleTextContainer}>
+                      <Text
+                        style={[
+                          styles.roleButtonText,
+                          { color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)' },
+                          selectedRole === role.key && { color: colors.primary },
+                        ]}
+                      >
+                        {role.label}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.roleDescription,
+                          { color: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.35)' },
+                          selectedRole === role.key && { color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)' },
+                        ]}
+                      >
+                        {role.description}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
 
-              {/* Input Fields */}
-              <Animated.View
-                entering={FadeInDown.delay(400).duration(500).springify()}
-                style={styles.inputsContainer}
-              >
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                  Email
-                </Text>
-                <GlassInput
-                  icon="mail-outline"
+            {/* Input Fields */}
+            <View style={styles.inputsContainer}>
+              <Text style={[styles.inputLabel, { color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)' }]}>Email / Username</Text>
+              <View style={[
+                styles.inputWrapper,
+                { 
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                }
+              ]}>
+                <TextInput
+                  style={[styles.input, { color: isDark ? '#FFFFFF' : '#1F2937' }]}
                   placeholder="Enter your email"
+                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   autoComplete="email"
-                  error={!!error && !email}
                 />
+              </View>
 
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { color: colors.textSecondary, marginTop: 18 },
-                  ]}
-                >
-                  Password
-                </Text>
-                <GlassInput
-                  icon="lock-closed-outline"
+              <Text style={[styles.inputLabel, { marginTop: 16, color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)' }]}>Password</Text>
+              <View style={[
+                styles.inputWrapper,
+                { 
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                }
+              ]}>
+                <TextInput
+                  style={[styles.input, { color: isDark ? '#FFFFFF' : '#1F2937' }]}
                   placeholder="Enter your password"
+                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
                   value={password}
                   onChangeText={setPassword}
-                  isPassword
-                  error={!!error && !password}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
                 />
-
-                {/* Error Message */}
-                {error && (
-                  <Animated.Text
-                    entering={FadeInDown.duration(250).springify()}
-                    style={styles.errorText}
-                  >
-                    {error}
-                  </Animated.Text>
-                )}
-
-                {/* Forgot Password */}
                 <TouchableOpacity
-                  style={styles.forgotPassword}
-                  onPress={() => router.push('/(auth)/forgot-password')}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
                 >
-                  <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
-                    Forgot password?
-                  </Text>
+                  <Ionicons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={20}
+                    color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}
+                  />
                 </TouchableOpacity>
-              </Animated.View>
+              </View>
 
-              {/* Sign In Button */}
-              <Animated.View entering={FadeInDown.delay(450).duration(500).springify()}>
-                <PrimaryButton
-                  title="Sign In"
-                  onPress={handleLogin}
-                  loading={loading}
-                  disabled={loading}
-                />
-              </Animated.View>
+              {/* Error Message */}
+              {error && (
+                <Animated.Text
+                  entering={FadeInDown.duration(250).springify()}
+                  style={styles.errorText}
+                >
+                  {error}
+                </Animated.Text>
+              )}
 
-              {/* Register / Contact Admin */}
-              <Animated.View
-                entering={FadeInDown.delay(500).duration(500).springify()}
-                style={styles.contactContainer}
+              {/* Forgot Password */}
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => router.push('/(auth)/forgot-password')}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                {selectedRole === 'student' ? (
-                  <>
-                    <Text style={[styles.contactText, { color: colors.textMuted }]}>
-                      New student?{' '}
-                    </Text>
-                    <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                      <Text style={[styles.contactLink, { color: colors.primary }]}>
-                        Register here
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <Text style={[styles.contactText, { color: colors.textMuted }]}>
-                      Need an account?{' '}
-                    </Text>
-                    <TouchableOpacity>
-                      <Text style={[styles.contactLink, { color: colors.primary }]}>
-                        Contact admin
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </Animated.View>
-            </GlassCard>
-          </Animated.View>
+                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Sign In Button */}
+            <TouchableOpacity
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+              style={styles.signInButtonWrapper}
+            >
+              <LinearGradient
+                colors={['#6366F1', '#4F46E5', '#7C3AED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.signInButton}
+              >
+                <Text style={styles.signInButtonText}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Register / Contact Admin */}
+            <View style={styles.contactContainer}>
+              {selectedRole === 'student' ? (
+                <>
+                  <Text style={[styles.contactText, { color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)' }]}>Don't have an account?{' '}</Text>
+                  <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                    <Text style={styles.contactLink}>Create an account</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.contactText, { color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)' }]}>Need an account?{' '}</Text>
+                  <TouchableOpacity>
+                    <Text style={styles.contactLink}>Contact admin</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </AnimatedBackground>
@@ -377,39 +349,43 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   themeToggleContainer: {
     position: 'absolute',
     right: 20,
     zIndex: 100,
   },
-  cardContainer: {
+  contentContainer: {
     width: '100%',
-    maxWidth: 400,
-  },
-  card: {
-    width: '100%',
+    maxWidth: 380,
+    paddingHorizontal: 4,
   },
   logoContainer: {
     alignSelf: 'center',
-    marginBottom: 22,
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 18,
-    elevation: 12,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
   logoGradient: {
-    width: 76,
-    height: 76,
-    borderRadius: 22,
+    width: 72,
+    height: 72,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 30,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '700',
     textAlign: 'center',
     letterSpacing: -0.5,
   },
@@ -417,10 +393,93 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     marginTop: 6,
-    marginBottom: 26,
+    marginBottom: 28,
+  },
+  inputsContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 0,
+  },
+  eyeButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  errorText: {
+    color: '#F87171',
+    fontSize: 13,
+    marginTop: 14,
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: 14,
+  },
+  forgotPasswordText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#818CF8',
+  },
+  signInButtonWrapper: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#6366F1',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  signInButton: {
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  signInButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  contactContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  contactText: {
+    fontSize: 14,
+  },
+  contactLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#F472B6',
   },
   roleContainer: {
-    marginBottom: 26,
+    marginBottom: 24,
   },
   roleLabel: {
     fontSize: 13,
@@ -438,9 +497,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 14,
     borderWidth: 1.5,
   },
   roleTextContainer: {
@@ -452,43 +511,6 @@ const styles = StyleSheet.create({
   },
   roleDescription: {
     fontSize: 10,
-    marginTop: 3,
-  },
-  inputsContainer: {
-    marginBottom: 22,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 10,
-    marginLeft: 4,
-  },
-  errorText: {
-    color: '#F87171',
-    fontSize: 13,
-    marginTop: 14,
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: 14,
-  },
-  forgotPasswordText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  contactContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-  },
-  contactText: {
-    fontSize: 14,
-  },
-  contactLink: {
-    fontSize: 14,
-    fontWeight: '700',
+    marginTop: 2,
   },
 });
