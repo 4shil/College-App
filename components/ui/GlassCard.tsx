@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withRepeat,
-  withSequence,
+  withSpring,
+  withDelay,
   Easing,
+  interpolate,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 
@@ -17,56 +18,94 @@ interface GlassCardProps {
   intensity?: number;
   floating?: boolean;
   glowColor?: string;
+  delay?: number;
+  variant?: 'default' | 'elevated' | 'subtle';
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({
   children,
   style,
-  intensity = 40,
-  floating = true,
+  intensity = 50,
+  floating = false,
   glowColor,
+  delay = 0,
+  variant = 'default',
 }) => {
-  const { isDark, colors } = useThemeStore();
-  const floatY = useSharedValue(0);
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
+  const { isDark } = useThemeStore();
+  const progress = useSharedValue(0);
 
   useEffect(() => {
-    // Entrance animation
-    opacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
-    translateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.ease) });
+    progress.value = withDelay(
+      delay,
+      withSpring(1, {
+        damping: 20,
+        stiffness: 90,
+        mass: 1,
+      })
+    );
+  }, []);
 
-    // Floating animation
-    if (floating) {
-      floatY.value = withRepeat(
-        withSequence(
-          withTiming(3, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
-          withTiming(-3, { duration: 2500, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
+  const animatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(progress.value, [0, 1], [30, 0]);
+    const opacity = interpolate(progress.value, [0, 0.5, 1], [0, 0.5, 1]);
+    const scale = interpolate(progress.value, [0, 1], [0.95, 1]);
+
+    return {
+      opacity,
+      transform: [
+        { translateY },
+        { scale },
+      ],
+    };
+  });
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'elevated':
+        return {
+          shadowOpacity: isDark ? 0.4 : 0.15,
+          shadowRadius: 25,
+          backgroundColor: isDark
+            ? 'rgba(255, 255, 255, 0.08)'
+            : 'rgba(255, 255, 255, 0.85)',
+        };
+      case 'subtle':
+        return {
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          backgroundColor: isDark
+            ? 'rgba(255, 255, 255, 0.03)'
+            : 'rgba(255, 255, 255, 0.5)',
+        };
+      default:
+        return {
+          shadowOpacity: isDark ? 0.3 : 0.12,
+          shadowRadius: 20,
+          backgroundColor: isDark
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(255, 255, 255, 0.7)',
+        };
     }
-  }, [floating]);
+  };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value + floatY.value }],
-  }));
+  const variantStyles = getVariantStyles();
+  const defaultGlowColor = isDark ? '#8B5CF6' : '#6366f1';
 
   return (
     <Animated.View
       style={[
         styles.wrapper,
         {
-          shadowColor: glowColor || (isDark ? '#8B5CF6' : '#6366f1'),
+          shadowColor: glowColor || defaultGlowColor,
+          shadowOpacity: variantStyles.shadowOpacity,
+          shadowRadius: variantStyles.shadowRadius,
         },
         animatedStyle,
         style,
       ]}
     >
       <BlurView
-        intensity={intensity}
+        intensity={Platform.OS === 'ios' ? intensity : intensity * 1.5}
         style={styles.blur}
         tint={isDark ? 'dark' : 'light'}
       >
@@ -74,15 +113,25 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           style={[
             styles.content,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(255, 255, 255, 0.7)',
+              backgroundColor: variantStyles.backgroundColor,
               borderColor: isDark
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(255, 255, 255, 0.8)',
+                ? 'rgba(255, 255, 255, 0.08)'
+                : 'rgba(255, 255, 255, 0.9)',
             },
           ]}
         >
+          {/* Inner glow effect */}
+          <View
+            style={[
+              styles.innerGlow,
+              {
+                backgroundColor: isDark
+                  ? 'rgba(139, 92, 246, 0.03)'
+                  : 'rgba(99, 102, 241, 0.02)',
+              },
+            ]}
+            pointerEvents="none"
+          />
           {children}
         </View>
       </BlurView>
@@ -92,21 +141,30 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 30,
-    elevation: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 15,
   },
   blur: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   content: {
-    padding: 28,
-    borderRadius: 24,
+    padding: 20,
+    borderRadius: 20,
     borderWidth: 1,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  innerGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
 });
 

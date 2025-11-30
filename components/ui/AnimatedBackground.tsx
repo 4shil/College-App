@@ -8,83 +8,82 @@ import Animated, {
   withSequence,
   withTiming,
   withDelay,
+  withSpring,
   Easing,
+  interpolate,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 
 const { width, height } = Dimensions.get('window');
 
-interface FloatingBlobProps {
-  colors: string[];
+// Glowing orb component for ambient lighting effect
+interface GlowOrbProps {
+  color: string;
   size: number;
-  initialX: number;
-  initialY: number;
-  duration?: number;
+  x: number;
+  y: number;
   delay?: number;
+  intensity?: number;
 }
 
-export const FloatingBlob: React.FC<FloatingBlobProps> = ({
-  colors,
+export const GlowOrb: React.FC<GlowOrbProps> = ({
+  color,
   size,
-  initialX,
-  initialY,
-  duration = 10000,
+  x,
+  y,
   delay = 0,
+  intensity = 0.6,
 }) => {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(intensity * 0.5);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(0.5);
 
   useEffect(() => {
-    // Horizontal floating
-    translateX.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(40, { duration, easing: Easing.inOut(Easing.ease) }),
-          withTiming(-40, { duration, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: duration * 0.5, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      )
-    );
-
-    // Vertical floating
-    translateY.value = withDelay(
-      delay + 500,
-      withRepeat(
-        withSequence(
-          withTiming(-35, { duration: duration * 0.8, easing: Easing.inOut(Easing.ease) }),
-          withTiming(35, { duration: duration * 0.8, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: duration * 0.4, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      )
-    );
-
-    // Scale breathing
+    // Smooth pulsing glow
     scale.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(1.08, { duration: duration * 1.2, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.95, { duration: duration * 1.2, easing: Easing.inOut(Easing.ease) })
+          withTiming(1.15, { duration: 4000, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
+          withTiming(0.9, { duration: 4000, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
         ),
         -1,
         true
       )
     );
 
-    // Opacity pulse
     opacity.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(0.6, { duration: duration * 0.8, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.4, { duration: duration * 0.8, easing: Easing.inOut(Easing.ease) })
+          withTiming(intensity * 0.8, { duration: 3000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+          withTiming(intensity * 0.4, { duration: 3000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    // Subtle drift movement
+    translateX.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(20, { duration: 8000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+          withTiming(-20, { duration: 8000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    translateY.value = withDelay(
+      delay + 1000,
+      withRepeat(
+        withSequence(
+          withTiming(-15, { duration: 6000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+          withTiming(15, { duration: 6000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
         ),
         -1,
         true
@@ -106,90 +105,151 @@ export const FloatingBlob: React.FC<FloatingBlobProps> = ({
       style={[
         {
           position: 'absolute',
-          left: initialX,
-          top: initialY,
+          left: x - size / 2,
+          top: y - size / 2,
           width: size,
           height: size,
-          borderRadius: size / 2,
         },
         animatedStyle,
       ]}
     >
-      <LinearGradient
-        colors={colors as [string, string, ...string[]]}
+      <View
         style={{
           width: size,
           height: size,
           borderRadius: size / 2,
+          backgroundColor: color,
+          shadowColor: color,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 1,
+          shadowRadius: size / 2,
+          elevation: 0,
         }}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
       />
     </Animated.View>
   );
 };
 
+// Legacy FloatingBlob for backwards compatibility (not used in new design)
+export const FloatingBlob: React.FC<{
+  colors: string[];
+  size: number;
+  initialX: number;
+  initialY: number;
+  duration?: number;
+  delay?: number;
+}> = () => null;
+
 interface AnimatedBackgroundProps {
   children: React.ReactNode;
+  variant?: 'default' | 'auth' | 'minimal';
 }
 
-export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ children }) => {
-  const { isDark, colors } = useThemeStore();
+export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ 
+  children,
+  variant = 'default',
+}) => {
+  const { isDark } = useThemeStore();
+  const fadeIn = useSharedValue(0);
 
-  const darkBlobs = [
-    { colors: ['#8B5CF6', '#3B82F6'], size: 320, x: -120, y: height * 0.05, duration: 12000, delay: 0 },
-    { colors: ['#EC4899', '#8B5CF6'], size: 280, x: width - 80, y: height * 0.35, duration: 14000, delay: 2000 },
-    { colors: ['#06B6D4', '#3B82F6'], size: 240, x: width * 0.2, y: height * 0.65, duration: 10000, delay: 1000 },
-    { colors: ['#F59E0B', '#EF4444'], size: 200, x: width * 0.6, y: height * 0.85, duration: 11000, delay: 3000 },
+  useEffect(() => {
+    fadeIn.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.ease) });
+  }, []);
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: fadeIn.value,
+  }));
+
+  // Dark theme gradient colors - deep blue to purple
+  const darkGradient: [string, string, string, string] = [
+    '#0a0a1a', // Very dark blue-black
+    '#0f0f2e', // Dark indigo
+    '#1a1040', // Deep purple
+    '#0d0d24', // Dark blue
   ];
 
-  const lightBlobs = [
-    { colors: ['#c7d2fe', '#a5b4fc'], size: 320, x: -120, y: height * 0.05, duration: 12000, delay: 0 },
-    { colors: ['#fce7f3', '#f5d0fe'], size: 280, x: width - 80, y: height * 0.35, duration: 14000, delay: 2000 },
-    { colors: ['#cffafe', '#bae6fd'], size: 240, x: width * 0.2, y: height * 0.65, duration: 10000, delay: 1000 },
-    { colors: ['#fef3c7', '#fde68a'], size: 200, x: width * 0.6, y: height * 0.85, duration: 11000, delay: 3000 },
+  // Light theme gradient colors
+  const lightGradient: [string, string, string, string] = [
+    '#f8fafc',
+    '#eef2ff', 
+    '#e0e7ff',
+    '#f1f5f9',
   ];
 
-  const blobs = isDark ? darkBlobs : lightBlobs;
+  // Glow orbs configuration
+  const glowOrbs = isDark ? [
+    { color: 'rgba(99, 102, 241, 0.4)', size: 400, x: width * 0.2, y: height * 0.15, delay: 0, intensity: 0.5 },
+    { color: 'rgba(139, 92, 246, 0.35)', size: 350, x: width * 0.8, y: height * 0.3, delay: 1000, intensity: 0.45 },
+    { color: 'rgba(59, 130, 246, 0.3)', size: 300, x: width * 0.1, y: height * 0.6, delay: 2000, intensity: 0.4 },
+    { color: 'rgba(168, 85, 247, 0.25)', size: 280, x: width * 0.9, y: height * 0.75, delay: 500, intensity: 0.35 },
+    { color: 'rgba(79, 70, 229, 0.3)', size: 320, x: width * 0.5, y: height * 0.9, delay: 1500, intensity: 0.4 },
+  ] : [
+    { color: 'rgba(99, 102, 241, 0.15)', size: 400, x: width * 0.2, y: height * 0.15, delay: 0, intensity: 0.25 },
+    { color: 'rgba(139, 92, 246, 0.12)', size: 350, x: width * 0.8, y: height * 0.3, delay: 1000, intensity: 0.2 },
+    { color: 'rgba(59, 130, 246, 0.1)', size: 300, x: width * 0.1, y: height * 0.6, delay: 2000, intensity: 0.18 },
+  ];
 
   return (
     <View style={styles.container}>
-      {/* Base gradient */}
+      {/* Main gradient background */}
       <LinearGradient
-        colors={
-          isDark
-            ? ['#0f172a', '#1e1b4b', '#312e81']
-            : ['#e0e7ff', '#f0f9ff', '#f8fafc']
-        }
+        colors={isDark ? darkGradient : lightGradient}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
+        locations={[0, 0.3, 0.7, 1]}
       />
 
-      {/* Radial glow */}
-      <View
+      {/* Secondary overlay gradient for depth */}
+      <LinearGradient
+        colors={
+          isDark
+            ? ['transparent', 'rgba(99, 102, 241, 0.08)', 'rgba(139, 92, 246, 0.12)', 'transparent']
+            : ['transparent', 'rgba(99, 102, 241, 0.05)', 'rgba(139, 92, 246, 0.03)', 'transparent']
+        }
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0.2 }}
+        end={{ x: 1, y: 0.8 }}
+      />
+
+      {/* Animated glow orbs */}
+      <Animated.View style={[StyleSheet.absoluteFillObject, containerStyle]}>
+        {variant !== 'minimal' && glowOrbs.map((orb, index) => (
+          <GlowOrb
+            key={index}
+            color={orb.color}
+            size={orb.size}
+            x={orb.x}
+            y={orb.y}
+            delay={orb.delay}
+            intensity={orb.intensity}
+          />
+        ))}
+      </Animated.View>
+
+      {/* Top radial glow */}
+      {isDark && (
+        <View style={styles.topGlow}>
+          <LinearGradient
+            colors={['rgba(99, 102, 241, 0.15)', 'transparent']}
+            style={StyleSheet.absoluteFillObject}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+        </View>
+      )}
+
+      {/* Noise texture overlay for depth (simulated) */}
+      <View 
         style={[
-          styles.radialGlow,
-          {
-            backgroundColor: isDark
-              ? 'rgba(139, 92, 246, 0.12)'
-              : 'rgba(99, 102, 241, 0.08)',
-          },
-        ]}
+          StyleSheet.absoluteFillObject, 
+          { 
+            backgroundColor: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.02)',
+            opacity: 0.5,
+          }
+        ]} 
+        pointerEvents="none"
       />
-
-      {/* Floating blobs */}
-      {blobs.map((blob, index) => (
-        <FloatingBlob
-          key={index}
-          colors={blob.colors}
-          size={blob.size}
-          initialX={blob.x}
-          initialY={blob.y}
-          duration={blob.duration}
-          delay={blob.delay}
-        />
-      ))}
 
       {/* Content */}
       {children}
@@ -200,14 +260,14 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ children
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0a0a1a',
   },
-  radialGlow: {
+  topGlow: {
     position: 'absolute',
-    width: width * 1.5,
-    height: width * 1.5,
-    borderRadius: width * 0.75,
-    top: height * 0.15,
-    left: -width * 0.25,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.4,
   },
 });
 
