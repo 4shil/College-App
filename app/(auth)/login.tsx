@@ -171,7 +171,7 @@ export default function LoginScreen() {
                 style={styles.logoContainer}
               >
                 <LinearGradient
-                  colors={isDark ? ['#818cf8', '#6366f1'] : ['#6366f1', '#4f46e5']}
+                  colors={isDark ? ['#A78BFA', '#8B5CF6', '#7C3AED'] : ['#8B5CF6', '#7C3AED', '#6D28D9']}
                   style={styles.logoGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -209,8 +209,8 @@ export default function LoginScreen() {
                           backgroundColor:
                             selectedRole === role.key
                               ? isDark
-                                ? 'rgba(129, 140, 248, 0.2)'
-                                : 'rgba(99, 102, 241, 0.1)'
+                                ? 'rgba(167, 139, 250, 0.15)'
+                                : 'rgba(139, 92, 246, 0.1)'
                               : 'transparent',
                           borderColor:
                             selectedRole === role.key

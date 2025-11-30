@@ -3,98 +3,98 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-// Light theme colors - Clean and minimal
+// Light theme colors - Warm and beautiful
 const lightColors = {
   // Backgrounds
-  background: '#f8fafc',
-  backgroundGradientStart: '#f1f5f9',
-  backgroundGradientEnd: '#e0e7ff',
+  background: '#FFFBF5',
+  backgroundGradientStart: '#FFF8F0',
+  backgroundGradientEnd: '#FFE4D6',
   
   // Glass effects
-  glassBackground: 'rgba(255, 255, 255, 0.75)',
-  glassBorder: 'rgba(255, 255, 255, 0.9)',
-  glassBackgroundStrong: 'rgba(255, 255, 255, 0.85)',
+  glassBackground: 'rgba(255, 255, 255, 0.72)',
+  glassBorder: 'rgba(255, 255, 255, 0.85)',
+  glassBackgroundStrong: 'rgba(255, 255, 255, 0.88)',
   
   // Text
-  textPrimary: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
+  textPrimary: '#1C1917',
+  textSecondary: '#57534E',
+  textMuted: '#A8A29E',
   textInverse: '#ffffff',
   
-  // Primary accent - Purple
-  primary: '#7C3AED',
-  primaryLight: '#A78BFA',
-  primaryDark: '#6D28D9',
+  // Primary accent - Warm Orange
+  primary: '#EA580C',
+  primaryLight: '#FB923C',
+  primaryDark: '#C2410C',
   
-  // Secondary - Indigo
-  secondary: '#6366F1',
-  secondaryLight: '#818CF8',
+  // Secondary - Amber
+  secondary: '#D97706',
+  secondaryLight: '#FBBF24',
   
   // Status colors
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  info: '#06b6d4',
+  success: '#16A34A',
+  warning: '#EAB308',
+  error: '#DC2626',
+  info: '#0891B2',
   
   // Input
-  inputBackground: 'rgba(255, 255, 255, 0.7)',
-  inputBorder: 'rgba(124, 58, 237, 0.2)',
-  inputFocusBorder: '#7C3AED',
-  placeholder: '#94a3b8',
+  inputBackground: 'rgba(255, 255, 255, 0.65)',
+  inputBorder: 'rgba(234, 88, 12, 0.2)',
+  inputFocusBorder: '#EA580C',
+  placeholder: '#A8A29E',
   
   // Card
-  cardBackground: 'rgba(255, 255, 255, 0.8)',
+  cardBackground: 'rgba(255, 255, 255, 0.78)',
   cardBorder: 'rgba(255, 255, 255, 0.9)',
   
   // Shadows
-  shadowColor: '#7C3AED',
+  shadowColor: '#EA580C',
 };
 
-// Dark theme colors - Deep blue-purple with glowing effects
+// Dark theme colors - Deep warm tones with glowing effects
 const darkColors = {
   // Backgrounds
-  background: '#0a0a1a',
-  backgroundGradientStart: '#0a0a1a',
-  backgroundGradientEnd: '#1a1040',
+  background: '#0C0A09',
+  backgroundGradientStart: '#0C0A09',
+  backgroundGradientEnd: '#1C1410',
   
   // Glass effects
-  glassBackground: 'rgba(255, 255, 255, 0.05)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
-  glassBackgroundStrong: 'rgba(255, 255, 255, 0.08)',
+  glassBackground: 'rgba(255, 255, 255, 0.06)',
+  glassBorder: 'rgba(255, 255, 255, 0.1)',
+  glassBackgroundStrong: 'rgba(255, 255, 255, 0.1)',
   
   // Text
-  textPrimary: '#f8fafc',
-  textSecondary: '#cbd5e1',
-  textMuted: '#64748b',
-  textInverse: '#0f172a',
+  textPrimary: '#FAFAF9',
+  textSecondary: '#D6D3D1',
+  textMuted: '#78716C',
+  textInverse: '#0C0A09',
   
-  // Primary accent - Vibrant Purple
-  primary: '#A78BFA',
-  primaryLight: '#C4B5FD',
-  primaryDark: '#8B5CF6',
+  // Primary accent - Warm Orange Glow
+  primary: '#FB923C',
+  primaryLight: '#FDBA74',
+  primaryDark: '#EA580C',
   
-  // Secondary - Bright Indigo
-  secondary: '#818CF8',
-  secondaryLight: '#A5B4FC',
+  // Secondary - Golden Amber
+  secondary: '#FBBF24',
+  secondaryLight: '#FDE68A',
   
   // Status colors
-  success: '#34d399',
-  warning: '#fbbf24',
-  error: '#f87171',
-  info: '#22d3ee',
+  success: '#4ADE80',
+  warning: '#FACC15',
+  error: '#F87171',
+  info: '#22D3EE',
   
   // Input
-  inputBackground: 'rgba(255, 255, 255, 0.03)',
-  inputBorder: 'rgba(139, 92, 246, 0.2)',
-  inputFocusBorder: '#A78BFA',
-  placeholder: '#64748b',
+  inputBackground: 'rgba(255, 255, 255, 0.04)',
+  inputBorder: 'rgba(251, 146, 60, 0.25)',
+  inputFocusBorder: '#FB923C',
+  placeholder: '#78716C',
   
   // Card
-  cardBackground: 'rgba(255, 255, 255, 0.05)',
-  cardBorder: 'rgba(255, 255, 255, 0.08)',
+  cardBackground: 'rgba(255, 255, 255, 0.06)',
+  cardBorder: 'rgba(255, 255, 255, 0.1)',
   
   // Shadows
-  shadowColor: '#8B5CF6',
+  shadowColor: '#EA580C',
 };
 
 interface ThemeState {

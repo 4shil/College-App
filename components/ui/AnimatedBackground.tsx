@@ -8,9 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
   withDelay,
-  withSpring,
   Easing,
-  interpolate,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 
@@ -40,13 +38,13 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
   const translateY = useSharedValue(0);
 
   useEffect(() => {
-    // Smooth pulsing glow
+    // Buttery smooth pulsing with longer duration
     scale.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(1.15, { duration: 4000, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
-          withTiming(0.9, { duration: 4000, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
+          withTiming(1.2, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.85, { duration: 5000, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
@@ -57,21 +55,21 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
       delay,
       withRepeat(
         withSequence(
-          withTiming(intensity * 0.8, { duration: 3000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-          withTiming(intensity * 0.4, { duration: 3000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+          withTiming(intensity * 0.9, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(intensity * 0.35, { duration: 4000, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
       )
     );
 
-    // Subtle drift movement
+    // Very smooth drift movement
     translateX.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(20, { duration: 8000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-          withTiming(-20, { duration: 8000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+          withTiming(25, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-25, { duration: 10000, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
@@ -79,11 +77,11 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
     );
 
     translateY.value = withDelay(
-      delay + 1000,
+      delay + 500,
       withRepeat(
         withSequence(
-          withTiming(-15, { duration: 6000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-          withTiming(15, { duration: 6000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+          withTiming(-20, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(20, { duration: 8000, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
         true
@@ -122,7 +120,7 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
           shadowColor: color,
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
-          shadowRadius: size / 2,
+          shadowRadius: size / 2.5,
           elevation: 0,
         }}
       />
@@ -153,40 +151,40 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   const fadeIn = useSharedValue(0);
 
   useEffect(() => {
-    fadeIn.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.ease) });
+    fadeIn.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
   }, []);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: fadeIn.value,
   }));
 
-  // Dark theme gradient colors - deep blue to purple
+  // Dark theme gradient - warm deep brown/orange tones
   const darkGradient: [string, string, string, string] = [
-    '#0a0a1a', // Very dark blue-black
-    '#0f0f2e', // Dark indigo
-    '#1a1040', // Deep purple
-    '#0d0d24', // Dark blue
+    '#0C0A09', // Very dark warm black
+    '#1C1410', // Deep brown
+    '#231815', // Warm dark brown
+    '#0F0C0A', // Near black
   ];
 
-  // Light theme gradient colors
+  // Light theme gradient - warm cream/peach
   const lightGradient: [string, string, string, string] = [
-    '#f8fafc',
-    '#eef2ff', 
-    '#e0e7ff',
-    '#f1f5f9',
+    '#FFFBF5',
+    '#FFF5EB', 
+    '#FFE8D6',
+    '#FFF8F0',
   ];
 
-  // Glow orbs configuration
+  // Warm glow orbs - orange, amber, rose tones
   const glowOrbs = isDark ? [
-    { color: 'rgba(99, 102, 241, 0.4)', size: 400, x: width * 0.2, y: height * 0.15, delay: 0, intensity: 0.5 },
-    { color: 'rgba(139, 92, 246, 0.35)', size: 350, x: width * 0.8, y: height * 0.3, delay: 1000, intensity: 0.45 },
-    { color: 'rgba(59, 130, 246, 0.3)', size: 300, x: width * 0.1, y: height * 0.6, delay: 2000, intensity: 0.4 },
-    { color: 'rgba(168, 85, 247, 0.25)', size: 280, x: width * 0.9, y: height * 0.75, delay: 500, intensity: 0.35 },
-    { color: 'rgba(79, 70, 229, 0.3)', size: 320, x: width * 0.5, y: height * 0.9, delay: 1500, intensity: 0.4 },
+    { color: 'rgba(251, 146, 60, 0.35)', size: 380, x: width * 0.15, y: height * 0.12, delay: 0, intensity: 0.55 },
+    { color: 'rgba(234, 88, 12, 0.3)', size: 320, x: width * 0.85, y: height * 0.28, delay: 800, intensity: 0.45 },
+    { color: 'rgba(251, 191, 36, 0.28)', size: 300, x: width * 0.08, y: height * 0.58, delay: 1600, intensity: 0.42 },
+    { color: 'rgba(248, 113, 113, 0.22)', size: 260, x: width * 0.92, y: height * 0.72, delay: 400, intensity: 0.35 },
+    { color: 'rgba(253, 186, 116, 0.25)', size: 290, x: width * 0.5, y: height * 0.88, delay: 1200, intensity: 0.4 },
   ] : [
-    { color: 'rgba(99, 102, 241, 0.15)', size: 400, x: width * 0.2, y: height * 0.15, delay: 0, intensity: 0.25 },
-    { color: 'rgba(139, 92, 246, 0.12)', size: 350, x: width * 0.8, y: height * 0.3, delay: 1000, intensity: 0.2 },
-    { color: 'rgba(59, 130, 246, 0.1)', size: 300, x: width * 0.1, y: height * 0.6, delay: 2000, intensity: 0.18 },
+    { color: 'rgba(251, 146, 60, 0.18)', size: 380, x: width * 0.15, y: height * 0.12, delay: 0, intensity: 0.28 },
+    { color: 'rgba(234, 88, 12, 0.14)', size: 320, x: width * 0.85, y: height * 0.28, delay: 800, intensity: 0.22 },
+    { color: 'rgba(251, 191, 36, 0.12)', size: 300, x: width * 0.08, y: height * 0.58, delay: 1600, intensity: 0.2 },
   ];
 
   return (
@@ -197,15 +195,15 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        locations={[0, 0.3, 0.7, 1]}
+        locations={[0, 0.35, 0.7, 1]}
       />
 
-      {/* Secondary overlay gradient for depth */}
+      {/* Secondary overlay gradient for depth - warm tones */}
       <LinearGradient
         colors={
           isDark
-            ? ['transparent', 'rgba(99, 102, 241, 0.08)', 'rgba(139, 92, 246, 0.12)', 'transparent']
-            : ['transparent', 'rgba(99, 102, 241, 0.05)', 'rgba(139, 92, 246, 0.03)', 'transparent']
+            ? ['transparent', 'rgba(251, 146, 60, 0.06)', 'rgba(234, 88, 12, 0.08)', 'transparent']
+            : ['transparent', 'rgba(251, 146, 60, 0.04)', 'rgba(251, 191, 36, 0.03)', 'transparent']
         }
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0, y: 0.2 }}
@@ -227,11 +225,11 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         ))}
       </Animated.View>
 
-      {/* Top radial glow */}
+      {/* Top warm radial glow */}
       {isDark && (
         <View style={styles.topGlow}>
           <LinearGradient
-            colors={['rgba(99, 102, 241, 0.15)', 'transparent']}
+            colors={['rgba(251, 146, 60, 0.12)', 'transparent']}
             style={StyleSheet.absoluteFillObject}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
@@ -239,13 +237,13 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         </View>
       )}
 
-      {/* Noise texture overlay for depth (simulated) */}
+      {/* Subtle noise texture overlay */}
       <View 
         style={[
           StyleSheet.absoluteFillObject, 
           { 
-            backgroundColor: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.02)',
-            opacity: 0.5,
+            backgroundColor: isDark ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.015)',
+            opacity: 0.4,
           }
         ]} 
         pointerEvents="none"
@@ -260,14 +258,14 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: '#0C0A09',
   },
   topGlow: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.4,
+    height: height * 0.35,
   },
 });
 

@@ -81,7 +81,7 @@ export default function AdminDashboard() {
       title: 'Departments',
       icon: 'building',
       iconType: 'fa5',
-      color: '#6366f1',
+      color: '#8B5CF6',
       route: '/(admin)/academic/departments',
     },
     {
@@ -292,9 +292,9 @@ export default function AdminDashboard() {
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
           <View style={styles.statsGrid}>
-            {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#6366f1', 200)}
+            {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200)}
             {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#10b981', 250)}
-            {renderStatCard('Departments', stats.totalDepartments, 'building', '#f59e0b', 300)}
+            {renderStatCard('Departments', stats.totalDepartments, 'building', '#A78BFA', 300)}
             {renderStatCard('Courses', stats.totalCourses, 'book', '#ef4444', 350)}
           </View>
         </Animated.View>
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
               </View>
             </View>
             <View style={styles.activityItem}>
-              <View style={[styles.activityDot, { backgroundColor: '#6366f1' }]} />
+              <View style={[styles.activityDot, { backgroundColor: '#8B5CF6' }]} />
               <View style={styles.activityContent}>
                 <Text style={[styles.activityText, { color: colors.textPrimary }]}>
                   Exam timetable published
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
     borderRadius: 12,
     alignSelf: 'flex-start',
   },
