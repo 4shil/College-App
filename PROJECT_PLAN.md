@@ -607,17 +607,17 @@ export function usePendingApprovals() {
 
 ## 👥 User Roles & Hierarchy
 
-### 🔴 Admin Roles (Category: `admin`)
+### 🔴 Admin Roles (9 TRUE ADMIN ROLES)
 ```
-├── super_admin          → Full system access
-├── principal            → College principal (Approves diaries/planners)
-├── department_admin     → Department level admin
-├── hod                  → Head of Department (Approves planners/diaries/leaves)
-├── exam_cell_admin      → Manages exams & results
-├── library_admin        → Manages library
-├── bus_admin            → Manages transportation
-├── canteen_admin        → Manages canteen
-└── finance_admin        → Manages fees & finances
+├── super_admin          → GOD MODE - Full system access to everything
+├── principal            → Academic top authority (Approver, not operational)
+├── department_admin     → Department-level user & info management
+├── hod                  → Head of Department (Teacher role with admin powers)
+├── exam_cell_admin      → Exam scheduling + marks verification
+├── library_admin        → Full library management
+├── bus_admin            → Transportation management
+├── canteen_admin        → Canteen token system management
+└── finance_admin        → Fee and payment management
 ```
 
 ### 🟡 Teacher Roles (Category: `teacher`) - STACKED HIERARCHY
@@ -629,24 +629,33 @@ export function usePendingApprovals() {
 └── hod                  → + Department head (highest teacher role)
 ```
 
+📌 **Only 9 Admin roles = TRUE ADMIN ROLES**
+📌 **All teaching roles (Coordinator, Class Teacher, Subject Teacher) are NOT admins**
+
 ### 🟢 Student Role (Category: `student`)
 ```
 └── student              → Regular enrolled student
 ```
 
 ### Role Permissions Matrix (Updated 2025)
-| Feature | Super Admin | Principal | HOD | Class Teacher | Subject Teacher | Student |
-|---------|-------------|-----------|-----|---------------|-----------------|---------|
-| Manage Users | ✅ | ✅ | ⚠️ Dept | ❌ | ❌ | ❌ |
-| View All Students | ✅ | ✅ | ✅ Dept | ✅ Class | ✅ Subject | ❌ |
-| Manage Courses | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Take Attendance | ✅ | ✅ | ✅ | ✅ | ✅ Own Subject | ❌ |
-| Enter Internal Marks | ✅ | ✅ | ✅ | ✅ | ✅ Own Subject | ❌ |
-| Enter External Marks | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ Own |
-| Approve Lesson Planner | ✅ | ✅ Final | ✅ First | ❌ | ❌ | ❌ |
-| Approve Work Diary | ✅ | ✅ Final | ✅ First | ❌ | ❌ | ❌ |
-| Assign Substitutes | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Post Notices | ✅ | ✅ | ✅ Dept | ✅ Class | ✅ Subject | ❌ |
+| Feature | Super Admin | Principal | Dept Admin | HOD | Exam Cell | Library | Bus | Canteen | Finance |
+|---------|-------------|-----------|------------|-----|-----------|---------|-----|---------|---------|
+| Full System Access | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Create/Delete Admins | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| View All Users | ✅ | ✅ | ⚠️ Dept | ⚠️ Dept | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Block/Unblock Users | ✅ | ✅ | ⚠️ Dept | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Academic Structure | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Timetable Control | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Exam Scheduling | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Verify Marks | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Approve Planner | ✅ | ⚠️ Monitor | ❌ | ✅ Level 1 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Approve Diary | ✅ | ✅ Final | ❌ | ✅ Level 1 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Library Management | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Bus Management | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Canteen Management | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Fee Management | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Post Notices | ✅ | ✅ | ⚠️ Dept | ⚠️ Dept | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Global Settings | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -1372,16 +1381,1081 @@ CREATE TABLE audit_logs (
 
 ---
 
-## 🎓 STUDENT MODULE — COMPLETE FEATURE SPECIFICATION (2025)
+## 🟥 ADMIN MODULE — COMPLETE FEATURE SPECIFICATION (2025)
 
 ### ⚡ System Rules Applied
-- ✅ **Mobile OTP registration** (Student creates account with OTP)
-- ✅ **Email login after registration**
+- ✅ **Email-only login** (NO phone login anywhere)
+- ✅ **Super Admin = God Mode** (Full access to everything)
+- ✅ **Only 9 TRUE Admin roles** (Teaching roles are NOT admins)
+- ✅ **Admin sets exam dates** → Teachers upload internal marks → Students upload external marks
+- ✅ **Exam Cell Admin verifies both internal & external marks** (NO marks upload by admin)
+- ✅ **Events = External Link only** (NO QR, NO internal registration, NO attendance tracking)
+- ✅ **NO credit system** (Honors/Minor without credit tracking)
+- ✅ **Library Admin manages everything** (NO department-level approvals)
+- ✅ **Lesson Planner/Diary approval** → HoD → Principal flow (Admin only monitors)
+
+---
+
+## ⭐ SECTION 1 — ADMIN HIERARCHY (TOP → BOTTOM)
+
+### 🟩 1. SUPER ADMIN (ROOT ADMIN – GOD MODE)
+
+*Full access to every module + every admin role + every teacher role.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| EVERYTHING | Full system access |
+| Create/Delete Admins | Manage all admin accounts |
+| Assign/Revoke Roles | Any role to any user |
+| Academic Structure | Full control (departments, courses, subjects) |
+| Timetable Control | Full create/edit/publish |
+| Attendance Control | Full view/edit/correct |
+| Exam Control | Full schedule/publish/verify |
+| Event Control | Full create/edit/publish |
+| Library/Bus/Canteen/Fees | Full control of all modules |
+| Global Settings | Academic year, maintenance, backups |
+| Force Logout | Force logout all users |
+
+**Super Admin overrides ALL lower roles.**
+
+---
+
+### 🟧 2. PRINCIPAL
+
+*Academic top authority. Approver-level, not operational.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Final Monthly Diary Approval | Approves work diary (after HoD) |
+| Monitor Lesson Planner | Views all planner status |
+| College Analytics | View entire college analytics |
+| Block/Unblock Users | Teachers & students |
+| View All | Exam timetables, events, notices, departments |
+
+#### Cannot:
+- Edit timetable
+- Edit academic structure
+- Manage library/bus/canteen/fees
+
+---
+
+### 🟦 3. DEPARTMENT ADMIN
+
+*Manages department-level users & info.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| View Dept Students | List of department students |
+| Block/Unblock Dept Students | Department level only |
+| View Dept Teachers | List of department teachers |
+| View Dept Attendance | Department attendance data |
+| View Dept Exam Timetable | Department exams only |
+| View Planner/Diary Status | Status only (no approvals) |
+| Publish Dept Notices | Department-only notices |
+
+#### Cannot:
+- Approve planners/diaries
+- Approve library requests
+- Edit timetable
+- Set exam dates
+
+---
+
+### 🟨 4. HOD (Department Academic Head)
+
+*Teacher role with admin-like powers.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Approve Weekly Planner | First-level approval |
+| Approve Monthly Diary | Level 1 (before Principal) |
+| Assign Subjects | Assign subjects to teachers |
+| Assign Substitutes | Assign substitute teachers |
+| View Dept Analytics | Department performance |
+| Publish Dept Academic Notices | Department notices |
+
+---
+
+### 🟥 5. EXAM CELL ADMIN
+
+*Manages all exam-related operations.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Set Exam Dates | Internal, Model, University |
+| Assign Exam Rooms | Optional room assignment |
+| Publish Exam Timetable | Push to students & teachers |
+| Verify Internal Marks | Verify teacher uploads |
+| Verify External Marks | Verify student uploads |
+| Push Exam Notifications | Exam alerts |
+| View Exam Analytics | Exam performance data |
+
+#### Cannot:
+- Upload marks themselves (Teachers upload internal, Students upload external)
+
+---
+
+### 🟫 6. LIBRARY ADMIN
+
+*Full library management.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Add/Edit Books | Book inventory management |
+| Issue/Return/Renew | Book transactions |
+| Manage Availability | Stock and availability |
+| Reservation Queue | Notify next student |
+| Library Analytics | Usage statistics |
+
+---
+
+### 🟪 7. BUS ADMIN
+
+*Transportation management.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Create/Edit Routes | Bus route management |
+| Add Stops & Timings | Stop and time management |
+| Approve Bus Selection | Student bus approvals |
+| Update Arrival Times | Daily timing updates |
+| Publish Bus Alerts | Holiday/payment alerts |
+
+---
+
+### 🟫 8. CANTEEN ADMIN
+
+*Canteen token system management.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Add/Edit Menu | Daily menu management |
+| Mark Sold Out | Availability updates |
+| View Tokens | All student tokens |
+| Update Token Status | Ready/collected/refunded |
+| Sales Summary | Canteen analytics |
+
+---
+
+### 🟫 9. FINANCE / FEE ADMIN
+
+*Fee and payment management.*
+
+#### Permissions:
+| Permission | Description |
+|------------|-------------|
+| Add Fee Structure | Semester-wise fee setup |
+| Verify Payments | Payment verification |
+| Upload Receipts | Receipt management |
+| Send Fee Reminders | Due date notifications |
+| Fee Analytics | Payment statistics |
+
+---
+
+📌 **Only these 9 roles = TRUE ADMIN ROLES.**
+📌 **All teaching roles (Coordinator, Class Teacher, Subject Teacher) are NOT admins.**
+
+---
+
+## ⭐ SECTION 2 — ADMIN MODULE (FULL FEATURE LIST)
+
+---
+
+### 🟥 0) Authentication (Email Only)
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Email Login | Email + password login |
+| Forgot Password | Email reset link |
+| Multi-role Access | Access multiple admin roles |
+| Secure Sessions | JWT-based sessions |
+
+#### Functions
+```typescript
+// Admin Auth
+loginAdmin(email, password)
+sendPasswordResetLink(email)
+resetPassword(token, newPassword)
+getAdminRoles(userId) → Role[]
+validateSession() → boolean
+logout()
+```
+
+**NO phone login anywhere.**
+
+---
+
+### 🟥 1) User Management
+
+#### Teachers:
+| Feature | Description |
+|---------|-------------|
+| Create Teacher | Add new teacher account |
+| Edit Teacher | Update teacher info |
+| Assign Teacher Roles | Subject/Class/Mentor/Coordinator/HoD |
+| Assign Department | Link to department |
+| Disable/Enable Teacher | Active status toggle |
+| Reset Password | Admin password reset |
+
+#### Students:
+| Feature | Description |
+|---------|-------------|
+| View Student List | All students with filters |
+| Block/Unblock | Active status toggle |
+| Approve External Uploads | Verify external result PDFs |
+| Edit Contact Details | Email/phone updates |
+
+#### Permissions:
+- Super Admin → Full access
+- Dept Admin → View/block department only
+
+#### Functions
+```typescript
+// Teacher Management
+createTeacher(teacherData)
+updateTeacher(teacherId, updates)
+assignTeacherRole(teacherId, role)
+assignDepartment(teacherId, departmentId)
+toggleTeacherStatus(teacherId, isActive)
+resetTeacherPassword(teacherId)
+
+// Student Management
+getStudentList(filters) → Student[]
+toggleStudentBlock(studentId, blocked)
+approveExternalUpload(uploadId)
+updateStudentContact(studentId, contactData)
+```
+
+---
+
+### 🟥 2) Academic Structure
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Departments | Create/Edit departments |
+| Courses | Create/Edit courses |
+| Years/Semesters | Academic year structure |
+| Divisions | Class divisions |
+| Subjects | Subject master |
+| Subject Mapping | Map subjects to departments |
+| Honors/Minor Rules | Major-Minor setup (NO credit system) |
+
+#### Functions
+```typescript
+// Academic Structure
+createDepartment(name, shortName)
+updateDepartment(deptId, updates)
+createCourse(courseData)
+updateCourse(courseId, updates)
+createAcademicYear(year, startDate, endDate)
+createSemester(yearId, semesterData)
+createDivision(courseId, divisionData)
+createSubject(subjectData)
+mapSubjectToDepartment(subjectId, departmentId)
+setupMinorRules(minorConfig) // NO credit tracking
+```
+
+---
+
+### 🟥 3) Exam Management
+
+#### A. Exam Date Assignment
+| Feature | Description |
+|---------|-------------|
+| Internal Exam Schedule | Set internal exam dates |
+| Model Exam Schedule | Set model exam dates |
+| University Exam Schedule | Set university exam dates |
+| Subject-wise Date/Time | Per-subject scheduling |
+| Room Assignment | Optional room allocation |
+
+#### B. Exam Timetable Publishing
+| Feature | Description |
+|---------|-------------|
+| Publish to Students | Student-facing timetable |
+| Publish to Teachers | Teacher-facing timetable |
+| Push Notifications | Exam alerts |
+
+#### C. Marks System
+| Role | Action |
+|------|--------|
+| Teachers | Upload internal marks |
+| Students | Upload external marks (PDF/photo) |
+| Exam Cell Admin | Verify internal marks |
+| Exam Cell Admin | Verify external marks |
+
+**NO marks upload by admin.**
+
+#### Functions
+```typescript
+// Exam Scheduling
+setExamSchedule(examType, scheduleData)
+assignExamRoom(examId, roomId)
+publishExamTimetable(semesterId, targetAudience)
+sendExamNotification(examId, message)
+
+// Marks Verification (Exam Cell Admin)
+getInternalMarksForVerification(examId) → MarksSubmission[]
+verifyInternalMarks(submissionId, status, remarks)
+getExternalUploadsForVerification() → ExternalUpload[]
+verifyExternalUpload(uploadId, status, remarks)
+
+// Analytics
+getExamAnalytics(examId) → ExamStats
+getDepartmentExamPerformance(deptId) → PerformanceData
+```
+
+---
+
+### 🟥 4) Attendance Control
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| View Attendance | Class-wise + dept-wise view |
+| Edit Attendance | Correct mistakes (logged) |
+| Set Rules | Attendance percentage rules |
+| Publish Shortage List | Low attendance alerts |
+
+#### Functions
+```typescript
+// Attendance Admin
+getClassAttendance(classId, dateRange) → AttendanceData[]
+getDepartmentAttendance(deptId, dateRange) → AttendanceData[]
+editAttendance(attendanceId, newStatus, reason) // Logged in audit
+setAttendanceRules(rules: {minPercentage, warningThreshold})
+publishShortageList(semesterId) → ShortageReport
+```
+
+---
+
+### 🟥 5) Timetable Management
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Create Master Timetable | Weekly timetable |
+| Assign Teachers | Teachers to subjects/periods |
+| Add Rooms | Room allocation |
+| Publish Timetable | Make live |
+| Edit Live Timetable | Real-time updates |
+| Override Substitution | Manual substitute override |
+
+#### Functions
+```typescript
+// Timetable Admin
+createMasterTimetable(semesterId, timetableData)
+assignTeacherToPeriod(periodId, teacherId)
+assignRoomToPeriod(periodId, roomId)
+publishTimetable(timetableId)
+updateLiveTimetable(periodId, updates)
+overrideSubstitution(periodId, substituteTeacherId)
+```
+
+---
+
+### 🟥 6) Lesson Planner & Work Diary
+
+#### Workflow:
+| Role | Action |
+|------|--------|
+| Teacher | Submits planner/diary |
+| HoD | First-level approval |
+| Principal | Final approval (diary) / Monitors (planner) |
+| Admin | Monitor only (NO approvals) |
+
+#### Functions
+```typescript
+// Admin Monitoring Only
+getAllPlannerStatus(filters) → PlannerStatus[]
+getAllDiaryStatus(filters) → DiaryStatus[]
+getPlannerAnalytics(departmentId) → PlannerStats
+getDiaryAnalytics(departmentId) → DiaryStats
+// NO approval functions for admin
+```
+
+---
+
+### 🟥 7) Notice System
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| College-wide Notices | All users |
+| Department Notices | Department specific |
+| Teacher-only Notices | Teachers only |
+| Class Notices | Year/Sem/Class specific |
+| Attachments | PDF/Image attachments |
+| Schedule Notices | Future publishing |
+| Push Notifications | Instant alerts |
+
+#### Functions
+```typescript
+// Notice Management
+createNotice(noticeData: {
+  title: string,
+  content: string,
+  audience: 'all' | 'department' | 'teachers' | 'class',
+  departmentId?: UUID,
+  yearId?: UUID,
+  attachments?: File[],
+  scheduledAt?: Date
+})
+publishNotice(noticeId)
+scheduleNotice(noticeId, publishAt)
+sendPushNotification(noticeId)
+```
+
+---
+
+### 🟥 8) Library Management
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Add/Edit Books | Book inventory |
+| Issue/Return/Renew | Transactions |
+| Availability Control | Stock management |
+| Reservation Queue | Next student notification |
+| Library Analytics | Usage stats |
+
+**NO fines auto-calculation, NO QR.**
+
+#### Functions
+```typescript
+// Library Admin
+addBook(bookData)
+updateBook(bookId, updates)
+issueBook(bookId, studentId, dueDate)
+returnBook(transactionId)
+renewBook(transactionId, newDueDate)
+manageAvailability(bookId, available)
+processReservationQueue(bookId) // Notify next student
+getLibraryAnalytics() → LibraryStats
+```
+
+---
+
+### 🟥 9) Bus Management
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Create Bus Routes | Route master |
+| Add Stops & Timings | Stop schedule |
+| Approve Bus Selection | Student approvals |
+| Update Arrival Times | Daily updates |
+| Holiday Alerts | Bus service alerts |
+
+#### Functions
+```typescript
+// Bus Admin
+createBusRoute(routeData)
+updateBusRoute(routeId, updates)
+addStopToRoute(routeId, stopData)
+updateStopTiming(stopId, timing)
+approveStudentBusSelection(selectionId)
+updateArrivalTime(routeId, arrivalTime)
+publishBusAlert(alertData)
+```
+
+---
+
+### 🟥 10) Canteen Management
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Add Daily Menu | Menu items |
+| Set Prices | Item pricing |
+| Mark Sold Out | Availability |
+| View Tokens | All student tokens |
+| Update Token Status | Ready/collected |
+| Sales Summary | Daily reports |
+
+#### Functions
+```typescript
+// Canteen Admin
+addMenuItem(menuData)
+updateMenuItem(itemId, updates)
+markSoldOut(itemId, soldOut)
+getTodayTokens() → Token[]
+updateTokenStatus(tokenId, status: 'ready' | 'collected')
+getSalesSummary(dateRange) → SalesReport
+```
+
+---
+
+### 🟥 11) Fee Management
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Add Fee Structure | Semester fees |
+| Verify Payment | Payment confirmation |
+| Upload Receipt | Receipt management |
+| Send Reminder | Due date alerts |
+| Fee Analytics | Payment stats |
+
+#### Functions
+```typescript
+// Finance Admin
+createFeeStructure(feeData)
+updateFeeStructure(feeId, updates)
+verifyPayment(paymentId, verified)
+uploadReceipt(paymentId, receiptFile)
+sendFeeReminder(studentId | batchReminder)
+getFeeAnalytics() → FeeStats
+```
+
+---
+
+### 🟥 12) Event Management (External Link Only)
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Create Event | Event master |
+| Event Details | Title, description, date, venue |
+| Add Poster | Event poster image |
+| External Registration Link | Third-party registration |
+| Publish Event | Make visible |
+| Optional Certificate | Upload after event |
+
+**NO QR, NO attendance, NO deadlines, NO internal registration.**
+
+#### Functions
+```typescript
+// Event Admin
+createEvent(eventData: {
+  title: string,
+  description: string,
+  eventDate: Date,
+  startTime: Time,
+  endTime: Time,
+  venue: string,
+  posterUrl?: string,
+  externalRegistrationLink: string // REQUIRED
+})
+updateEvent(eventId, updates)
+publishEvent(eventId)
+uploadCertificate(eventId, certificateFile) // Optional post-event
+```
+
+---
+
+### 🟥 13) Event Calendar System
+
+#### Student Calendar:
+- Events
+- Exam timetable
+- Holidays
+
+#### Teacher Calendar:
+- Events
+- Meetings
+- Planner deadlines
+- Diary deadlines
+- Exam timetable
+
+#### Functions
+```typescript
+// Calendar
+getStudentCalendar(studentId, month) → CalendarEvents[]
+getTeacherCalendar(teacherId, month) → CalendarEvents[]
+addHoliday(date, description)
+addMeeting(meetingData)
+```
+
+---
+
+### 🟥 14) Analytics & Reports
+
+#### Available Analytics:
+| Report | Description |
+|--------|-------------|
+| Attendance Analytics | Class/dept attendance trends |
+| Exam Analytics | Performance by exam/subject |
+| Dept Performance | Department comparisons |
+| Library Usage | Book circulation stats |
+| Bus Usage | Route utilization |
+| Canteen Reports | Sales and token data |
+| Fee Analytics | Payment statistics |
+| Export | PDF/CSV export |
+
+#### Functions
+```typescript
+// Analytics
+getAttendanceAnalytics(filters) → AttendanceReport
+getExamAnalytics(filters) → ExamReport
+getDepartmentPerformance(deptId) → PerformanceReport
+getLibraryUsage(dateRange) → LibraryReport
+getBusUsage(dateRange) → BusReport
+getCanteenReports(dateRange) → CanteenReport
+getFeeAnalytics(dateRange) → FeeReport
+exportReport(reportType, format: 'pdf' | 'csv')
+```
+
+---
+
+### 🟥 15) Audit Logging
+
+#### Logged Actions:
+- Attendance edits
+- Exam timetable updates
+- External mark approvals
+- Planner/Diary approvals
+- Library issue/return
+- Bus route changes
+- Notice publishing
+- Event edits
+- Canteen menu edits
+- User status changes
+- Role assignments
+
+#### Functions
+```typescript
+// Audit
+getAuditLog(entityType, entityId) → AuditEntry[]
+getAuditLogByUser(userId, dateRange) → AuditEntry[]
+searchAuditLog(searchParams) → AuditEntry[]
+```
+
+---
+
+### 🟥 16) Global Settings
+
+#### Features
+| Feature | Description |
+|---------|-------------|
+| Academic Year | Start/end dates |
+| College Info | Name, logo, contact |
+| Module Enable/Disable | Feature toggles |
+| Backup/Restore | Data backup |
+| Maintenance Mode | System maintenance |
+| Force Logout | Logout all users |
+
+#### Functions
+```typescript
+// Settings
+setAcademicYear(startDate, endDate)
+updateCollegeInfo(infoData)
+toggleModule(moduleName, enabled)
+createBackup() → BackupId
+restoreFromBackup(backupId)
+setMaintenanceMode(enabled)
+forceLogoutAllUsers()
+```
+
+---
+
+## ⭐ SECTION 3 — ADMIN WORKFLOWS (END-TO-END)
+
+---
+
+### 🔵 WORKFLOW 1: EXAM WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Admin/Exam Cell → Set exam dates (Internal/Model/University)│
+│                ↓                                            │
+│ Admin/Exam Cell → Publish exam timetable                    │
+│                ↓                                            │
+│ Teacher → Upload internal marks                             │
+│                ↓                                            │
+│ Student → Upload external marks (PDF/photo)                 │
+│                ↓                                            │
+│ Exam Cell Admin → Verify internal marks                     │
+│ Exam Cell Admin → Verify external results                   │
+│                ↓                                            │
+│ Principal/Super Admin → View analytics                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🟢 WORKFLOW 2: ATTENDANCE WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Teacher → Marks attendance (subject-wise)                   │
+│                ↓                                            │
+│ HoD → Monitors department attendance                        │
+│                ↓                                            │
+│ Admin → Corrects mistakes (logged in audit)                 │
+│                ↓                                            │
+│ Admin → Publishes shortage lists                            │
+│                ↓                                            │
+│ Student → Views attendance                                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🟣 WORKFLOW 3: LESSON PLANNER WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Teacher → Submits weekly planner                            │
+│                ↓                                            │
+│ HoD → Approves planner (Level 1)                            │
+│                ↓                                            │
+│ Principal → Monitors planner status                         │
+│                ↓                                            │
+│ Admin → Observes only (no approvals)                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🔴 WORKFLOW 4: WORK DIARY WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Teacher → Submits monthly work diary                        │
+│                ↓                                            │
+│ HoD → Approves diary (Level 1)                              │
+│                ↓                                            │
+│ Principal → Final approval                                  │
+│                ↓                                            │
+│ Admin → Monitors only (no approvals)                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🟡 WORKFLOW 5: EVENT WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Admin → Creates event                                       │
+│                ↓                                            │
+│ Admin → Adds external registration link                     │
+│                ↓                                            │
+│ System → Publishes on calendars                             │
+│                ↓                                            │
+│ Students/Teachers → Click link to register externally       │
+│                ↓                                            │
+│ Admin → Optionally uploads certificates post-event          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**NO QR, NO internal registration, NO attendance tracking.**
+
+---
+
+### 🟤 WORKFLOW 6: LIBRARY WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Student → Requests book (or walks in)                       │
+│                ↓                                            │
+│ Library Admin → Issues book                                 │
+│                ↓                                            │
+│ Student → Returns or renews book                            │
+│                ↓                                            │
+│ Library Admin → Processes return/renewal                    │
+│                ↓                                            │
+│ Library Admin → Notifies next student in reservation queue  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🟠 WORKFLOW 7: BUS WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Student → Selects bus route (one-time)                      │
+│                ↓                                            │
+│ Bus Admin → Approves bus selection                          │
+│                ↓                                            │
+│ Bus Admin → Updates timings daily                           │
+│                ↓                                            │
+│ Student → Views route & arrival time                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🟣 WORKFLOW 8: FEE WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Admin → Adds fee structure                                  │
+│                ↓                                            │
+│ Student → Pays online or uploads payment proof              │
+│                ↓                                            │
+│ Finance Admin → Verifies payment                            │
+│                ↓                                            │
+│ Admin → Uploads receipt (if manual)                         │
+│                ↓                                            │
+│ Admin → Sends reminders for dues                            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🗄️ Admin Module - Database Tables
+
+#### Tables Required
+
+```sql
+-- 1. Events (External Link System)
+CREATE TABLE events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  event_type VARCHAR(20), -- cultural/technical/sports/workshop/seminar
+  event_date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  venue VARCHAR(200),
+  poster_url TEXT,
+  external_registration_link TEXT NOT NULL, -- REQUIRED
+  is_published BOOLEAN DEFAULT false,
+  certificate_template_url TEXT, -- Optional for post-event
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- NO event_registrations table (external registration only)
+-- NO event_attendance table (no attendance tracking)
+
+-- 2. Admin Settings
+CREATE TABLE admin_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  setting_key VARCHAR(100) UNIQUE NOT NULL,
+  setting_value JSONB NOT NULL,
+  updated_by UUID REFERENCES profiles(id),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Holidays
+CREATE TABLE holidays (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  holiday_date DATE NOT NULL,
+  description VARCHAR(200),
+  affects VARCHAR(20) DEFAULT 'all', -- all/students/teachers
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Meetings (Teacher Calendar)
+CREATE TABLE meetings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  meeting_date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  venue VARCHAR(200),
+  attendee_type VARCHAR(20), -- all_teachers/department/individual
+  department_id UUID REFERENCES departments(id),
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Module Toggles
+CREATE TABLE module_toggles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module_name VARCHAR(50) UNIQUE NOT NULL,
+  is_enabled BOOLEAN DEFAULT true,
+  updated_by UUID REFERENCES profiles(id),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+### 📊 Admin Module - Zustand Stores
+
+```
+store/
+├── adminAuthStore.ts              ❌ TODO
+│   - adminUser, roles
+│   - loginAdmin(), logout(), getRoles()
+│
+├── userManagementStore.ts         ❌ TODO
+│   - teachers, students
+│   - createTeacher(), updateTeacher(), toggleStatus()
+│
+├── academicStructureStore.ts      ❌ TODO
+│   - departments, courses, subjects
+│   - createDepartment(), createCourse(), mapSubject()
+│
+├── examAdminStore.ts              ❌ TODO
+│   - examSchedules, marksVerification
+│   - setExamSchedule(), verifyMarks()
+│
+├── attendanceAdminStore.ts        ❌ TODO
+│   - attendanceData, shortageList
+│   - editAttendance(), publishShortageList()
+│
+├── timetableAdminStore.ts         ❌ TODO
+│   - masterTimetable, assignments
+│   - createTimetable(), publishTimetable()
+│
+├── noticeAdminStore.ts            ❌ TODO
+│   - notices, scheduled
+│   - createNotice(), publishNotice()
+│
+├── libraryAdminStore.ts           ❌ TODO
+│   - books, transactions
+│   - addBook(), issueBook(), returnBook()
+│
+├── busAdminStore.ts               ❌ TODO
+│   - routes, approvals
+│   - createRoute(), approveBusSelection()
+│
+├── canteenAdminStore.ts           ❌ TODO
+│   - menu, tokens
+│   - addMenuItem(), updateTokenStatus()
+│
+├── feeAdminStore.ts               ❌ TODO
+│   - feeStructure, payments
+│   - createFeeStructure(), verifyPayment()
+│
+├── eventAdminStore.ts             ❌ TODO
+│   - events
+│   - createEvent(), publishEvent()
+│
+├── analyticsStore.ts              ❌ TODO
+│   - reports
+│   - getAnalytics(), exportReport()
+│
+├── auditStore.ts                  ❌ TODO
+│   - auditLogs
+│   - getAuditLog(), searchAuditLog()
+│
+└── settingsAdminStore.ts          ❌ TODO
+    - settings, academicYear
+    - updateSettings(), toggleModule(), forceLogout()
+```
+
+---
+
+### 📱 Admin Module - Screen Architecture
+
+```
+app/(admin)/
+├── _layout.tsx                    ✅ Built
+├── dashboard.tsx                  ⚠️ Basic (needs enhancement)
+│
+├── users/
+│   ├── teachers/
+│   │   ├── index.tsx              ❌ TODO - Teacher list
+│   │   ├── create.tsx             ❌ TODO - Create teacher
+│   │   ├── [teacherId].tsx        ❌ TODO - Teacher details
+│   │   └── roles.tsx              ❌ TODO - Assign roles
+│   └── students/
+│       ├── index.tsx              ❌ TODO - Student list
+│       ├── [studentId].tsx        ❌ TODO - Student details
+│       └── external-uploads.tsx   ❌ TODO - Verify uploads
+│
+├── academic/
+│   ├── departments.tsx            ❌ TODO - Department management
+│   ├── courses.tsx                ❌ TODO - Course management
+│   ├── subjects.tsx               ❌ TODO - Subject management
+│   ├── semesters.tsx              ❌ TODO - Semester management
+│   └── minor-programs.tsx         ❌ TODO - Minor setup (no credits)
+│
+├── exams/
+│   ├── schedule.tsx               ❌ TODO - Set exam dates
+│   ├── timetable.tsx              ❌ TODO - Publish timetable
+│   ├── verify-internal.tsx        ❌ TODO - Verify internal marks
+│   ├── verify-external.tsx        ❌ TODO - Verify external marks
+│   └── analytics.tsx              ❌ TODO - Exam analytics
+│
+├── attendance/
+│   ├── view.tsx                   ❌ TODO - View attendance
+│   ├── edit.tsx                   ❌ TODO - Edit with logging
+│   ├── rules.tsx                  ❌ TODO - Set rules
+│   └── shortage.tsx               ❌ TODO - Shortage list
+│
+├── timetable/
+│   ├── create.tsx                 ❌ TODO - Create master
+│   ├── assign.tsx                 ❌ TODO - Assign teachers
+│   ├── rooms.tsx                  ❌ TODO - Room management
+│   └── publish.tsx                ❌ TODO - Publish timetable
+│
+├── planner-diary/
+│   ├── planners.tsx               ❌ TODO - Monitor planners
+│   └── diaries.tsx                ❌ TODO - Monitor diaries
+│
+├── notices/
+│   ├── index.tsx                  ✅ Built
+│   ├── create.tsx                 ❌ TODO - Create notice
+│   └── scheduled.tsx              ❌ TODO - Scheduled notices
+│
+├── library/
+│   ├── books.tsx                  ❌ TODO - Book management
+│   ├── issue-return.tsx           ❌ TODO - Transactions
+│   ├── reservations.tsx           ❌ TODO - Queue management
+│   └── analytics.tsx              ❌ TODO - Library stats
+│
+├── bus/
+│   ├── routes.tsx                 ❌ TODO - Route management
+│   ├── stops.tsx                  ❌ TODO - Stop management
+│   ├── approvals.tsx              ❌ TODO - Student approvals
+│   └── alerts.tsx                 ❌ TODO - Holiday alerts
+│
+├── canteen/
+│   ├── menu.tsx                   ❌ TODO - Menu management
+│   ├── tokens.tsx                 ❌ TODO - Token view
+│   └── reports.tsx                ❌ TODO - Sales reports
+│
+├── fees/
+│   ├── structure.tsx              ❌ TODO - Fee structure
+│   ├── payments.tsx               ❌ TODO - Payment verification
+│   ├── receipts.tsx               ❌ TODO - Receipt management
+│   └── reminders.tsx              ❌ TODO - Send reminders
+│
+├── events/
+│   ├── index.tsx                  ❌ TODO - Event list
+│   ├── create.tsx                 ❌ TODO - Create event (external link)
+│   └── certificates.tsx           ❌ TODO - Upload certificates
+│
+├── calendar/
+│   ├── holidays.tsx               ❌ TODO - Holiday management
+│   └── meetings.tsx               ❌ TODO - Meeting scheduler
+│
+├── analytics/
+│   ├── attendance.tsx             ❌ TODO - Attendance reports
+│   ├── exams.tsx                  ❌ TODO - Exam reports
+│   ├── departments.tsx            ❌ TODO - Dept performance
+│   └── export.tsx                 ❌ TODO - Export reports
+│
+├── audit/
+│   └── logs.tsx                   ❌ TODO - Audit log viewer
+│
+└── settings/
+    ├── academic-year.tsx          ❌ TODO - Year settings
+    ├── college-info.tsx           ❌ TODO - College details
+    ├── modules.tsx                ❌ TODO - Module toggles
+    ├── backup.tsx                 ❌ TODO - Backup/restore
+    └── maintenance.tsx            ❌ TODO - Maintenance mode
+```
+
+### ⚡ System Rules Applied
+- ✅ **Email-only registration** (NO mobile OTP)
+- ✅ **Email login** (Email + Password)
+- ✅ **Profile photo upload by students**
 - ✅ **Students upload external marks** (Teachers upload internal only)
 - ✅ **Bus selection requires admin approval**
-- ✅ **Event attendance via QR** (optional)
-- ✅ **Honors/Major-Minor system** with credits tracking
-- ✅ **Pre-order canteen tokens**
+- ✅ **NO event QR attendance** (Manual/simple registration only)
+- ✅ **Honors/Major-Minor system** (NO credit tracking)
+- ✅ **Canteen Token System** (Online payment → Token → Collect/Refund)
 
 ---
 
@@ -1390,20 +2464,19 @@ CREATE TABLE audit_logs (
 #### Features
 | Feature | Description |
 |---------|-------------|
-| Create Account | Mobile OTP verification |
-| Login/Logout | Email + Password after registration |
-| Forgot Password | Reset via email/OTP |
+| Create Account | Email + Password registration |
+| Login/Logout | Email + Password |
+| Forgot Password | Reset via email link |
 | Profile View | Complete student profile |
 | Profile Edit | Update allowed fields |
-| Photo Upload | Upload/change profile photo |
+| Photo Upload | Student uploads/changes profile photo |
 | Auto-sync | Course + Year + Department auto-linked |
 
 #### Functions
 ```typescript
 // Auth Functions
-registerWithMobileOTP(mobile, otp)
-verifyOTP(mobile, otp)
-completeRegistration(profileData)
+registerWithEmail(email, password, profileData)
+verifyEmail(token) // Email verification link
 loginWithEmail(email, password)
 logout()
 forgotPassword(email)
@@ -1412,7 +2485,7 @@ resetPassword(token, newPassword)
 // Profile Functions
 getProfile(studentId) → StudentProfile
 updateProfile(studentId, updates)
-uploadProfilePhoto(studentId, file) → photoUrl
+uploadProfilePhoto(studentId, file) → photoUrl // Student uploads
 syncAcademicInfo(studentId) // Auto-sync course/year/dept
 ```
 
@@ -1712,25 +2785,45 @@ interface ExamResult {
 
 ---
 
-### ⭐ 10. CANTEEN MODULE
+### ⭐ 10. CANTEEN MODULE (Complete Token System)
+
+#### 🎯 How It Works
+```
+Pay Online → Token Generated → Staff Updates → Collect Food OR Refund
+```
 
 #### Features
 | Feature | Description |
 |---------|-------------|
-| Daily Menu | Today's available items |
-| Pre-Order Tokens | Order food in advance |
-| Token History | Past orders |
-| Payment History | Payment records (if integrated) |
-| Availability Indicator | "Sold Out" / "Available" status |
+| Daily Menu | Today's available items with prices |
+| Online Payment | Pay for food inside app (mandatory) |
+| Token Generation | Get token number after successful payment |
+| My Orders | View token status (pending/ready/done) |
+| Availability | "Sold Out" / "Available" indicators |
 
-#### Functions
+#### Token Statuses
+| Status | Meaning |
+|--------|--------|
+| `pending` | Student paid, waiting for food preparation |
+| `ready` | Canteen prepared food, come collect |
+| `done` | Student collected the food |
+| `refunded` | Student didn't collect / couldn't serve → money returned |
+
+#### Student Functions
 ```typescript
-// Canteen Functions
+// Menu Functions
 getDailyMenu(date?) → MenuItem[]
-preOrderToken(items: OrderItem[]) → Token
-getTokenHistory(studentId) → Token[]
-getPaymentHistory(studentId) → Payment[]
-checkAvailability(itemId) → AvailabilityStatus
+checkAvailability(itemId) → boolean
+
+// Order & Payment Functions
+initiatePayment(items: OrderItem[]) → PaymentSession
+verifyPayment(paymentId, transactionId) → PaymentResult
+generateToken(paymentId) → Token // Called after payment success
+
+// My Orders Functions
+getMyOrders(studentId) → Token[]
+getOrderStatus(tokenId) → TokenStatus
+getOrderHistory(studentId, dateRange?) → Token[]
 
 // Types
 interface MenuItem {
@@ -1745,13 +2838,66 @@ interface MenuItem {
 }
 
 interface Token {
-  tokenNumber: string;
+  tokenNumber: number; // Resets daily (1, 2, 3...)
+  studentId: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'ready' | 'collected' | 'cancelled';
+  paymentId: string;
+  status: 'pending' | 'ready' | 'done' | 'refunded';
   orderTime: Date;
-  pickupTime?: Date;
+  readyTime?: Date;
+  collectedTime?: Date;
+  refundedTime?: Date;
 }
+```
+
+#### Staff Dashboard Functions (Canteen Admin)
+```typescript
+// View Orders
+getAllTokens(date: Date) → Token[]
+getPendingTokens() → Token[]
+getReadyTokens() → Token[]
+
+// Update Status
+markAsReady(tokenId) → Result     // Food prepared
+markAsCollected(tokenId) → Result // Student collected
+initiateRefund(tokenId) → Result  // Refund money
+
+// Daily Reset
+resetDailyTokens() → Result // Runs at midnight, token numbers restart from 1
+
+// Reports
+getDailySalesReport(date) → SalesReport
+getRefundReport(dateRange) → RefundReport
+```
+
+#### Canteen System Flow
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    STUDENT FLOW                              │
+├─────────────────────────────────────────────────────────────┤
+│  1. Browse Menu → 2. Add Items → 3. Pay Online              │
+│       ↓                                                      │
+│  4. Payment Verified → 5. Token #43 Generated               │
+│       ↓                                                      │
+│  6. Check "My Orders" → Status: pending/ready/done          │
+│       ↓                                                      │
+│  7. When status = "ready" → Go collect food                 │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    STAFF FLOW                                │
+├─────────────────────────────────────────────────────────────┤
+│  1. View Dashboard → See all pending tokens                 │
+│       ↓                                                      │
+│  2. Prepare food → Press "Ready" button                     │
+│       ↓                                                      │
+│  3. Student comes → Press "Collected" button                │
+│       ↓                                                      │
+│  OR Student doesn't come → Press "Refund" button            │
+│       ↓                                                      │
+│  4. Daily reset at midnight → Token #1 starts again         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -1849,9 +2995,11 @@ interface Notice {
 | Feature | Description |
 |---------|-------------|
 | Upcoming Events | List of upcoming events |
+| Event Details | View event info, venue, timing |
 | Event Registration | Register for events |
-| Attendance QR | QR-based attendance (if used) |
+| My Registrations | View registered events |
 | Certificate Download | Download participation certificates |
+| **NO QR Attendance** | Manual attendance by organizers |
 
 #### Functions
 ```typescript
@@ -1860,8 +3008,7 @@ getUpcomingEvents() → Event[]
 getEventDetails(eventId) → EventDetail
 registerForEvent(eventId, studentId) → Registration
 getMyRegistrations(studentId) → Registration[]
-scanAttendanceQR(eventId, qrCode) → AttendanceResult
-downloadCertificate(eventId, studentId) → PDFBlob
+downloadCertificate(eventId, studentId) → PDFBlob // If available
 
 // Types
 interface Event {
@@ -1873,7 +3020,7 @@ interface Event {
   venue: string;
   registrationDeadline: Date;
   isRegistered: boolean;
-  hasAttended: boolean;
+  hasAttended: boolean; // Marked by organizers manually
   hasCertificate: boolean;
 }
 ```
@@ -1962,11 +3109,11 @@ interface FeeDetails {
 #### Features
 | Feature | Description |
 |---------|-------------|
-| Major View | View major (from course) |
-| Minor Subjects | Available minor options |
+| Major View | View major (from enrolled course) |
+| Minor Subjects | View available minor options |
 | Selection Window | Apply during selection period |
-| Approval Status | Track approval status |
-| Credits Tracking | Track minor credits |
+| Approval Status | Track application status |
+| **NO Credits Tracking** | Handled by academic office |
 
 #### Functions
 ```typescript
@@ -1975,9 +3122,23 @@ getMajor(studentId) → Major
 getAvailableMinors(studentId) → Minor[]
 selectMinor(studentId, minorId) → Application
 getMinorApplication(studentId) → MinorApplication | null
-getCreditsProgress(studentId) → CreditsProgress
 
 // Types
+interface Major {
+  id: string;
+  name: string;
+  department: string;
+  program: string;
+}
+
+interface Minor {
+  id: string;
+  name: string;
+  department: string;
+  description: string;
+  isAvailable: boolean; // Selection window open?
+}
+
 interface MinorApplication {
   id: string;
   minorId: string;
@@ -1986,22 +3147,6 @@ interface MinorApplication {
   appliedAt: Date;
   approvedAt?: Date;
   remarks?: string;
-}
-
-interface CreditsProgress {
-  majorCredits: {
-    required: number;
-    completed: number;
-  };
-  minorCredits: {
-    required: number;
-    completed: number;
-  };
-  electiveCredits: {
-    required: number;
-    completed: number;
-  };
-  totalCredits: number;
 }
 ```
 
@@ -2014,7 +3159,6 @@ interface CreditsProgress {
 |---------|-------------|
 | Dark/Light Mode | Theme toggle |
 | Notification Control | Enable/disable notifications |
-| Update Mobile | Change mobile number |
 | About/Version | App version info |
 
 #### Functions
@@ -2023,7 +3167,6 @@ interface CreditsProgress {
 getSettings(studentId) → Settings
 updateTheme(studentId, theme: 'light' | 'dark' | 'system')
 updateNotificationPreferences(studentId, prefs)
-updateMobileNumber(studentId, newMobile, otp) → Result
 getAppVersion() → VersionInfo
 
 // Types
@@ -2037,7 +3180,6 @@ interface Settings {
     exam: boolean;
     notices: boolean;
   };
-  mobileNumber: string;
 }
 ```
 
@@ -2087,7 +3229,8 @@ interface FAQ {
 app/(student)/
 ├── _layout.tsx                    ✅ Built
 ├── dashboard.tsx                  ⚠️ Basic (needs enhancement)
-├── profile.tsx                    ❌ TODO
+├── profile.tsx                    ❌ TODO - View & edit profile
+├── profile-photo.tsx              ❌ TODO - Upload/change photo
 │
 ├── attendance/
 │   ├── index.tsx                  ❌ TODO - Subject-wise %
@@ -2133,10 +3276,16 @@ app/(student)/
 │   └── gpa.tsx                    ❌ TODO - SGPA/CGPA view
 │
 ├── canteen/
-│   ├── index.tsx                  ❌ TODO - Daily menu
-│   ├── order.tsx                  ❌ TODO - Pre-order token
-│   ├── tokens.tsx                 ❌ TODO - Token history
-│   └── payments.tsx               ❌ TODO - Payment history
+│   ├── index.tsx                  ❌ TODO - Today's menu
+│   ├── order.tsx                  ❌ TODO - Place order + payment
+│   ├── token-status.tsx           ❌ TODO - Current token status
+│   ├── my-orders.tsx              ❌ TODO - Order history
+│   └── request-refund.tsx         ❌ TODO - Refund request
+
+├── canteen-staff/                   # Staff only screens
+│   ├── dashboard.tsx              ❌ TODO - Staff dashboard (tokens list)
+│   ├── update-status.tsx          ❌ TODO - Mark ready/done
+│   └── refunds.tsx                ❌ TODO - Process refunds
 │
 ├── bus/
 │   ├── index.tsx                  ❌ TODO - Bus home
@@ -2168,14 +3317,14 @@ app/(student)/
 │   └── pay.tsx                    ❌ TODO - Payment gateway
 │
 ├── honors/
-│   ├── index.tsx                  ❌ TODO - Honors home
+│   ├── index.tsx                  ❌ TODO - Honors/Minor home
 │   ├── minor.tsx                  ❌ TODO - Minor selection
-│   └── credits.tsx                ❌ TODO - Credits tracking
+│   └── courses.tsx                ❌ TODO - Minor courses list
 │
 ├── settings/
 │   ├── index.tsx                  ❌ TODO - Settings home
 │   ├── notifications.tsx          ❌ TODO - Notification prefs
-│   └── mobile.tsx                 ❌ TODO - Update mobile
+│   └── about.tsx                  ❌ TODO - App version/info
 │
 └── support/
     ├── index.tsx                  ❌ TODO - Support home
@@ -2200,25 +3349,68 @@ CREATE TABLE canteen_menu (
   category VARCHAR(20), -- breakfast/lunch/snacks/beverages
   image_url TEXT,
   is_available BOOLEAN DEFAULT true,
-  available_date DATE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  sold_out BOOLEAN DEFAULT false,
+  available_date DATE, -- Menu for specific date
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Canteen Orders (Tokens)
-CREATE TABLE canteen_orders (
+-- 2. Canteen Tokens (Complete Token System)
+CREATE TABLE canteen_tokens (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token_number INT NOT NULL, -- Resets daily (1, 2, 3...)
+  token_date DATE NOT NULL DEFAULT CURRENT_DATE,
   student_id UUID REFERENCES students(id),
-  token_number VARCHAR(20) UNIQUE,
   items JSONB NOT NULL, -- [{itemId, name, quantity, price}]
   total_amount DECIMAL(10,2) NOT NULL,
-  status VARCHAR(20) DEFAULT 'pending', -- pending/ready/collected/cancelled
+  
+  -- Payment Info
+  payment_id VARCHAR(100), -- Payment gateway transaction ID
+  payment_status VARCHAR(20) DEFAULT 'pending', -- pending/verified/failed
+  payment_verified_at TIMESTAMPTZ,
+  
+  -- Token Status
+  status VARCHAR(20) DEFAULT 'pending', -- pending/ready/done/refunded
+  
+  -- Timestamps
   order_time TIMESTAMPTZ DEFAULT NOW(),
-  pickup_time TIMESTAMPTZ,
-  payment_status VARCHAR(20) DEFAULT 'pending',
+  ready_time TIMESTAMPTZ, -- When staff marked ready
+  collected_time TIMESTAMPTZ, -- When student collected
+  refunded_time TIMESTAMPTZ, -- When refund initiated
+  refund_reason TEXT,
+  
+  -- Staff who updated
+  updated_by UUID REFERENCES profiles(id),
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(token_number, token_date) -- Unique token per day
+);
+
+-- 3. Canteen Daily Token Counter (For daily reset)
+CREATE TABLE canteen_token_counter (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  counter_date DATE UNIQUE NOT NULL DEFAULT CURRENT_DATE,
+  last_token_number INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Events
+-- 4. Canteen Payments
+CREATE TABLE canteen_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token_id UUID REFERENCES canteen_tokens(id),
+  student_id UUID REFERENCES students(id),
+  amount DECIMAL(10,2) NOT NULL,
+  payment_gateway VARCHAR(50), -- razorpay/paytm/upi
+  gateway_transaction_id VARCHAR(100),
+  gateway_order_id VARCHAR(100),
+  status VARCHAR(20) DEFAULT 'initiated', -- initiated/success/failed/refunded
+  refund_id VARCHAR(100),
+  refund_amount DECIMAL(10,2),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Events
 CREATE TABLE events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title VARCHAR(200) NOT NULL,
@@ -2236,19 +3428,20 @@ CREATE TABLE events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Event Registrations
+-- 6. Event Registrations (NO QR - Manual attendance)
 CREATE TABLE event_registrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID REFERENCES events(id),
   student_id UUID REFERENCES students(id),
   registered_at TIMESTAMPTZ DEFAULT NOW(),
-  attended BOOLEAN DEFAULT false,
-  attendance_time TIMESTAMPTZ,
+  attended BOOLEAN DEFAULT false, -- Marked manually by organizers
+  marked_by UUID REFERENCES profiles(id), -- Who marked attendance
+  marked_at TIMESTAMPTZ,
   certificate_url TEXT,
   UNIQUE(event_id, student_id)
 );
 
--- 5. Feedback
+-- 7. Feedback
 CREATE TABLE feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES students(id),
@@ -2261,7 +3454,7 @@ CREATE TABLE feedback (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. Complaints
+-- 8. Complaints
 CREATE TABLE complaints (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_number VARCHAR(20) UNIQUE,
@@ -2276,7 +3469,7 @@ CREATE TABLE complaints (
   resolved_at TIMESTAMPTZ
 );
 
--- 7. Complaint Comments
+-- 9. Complaint Comments
 CREATE TABLE complaint_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   complaint_id UUID REFERENCES complaints(id),
@@ -2286,18 +3479,19 @@ CREATE TABLE complaint_comments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. Minor Programs
+-- 10. Minor Programs (NO credits tracking)
 CREATE TABLE minor_programs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL,
   short_name VARCHAR(20),
   department_id UUID REFERENCES departments(id),
-  total_credits INT NOT NULL,
+  description TEXT,
   is_active BOOLEAN DEFAULT true,
+  selection_open BOOLEAN DEFAULT false, -- Is selection window open?
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 9. Minor Applications
+-- 11. Minor Applications
 CREATE TABLE minor_applications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES students(id),
@@ -2311,19 +3505,9 @@ CREATE TABLE minor_applications (
   UNIQUE(student_id, minor_program_id, academic_year_id)
 );
 
--- 10. Student Credits
-CREATE TABLE student_credits (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID REFERENCES students(id),
-  course_id UUID REFERENCES courses(id),
-  credit_type VARCHAR(20), -- major/minor/elective/honors
-  credits_earned DECIMAL(3,1),
-  semester_id UUID,
-  verified BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- NOTE: NO student_credits table - Credits handled by academic office
 
--- 11. FAQs
+-- 12. FAQs
 CREATE TABLE faqs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question TEXT NOT NULL,
@@ -2335,7 +3519,7 @@ CREATE TABLE faqs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 12. College Contacts
+-- 13. College Contacts
 CREATE TABLE college_contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   department VARCHAR(100) NOT NULL,
@@ -2347,7 +3531,7 @@ CREATE TABLE college_contacts (
   is_active BOOLEAN DEFAULT true
 );
 
--- 13. Student Settings
+-- 14. Student Settings
 CREATE TABLE student_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES students(id) UNIQUE,
@@ -2361,7 +3545,7 @@ CREATE TABLE student_settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 14. External Marks Upload (Student uploads)
+-- 15. External Marks Upload (Student uploads)
 CREATE TABLE external_marks_uploads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES students(id),
@@ -2416,8 +3600,13 @@ store/
 │   - examSchedule, results, gpa
 │
 ├── canteenStore.ts                ❌ TODO
-│   - menu, orders
-│   - preOrder(), getTokens()
+│   - menu, currentToken, orderHistory
+│   - placeOrder(), verifyPayment(), checkTokenStatus()
+│   - requestRefund(), fetchMyOrders()
+│
+├── canteenStaffStore.ts           ❌ TODO (Staff only)
+│   - todayTokens, pendingTokens
+│   - markReady(), markCollected(), processRefund()
 │
 ├── busStore.ts                    ❌ TODO
 │   - subscription, routes
@@ -2440,8 +3629,8 @@ store/
 │   - initiatePayment()
 │
 ├── honorsStore.ts                 ❌ TODO
-│   - major, minors, credits
-│   - applyMinor()
+│   - minorPrograms, myMinor, courses
+│   - applyMinor(), getMinorCourses()
 │
 └── settingsStore.ts               ❌ TODO (shared)
     - settings
@@ -3064,11 +4253,11 @@ on_fee_paid          → Update payment status
 ### Module 6: Student Module ❌ TODO (DETAILED ABOVE)
 
 #### 6.1 Authentication & Profile
-- [ ] Mobile OTP registration
+- [ ] Email-only registration (NO mobile OTP)
 - [ ] Email login/logout
-- [ ] Forgot password/reset
+- [ ] Forgot password/reset (email link)
 - [ ] Profile view & edit
-- [ ] Photo upload
+- [ ] Photo upload (by student)
 - [ ] Course/Year/Dept auto-sync
 
 #### 6.2 Dashboard
@@ -3132,12 +4321,20 @@ on_fee_paid          → Update payment status
 - [ ] Grade points
 - [ ] SGPA/CGPA view
 
-#### 6.10 Canteen
-- [ ] Daily menu
-- [ ] Pre-order token system
-- [ ] Token history
-- [ ] Payment history
-- [ ] Availability indicator
+#### 6.10 Canteen (Complete Token System)
+- [ ] Today's menu view
+- [ ] Place order (select items)
+- [ ] Online payment (Razorpay/Paytm/UPI)
+- [ ] Token generation on payment
+- [ ] Token status tracking (pending/ready/done)
+- [ ] My orders history
+- [ ] Refund request
+- [ ] Staff Dashboard:
+  - [ ] View all today's tokens
+  - [ ] Mark token ready
+  - [ ] Mark token collected
+  - [ ] Process refunds
+- [ ] Daily token counter reset
 
 #### 6.11 Bus
 - [ ] Bus selection (once, admin approval)
@@ -3158,7 +4355,7 @@ on_fee_paid          → Update payment status
 #### 6.13 Events & Activities
 - [ ] Upcoming events
 - [ ] Event registration
-- [ ] Attendance QR (optional)
+- [ ] Manual attendance (by organizers)
 - [ ] Certificate download
 
 #### 6.14 Feedback & Complaints
@@ -3178,12 +4375,11 @@ on_fee_paid          → Update payment status
 - [ ] Available minor subjects
 - [ ] Selection window
 - [ ] Approval status
-- [ ] Credits tracking
+- [ ] NO credits tracking (handled by academic office)
 
 #### 6.17 Settings
 - [ ] Dark/Light mode
 - [ ] Notification control
-- [ ] Update mobile number
 - [ ] About/App version
 
 #### 6.18 Support
@@ -3443,14 +4639,23 @@ on_fee_paid          → Update payment status
 | POST | `/student/results/external` | Upload external marks |
 | GET | `/student/gpa` | SGPA/CGPA |
 
-### Canteen
+### Canteen (Complete Token System)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/canteen/menu` | Daily menu |
-| POST | `/canteen/order` | Pre-order token |
-| GET | `/canteen/orders` | My orders |
-| GET | `/canteen/orders/{id}` | Order details |
-| PATCH | `/canteen/orders/{id}/cancel` | Cancel order |
+| GET | `/canteen/menu` | Today's menu |
+| GET | `/canteen/menu?date=YYYY-MM-DD` | Menu for specific date |
+| POST | `/canteen/order` | Create order (initiate payment) |
+| POST | `/canteen/payment/verify` | Verify payment & generate token |
+| GET | `/canteen/tokens/current` | My current/active token |
+| GET | `/canteen/tokens` | My token history |
+| GET | `/canteen/tokens/{id}` | Token status & details |
+| POST | `/canteen/tokens/{id}/refund` | Request refund |
+| **Staff Endpoints** | | |
+| GET | `/canteen/staff/tokens` | Today's all tokens (staff) |
+| GET | `/canteen/staff/pending` | Pending tokens (staff) |
+| PATCH | `/canteen/staff/tokens/{id}/ready` | Mark token ready (staff) |
+| PATCH | `/canteen/staff/tokens/{id}/collected` | Mark token collected (staff) |
+| POST | `/canteen/staff/refund/{id}` | Process refund (staff) |
 
 ### Bus
 | Method | Endpoint | Description |
@@ -3462,15 +4667,19 @@ on_fee_paid          → Update payment status
 | GET | `/bus/arrival` | Arrival time |
 | GET | `/bus/alerts` | Holiday/payment alerts |
 
-### Events
+### Events (External Link Only)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/events` | Upcoming events |
-| GET | `/events/{id}` | Event details |
-| POST | `/events/{id}/register` | Register for event |
-| GET | `/events/registered` | My registrations |
-| POST | `/events/{id}/attendance` | QR attendance |
-| GET | `/events/{id}/certificate` | Download certificate |
+| GET | `/events/{id}` | Event details (includes external link) |
+| GET | `/events/{id}/certificate` | Download certificate (if available) |
+| **Admin Endpoints** | | |
+| POST | `/admin/events` | Create event (external link required) |
+| PATCH | `/admin/events/{id}` | Update event |
+| POST | `/admin/events/{id}/publish` | Publish event |
+| POST | `/admin/events/{id}/certificate` | Upload certificate template |
+
+**NO registration endpoint (external link only). NO attendance tracking.**
 
 ### Feedback & Complaints
 | Method | Endpoint | Description |
@@ -3483,21 +4692,19 @@ on_fee_paid          → Update payment status
 | GET | `/complaints/{id}` | Complaint details |
 | POST | `/complaints/{id}/comment` | Add comment |
 
-### Honors/Minor
+### Honors/Minor (NO Credits)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/student/major` | Get major |
 | GET | `/student/minors/available` | Available minors |
 | POST | `/student/minors/apply` | Apply for minor |
 | GET | `/student/minors/application` | Application status |
-| GET | `/student/credits` | Credits progress |
 
 ### Settings & Support
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/settings` | Get settings |
-| PATCH | `/settings` | Update settings |
-| PATCH | `/settings/mobile` | Update mobile |
+| PATCH | `/settings` | Update settings (theme, notifications) |
 | GET | `/support/contacts` | College contacts |
 | GET | `/support/faq` | FAQs |
 | POST | `/support/chat` | Start chat session |
@@ -3506,6 +4713,139 @@ on_fee_paid          → Update payment status
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/audit/{entity_type}/{id}` | Get audit trail |
+
+---
+
+### Admin API Endpoints
+
+#### User Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/teachers` | List teachers |
+| POST | `/admin/teachers` | Create teacher |
+| PATCH | `/admin/teachers/{id}` | Update teacher |
+| POST | `/admin/teachers/{id}/roles` | Assign roles |
+| PATCH | `/admin/teachers/{id}/status` | Enable/disable |
+| POST | `/admin/teachers/{id}/reset-password` | Reset password |
+| GET | `/admin/students` | List students |
+| PATCH | `/admin/students/{id}/block` | Block/unblock |
+| GET | `/admin/external-uploads` | Pending external uploads |
+| POST | `/admin/external-uploads/{id}/verify` | Verify upload |
+
+#### Academic Structure
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/departments` | Create department |
+| PATCH | `/admin/departments/{id}` | Update department |
+| POST | `/admin/courses` | Create course |
+| PATCH | `/admin/courses/{id}` | Update course |
+| POST | `/admin/subjects` | Create subject |
+| POST | `/admin/subjects/{id}/map` | Map to department |
+| POST | `/admin/semesters` | Create semester |
+| POST | `/admin/minor-programs` | Create minor program |
+
+#### Exam Management (Exam Cell Admin)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/exams/schedule` | Set exam schedule |
+| PATCH | `/admin/exams/schedule/{id}` | Update schedule |
+| POST | `/admin/exams/timetable/publish` | Publish timetable |
+| GET | `/admin/exams/internal-marks` | Pending internal marks |
+| POST | `/admin/exams/internal-marks/{id}/verify` | Verify internal marks |
+| GET | `/admin/exams/external-uploads` | Pending external uploads |
+| POST | `/admin/exams/external-uploads/{id}/verify` | Verify external marks |
+| GET | `/admin/exams/analytics` | Exam analytics |
+
+#### Attendance Control
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/attendance/class/{id}` | Class attendance |
+| GET | `/admin/attendance/department/{id}` | Dept attendance |
+| PATCH | `/admin/attendance/{id}` | Edit attendance (logged) |
+| POST | `/admin/attendance/rules` | Set rules |
+| POST | `/admin/attendance/shortage-list` | Publish shortage |
+
+#### Timetable Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/timetable` | Create master timetable |
+| POST | `/admin/timetable/{id}/assign` | Assign teacher to period |
+| POST | `/admin/timetable/{id}/room` | Assign room |
+| POST | `/admin/timetable/{id}/publish` | Publish timetable |
+| PATCH | `/admin/timetable/period/{id}` | Update live period |
+
+#### Library Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/library/books` | Add book |
+| PATCH | `/admin/library/books/{id}` | Update book |
+| POST | `/admin/library/issue` | Issue book |
+| POST | `/admin/library/return/{id}` | Return book |
+| POST | `/admin/library/renew/{id}` | Renew book |
+| GET | `/admin/library/reservations` | Reservation queue |
+| GET | `/admin/library/analytics` | Library analytics |
+
+#### Bus Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/bus/routes` | Create route |
+| PATCH | `/admin/bus/routes/{id}` | Update route |
+| POST | `/admin/bus/routes/{id}/stops` | Add stop |
+| GET | `/admin/bus/approvals` | Pending approvals |
+| POST | `/admin/bus/approvals/{id}` | Approve selection |
+| POST | `/admin/bus/alerts` | Publish alert |
+
+#### Canteen Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/canteen/menu` | Add menu item |
+| PATCH | `/admin/canteen/menu/{id}` | Update item |
+| PATCH | `/admin/canteen/menu/{id}/soldout` | Mark sold out |
+| GET | `/admin/canteen/tokens` | Today's tokens |
+| PATCH | `/admin/canteen/tokens/{id}/status` | Update status |
+| GET | `/admin/canteen/reports` | Sales summary |
+
+#### Fee Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/admin/fees/structure` | Create fee structure |
+| PATCH | `/admin/fees/structure/{id}` | Update structure |
+| GET | `/admin/fees/payments` | Pending payments |
+| POST | `/admin/fees/payments/{id}/verify` | Verify payment |
+| POST | `/admin/fees/receipts/{id}` | Upload receipt |
+| POST | `/admin/fees/reminders` | Send reminders |
+| GET | `/admin/fees/analytics` | Fee analytics |
+
+#### Analytics & Reports
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/analytics/attendance` | Attendance analytics |
+| GET | `/admin/analytics/exams` | Exam analytics |
+| GET | `/admin/analytics/departments` | Dept performance |
+| GET | `/admin/analytics/library` | Library usage |
+| GET | `/admin/analytics/bus` | Bus usage |
+| GET | `/admin/analytics/canteen` | Canteen reports |
+| GET | `/admin/analytics/fees` | Fee analytics |
+| POST | `/admin/analytics/export` | Export PDF/CSV |
+
+#### Global Settings
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/settings` | Get all settings |
+| PATCH | `/admin/settings/academic-year` | Set academic year |
+| PATCH | `/admin/settings/college-info` | Update college info |
+| POST | `/admin/settings/modules/{name}/toggle` | Toggle module |
+| POST | `/admin/settings/backup` | Create backup |
+| POST | `/admin/settings/restore` | Restore backup |
+| POST | `/admin/settings/maintenance` | Toggle maintenance |
+| POST | `/admin/settings/force-logout` | Force logout all |
+
+#### Admin Audit
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/audit` | Search audit logs |
+| GET | `/admin/audit/user/{id}` | User audit trail |
+| GET | `/admin/audit/entity/{type}/{id}` | Entity audit |
 
 ---
 
@@ -3742,3 +5082,1095 @@ npm install -g supabase hasura-cli && supabase login
 ---
 
 *Last Updated: November 30, 2025*
+
+---
+
+# 🏗️ TEAM PHASE PLAN — JPM COLLEGE APP (4-PERSON TEAM)
+
+## 🌐 GLOBAL SYSTEM ARCHITECTURE
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              JPM COLLEGE APP - SYSTEM ARCHITECTURE                          │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │                              📱 MOBILE APP (React Native + Expo)                     │   │
+│   │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │   │
+│   │  │   Admin     │  │   Teacher   │  │   Student   │  │    Auth     │                 │   │
+│   │  │   Module    │  │   Module    │  │   Module    │  │   Module    │                 │   │
+│   │  │  (9 roles)  │  │  (5 roles)  │  │ (18 features)│  │ (email only)│                 │   │
+│   │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                 │   │
+│   │         │                │                │                │                         │   │
+│   │  ┌──────┴────────────────┴────────────────┴────────────────┴──────┐                 │   │
+│   │  │                    Zustand State Management                     │                 │   │
+│   │  │   (authStore, themeStore, adminStores, teacherStores, etc.)    │                 │   │
+│   │  └──────────────────────────────┬──────────────────────────────────┘                 │   │
+│   │                                 │                                                    │   │
+│   │  ┌──────────────────────────────┴──────────────────────────────────┐                 │   │
+│   │  │                     GraphQL Client Layer                         │                 │   │
+│   │  │        (Apollo Client / urql connecting to Hasura)              │                 │   │
+│   │  └──────────────────────────────┬──────────────────────────────────┘                 │   │
+│   └─────────────────────────────────┼───────────────────────────────────────────────────┘   │
+│                                     │                                                       │
+│                                     │ HTTPS/WSS                                             │
+│                                     ▼                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │                              🔷 HASURA GRAPHQL ENGINE                                │   │
+│   │  ┌─────────────────────────────────────────────────────────────────────────────┐    │   │
+│   │  │  • Auto-generates GraphQL API from PostgreSQL schema                         │    │   │
+│   │  │  • Real-time subscriptions (WebSocket)                                       │    │   │
+│   │  │  • Role-based permissions (Admin/Teacher/Student)                            │    │   │
+│   │  │  • Relationship tracking (foreign keys → GraphQL joins)                      │    │   │
+│   │  │  • Actions (custom business logic via webhooks)                              │    │   │
+│   │  │  • Event triggers (async processing)                                         │    │   │
+│   │  └─────────────────────────────────┬───────────────────────────────────────────┘    │   │
+│   └─────────────────────────────────────┼───────────────────────────────────────────────┘   │
+│                                         │                                                   │
+│                                         │ PostgreSQL Wire Protocol                         │
+│                                         ▼                                                   │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │                              🟢 SUPABASE BACKEND                                     │   │
+│   │                                                                                      │   │
+│   │  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐         │   │
+│   │  │  PostgreSQL   │  │  Supabase     │  │  Supabase     │  │    Edge       │         │   │
+│   │  │   Database    │  │    Auth       │  │   Storage     │  │  Functions    │         │   │
+│   │  │  (35+ tables) │  │ (JWT, email)  │  │ (files, PDFs) │  │  (webhooks)   │         │   │
+│   │  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘         │   │
+│   │          │                  │                  │                  │                  │   │
+│   │  ┌───────┴──────────────────┴──────────────────┴──────────────────┴───────┐         │   │
+│   │  │                      Row Level Security (RLS)                           │         │   │
+│   │  │   • Super Admin → Full access                                           │         │   │
+│   │  │   • Admin roles → Scoped to their permissions                          │         │   │
+│   │  │   • Teachers → Own data + assigned classes/subjects                    │         │   │
+│   │  │   • Students → Own data only                                           │         │   │
+│   │  └─────────────────────────────────────────────────────────────────────────┘         │   │
+│   │                                                                                      │   │
+│   └──────────────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 DATA FLOW ARCHITECTURE
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    DATA FLOW DIAGRAM                                        │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐               │
+│  │   Admin     │     │   Teacher   │     │   Student   │     │   Public    │               │
+│  │   (Web/App) │     │    (App)    │     │    (App)    │     │   (View)    │               │
+│  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘     └──────┬──────┘               │
+│         │                   │                   │                   │                       │
+│         └─────────────┬─────┴─────────────┬─────┴───────────────────┘                       │
+│                       │                   │                                                 │
+│                       ▼                   ▼                                                 │
+│         ┌─────────────────────────────────────────────────┐                                 │
+│         │              Supabase Auth (JWT)                 │                                 │
+│         │  • Email login → JWT token                       │                                 │
+│         │  • Token contains: user_id, role, permissions    │                                 │
+│         │  • Auto-refresh on expiry                        │                                 │
+│         └────────────────────┬────────────────────────────┘                                 │
+│                              │                                                              │
+│                              ▼                                                              │
+│         ┌─────────────────────────────────────────────────┐                                 │
+│         │              Hasura GraphQL                      │                                 │
+│         │  ┌─────────────────────────────────────────┐    │                                 │
+│         │  │ Query: Get data (with RLS filtering)    │    │                                 │
+│         │  │ Mutation: Create/Update/Delete          │    │                                 │
+│         │  │ Subscription: Real-time updates         │    │                                 │
+│         │  └─────────────────────────────────────────┘    │                                 │
+│         └────────────────────┬────────────────────────────┘                                 │
+│                              │                                                              │
+│                              ▼                                                              │
+│         ┌─────────────────────────────────────────────────┐                                 │
+│         │              PostgreSQL + RLS                    │                                 │
+│         │  ┌─────────────────────────────────────────┐    │                                 │
+│         │  │ • profiles, roles, user_roles           │    │                                 │
+│         │  │ • departments, courses, subjects        │    │                                 │
+│         │  │ • students, teachers, attendance        │    │                                 │
+│         │  │ • exams, marks, assignments             │    │                                 │
+│         │  │ • canteen, library, bus, fees           │    │                                 │
+│         │  │ • notices, events, feedback             │    │                                 │
+│         │  │ • audit_logs (all actions logged)       │    │                                 │
+│         │  └─────────────────────────────────────────┘    │                                 │
+│         └────────────────────┬────────────────────────────┘                                 │
+│                              │                                                              │
+│                              ▼                                                              │
+│         ┌─────────────────────────────────────────────────┐                                 │
+│         │              Supabase Storage                    │                                 │
+│         │  • /profile-photos/{user_id}                    │                                 │
+│         │  • /materials/{course_id}/{file}                │                                 │
+│         │  • /assignments/{assignment_id}/submissions     │                                 │
+│         │  • /external-marks/{student_id}/{exam_id}       │                                 │
+│         │  • /notices/{notice_id}/attachments             │                                 │
+│         │  • /events/{event_id}/posters                   │                                 │
+│         └─────────────────────────────────────────────────┘                                 │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 MODULE DEPENDENCY GRAPH
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              MODULE DEPENDENCY GRAPH                                        │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│                              ┌─────────────────────┐                                        │
+│                              │    FOUNDATION       │                                        │
+│                              │  (Phase 1 - Done)   │                                        │
+│                              │  • Auth System      │                                        │
+│                              │  • UI Components    │                                        │
+│                              │  • Theme System     │                                        │
+│                              │  • Navigation       │                                        │
+│                              │  • Core DB Tables   │                                        │
+│                              └──────────┬──────────┘                                        │
+│                                         │                                                   │
+│              ┌──────────────────────────┼──────────────────────────┐                        │
+│              │                          │                          │                        │
+│              ▼                          ▼                          ▼                        │
+│  ┌───────────────────┐      ┌───────────────────┐      ┌───────────────────┐               │
+│  │   ADMIN MODULE    │      │  TEACHER MODULE   │      │  STUDENT MODULE   │               │
+│  │    (Phase 2-3)    │      │   (Phase 4-5)     │      │    (Phase 6-7)    │               │
+│  │                   │      │                   │      │                   │               │
+│  │ • User Mgmt       │◄────►│ • Timetable View  │◄────►│ • Timetable View  │               │
+│  │ • Academic Struct │      │ • Attendance Mark │      │ • Attendance View │               │
+│  │ • Timetable Mgmt  │      │ • Materials Upload│      │ • Materials DL    │               │
+│  │ • Exam Scheduling │      │ • Marks Entry     │      │ • Marks View      │               │
+│  │ • Marks Verify    │      │ • Assignments     │      │ • Assignments Sub │               │
+│  │ • Planner Monitor │      │ • Planner/Diary   │      │ • Exams/Results   │               │
+│  └─────────┬─────────┘      └─────────┬─────────┘      └─────────┬─────────┘               │
+│            │                          │                          │                          │
+│            └──────────────────────────┼──────────────────────────┘                          │
+│                                       │                                                     │
+│                                       ▼                                                     │
+│                         ┌─────────────────────────┐                                         │
+│                         │    UTILITY MODULES      │                                         │
+│                         │     (Phase 8-9)         │                                         │
+│                         │                         │                                         │
+│                         │  ┌─────────┐ ┌───────┐  │                                         │
+│                         │  │ Library │ │  Bus  │  │                                         │
+│                         │  └─────────┘ └───────┘  │                                         │
+│                         │  ┌─────────┐ ┌───────┐  │                                         │
+│                         │  │ Canteen │ │ Fees  │  │                                         │
+│                         │  └─────────┘ └───────┘  │                                         │
+│                         │  ┌─────────┐ ┌───────┐  │                                         │
+│                         │  │ Events  │ │Notices│  │                                         │
+│                         │  └─────────┘ └───────┘  │                                         │
+│                         └─────────────────────────┘                                         │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 👥 TEAM STRUCTURE & RESPONSIBILITIES
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    TEAM STRUCTURE                                           │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│                                   ┌─────────────┐                                           │
+│                                   │     ASH     │                                           │
+│                                   │  (Master)   │                                           │
+│                                   │             │                                           │
+│                                   │ • System    │                                           │
+│                                   │   Architect │                                           │
+│                                   │ • DB Design │                                           │
+│                                   │ • Code Rev  │                                           │
+│                                   │ • Core APIs │                                           │
+│                                   │ • Auth/RLS  │                                           │
+│                                   └──────┬──────┘                                           │
+│                                          │                                                  │
+│                   ┌──────────────────────┴──────────────────────┐                           │
+│                   │                                             │                           │
+│                   ▼                                             ▼                           │
+│           ┌─────────────┐                               ┌─────────────┐                     │
+│           │    ABIN     │                               │   CHRISTO   │                     │
+│           │ (Assistant) │                               │   & DEON    │                     │
+│           │             │                               │             │                     │
+│           │ • Teacher   │                               │ • Student   │                     │
+│           │   Module    │                               │   Module    │                     │
+│           │ • Admin UI  │                               │ • UI/UX     │                     │
+│           │ • GraphQL   │                               │ • Screens   │                     │
+│           │   Queries   │                               │ • Testing   │                     │
+│           └─────────────┘                               └─────────────┘                     │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 📅 DETAILED PHASE PLAN (12 WEEKS)
+
+---
+
+## 📌 PHASE 1: FOUNDATION & DATABASE (Week 1-2) ✅ COMPLETE
+
+**Status: DONE**
+
+| Task | Owner | Duration | Status |
+|------|-------|----------|--------|
+| Project Setup (Expo, TS, ESLint) | Ash | 1 day | ✅ |
+| UI Component Library | Christo | 3 days | ✅ |
+| Theme System (Dark/Light) | Deon | 2 days | ✅ |
+| Auth Flow (Email only) | Ash | 2 days | ✅ |
+| Database Schema Design | Ash | 2 days | ✅ |
+| Core Navigation Setup | Abin | 1 day | ✅ |
+| Supabase + Hasura Integration | Ash | 2 days | ✅ |
+
+---
+
+## 📌 PHASE 2: CORE DATABASE & ADMIN FOUNDATION (Week 3-4)
+
+**Goal: Complete database schema + Admin core screens**
+
+### Week 3: Database Layer
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Core Tables Migration** | Ash | 2 days | Phase 1 | profiles, roles, user_roles, departments, courses, subjects, semesters |
+| **Academic Tables** | Ash | 1 day | Core Tables | timetable_master, periods, rooms |
+| **Student/Teacher Tables** | Ash | 1 day | Core Tables | students, teachers, teacher_subjects, teacher_classes |
+| **RLS Policies - Core** | Ash | 1 day | All Tables | Super Admin, Principal, Dept Admin policies |
+| **Hasura Setup** | Abin | 2 days | Tables Done | Track all tables, relationships, permissions |
+| **Type Generation Script** | Abin | 0.5 day | Hasura | npm run gen:types working |
+| **GraphQL Queries Setup** | Abin | 1.5 days | Hasura | lib/graphql/queries.ts, mutations.ts |
+
+### Week 4: Admin Module - Core
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Admin Dashboard Enhancement** | Abin | 2 days | GraphQL Ready | Stats cards, quick actions, pending counts |
+| **User List Components** | Christo | 2 days | Types Ready | UserCard, UserList, filters, search |
+| **Students Management Screen** | Deon | 2 days | Components | /(admin)/users/students.tsx - list, block/unblock |
+| **Teachers Management Screen** | Deon | 2 days | Components | /(admin)/users/teachers.tsx - list, roles view |
+| **Pending Approvals Screen** | Christo | 1.5 days | GraphQL | /(admin)/users/pending.tsx |
+| **Admin Store Setup** | Abin | 1 day | Screens | userManagementStore.ts |
+
+### Week 3-4 Deliverables Checklist:
+
+```
+DATABASE (Ash):
+□ Migration: 20241201_core_tables.sql
+  - profiles (extended)
+  - roles (9 admin + 5 teacher)
+  - user_roles (many-to-many)
+  - departments
+  - courses
+  - subjects
+  - academic_years
+  - semesters
+
+□ Migration: 20241202_academic_tables.sql
+  - timetable_master
+  - periods
+  - rooms
+  - students (extended)
+  - teachers (extended)
+  - teacher_subjects
+  - teacher_classes
+
+□ Migration: 20241203_rls_policies.sql
+  - Super Admin: full access
+  - Principal: read all, limited write
+  - Dept Admin: dept scope
+  - HOD: dept + approval scope
+  - Teachers: own data
+  - Students: own data
+
+HASURA (Abin):
+□ Track all tables in Hasura Console
+□ Setup relationships:
+  - profiles → user_roles → roles
+  - students → profiles
+  - teachers → profiles
+  - courses → departments
+  - subjects → departments
+□ Permission rules per role
+□ Generated TypeScript types
+
+FRONTEND (Christo + Deon):
+□ Components:
+  - UserCard.tsx
+  - UserList.tsx
+  - FilterBar.tsx
+  - SearchInput.tsx
+  - StatusBadge.tsx
+  
+□ Screens:
+  - /(admin)/users/students.tsx
+  - /(admin)/users/teachers.tsx
+  - /(admin)/users/pending.tsx
+  - /(admin)/dashboard.tsx (enhanced)
+
+□ Stores:
+  - userManagementStore.ts
+```
+
+---
+
+## 📌 PHASE 3: ADMIN MODULE COMPLETE (Week 5-6)
+
+**Goal: Full Admin module with all 16 features**
+
+### Week 5: Academic Management + Exams
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Departments CRUD** | Christo | 1.5 days | Phase 2 | /(admin)/academic/departments.tsx |
+| **Courses CRUD** | Christo | 1.5 days | Departments | /(admin)/academic/courses.tsx |
+| **Subjects CRUD** | Deon | 1.5 days | Courses | /(admin)/academic/subjects.tsx |
+| **Timetable Builder** | Abin | 3 days | Subjects | /(admin)/timetable/create.tsx, assign.tsx, publish.tsx |
+| **Exam Tables Migration** | Ash | 1 day | Phase 2 | exams, exam_schedules, internal_marks, external_uploads |
+| **Exam Scheduling Screen** | Deon | 2 days | Exam Tables | /(admin)/exams/schedule.tsx |
+| **Exam Timetable Publish** | Deon | 1 day | Scheduling | /(admin)/exams/timetable.tsx |
+| **Marks Verification Screens** | Abin | 2 days | Exam Tables | verify-internal.tsx, verify-external.tsx |
+
+### Week 6: Notices, Analytics, Settings
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Notices Tables** | Ash | 0.5 day | Phase 2 | notices, notice_attachments |
+| **Notice Create Screen** | Christo | 1.5 days | Tables | /(admin)/notices/create.tsx |
+| **Notice Scheduling** | Christo | 1 day | Create | /(admin)/notices/scheduled.tsx |
+| **Analytics Dashboard** | Abin | 2 days | All Data | /(admin)/analytics/*.tsx (attendance, exams, dept) |
+| **Export Reports** | Abin | 1 day | Analytics | PDF/CSV export function |
+| **Settings Screens** | Deon | 2 days | - | academic-year.tsx, college-info.tsx, modules.tsx |
+| **Audit Log Viewer** | Deon | 1.5 days | audit_logs table | /(admin)/audit/logs.tsx |
+| **Admin Stores Complete** | Abin | 1 day | All Screens | All 15 admin stores |
+
+### Week 5-6 Deliverables Checklist:
+
+```
+DATABASE (Ash):
+□ Migration: 20241205_exam_tables.sql
+  - exams
+  - exam_schedules
+  - internal_marks
+  - external_uploads (student marks)
+  
+□ Migration: 20241206_notices_tables.sql
+  - notices
+  - notice_attachments
+  - notice_reads
+  
+□ Migration: 20241207_settings_tables.sql
+  - admin_settings
+  - holidays
+  - module_toggles
+
+FRONTEND (All):
+□ Academic Screens:
+  - departments.tsx
+  - courses.tsx
+  - subjects.tsx
+  - semesters.tsx
+  - minor-programs.tsx
+
+□ Timetable Screens:
+  - create.tsx (master timetable)
+  - assign.tsx (teacher assignment)
+  - rooms.tsx (room management)
+  - publish.tsx
+
+□ Exam Screens:
+  - schedule.tsx
+  - timetable.tsx
+  - verify-internal.tsx
+  - verify-external.tsx
+  - analytics.tsx
+
+□ Notice Screens:
+  - create.tsx
+  - scheduled.tsx
+  - index.tsx (enhanced)
+
+□ Analytics Screens:
+  - attendance.tsx
+  - exams.tsx
+  - departments.tsx
+  - export.tsx
+
+□ Settings Screens:
+  - academic-year.tsx
+  - college-info.tsx
+  - modules.tsx
+  - backup.tsx
+  - maintenance.tsx
+
+□ Audit Screen:
+  - logs.tsx
+
+STORES (Abin):
+□ academicStructureStore.ts
+□ examAdminStore.ts
+□ timetableAdminStore.ts
+□ noticeAdminStore.ts
+□ analyticsStore.ts
+□ settingsAdminStore.ts
+□ auditStore.ts
+```
+
+---
+
+## 📌 PHASE 4: TEACHER MODULE - CORE (Week 7-8)
+
+**Goal: Subject Teacher functionality complete**
+
+### Week 7: Base Teacher Features
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Teacher Tables** | Ash | 1 day | Phase 3 | teacher_subjects, attendance_records |
+| **Teacher Dashboard** | Abin | 2 days | Tables | /(teacher)/dashboard.tsx (enhanced) |
+| **Timetable View (Teacher)** | Christo | 1.5 days | timetable_master | /(teacher)/timetable/*.tsx |
+| **Attendance Tables** | Ash | 1 day | Teacher Tables | attendance, attendance_records |
+| **Attendance Marking UI** | Deon | 3 days | Tables | /(teacher)/attendance/mark.tsx, summary.tsx |
+| **Attendance Store** | Abin | 1 day | UI Done | attendanceStore.ts |
+| **Subject Teacher Store** | Abin | 1 day | - | subjectTeacherStore.ts |
+
+### Week 8: Materials, Assignments, Marks
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Materials Tables** | Ash | 0.5 day | - | teaching_materials |
+| **Materials Upload Screen** | Christo | 2 days | Storage Setup | /(teacher)/materials/upload.tsx |
+| **Materials List Screen** | Christo | 1 day | Upload | /(teacher)/materials/index.tsx |
+| **Assignment Tables** | Ash | 0.5 day | - | assignments, submissions |
+| **Assignment CRUD** | Deon | 2.5 days | Tables | /(teacher)/assignments/*.tsx |
+| **Submission Grading** | Deon | 1.5 days | CRUD | grade.tsx, feedback |
+| **Internal Marks Entry** | Abin | 2 days | exam tables | /(teacher)/marks/entry.tsx |
+| **CSV Upload for Marks** | Abin | 1 day | Entry | /(teacher)/marks/csv-upload.tsx |
+| **Materials Store** | Abin | 0.5 day | - | materialsStore.ts |
+| **Assignment Store** | Abin | 0.5 day | - | assignmentStore.ts |
+
+### Week 7-8 Deliverables Checklist:
+
+```
+DATABASE (Ash):
+□ Migration: 20241210_teacher_tables.sql
+  - teacher_subjects (junction)
+  - teacher_classes (junction)
+  
+□ Migration: 20241211_attendance_tables.sql
+  - attendance_sessions
+  - attendance_records
+  
+□ Migration: 20241212_materials_assignments.sql
+  - teaching_materials
+  - assignments
+  - submissions
+  
+□ Storage Buckets:
+  - materials (public read, auth upload)
+  - submissions (private)
+
+FRONTEND (All):
+□ Teacher Dashboard:
+  - Today's classes widget
+  - Quick attendance actions
+  - Pending submissions count
+  - Recent marks updates
+
+□ Timetable Screens:
+  - /(teacher)/timetable/index.tsx (today)
+  - /(teacher)/timetable/weekly.tsx
+  
+□ Attendance Screens:
+  - /(teacher)/attendance/mark.tsx
+  - /(teacher)/attendance/summary.tsx
+  - /(teacher)/attendance/history.tsx
+  
+□ Materials Screens:
+  - /(teacher)/materials/index.tsx
+  - /(teacher)/materials/upload.tsx
+  - /(teacher)/materials/[id].tsx
+  
+□ Assignment Screens:
+  - /(teacher)/assignments/index.tsx
+  - /(teacher)/assignments/create.tsx
+  - /(teacher)/assignments/[id].tsx
+  - /(teacher)/assignments/grade.tsx
+  
+□ Marks Screens:
+  - /(teacher)/marks/entry.tsx
+  - /(teacher)/marks/csv-upload.tsx
+  - /(teacher)/marks/subject-report.tsx
+
+STORES (Abin):
+□ teacherDashboardStore.ts
+□ timetableStore.ts
+□ attendanceStore.ts
+□ materialsStore.ts
+□ assignmentStore.ts
+□ marksStore.ts
+```
+
+---
+
+## 📌 PHASE 5: TEACHER MODULE - ADVANCED (Week 9-10)
+
+**Goal: Lesson Planner, Work Diary, Role-specific features**
+
+### Week 9: Planner & Diary
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Planner Tables** | Ash | 1 day | - | lesson_planners, planner_topics, planner_approvals |
+| **Diary Tables** | Ash | 1 day | - | work_diaries, diary_entries, diary_approvals |
+| **Syllabus Upload** | Christo | 1.5 days | Planner Tables | /(teacher)/planner/upload.tsx |
+| **Weekly Planner View** | Christo | 2 days | Upload | /(teacher)/planner/weekly.tsx |
+| **Mark Completed Topics** | Christo | 1 day | View | Completion toggle in view |
+| **Submit for Approval** | Abin | 1 day | View | Approval submission flow |
+| **Daily Diary Entry** | Deon | 2 days | Diary Tables | /(teacher)/diary/daily.tsx |
+| **Monthly Diary View** | Deon | 1.5 days | Daily | /(teacher)/diary/monthly.tsx |
+| **Diary Approval Submit** | Deon | 1 day | Monthly | Submit + status tracking |
+| **Planner/Diary Stores** | Abin | 1 day | All Screens | plannerStore.ts, diaryStore.ts |
+
+### Week 10: Role-Specific Features
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Substitution Tables** | Ash | 0.5 day | - | substitutions |
+| **Mentor Assignment Tables** | Ash | 0.5 day | - | mentor_assignments, counselling_notes |
+| **Class Teacher Dashboard** | Abin | 2 days | Tables | /(teacher)/class-teacher/dashboard.tsx |
+| **Class Attendance Overview** | Abin | 1 day | Dashboard | Full class attendance view |
+| **Mentor Dashboard** | Christo | 2 days | Tables | /(teacher)/mentor/dashboard.tsx |
+| **Counselling Notes** | Christo | 1.5 days | Dashboard | /(teacher)/mentor/notes.tsx |
+| **Coordinator Dashboard** | Deon | 2 days | Substitution | /(teacher)/coordinator/dashboard.tsx |
+| **Substitution Assignment** | Deon | 1.5 days | Dashboard | /(teacher)/coordinator/assign.tsx |
+| **HoD Dashboard** | Abin | 2 days | All | /(teacher)/hod/dashboard.tsx |
+| **Approval Screens (HoD)** | Abin | 1.5 days | Dashboard | Planner/Diary approval screens |
+
+### Week 9-10 Deliverables Checklist:
+
+```
+DATABASE (Ash):
+□ Migration: 20241215_planner_tables.sql
+  - lesson_planners
+  - planner_topics
+  - planner_approvals
+  
+□ Migration: 20241216_diary_tables.sql
+  - work_diaries
+  - diary_entries
+  - diary_approvals
+  
+□ Migration: 20241217_teacher_roles_tables.sql
+  - substitutions
+  - mentor_assignments
+  - counselling_notes
+
+FRONTEND (All):
+□ Lesson Planner Screens:
+  - /(teacher)/planner/upload.tsx
+  - /(teacher)/planner/weekly.tsx
+  - /(teacher)/planner/monthly.tsx
+  - /(teacher)/planner/status.tsx
+  
+□ Work Diary Screens:
+  - /(teacher)/diary/daily.tsx
+  - /(teacher)/diary/monthly.tsx
+  - /(teacher)/diary/status.tsx
+  
+□ Class Teacher Screens:
+  - /(teacher)/class-teacher/dashboard.tsx
+  - /(teacher)/class-teacher/students.tsx
+  - /(teacher)/class-teacher/attendance.tsx
+  
+□ Mentor Screens:
+  - /(teacher)/mentor/dashboard.tsx
+  - /(teacher)/mentor/students.tsx
+  - /(teacher)/mentor/notes.tsx
+  - /(teacher)/mentor/follow-up.tsx
+  
+□ Coordinator Screens:
+  - /(teacher)/coordinator/dashboard.tsx
+  - /(teacher)/coordinator/assign.tsx
+  - /(teacher)/coordinator/pending.tsx
+  
+□ HoD Screens:
+  - /(teacher)/hod/dashboard.tsx
+  - /(teacher)/hod/planners.tsx
+  - /(teacher)/hod/diaries.tsx
+  - /(teacher)/hod/analytics.tsx
+
+STORES (Abin):
+□ plannerStore.ts
+□ diaryStore.ts
+□ classTeacherStore.ts
+□ mentorStore.ts
+□ coordinatorStore.ts
+□ hodStore.ts
+```
+
+---
+
+## 📌 PHASE 6: STUDENT MODULE - CORE (Week 11-12)
+
+**Goal: Dashboard, Attendance, Timetable, Materials, Assignments**
+
+### Week 11: Student Core
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Student Dashboard** | Abin | 2 days | Teacher Done | /(student)/dashboard.tsx (full) |
+| **Profile View/Edit** | Christo | 1.5 days | - | /(student)/profile.tsx |
+| **Profile Photo Upload** | Christo | 1 day | Storage | /(student)/profile-photo.tsx |
+| **Attendance View** | Deon | 2 days | attendance tables | /(student)/attendance/index.tsx |
+| **Attendance Calendar** | Deon | 1.5 days | View | /(student)/attendance/calendar.tsx |
+| **Shortage Alerts** | Deon | 1 day | View | /(student)/attendance/alerts.tsx |
+| **Student Timetable** | Christo | 1.5 days | timetable tables | /(student)/timetable/*.tsx |
+| **Student Dashboard Store** | Abin | 1 day | Dashboard | studentDashboardStore.ts |
+| **Attendance Store (Student)** | Abin | 0.5 day | Attendance | attendanceStore.ts (student) |
+
+### Week 12: Materials, Assignments, Marks
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Materials Download** | Christo | 1.5 days | Teacher materials | /(student)/materials/index.tsx |
+| **Materials Search** | Christo | 1 day | Download | /(student)/materials/search.tsx |
+| **Offline Downloads** | Christo | 1 day | Download | /(student)/materials/downloads.tsx |
+| **Assignment List** | Deon | 1.5 days | Teacher assignments | /(student)/assignments/index.tsx |
+| **Assignment Submit** | Deon | 2 days | List | /(student)/assignments/submit.tsx |
+| **Assignment Feedback** | Deon | 1 day | Submit | /(student)/assignments/[id].tsx |
+| **Internal Marks View** | Abin | 1.5 days | marks tables | /(student)/marks/index.tsx |
+| **External Marks Upload** | Abin | 2 days | Storage | /(student)/marks/upload-external.tsx |
+| **Marks Store** | Abin | 0.5 day | Marks Screens | marksStore.ts (student) |
+| **Materials Store** | Abin | 0.5 day | Materials | materialsStore.ts (student) |
+
+### Week 11-12 Deliverables Checklist:
+
+```
+FRONTEND (All):
+□ Student Dashboard:
+  - Today's timetable widget
+  - Attendance percentage
+  - Pending assignments
+  - Recent marks
+  - Quick actions
+
+□ Profile Screens:
+  - /(student)/profile.tsx
+  - /(student)/profile-photo.tsx
+  
+□ Attendance Screens:
+  - /(student)/attendance/index.tsx
+  - /(student)/attendance/daily.tsx
+  - /(student)/attendance/calendar.tsx
+  - /(student)/attendance/alerts.tsx
+  
+□ Timetable Screens:
+  - /(student)/timetable/index.tsx
+  - /(student)/timetable/weekly.tsx
+  - /(student)/timetable/substitutions.tsx
+  
+□ Materials Screens:
+  - /(student)/materials/index.tsx
+  - /(student)/materials/[courseId].tsx
+  - /(student)/materials/downloads.tsx
+  - /(student)/materials/search.tsx
+  
+□ Assignment Screens:
+  - /(student)/assignments/index.tsx
+  - /(student)/assignments/[id].tsx
+  - /(student)/assignments/submit.tsx
+  - /(student)/assignments/calendar.tsx
+  
+□ Marks Screens:
+  - /(student)/marks/index.tsx
+  - /(student)/marks/[courseId].tsx
+  - /(student)/marks/history.tsx
+  - /(student)/marks/upload-external.tsx
+
+STORES (Abin):
+□ studentDashboardStore.ts
+□ attendanceStore.ts (student version)
+□ timetableStore.ts (student version)
+□ materialsStore.ts (student version)
+□ assignmentStore.ts (student version)
+□ marksStore.ts (student version)
+```
+
+---
+
+## 📌 PHASE 7: STUDENT MODULE - ACADEMIC + UTILITIES (Week 13-14)
+
+**Goal: Exams, Library, Canteen, Bus, Fees**
+
+### Week 13: Exams & Library
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Exam Timetable View** | Christo | 1.5 days | exam tables | /(student)/exams/timetable.tsx |
+| **Hall Ticket Screen** | Christo | 1 day | Exam View | /(student)/exams/hallticket.tsx |
+| **Results View** | Christo | 1.5 days | Results | /(student)/exams/results.tsx |
+| **GPA Calculator** | Christo | 1 day | Results | /(student)/exams/gpa.tsx |
+| **Library Tables** | Ash | 1 day | - | books, book_transactions, reservations |
+| **Library Search** | Deon | 1.5 days | Tables | /(student)/library/search.tsx |
+| **Borrowed Books** | Deon | 1 day | Search | /(student)/library/borrowed.tsx |
+| **Book Request** | Deon | 1 day | Borrowed | /(student)/library/request.tsx |
+| **Library Fines** | Deon | 0.5 day | Borrowed | /(student)/library/fines.tsx |
+| **Exam Store** | Abin | 1 day | Exam Screens | examStore.ts |
+| **Library Store** | Abin | 1 day | Library Screens | libraryStore.ts |
+
+### Week 14: Canteen, Bus, Fees
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Canteen Tables** | Ash | 1 day | - | canteen_menu, canteen_tokens, canteen_payments |
+| **Canteen Menu View** | Christo | 1 day | Tables | /(student)/canteen/index.tsx |
+| **Token Order System** | Christo | 2 days | Menu | /(student)/canteen/order.tsx, token-status.tsx |
+| **My Orders** | Christo | 1 day | Order | /(student)/canteen/my-orders.tsx |
+| **Bus Tables** | Ash | 0.5 day | - | bus_routes, bus_stops, bus_subscriptions |
+| **Bus Selection** | Deon | 1.5 days | Tables | /(student)/bus/select.tsx |
+| **Bus Route View** | Deon | 1 day | Selection | /(student)/bus/route.tsx |
+| **Bus Alerts** | Deon | 0.5 day | Route | /(student)/bus/alerts.tsx |
+| **Fee Tables** | Ash | 0.5 day | - | fee_structure, payments, receipts |
+| **Fee Details** | Abin | 1.5 days | Tables | /(student)/fees/index.tsx |
+| **Fee Payment** | Abin | 1.5 days | Details | /(student)/fees/pay.tsx |
+| **Fee Receipts** | Abin | 1 day | Payment | /(student)/fees/receipts.tsx |
+| **Canteen Store** | Abin | 0.5 day | Canteen | canteenStore.ts |
+| **Bus Store** | Abin | 0.5 day | Bus | busStore.ts |
+| **Fee Store** | Abin | 0.5 day | Fee | feeStore.ts |
+
+### Week 13-14 Deliverables Checklist:
+
+```
+DATABASE (Ash):
+□ Migration: 20241220_library_tables.sql
+  - books
+  - book_transactions
+  - reservations
+  
+□ Migration: 20241221_canteen_tables.sql
+  - canteen_menu
+  - canteen_tokens
+  - canteen_token_counter
+  - canteen_payments
+  
+□ Migration: 20241222_bus_tables.sql
+  - bus_routes
+  - bus_stops
+  - bus_subscriptions
+  - bus_approvals
+  
+□ Migration: 20241223_fee_tables.sql
+  - fee_structure
+  - payments
+  - receipts
+
+FRONTEND (All):
+□ Exam Screens:
+  - /(student)/exams/index.tsx
+  - /(student)/exams/timetable.tsx
+  - /(student)/exams/hallticket.tsx
+  - /(student)/exams/results.tsx
+  - /(student)/exams/gpa.tsx
+  
+□ Library Screens:
+  - /(student)/library/index.tsx
+  - /(student)/library/search.tsx
+  - /(student)/library/borrowed.tsx
+  - /(student)/library/fines.tsx
+  - /(student)/library/request.tsx
+  
+□ Canteen Screens:
+  - /(student)/canteen/index.tsx
+  - /(student)/canteen/order.tsx
+  - /(student)/canteen/token-status.tsx
+  - /(student)/canteen/my-orders.tsx
+  - /(student)/canteen/request-refund.tsx
+  
+□ Bus Screens:
+  - /(student)/bus/index.tsx
+  - /(student)/bus/select.tsx
+  - /(student)/bus/route.tsx
+  - /(student)/bus/alerts.tsx
+  
+□ Fee Screens:
+  - /(student)/fees/index.tsx
+  - /(student)/fees/receipts.tsx
+  - /(student)/fees/dues.tsx
+  - /(student)/fees/pay.tsx
+
+STORES (Abin):
+□ examStore.ts
+□ libraryStore.ts
+□ canteenStore.ts
+□ busStore.ts
+□ feeStore.ts
+```
+
+---
+
+## 📌 PHASE 8: REMAINING FEATURES & POLISH (Week 15-16)
+
+**Goal: Events, Feedback, Notices, Settings, Honors/Minor**
+
+### Week 15: Events, Feedback, Notices
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Events List** | Christo | 1 day | events table | /(student)/events/index.tsx |
+| **Event Details** | Christo | 1 day | List | /(student)/events/[id].tsx |
+| **Certificates** | Christo | 1 day | Details | /(student)/events/certificates.tsx |
+| **Feedback Tables** | Ash | 0.5 day | - | feedback, complaints, complaint_comments |
+| **Teacher Feedback** | Deon | 1.5 days | Tables | /(student)/feedback/teacher.tsx |
+| **College Feedback** | Deon | 1 day | Tables | /(student)/feedback/college.tsx |
+| **Complaints System** | Deon | 2 days | Tables | /(student)/feedback/complaints.tsx |
+| **Notices View** | Abin | 1.5 days | notice tables | /(student)/notices/index.tsx |
+| **Notice Details** | Abin | 1 day | View | /(student)/notices/[id].tsx |
+| **Push Notifications** | Abin | 1.5 days | All | Notification service setup |
+| **Event Store** | Abin | 0.5 day | Events | eventStore.ts |
+| **Feedback Store** | Abin | 0.5 day | Feedback | feedbackStore.ts |
+| **Notice Store** | Abin | 0.5 day | Notices | noticeStore.ts |
+
+### Week 16: Honors/Minor, Settings, Admin Utilities
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Minor Programs Tables** | Ash | 0.5 day | - | minor_programs, minor_applications |
+| **Honors/Minor View** | Christo | 1.5 days | Tables | /(student)/honors/index.tsx |
+| **Minor Selection** | Christo | 1.5 days | View | /(student)/honors/minor.tsx |
+| **Settings Screen** | Deon | 1.5 days | - | /(student)/settings/index.tsx |
+| **Notification Prefs** | Deon | 1 day | Settings | /(student)/settings/notifications.tsx |
+| **Support Screens** | Deon | 1.5 days | - | /(student)/support/*.tsx (contacts, faq) |
+| **Admin Library Screens** | Christo | 2 days | Library Tables | /(admin)/library/*.tsx |
+| **Admin Bus Screens** | Deon | 2 days | Bus Tables | /(admin)/bus/*.tsx |
+| **Admin Canteen Screens** | Abin | 2 days | Canteen Tables | /(admin)/canteen/*.tsx |
+| **Admin Fee Screens** | Abin | 2 days | Fee Tables | /(admin)/fees/*.tsx |
+| **Canteen Staff Screens** | Ash | 1 day | Canteen | canteen-staff/*.tsx (dashboard, status) |
+
+### Week 15-16 Deliverables Checklist:
+
+```
+DATABASE (Ash):
+□ Migration: 20241225_feedback_tables.sql
+  - feedback
+  - complaints
+  - complaint_comments
+  
+□ Migration: 20241226_honors_tables.sql
+  - minor_programs
+  - minor_applications
+  
+□ Migration: 20241227_student_settings.sql
+  - student_settings
+
+FRONTEND (All):
+□ Event Screens:
+  - /(student)/events/index.tsx
+  - /(student)/events/[id].tsx
+  - /(student)/events/certificates.tsx
+  
+□ Feedback Screens:
+  - /(student)/feedback/index.tsx
+  - /(student)/feedback/teacher.tsx
+  - /(student)/feedback/college.tsx
+  - /(student)/feedback/complaints.tsx
+  
+□ Notice Screens:
+  - /(student)/notices/index.tsx
+  - /(student)/notices/[id].tsx
+  - /(student)/notices/notifications.tsx
+  
+□ Honors/Minor Screens:
+  - /(student)/honors/index.tsx
+  - /(student)/honors/minor.tsx
+  - /(student)/honors/courses.tsx
+  
+□ Settings Screens:
+  - /(student)/settings/index.tsx
+  - /(student)/settings/notifications.tsx
+  - /(student)/settings/about.tsx
+  
+□ Support Screens:
+  - /(student)/support/index.tsx
+  - /(student)/support/contacts.tsx
+  - /(student)/support/faq.tsx
+  
+□ Admin Utility Screens:
+  - /(admin)/library/*.tsx
+  - /(admin)/bus/*.tsx
+  - /(admin)/canteen/*.tsx
+  - /(admin)/fees/*.tsx
+
+STORES (Abin):
+□ honorsStore.ts
+□ settingsStore.ts (student)
+```
+
+---
+
+## 📌 PHASE 9: TESTING & OPTIMIZATION (Week 17-18)
+
+**Goal: Full testing, performance optimization, bug fixes**
+
+### Week 17: Testing
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Unit Tests Setup** | Ash | 1 day | - | Jest config, test utils |
+| **Auth Tests** | Ash | 1 day | Unit Tests | auth flow tests |
+| **Admin Module Tests** | Abin | 2 days | Unit Tests | All admin store tests |
+| **Teacher Module Tests** | Abin | 2 days | Unit Tests | All teacher store tests |
+| **Student Module Tests** | Christo | 2 days | Unit Tests | All student store tests |
+| **Integration Tests** | Deon | 2 days | All | API integration tests |
+| **E2E Test Setup** | Deon | 1 day | - | Detox config |
+| **Critical Path E2E** | Deon | 2 days | E2E Setup | Login, Dashboard, Attendance flows |
+
+### Week 18: Optimization
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Performance Audit** | Ash | 1 day | All Modules | Performance report |
+| **List Virtualization** | Christo | 2 days | Audit | FlatList optimizations |
+| **Image Optimization** | Christo | 1 day | Audit | Lazy loading, caching |
+| **Bundle Size Reduction** | Abin | 1.5 days | Audit | Tree shaking, code splitting |
+| **API Caching** | Abin | 1.5 days | Audit | React Query integration |
+| **Offline Support** | Deon | 2 days | Caching | AsyncStorage caching |
+| **Memory Leaks Fix** | Ash | 1 day | Audit | Memory profiling fixes |
+| **Android Performance** | Ash | 1 day | Audit | Android-specific optimizations |
+| **Bug Fixes** | All | 2 days | Testing | Critical bug fixes |
+
+---
+
+## 📌 PHASE 10: SECURITY & LAUNCH (Week 19-20)
+
+**Goal: Security audit, final polish, deployment**
+
+### Week 19: Security
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Security Audit** | Ash | 2 days | - | Security report |
+| **RLS Policy Review** | Ash | 1 day | Audit | RLS fixes |
+| **API Security Review** | Ash | 1 day | Audit | API hardening |
+| **Input Validation** | Abin | 2 days | Audit | Zod schemas everywhere |
+| **Error Handling** | Abin | 1 day | Audit | Global error boundaries |
+| **Audit Logging Complete** | Christo | 2 days | - | All actions logged |
+| **Session Security** | Deon | 1 day | Audit | Token refresh, expiry handling |
+| **Data Encryption** | Deon | 1 day | Audit | Sensitive data encryption |
+
+### Week 20: Launch
+
+| Task | Owner | Duration | Dependencies | Deliverables |
+|------|-------|----------|--------------|--------------|
+| **Final Bug Fixes** | All | 2 days | Testing | All critical bugs fixed |
+| **App Icons & Splash** | Christo | 1 day | - | Final assets |
+| **Play Store Prep** | Deon | 1 day | Assets | Listing, screenshots |
+| **App Store Prep** | Deon | 1 day | Assets | Listing, screenshots |
+| **Production Deploy** | Ash | 1 day | All | Production Supabase/Hasura |
+| **CI/CD Setup** | Ash | 1 day | Deploy | GitHub Actions |
+| **Documentation** | Abin | 2 days | All | User guide, API docs |
+| **Team Training** | Ash | 1 day | Docs | Admin training session |
+| **Launch!** | All | - | All | 🚀 |
+
+---
+
+## 📊 PHASE SUMMARY TABLE
+
+| Phase | Week | Focus | Ash | Abin | Christo | Deon |
+|-------|------|-------|-----|------|---------|------|
+| 1 | 1-2 | Foundation | ✅ Setup, Auth, DB | ✅ Nav | ✅ UI Components | ✅ Theme |
+| 2 | 3-4 | DB + Admin Core | DB, RLS | Hasura, Stores | Components | Screens |
+| 3 | 5-6 | Admin Complete | Exam Tables | Analytics, Marks | Academic, Notices | Exams, Settings |
+| 4 | 7-8 | Teacher Core | Attendance Tables | Dashboard, Marks | Materials | Attendance, Assign |
+| 5 | 9-10 | Teacher Advanced | Planner/Diary Tables | HoD, Approvals | Planner, Mentor | Diary, Coordinator |
+| 6 | 11-12 | Student Core | - | Dashboard, Stores | Profile, Materials | Attendance, Assign |
+| 7 | 13-14 | Student Utilities | Utility Tables | Fees | Exams, Canteen | Library, Bus |
+| 8 | 15-16 | Remaining | Feedback Tables | Notices, Admin Utils | Events, Honors | Feedback, Settings |
+| 9 | 17-18 | Testing | Unit Tests, Perf | Store Tests, Caching | UI Tests, Images | Integration, E2E |
+| 10 | 19-20 | Launch | Security, Deploy | Validation, Docs | Audit Log, Assets | Security, Stores |
+
+---
+
+## 🔑 KEY MILESTONES
+
+| Milestone | Target Date | Deliverable |
+|-----------|-------------|-------------|
+| Database Schema Complete | Week 4 | All migrations applied |
+| Admin Module Complete | Week 6 | All 16 admin features working |
+| Teacher Module Complete | Week 10 | All 5 teacher roles working |
+| Student Core Complete | Week 12 | Dashboard, Attendance, Assignments |
+| Student Full Complete | Week 14 | All 18 student features |
+| All Features Complete | Week 16 | Full app functionality |
+| Testing Complete | Week 18 | All tests passing |
+| Launch Ready | Week 20 | App deployed to stores |
+
+---
+
+## 📝 DAILY STANDUP FORMAT
+
+Each day, all team members report:
+
+1. **Yesterday**: What was completed
+2. **Today**: What will be worked on
+3. **Blockers**: Any issues needing help
+
+**Standup Time**: 9:00 AM daily (15 min max)
+
+---
+
+## 🔄 CODE REVIEW PROCESS
+
+1. **All PRs require review** before merge
+2. **Ash reviews**: Database changes, Auth, Security
+3. **Abin reviews**: GraphQL, State management, API
+4. **Cross-review**: Christo ↔ Deon for UI screens
+
+**PR Template**:
+```markdown
+## Summary
+[What does this PR do?]
+
+## Type
+- [ ] Feature
+- [ ] Bug Fix
+- [ ] Refactor
+
+## Screens/Components
+- List of affected files
+
+## Testing
+- How was this tested?
+
+## Screenshots (if UI)
+[Add screenshots]
+```
+
+---
+
+## 📁 BRANCH STRATEGY
+
+```
+main (production)
+  │
+  └── develop (integration)
+        │
+        ├── feature/admin-users      (Abin)
+        ├── feature/admin-academic   (Christo)
+        ├── feature/admin-exams      (Deon)
+        ├── feature/teacher-core     (Abin)
+        ├── feature/teacher-planner  (Christo)
+        ├── feature/student-core     (Deon)
+        └── fix/bug-name             (anyone)
+```
+
+**Naming Convention**:
+- `feature/module-feature` for new features
+- `fix/bug-description` for bug fixes
+- `refactor/area` for refactoring
+
+---
+
+*Team Phase Plan - Last Updated: November 30, 2025*
