@@ -5,11 +5,11 @@
 import { GraphQLClient } from 'graphql-request';
 import { supabase } from '../supabase';
 
-// Hasura GraphQL endpoint (configure in env)
+// Hasura GraphQL endpoint
 const HASURA_ENDPOINT = process.env.EXPO_PUBLIC_HASURA_ENDPOINT || 
-  'https://your-hasura-instance.hasura.app/v1/graphql';
+  'https://college-app.hasura.app/v1/graphql';
 
-const HASURA_ADMIN_SECRET = process.env.EXPO_PUBLIC_HASURA_ADMIN_SECRET || '';
+const HASURA_ADMIN_SECRET = process.env.EXPO_PUBLIC_HASURA_ADMIN_SECRET || 'HVT25ZPcgXcv0z2U0O7DCnFUwnZKaAofseki4rvNRCDF02xEi9j2EgGwZj9QEFKb';
 
 // Create base client
 const createClient = async () => {

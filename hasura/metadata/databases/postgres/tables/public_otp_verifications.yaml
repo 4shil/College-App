@@ -1,0 +1,3 @@
+table:
+  name: otp_verifications
+  schema: public

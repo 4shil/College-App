@@ -1,3 +1,12 @@
+import { Redirect } from 'expo-router';
+
+// Redirect to the new academic folder structure
+export default function AcademicScreen() {
+  return <Redirect href="/(admin)/academic/" />;
+}
+
+/* LEGACY CODE - Kept for reference but no longer used
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -54,7 +63,7 @@ interface Subject {
   };
 }
 
-export default function AcademicScreen() {
+function AcademicScreenLegacy() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeStore();
 

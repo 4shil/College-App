@@ -1,0 +1,13 @@
+table:
+  name: mentor_assignments
+  schema: public
+object_relationships:
+  - name: academic_year
+    using:
+      foreign_key_constraint_on: academic_year_id
+  - name: student
+    using:
+      foreign_key_constraint_on: student_id
+  - name: teacher
+    using:
+      foreign_key_constraint_on: mentor_id

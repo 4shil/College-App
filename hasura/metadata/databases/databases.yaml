@@ -1,0 +1,14 @@
+- name: postgres
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        connection_parameters:
+          database: postgres
+          host: aws-1-ap-northeast-2.pooler.supabase.com
+          password: BCA@2024hocuspocus123
+          port: 5432
+          username: postgres.celwfcflcofejjpkpgcq
+      isolation_level: read-committed
+      use_prepared_statements: false
+  tables: "!include postgres/tables/tables.yaml"

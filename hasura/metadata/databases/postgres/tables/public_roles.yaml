@@ -1,0 +1,18 @@
+table:
+  name: roles
+  schema: public
+array_relationships:
+  - name: profiles
+    using:
+      foreign_key_constraint_on:
+        column: primary_role
+        table:
+          name: profiles
+          schema: public
+  - name: user_roles
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          name: user_roles
+          schema: public

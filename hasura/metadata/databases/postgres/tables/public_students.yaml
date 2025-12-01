@@ -1,0 +1,33 @@
+table:
+  name: students
+  schema: public
+object_relationships:
+  - name: academic_year
+    using:
+      foreign_key_constraint_on: academic_year_id
+  - name: department
+    using:
+      foreign_key_constraint_on: department_id
+  - name: profile
+    using:
+      foreign_key_constraint_on: user_id
+  - name: program
+    using:
+      foreign_key_constraint_on: program_id
+  - name: section
+    using:
+      foreign_key_constraint_on: section_id
+  - name: semester
+    using:
+      foreign_key_constraint_on: semester_id
+  - name: year
+    using:
+      foreign_key_constraint_on: year_id
+array_relationships:
+  - name: mentor_assignments
+    using:
+      foreign_key_constraint_on:
+        column: student_id
+        table:
+          name: mentor_assignments
+          schema: public

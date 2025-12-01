@@ -1,3 +1,12 @@
+import { Redirect } from 'expo-router';
+
+// Redirect to the new users folder structure
+export default function UsersScreen() {
+  return <Redirect href="/(admin)/users/" />;
+}
+
+/* LEGACY CODE - Kept for reference but no longer used
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -50,7 +59,7 @@ interface Teacher {
   } | null;
 }
 
-export default function UsersScreen() {
+function UsersScreenLegacy() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeStore();
 

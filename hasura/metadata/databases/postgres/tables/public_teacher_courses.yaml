@@ -1,0 +1,16 @@
+table:
+  name: teacher_courses
+  schema: public
+object_relationships:
+  - name: academic_year
+    using:
+      foreign_key_constraint_on: academic_year_id
+  - name: course
+    using:
+      foreign_key_constraint_on: course_id
+  - name: section
+    using:
+      foreign_key_constraint_on: section_id
+  - name: teacher
+    using:
+      foreign_key_constraint_on: teacher_id
