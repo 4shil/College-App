@@ -11,6 +11,7 @@ interface AuthState {
   profile: Profile | null;
   roles: RoleName[];
   primaryRole: RoleName | null;
+  userRole: 'admin' | 'teacher' | 'student' | null; // Legacy support
   
   // Flags
   isLoading: boolean;
@@ -26,6 +27,7 @@ interface AuthState {
   setRoles: (roles: RoleName[]) => void;
   setLoading: (loading: boolean) => void;
   setAuthUser: (authUser: AuthUser | null) => void;
+  setUserRole: (role: 'admin' | 'teacher' | 'student' | null) => void;
   logout: () => void;
 }
 
@@ -54,6 +56,7 @@ export const useAuthStore = createStore<AuthState>((set, get) => ({
   profile: null,
   roles: [],
   primaryRole: null,
+  userRole: null,
   isLoading: true,
   isAuthenticated: false,
   isAdmin: false,
@@ -89,6 +92,8 @@ export const useAuthStore = createStore<AuthState>((set, get) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
 
+  setUserRole: (userRole) => set({ userRole }),
+
   setAuthUser: (authUser) => {
     if (!authUser) {
       set({
@@ -122,6 +127,7 @@ export const useAuthStore = createStore<AuthState>((set, get) => ({
       profile: null,
       roles: [],
       primaryRole: null,
+      userRole: null,
       isAuthenticated: false,
       isAdmin: false,
       isTeacher: false,

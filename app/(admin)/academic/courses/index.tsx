@@ -373,7 +373,7 @@ export default function CoursesScreen() {
               </ScrollView>
 
               <View style={styles.modalActions}>
-                <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={() => setShowAddModal(false)}>
+                <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.glassBorder }]} onPress={() => setShowAddModal(false)}>
                   <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <PrimaryButton

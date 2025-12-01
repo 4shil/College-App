@@ -382,7 +382,7 @@ export default function StudentDetailsScreen() {
                       styles.parentItem,
                       index < parents.length - 1 && {
                         borderBottomWidth: 1,
-                        borderBottomColor: colors.border,
+                        borderBottomColor: colors.glassBorder,
                         paddingBottom: 12,
                         marginBottom: 12,
                       },

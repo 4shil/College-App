@@ -77,7 +77,7 @@ export default function TeachersListScreen() {
       let filtered = data || [];
       if (searchQuery) {
         const search = searchQuery.toLowerCase();
-        filtered = filtered.filter(t => 
+        filtered = filtered.filter((t: Teacher) => 
           t.profile?.full_name?.toLowerCase().includes(search) ||
           t.profile?.email?.toLowerCase().includes(search) ||
           t.employee_id?.toLowerCase().includes(search)

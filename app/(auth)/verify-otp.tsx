@@ -303,7 +303,7 @@ export default function VerifyOTPScreen() {
                 {otp.map((digit, index) => (
                   <TextInput
                     key={index}
-                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    ref={(ref) => { inputRefs.current[index] = ref; }}
                     style={[
                       styles.otpInput,
                       {
@@ -314,7 +314,7 @@ export default function VerifyOTPScreen() {
                           ? colors.primary
                           : error
                           ? '#f87171'
-                          : colors.border,
+                          : colors.glassBorder,
                         color: colors.textPrimary,
                       },
                     ]}

@@ -146,12 +146,12 @@ export default function UsersIndexScreen() {
                 <Text style={[styles.statValue, { color: colors.primary }]}>45</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Teachers</Text>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
                 <Text style={[styles.statValue, { color: '#10b981' }]}>380</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Students</Text>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
                 <Text style={[styles.statValue, { color: '#f59e0b' }]}>3</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>

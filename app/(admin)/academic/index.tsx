@@ -157,13 +157,13 @@ export default function AcademicIndexScreen() {
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>6</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Depts</Text>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
                 <FontAwesome5 name="graduation-cap" size={16} color="#10b981" />
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>8</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Courses</Text>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
                 <FontAwesome5 name="book" size={16} color="#f59e0b" />
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>45</Text>

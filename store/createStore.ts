@@ -43,7 +43,7 @@ export function createStore<T extends object>(createState: StateCreator<T>) {
 
     useEffect(() => {
       const unsubscribe = subscribe(() => forceUpdate({}));
-      return unsubscribe;
+      return () => { unsubscribe(); };
     }, []);
 
     return selector ? selector(state) : state;

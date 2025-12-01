@@ -299,12 +299,12 @@ export default function ForgotPasswordScreen() {
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  ref={(ref) => { inputRefs.current[index] = ref; }}
                   style={[
                     styles.otpInput,
                     {
                       backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                      borderColor: digit ? colors.primary : error ? '#f87171' : colors.border,
+                      borderColor: digit ? colors.primary : error ? '#f87171' : colors.glassBorder,
                       color: colors.textPrimary,
                     },
                   ]}

@@ -94,6 +94,7 @@ export default function AdminLayout() {
           ),
         }}
       />
+      {/* Users tab - points to users folder */}
       <Tabs.Screen
         name="users"
         options={{
@@ -105,6 +106,7 @@ export default function AdminLayout() {
           ),
         }}
       />
+      {/* Academic tab - points to academic folder */}
       <Tabs.Screen
         name="academic"
         options={{

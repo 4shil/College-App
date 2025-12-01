@@ -1,7 +1,8 @@
 // Polyfill for import.meta.env in non-ESM environments
-if (typeof globalThis !== 'undefined' && !globalThis.importMetaEnv) {
+const _global = globalThis as unknown as Record<string, unknown>;
+if (typeof globalThis !== 'undefined' && !_global.importMetaEnv) {
   // Create a mock import.meta.env
-  globalThis.importMetaEnv = {
+  _global.importMetaEnv = {
     MODE: __DEV__ ? 'development' : 'production',
     DEV: __DEV__,
     PROD: !__DEV__,

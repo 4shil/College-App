@@ -108,7 +108,7 @@ export default function StudentsListScreen() {
       let filtered = data || [];
       if (searchQuery) {
         const search = searchQuery.toLowerCase();
-        filtered = filtered.filter(s =>
+        filtered = filtered.filter((s: Student) =>
           s.profile?.full_name?.toLowerCase().includes(search) ||
           s.profile?.email?.toLowerCase().includes(search) ||
           s.registration_number?.toLowerCase().includes(search)

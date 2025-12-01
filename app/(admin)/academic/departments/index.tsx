@@ -60,7 +60,7 @@ export default function DepartmentsScreen() {
 
       // Fetch counts for each department
       const deptsWithCounts = await Promise.all(
-        (depts || []).map(async (dept) => {
+        (depts || []).map(async (dept: Department) => {
           const [studentsRes, teachersRes] = await Promise.all([
             supabase.from('students').select('id', { count: 'exact', head: true }).eq('department_id', dept.id),
             supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('department_id', dept.id),
@@ -397,7 +397,7 @@ export default function DepartmentsScreen() {
 
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[styles.cancelBtn, { borderColor: colors.border }]}
+                  style={[styles.cancelBtn, { borderColor: colors.glassBorder }]}
                   onPress={() => setShowAddModal(false)}
                 >
                   <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
