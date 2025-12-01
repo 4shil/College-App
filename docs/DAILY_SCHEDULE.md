@@ -1,360 +1,1458 @@
-# 📅 VIBE CODERS DAILY SCHEDULE
-## JPM College App - Aggressive 8-Week Sprint
+# JPM College App - Daily Schedule
 
-**Target:** 3-5 screens/features per person per day  
-**Duration:** 8 weeks = 40 working days  
-**Team:** Ash, Abin, Christo, Deon  
-**Motto:** "Ship fast, fix faster" 🚀
+## Team: Ash, Abin, Christo, Deon
+## Start Date: December 1, 2025
+## Timeline: 1 complete page per person per day
 
 ---
 
-# WEEK 1: FULL FOUNDATION
-
-## Day 1 (Mon) - Setup + Auth + Core UI
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Supabase + `profiles`, `roles`, `user_roles`, `departments`, `courses` + ALL RLS | 5 tables + RLS |
-| **Abin** | Hasura + track tables + GraphQL client + `authStore.ts` + `themeStore.ts` | Full backend ready |
-| **Christo** | `GlassCard`, `GlassInput`, `PrimaryButton`, `Badge`, `Avatar`, `Modal`, Login | 6 components + 1 screen |
-| **Deon** | `Tabs`, `SearchBar`, `EmptyState`, `Spinner`, `ProgressBar`, `FAB`, Register | 6 components + 1 screen |
-
-## Day 2 (Tue) - Auth Complete + Admin Layout
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `students`, `teachers`, `subjects`, `semesters` + storage buckets + seed all roles | 4 tables + storage |
-| **Abin** | All auth queries/mutations, navigation guards, profile queries | Full auth API |
-| **Christo** | Forgot password, OTP, Auth layout, `AnimatedBackground`, Admin layout | 4 screens/layouts |
-| **Deon** | `ListItem`, `DatePicker`, `BottomSheet`, connect auth to stores | 3 components + integration |
-
-## Day 3 (Wed) - Admin Users + Dashboard
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `timetable_master`, `periods`, `attendance_sessions`, `attendance_records`, `notices`, `events` | 6 tables + RLS |
-| **Abin** | `userManagementStore.ts`, `academicStore.ts`, dashboard stats query | 2 stores + queries |
-| **Christo** | Admin dashboard (FULL), `StatCard`, `QuickActions`, Users list | 4 features |
-| **Deon** | User detail, Add/Edit user, Block user, Academic index | 4 screens |
-
-## Day 4 (Thu) - Academic + Timetable + Notices
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `teaching_materials`, `assignments`, `submissions`, `exams`, `exam_schedule` | 5 tables + RLS |
-| **Abin** | `noticeStore.ts`, `eventStore.ts`, timetable queries, academic mutations | 2 stores + APIs |
-| **Christo** | Departments CRUD, Courses CRUD, Subjects CRUD, Semesters | 4 CRUD screens |
-| **Deon** | Timetable builder (FULL), Notices CRUD, Events CRUD | 3 full modules |
-
-## Day 5 (Fri) - Library + Bus + Exams
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `books`, `book_issues`, `bus_routes`, `bus_stops`, `bus_subscriptions`, `internal_marks`, `external_uploads` | 7 tables |
-| **Abin** | `libraryStore.ts`, `busStore.ts`, `examAdminStore.ts` | 3 stores |
-| **Christo** | Library CRUD (add, issue, return, overdue), Book catalog | 5 screens |
-| **Deon** | Bus CRUD (routes, stops), Subscriptions, Exam CRUD (create, list, schedule) | 5 screens |
+# ADMIN MODULE (Days 1-20)
 
 ---
 
-# WEEK 2: ADMIN COMPLETE + TEACHER START
+## Day 1
 
-## Day 6 (Mon) - Canteen + Fees + Settings
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `canteen_menu_items`, `canteen_tokens`, `token_items`, `fees_structure`, `fee_payments`, `app_settings` | 6 tables |
-| **Abin** | `canteenAdminStore.ts`, `feesStore.ts`, `settingsStore.ts` | 3 stores |
-| **Christo** | Canteen menu CRUD, Token list, Token status, Sales summary | 4 screens |
-| **Deon** | Fees structure, Fee collection, Payment history, Admin settings | 4 screens |
+### Ash → Login Screen
+**Backend:**
+- Create `profiles` table with all fields
+- Create `roles` table with 9 admin roles + teacher + student roles
+- Create `user_roles` junction table
+- Set up RLS policies for auth.users access
+- Create login trigger to set last_login timestamp
 
-## Day 7 (Tue) - Honors + Teacher Layout + Dashboard
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `honors_minor_programs`, `honors_minor_enrollments`, `lesson_plans`, `teacher_diary`, `feedback`, `student_settings` | 6 tables |
-| **Abin** | `teacherDashboardStore.ts`, teacher queries, today's schedule query | 1 store + queries |
-| **Christo** | Honors admin, Enrollment management, Teacher layout | 3 screens |
-| **Deon** | Teacher dashboard (FULL), Today's classes, Pending tasks | 3 screens |
+**Frontend:**
+- Login screen UI with email + password fields
+- Form validation (email format, password length)
+- Error handling (invalid credentials, network error)
+- Loading state during login
+- Navigate to role-based dashboard on success
 
-## Day 8 (Wed) - Attendance + Marks
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | `teacher_subjects`, `teacher_classes`, all teacher RLS, attendance RLS | Tables + RLS |
-| **Abin** | `attendanceStore.ts`, `marksStore.ts` (with CSV parser) | 2 stores |
-| **Christo** | Class selection, Attendance marking (FULL), Attendance history | 3 screens |
-| **Deon** | Exam selection, Marks entry (FULL), CSV upload, Marks summary | 4 screens |
-
-## Day 9 (Thu) - Assignments + Materials
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Assignment RLS, materials storage bucket, submissions bucket | RLS + storage |
-| **Abin** | `assignmentStore.ts`, `materialsStore.ts`, submissions query | 2 stores |
-| **Christo** | Create assignment, Assignment list, View submissions, Grade | 4 screens |
-| **Deon** | Upload material, Materials list, Edit/delete material, Preview | 4 screens |
-
-## Day 10 (Fri) - Planner + Diary + Mentor
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Mentor tables, lesson plan RLS, diary RLS | Tables + RLS |
-| **Abin** | `plannerStore.ts`, `diaryStore.ts`, mentor queries | 2 stores |
-| **Christo** | Lesson planner (create, view, calendar), Plans list | 4 screens |
-| **Deon** | Teacher diary (add, view, date picker), Mentor dashboard, Mentees | 5 screens |
+**Store:**
+- `authStore.ts` with signIn(), user state, loading, error
 
 ---
 
-# WEEK 3: TEACHER ROLES + STUDENT START
+### Abin → Register Screen
+**Backend:**
+- Create `students` table with all registration fields
+- Create `teachers` table with all registration fields
+- RLS for new user registration
+- Email verification trigger via Supabase Auth
 
-## Day 11 (Mon) - HoD + Coordinator + Class Teacher
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | HoD RLS, Coordinator RLS, Class teacher RLS, approval workflows | All role RLS |
-| **Abin** | `hodStore.ts`, `coordinatorStore.ts`, approval queries | 2 stores |
-| **Christo** | HoD dashboard, Dept stats, Marks verification, Approve/reject | 4 screens |
-| **Deon** | Coordinator dashboard, Schedule approval, Class dashboard, Class report | 4 screens |
+**Frontend:**
+- Register screen UI with step-by-step form
+- Role selection (Student/Teacher)
+- Form validation for all fields
+- Password strength indicator
+- Terms & conditions checkbox
 
-## Day 12 (Tue) - Student Foundation
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | All student RLS, profile photo RLS, photo upload trigger | Student security |
-| **Abin** | `studentDashboardStore.ts`, profile mutations, dashboard query | 1 store |
-| **Christo** | Student layout, Student dashboard (FULL), Quick links | 3 screens |
-| **Deon** | Profile view, Profile edit, Photo upload, Photo preview | 4 screens |
-
-## Day 13 (Wed) - Attendance + Timetable + Materials
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Student attendance view RLS, timetable RLS, materials RLS | RLS updates |
-| **Abin** | Attendance queries, timetable query, materials query | All queries |
-| **Christo** | Attendance overview, By subject, Attendance calendar | 3 screens |
-| **Deon** | Timetable (today + week), Materials list, Material download | 4 screens |
-
-## Day 14 (Thu) - Assignments + Exams
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Submission RLS, exam view RLS, marks view RLS | RLS updates |
-| **Abin** | `assignmentStudentStore.ts`, `examStudentStore.ts` | 2 stores |
-| **Christo** | Pending/submitted assignments, Submit assignment, Detail | 4 screens |
-| **Deon** | Exam schedule, Countdown, Marks view, Marks history | 4 screens |
-
-## Day 15 (Fri) - External Marks + Results + Library
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | External upload RLS, results RLS, library student RLS | RLS updates |
-| **Abin** | `externalMarksStore.ts`, `libraryStudentStore.ts`, results query | 2 stores |
-| **Christo** | External upload, Upload status, Results view, CGPA calc | 4 screens |
-| **Deon** | My books, Book catalog, Book detail, Due reminders | 4 screens |
+**Store:**
+- `authStore.ts` signUp() function
+- Profile creation after auth signup
 
 ---
 
-# WEEK 4: STUDENT COMPLETE
+### Christo → Admin Dashboard
+**Backend:**
+- Create `departments` table
+- Create `courses` table
+- Create dashboard stats view (total students, teachers, pending approvals)
+- RLS for admin-only access
 
-## Day 16 (Mon) - Bus + Canteen
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Bus student RLS, canteen student RLS, token triggers | RLS + triggers |
-| **Abin** | `busStudentStore.ts`, `canteenStudentStore.ts`, realtime | 2 stores |
-| **Christo** | Bus routes, Subscribe, Status, Route map | 4 screens |
-| **Deon** | Menu view, Cart, Place order, Order confirm | 4 screens |
+**Frontend:**
+- Dashboard UI with stat cards
+- Quick action buttons (Users, Academic, Notices, Settings)
+- Today's summary section
+- Navigation to all admin modules
+- Pull-to-refresh functionality
 
-## Day 17 (Tue) - Canteen Tokens + Events
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Token number trigger, status notification trigger, events RLS | Triggers + RLS |
-| **Abin** | Events query, token status subscription | Queries |
-| **Christo** | My tokens, Token status, Token QR, Token history | 4 screens |
-| **Deon** | Events list, Event detail, External link handler | 3 screens |
-
-## Day 18 (Wed) - Honors + Feedback + Settings
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Honors student RLS, enrollment trigger, feedback RLS | RLS + triggers |
-| **Abin** | `honorsStore.ts`, feedback mutations, settings store | 2 stores |
-| **Christo** | Available programs, Program detail, Apply, Status | 4 screens |
-| **Deon** | Feedback form, History, Settings (notifications, theme, logout) | 4 screens |
-
-## Day 19 (Thu) - All Modules Polish
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Test all student flows, fix bugs, UI consistency | Student complete |
-
-## Day 20 (Fri) - Full Integration Test
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Cross-module testing, Admin→Teacher→Student flows | All flows working |
+**Store:**
+- `adminDashboardStore.ts` with stats query
 
 ---
 
-# WEEK 5: INTEGRATION + NOTIFICATIONS
+### Deon → OTP Verification Screen
+**Backend:**
+- OTP verification via Supabase Auth email
+- Resend OTP logic with cooldown timer
+- Update profile status on verification
 
-## Day 21 (Mon) - RLS Audit + Performance
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Full RLS security audit, fix vulnerabilities | Security verified |
-| **Abin** | Query optimization, N+1 fixes, caching | Performance tuned |
-| **Christo** | UI consistency audit, fix design issues | UI polished |
-| **Deon** | Navigation audit, UX improvements | UX improved |
+**Frontend:**
+- 6-digit OTP input boxes
+- Auto-focus next box on input
+- Countdown timer for resend
+- Resend OTP button
+- Success navigation to dashboard
 
-## Day 22 (Tue) - Push Notifications
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | FCM setup, notification triggers (attendance, assignments, tokens) | Backend notifications |
-| **Abin** | `notificationStore.ts`, notification queries | 1 store |
-| **Christo** | Notification list, Badges, In-app alerts | 3 features |
-| **Deon** | Mark read, Preferences, Clear all, Push handling | 4 features |
-
-## Day 23 (Wed) - Offline + Error Handling
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Offline strategy, sync functions | Offline backend |
-| **Abin** | Offline data sync, error boundaries | Offline client |
-| **Christo** | Offline indicators, Error screens, Retry UI | 3 features |
-| **Deon** | Sync status, Retry logic, Error toasts | 3 features |
-
-## Day 24 (Thu) - Analytics + Monitoring
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Analytics events, DB monitoring setup | Analytics backend |
-| **Abin** | Analytics integration, performance tracking | Analytics client |
-| **Christo** | Image optimization, lazy loading | Optimizations |
-| **Deon** | Bundle optimization, code splitting | Optimizations |
-
-## Day 25 (Fri) - Full Regression
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Complete regression test, fix all bugs | All features stable |
+**Store:**
+- `authStore.ts` verifyOTP(), resendOTP()
 
 ---
 
-# WEEK 6: E2E TESTING
+## Day 2
 
-## Day 26 (Mon) - Test Setup + Auth Tests
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | E2E test DB, seed test data | Test infrastructure |
-| **Abin** | Detox setup, test helpers | E2E framework |
-| **Christo** | Auth tests (login, register, forgot, OTP) | 4 test suites |
-| **Deon** | Role switching tests, navigation tests | 2 test suites |
+### Ash → Forgot Password Screen
+**Backend:**
+- Password reset via Supabase Auth
+- Email template for reset link
+- Reset token validation
 
-## Day 27 (Tue) - Module E2E Tests
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Generate comprehensive test data | All test scenarios |
-| **Abin** | Admin E2E (users, academic, exams) | Admin suite |
-| **Christo** | Teacher E2E (attendance, marks, materials) | Teacher suite |
-| **Deon** | Student E2E (all features) | Student suite |
+**Frontend:**
+- Email input form
+- Send reset link button
+- Success message with email confirmation
+- Loading and error states
 
-## Day 28 (Wed) - Security + Edge Cases
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Security audit, SQL injection tests | Security passed |
-| **Abin** | API security, rate limiting | API secured |
-| **Christo** | Input validation, XSS prevention | Frontend secure |
-| **Deon** | Edge cases, error scenarios | All handled |
-
-## Day 29 (Thu) - Fix + Retest
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Fix failing tests, rerun all E2E | All tests pass |
-
-## Day 30 (Fri) - UAT Prep
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Prepare UAT environment, user guides | UAT ready |
+**Store:**
+- `authStore.ts` resetPassword()
 
 ---
 
-# WEEK 7: UAT + POLISH
+### Abin → Users List Screen (Teachers)
+**Backend:**
+- Teacher list query with pagination
+- Filter by department, status
+- Search by name, email, employee ID
+- RLS for admin viewing
 
-## Day 31-33 (Mon-Wed) - UAT Sessions
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Conduct UAT with stakeholders, collect feedback | Feedback documented |
+**Frontend:**
+- Teachers list with tabs (Active/Inactive/All)
+- Search bar with filters
+- Teacher card with photo, name, department
+- Pagination or infinite scroll
+- Add teacher FAB button
 
-## Day 34 (Thu) - UAT Bug Fixes
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Fix all UAT issues | Bugs fixed |
-
-## Day 35 (Fri) - Final Polish
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Final UI polish, animation tweaks | App polished |
-
----
-
-# WEEK 8: PRODUCTION + LAUNCH
-
-## Day 36 (Mon) - Production Setup
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Prod Supabase, secrets, data migration | Prod backend |
-| **Abin** | Prod Hasura, API testing | Prod API |
-| **Christo** | App icons, splash, store screenshots | Store assets |
-| **Deon** | Store descriptions, privacy policy | Store materials |
-
-## Day 37 (Tue) - Build + Test
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **Ash** | Final data migration, backup strategy | Data ready |
-| **Abin** | Release build config | Build config |
-| **Christo** | Android build (APK/AAB), device testing | Android ready |
-| **Deon** | iOS build (IPA), device testing | iOS ready |
-
-## Day 38 (Wed) - Production Testing
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Full production test on real devices | Prod verified |
-
-## Day 39 (Thu) - Submission
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | App store submission | Submitted |
-
-## Day 40 (Fri) - LAUNCH! 🚀
-| Member | Tasks | Deliverables |
-|--------|-------|--------------|
-| **ALL** | Monitor launch, celebrate! | **APP LIVE!** |
+**Store:**
+- `userManagementStore.ts` with getTeachers(), filters
 
 ---
 
-# 📊 VIBE METRICS
+### Christo → Users List Screen (Students)
+**Backend:**
+- Student list query with pagination
+- Filter by department, year, semester, section
+- Search by name, email, registration number
+- RLS for admin viewing
 
-## Expected Daily Output
-| Role | Min Screens | Tables/RLS | Stores | Components |
-|------|-------------|------------|--------|------------|
-| Ash | - | 5-7 | - | - |
-| Abin | - | - | 2-3 | - |
-| Christo | 4-5 | - | - | 2-3 |
-| Deon | 4-5 | - | - | 2-3 |
+**Frontend:**
+- Students list with filters
+- Search bar
+- Student card with photo, name, course, year
+- Filter dropdown (Department, Year, Semester)
+- Pagination
 
-## Total Output (40 days)
-- **~160+ screens** (4 members × 4 screens × ~10 days each)
-- **~35 database tables** with full RLS
-- **~25 Zustand stores**
-- **~30 reusable components**
-
----
-
-# 🔥 VIBE CODER RULES
-
-1. **Ship > Perfect** - Done beats perfect every time
-2. **AI First** - Copilot for everything, 10x speed
-3. **Copy-paste OK** - Reuse aggressively
-4. **No Blockers** - Log issues, move on, fix later
-5. **Daily Demos** - Show what you shipped
-6. **Async Comms** - No meetings, just chat
-7. **Friday = Integration** - Merge everything, test together
-8. **Same-day PRs** - Review and merge within hours
+**Store:**
+- `userManagementStore.ts` getStudents()
 
 ---
 
-# 🎯 WEEKLY MILESTONES
+### Deon → Add Teacher Screen
+**Backend:**
+- Teacher creation mutation
+- Role assignment (Subject Teacher default)
+- Department assignment
+- Profile photo upload to Supabase Storage
 
-| Week | Focus | Screens |
-|------|-------|---------|
-| 1 | Foundation + Auth + Admin Core | ~50 |
-| 2 | Admin Complete + Teacher Core | ~100 |
-| 3 | Teacher Complete + Student Core | ~130 |
-| 4 | Student Complete | ~160 |
-| 5 | Integration + Notifications | Polish |
-| 6 | E2E Testing | Tests |
-| 7 | UAT + Fixes | Final |
-| 8 | Launch! 🚀 | **LIVE** |
+**Frontend:**
+- Add teacher form (all fields)
+- Department dropdown
+- Role checkboxes
+- Photo upload picker
+- Form validation
+- Submit button with loading state
+
+**Store:**
+- `userManagementStore.ts` createTeacher()
 
 ---
 
-*Vibe Coders - 8 Weeks to Launch! 🚀*
+## Day 3
+
+### Ash → Add Student Screen
+**Backend:**
+- Student creation mutation
+- Auto-generate registration number
+- Section assignment
+- Profile photo upload
+
+**Frontend:**
+- Add student form (all fields)
+- Department/Year/Semester/Section dropdowns
+- Photo upload picker
+- Parent details section
+- Form validation
+
+**Store:**
+- `userManagementStore.ts` createStudent()
+
+---
+
+### Abin → Teacher Detail Screen
+**Backend:**
+- Get teacher by ID query
+- Update teacher mutation
+- Block/unblock teacher mutation
+- Reset password mutation
+
+**Frontend:**
+- Teacher profile view
+- Edit mode toggle
+- Assigned subjects list
+- Assigned classes list
+- Block/Unblock button
+- Reset password button
+
+**Store:**
+- `userManagementStore.ts` getTeacher(), updateTeacher()
+
+---
+
+### Christo → Student Detail Screen
+**Backend:**
+- Get student by ID query
+- Update student mutation
+- Block/unblock student mutation
+- View attendance summary
+
+**Frontend:**
+- Student profile view
+- Edit mode toggle
+- Attendance percentage display
+- Fee status display
+- Block/Unblock button
+
+**Store:**
+- `userManagementStore.ts` getStudent(), updateStudent()
+
+---
+
+### Deon → Assign Teacher Roles Screen
+**Backend:**
+- Get teacher's current roles query
+- Assign/remove role mutation
+- Role hierarchy validation
+
+**Frontend:**
+- Role selection checkboxes
+- Role descriptions
+- Save changes button
+- Warning for removing roles
+
+**Store:**
+- `userManagementStore.ts` assignRole(), removeRole()
+
+---
+
+## Day 4
+
+### Ash → Departments Screen
+**Backend:**
+- Departments CRUD mutations
+- HoD assignment mutation
+- Department stats query
+
+**Frontend:**
+- Department list
+- Add/Edit department modal
+- HoD dropdown selector
+- Department card with stats
+- Delete confirmation
+
+**Store:**
+- `academicStructureStore.ts` departments CRUD
+
+---
+
+### Abin → Courses Screen
+**Backend:**
+- Courses CRUD mutations
+- Course-department relationship
+- Course stats query
+
+**Frontend:**
+- Course list by department
+- Add/Edit course modal
+- Department filter
+- Course card with details
+
+**Store:**
+- `academicStructureStore.ts` courses CRUD
+
+---
+
+### Christo → Subjects Screen
+**Backend:**
+- Subjects CRUD mutations
+- Subject-course relationship
+- Credits, hours fields
+
+**Frontend:**
+- Subject list by course
+- Add/Edit subject modal
+- Course/Semester filter
+- Subject card with credits, type
+
+**Store:**
+- `academicStructureStore.ts` subjects CRUD
+
+---
+
+### Deon → Semesters Screen
+**Backend:**
+- Semesters CRUD mutations
+- Academic year relationship
+- Start/end dates
+
+**Frontend:**
+- Semester list
+- Add/Edit semester modal
+- Year filter
+- Set active semester
+
+**Store:**
+- `academicStructureStore.ts` semesters CRUD
+
+---
+
+## Day 5
+
+### Ash → Sections Screen
+**Backend:**
+- Sections CRUD mutations
+- Section-course-semester relationship
+- Class teacher assignment
+
+**Frontend:**
+- Section list
+- Add/Edit section modal
+- Assign class teacher dropdown
+- Student count display
+
+**Store:**
+- `academicStructureStore.ts` sections CRUD
+
+---
+
+### Abin → Exam Schedule Screen
+**Backend:**
+- `exams` table with type, dates
+- Exam schedule CRUD mutations
+- Publish/unpublish mutation
+
+**Frontend:**
+- Exam list (Internal/Model/University)
+- Add exam schedule form
+- Date/time picker
+- Subject-wise schedule grid
+- Publish button
+
+**Store:**
+- `examAdminStore.ts` examSchedules CRUD
+
+---
+
+### Christo → Exam Timetable Screen
+**Backend:**
+- Exam timetable query by semester
+- Room assignment mutation
+- Timetable publish mutation
+
+**Frontend:**
+- Timetable grid view
+- Room assignment dropdown
+- Publish to students/teachers
+- Print/export button
+
+**Store:**
+- `examAdminStore.ts` timetable query
+
+---
+
+### Deon → Verify Internal Marks Screen
+**Backend:**
+- Get pending internal marks query
+- Verify/reject marks mutation
+- Audit log entry
+
+**Frontend:**
+- Pending marks list
+- Filter by subject, exam
+- Marks preview modal
+- Verify/Reject buttons
+- Remarks input
+
+**Store:**
+- `examAdminStore.ts` verifyMarks()
+
+---
+
+## Day 6
+
+### Ash → Verify External Marks Screen
+**Backend:**
+- Get pending external uploads query
+- Verify/reject upload mutation
+- Audit log entry
+
+**Frontend:**
+- Pending uploads list
+- Document preview (PDF/image)
+- Marks entry form
+- Verify/Reject buttons
+
+**Store:**
+- `examAdminStore.ts` verifyExternalMarks()
+
+---
+
+### Abin → Attendance View Screen
+**Backend:**
+- Attendance summary query by class
+- Department-wise attendance query
+- Date range filter
+
+**Frontend:**
+- Attendance summary cards
+- Filter by department, class, date
+- Percentage charts
+- Drill down to student list
+
+**Store:**
+- `attendanceAdminStore.ts` getAttendanceSummary()
+
+---
+
+### Christo → Attendance Edit Screen
+**Backend:**
+- Edit attendance mutation with reason
+- Audit log for all edits
+- Grace period check
+
+**Frontend:**
+- Student attendance list
+- Edit status dropdown
+- Reason input (required)
+- Save with confirmation
+- Audit trail display
+
+**Store:**
+- `attendanceAdminStore.ts` editAttendance()
+
+---
+
+### Deon → Shortage List Screen
+**Backend:**
+- Get students below threshold query
+- Shortage list publish mutation
+- Notification trigger
+
+**Frontend:**
+- Shortage students list
+- Filter by percentage threshold
+- Publish shortage list button
+- Send notification toggle
+
+**Store:**
+- `attendanceAdminStore.ts` getShortageList()
+
+---
+
+## Day 7
+
+### Ash → Master Timetable Screen
+**Backend:**
+- `timetable` table with periods
+- Timetable CRUD mutations
+- Period validation (no conflicts)
+
+**Frontend:**
+- Timetable grid editor
+- Add period modal
+- Drag-drop reorder
+- Conflict warnings
+- Section selector
+
+**Store:**
+- `timetableAdminStore.ts` timetable CRUD
+
+---
+
+### Abin → Teacher-Period Assignment Screen
+**Backend:**
+- Assign teacher to period mutation
+- Workload calculation query
+- Conflict check query
+
+**Frontend:**
+- Teacher dropdown per period
+- Workload display per teacher
+- Conflict warnings
+- Bulk assign mode
+
+**Store:**
+- `timetableAdminStore.ts` assignTeacher()
+
+---
+
+### Christo → Room Management Screen
+**Backend:**
+- `rooms` table CRUD
+- Room-period assignment
+- Capacity tracking
+
+**Frontend:**
+- Room list
+- Add/Edit room modal
+- Assign to periods
+- Capacity indicator
+
+**Store:**
+- `timetableAdminStore.ts` rooms CRUD
+
+---
+
+### Deon → Publish Timetable Screen
+**Backend:**
+- Timetable publish mutation
+- Push notification trigger
+- Version tracking
+
+**Frontend:**
+- Preview timetable
+- Publish confirmation
+- Notify students/teachers checkboxes
+- Publish history
+
+**Store:**
+- `timetableAdminStore.ts` publishTimetable()
+
+---
+
+## Day 8
+
+### Ash → Notices List Screen
+**Backend:**
+- Notices query with filters
+- Scheduled notices query
+- Notice stats query
+
+**Frontend:**
+- Notices list
+- Filter by category, status
+- Pinned notices section
+- Add notice FAB
+
+**Store:**
+- `noticeAdminStore.ts` getNotices()
+
+---
+
+### Abin → Create Notice Screen
+**Backend:**
+- Create notice mutation
+- Attachment upload
+- Target audience selection
+
+**Frontend:**
+- Notice form (title, content)
+- Rich text editor
+- Audience selector (All/Dept/Class)
+- Attachment picker
+- Schedule date picker
+
+**Store:**
+- `noticeAdminStore.ts` createNotice()
+
+---
+
+### Christo → Notice Detail Screen
+**Backend:**
+- Get notice by ID query
+- Update notice mutation
+- Delete notice mutation
+
+**Frontend:**
+- Notice full view
+- Edit mode
+- Attachment preview
+- Delete confirmation
+- View count display
+
+**Store:**
+- `noticeAdminStore.ts` updateNotice()
+
+---
+
+### Deon → Scheduled Notices Screen
+**Backend:**
+- Scheduled notices query
+- Cancel scheduled mutation
+- Reschedule mutation
+
+**Frontend:**
+- Scheduled notices list
+- Calendar view
+- Cancel/Reschedule buttons
+- Edit scheduled notice
+
+**Store:**
+- `noticeAdminStore.ts` scheduledNotices
+
+---
+
+## Day 9
+
+### Ash → Library Books Screen
+**Backend:**
+- `library_books` table CRUD
+- Book availability query
+- Search books query
+
+**Frontend:**
+- Books list with search
+- Add/Edit book modal
+- Availability indicator
+- Filter by category
+
+**Store:**
+- `libraryAdminStore.ts` books CRUD
+
+---
+
+### Abin → Issue/Return Book Screen
+**Backend:**
+- `library_transactions` table
+- Issue book mutation
+- Return book mutation
+- Calculate fine mutation
+
+**Frontend:**
+- Issue form (student, book)
+- Return form (scan/search)
+- Due date picker
+- Fine display
+- Transaction history
+
+**Store:**
+- `libraryAdminStore.ts` issueBook(), returnBook()
+
+---
+
+### Christo → Library Reservations Screen
+**Backend:**
+- Reservations queue query
+- Process reservation mutation
+- Notify student trigger
+
+**Frontend:**
+- Reservation queue list
+- Process next button
+- Student notification status
+- Cancel reservation
+
+**Store:**
+- `libraryAdminStore.ts` reservations
+
+---
+
+### Deon → Library Analytics Screen
+**Backend:**
+- Library stats query
+- Popular books query
+- Overdue books query
+
+**Frontend:**
+- Usage stats cards
+- Popular books chart
+- Overdue list
+- Export report button
+
+**Store:**
+- `libraryAdminStore.ts` analytics
+
+---
+
+## Day 10
+
+### Ash → Bus Routes Screen
+**Backend:**
+- `bus_routes` table CRUD
+- Route stops JSONB handling
+- Route stats query
+
+**Frontend:**
+- Routes list
+- Add/Edit route modal
+- Stops editor (add/remove/reorder)
+- Vehicle assignment
+
+**Store:**
+- `busAdminStore.ts` routes CRUD
+
+---
+
+### Abin → Bus Stops Screen
+**Backend:**
+- Stops management
+- Timing per stop
+- Stop sequence update
+
+**Frontend:**
+- Stops list per route
+- Add/Edit stop modal
+- Time picker per stop
+- Reorder stops
+
+**Store:**
+- `busAdminStore.ts` stops CRUD
+
+---
+
+### Christo → Bus Approvals Screen
+**Backend:**
+- Pending approvals query
+- Approve/reject mutation
+- Notification trigger
+
+**Frontend:**
+- Pending requests list
+- Student details view
+- Approve/Reject buttons
+- Bulk approve mode
+
+**Store:**
+- `busAdminStore.ts` approvals
+
+---
+
+### Deon → Bus Alerts Screen
+**Backend:**
+- Bus alerts CRUD
+- Schedule alert mutation
+- Push notification trigger
+
+**Frontend:**
+- Alerts list
+- Create alert form
+- Target route selector
+- Schedule date picker
+- Send now button
+
+**Store:**
+- `busAdminStore.ts` alerts
+
+---
+
+## Day 11
+
+### Ash → Canteen Menu Screen
+**Backend:**
+- `canteen_menu` table CRUD
+- Daily menu management
+- Price update mutation
+
+**Frontend:**
+- Menu items list
+- Add/Edit item modal
+- Category tabs
+- Image upload
+- Set sold out toggle
+
+**Store:**
+- `canteenAdminStore.ts` menu CRUD
+
+---
+
+### Abin → Canteen Tokens Screen
+**Backend:**
+- Today's tokens query
+- Token status update mutation
+- Daily reset function
+
+**Frontend:**
+- Tokens list with status
+- Filter by status
+- Mark ready/collected buttons
+- Token details modal
+
+**Store:**
+- `canteenAdminStore.ts` tokens
+
+---
+
+### Christo → Canteen Refunds Screen
+**Backend:**
+- Refund request query
+- Process refund mutation
+- Payment gateway refund API
+
+**Frontend:**
+- Refund requests list
+- Refund details modal
+- Approve/Reject buttons
+- Refund reason input
+
+**Store:**
+- `canteenAdminStore.ts` refunds
+
+---
+
+### Deon → Canteen Reports Screen
+**Backend:**
+- Daily sales query
+- Category-wise sales query
+- Export report mutation
+
+**Frontend:**
+- Sales summary cards
+- Category breakdown chart
+- Date range picker
+- Export PDF/CSV button
+
+**Store:**
+- `canteenAdminStore.ts` reports
+
+---
+
+## Day 12
+
+### Ash → Fee Structure Screen
+**Backend:**
+- `fee_structure` table CRUD
+- Semester-wise fee setup
+- Component breakdown
+
+**Frontend:**
+- Fee structure list
+- Add/Edit fee modal
+- Components editor
+- Semester selector
+- Due date picker
+
+**Store:**
+- `feeAdminStore.ts` structure CRUD
+
+---
+
+### Abin → Payment Verification Screen
+**Backend:**
+- Pending payments query
+- Verify payment mutation
+- Receipt generation
+
+**Frontend:**
+- Pending payments list
+- Payment details modal
+- Verify button
+- Reject with reason
+- View proof image
+
+**Store:**
+- `feeAdminStore.ts` verifyPayment()
+
+---
+
+### Christo → Fee Receipts Screen
+**Backend:**
+- Receipts query
+- Upload receipt mutation
+- Receipt template
+
+**Frontend:**
+- Receipts list
+- Upload receipt form
+- Preview receipt
+- Download/Print button
+
+**Store:**
+- `feeAdminStore.ts` receipts
+
+---
+
+### Deon → Fee Reminders Screen
+**Backend:**
+- Overdue students query
+- Send reminder mutation
+- Bulk reminder mutation
+
+**Frontend:**
+- Overdue list
+- Select students
+- Send reminder button
+- Bulk send mode
+- Message template editor
+
+**Store:**
+- `feeAdminStore.ts` reminders
+
+---
+
+## Day 13
+
+### Ash → Events List Screen
+**Backend:**
+- `events` table CRUD
+- Events query with filters
+- Publish mutation
+
+**Frontend:**
+- Events list
+- Filter by type, status
+- Add event FAB
+- Event card with poster
+
+**Store:**
+- `eventAdminStore.ts` events
+
+---
+
+### Abin → Create Event Screen
+**Backend:**
+- Create event mutation
+- Poster upload
+- External link validation
+
+**Frontend:**
+- Event form (all fields)
+- Date/time picker
+- Poster upload
+- External registration link input
+- Venue input
+
+**Store:**
+- `eventAdminStore.ts` createEvent()
+
+---
+
+### Christo → Event Detail Screen
+**Backend:**
+- Get event by ID query
+- Update event mutation
+- Delete event mutation
+
+**Frontend:**
+- Event full view
+- Edit mode
+- Poster preview
+- Publish/Unpublish button
+- Delete confirmation
+
+**Store:**
+- `eventAdminStore.ts` updateEvent()
+
+---
+
+### Deon → Event Certificates Screen
+**Backend:**
+- Certificate upload mutation
+- Bulk certificate assignment
+
+**Frontend:**
+- Event selector
+- Upload certificate template
+- Generate for participants
+- Download all certificates
+
+**Store:**
+- `eventAdminStore.ts` certificates
+
+---
+
+## Day 14
+
+### Ash → Holidays Screen
+**Backend:**
+- `holidays` table CRUD
+- Holiday query by month
+- Affects filter (all/students/teachers)
+
+**Frontend:**
+- Holidays calendar view
+- Add/Edit holiday modal
+- Affects selector
+- Monthly view
+
+**Store:**
+- `calendarStore.ts` holidays CRUD
+
+---
+
+### Abin → Meetings Screen
+**Backend:**
+- `meetings` table CRUD
+- Meeting invites
+- Department filter
+
+**Frontend:**
+- Meetings list
+- Add meeting modal
+- Attendee type selector
+- Date/time/venue inputs
+- Send invites button
+
+**Store:**
+- `calendarStore.ts` meetings CRUD
+
+---
+
+### Christo → Attendance Analytics Screen
+**Backend:**
+- Attendance trends query
+- Department comparison query
+- Subject-wise stats
+
+**Frontend:**
+- Attendance charts
+- Department comparison
+- Subject breakdown
+- Date range picker
+- Export button
+
+**Store:**
+- `analyticsStore.ts` attendance
+
+---
+
+### Deon → Exam Analytics Screen
+**Backend:**
+- Exam performance query
+- Pass/fail statistics
+- Subject-wise analysis
+
+**Frontend:**
+- Performance charts
+- Pass/fail pie chart
+- Subject comparison
+- Semester filter
+
+**Store:**
+- `analyticsStore.ts` exams
+
+---
+
+## Day 15
+
+### Ash → Department Analytics Screen
+**Backend:**
+- Department performance query
+- Teacher workload query
+- Student distribution
+
+**Frontend:**
+- Department stats cards
+- Teacher workload chart
+- Student count per year
+- Export report
+
+**Store:**
+- `analyticsStore.ts` departments
+
+---
+
+### Abin → Export Reports Screen
+**Backend:**
+- Report generation functions
+- PDF/CSV export
+- Scheduled reports
+
+**Frontend:**
+- Report type selector
+- Date range picker
+- Format selector (PDF/CSV)
+- Download button
+- Email report option
+
+**Store:**
+- `analyticsStore.ts` export
+
+---
+
+### Christo → Audit Logs Screen
+**Backend:**
+- Audit logs query
+- Filter by action, user, entity
+- Date range filter
+
+**Frontend:**
+- Audit log list
+- Filter dropdowns
+- Date range picker
+- Log detail modal
+- Export logs
+
+**Store:**
+- `auditStore.ts` logs
+
+---
+
+### Deon → Academic Year Settings Screen
+**Backend:**
+- Academic year CRUD
+- Set active year mutation
+- Year transition logic
+
+**Frontend:**
+- Year list
+- Add/Edit year modal
+- Start/end date pickers
+- Set active button
+- Transition wizard
+
+**Store:**
+- `settingsAdminStore.ts` academicYear
+
+---
+
+## Day 16
+
+### Ash → College Info Settings Screen
+**Backend:**
+- College info update mutation
+- Logo upload
+- Contact details
+
+**Frontend:**
+- College name, address inputs
+- Logo upload picker
+- Contact details form
+- Save button
+
+**Store:**
+- `settingsAdminStore.ts` collegeInfo
+
+---
+
+### Abin → Module Toggles Screen
+**Backend:**
+- `module_toggles` table
+- Toggle module mutation
+- Module status query
+
+**Frontend:**
+- Module list with toggles
+- Enable/Disable switches
+- Module descriptions
+- Warning on disable
+
+**Store:**
+- `settingsAdminStore.ts` modules
+
+---
+
+### Christo → Backup Settings Screen
+**Backend:**
+- Backup trigger function
+- Backup history query
+- Restore function
+
+**Frontend:**
+- Backup now button
+- Backup history list
+- Restore button
+- Confirmation modal
+
+**Store:**
+- `settingsAdminStore.ts` backup
+
+---
+
+### Deon → Maintenance Mode Screen
+**Backend:**
+- Maintenance mode toggle
+- Force logout all users
+- Scheduled maintenance
+
+**Frontend:**
+- Maintenance toggle
+- Message input
+- Schedule maintenance picker
+- Force logout button
+
+**Store:**
+- `settingsAdminStore.ts` maintenance
+
+---
+
+## Day 17
+
+### Ash → Monitor Planners Screen
+**Backend:**
+- All planners query
+- Status filter
+- Department filter
+
+**Frontend:**
+- Planners list
+- Status tabs
+- Department filter
+- Planner preview modal
+
+**Store:**
+- `plannerDiaryStore.ts` planners
+
+---
+
+### Abin → Monitor Diaries Screen
+**Backend:**
+- All diaries query
+- Status filter
+- Month/year filter
+
+**Frontend:**
+- Diaries list
+- Status tabs
+- Month picker
+- Diary preview modal
+
+**Store:**
+- `plannerDiaryStore.ts` diaries
+
+---
+
+### Christo → Minor Programs Screen
+**Backend:**
+- `minor_programs` table CRUD
+- Selection window toggle
+- Enrollment stats
+
+**Frontend:**
+- Minor programs list
+- Add/Edit modal
+- Open/close selection toggle
+- Enrollment count display
+
+**Store:**
+- `academicStructureStore.ts` minorPrograms
+
+---
+
+### Deon → Minor Applications Screen
+**Backend:**
+- Applications query
+- Approve/reject mutation
+- Notification trigger
+
+**Frontend:**
+- Applications list
+- Filter by program, status
+- Approve/Reject buttons
+- Bulk actions
+
+**Store:**
+- `academicStructureStore.ts` minorApplications
+
+---
+
+## Day 18
+
+### Ash → External Uploads Review Screen
+**Backend:**
+- Pending uploads query
+- Document preview query
+- Approve with marks mutation
+
+**Frontend:**
+- Uploads list
+- Document viewer (PDF/image)
+- Marks input form
+- Approve/Reject buttons
+
+**Store:**
+- `examAdminStore.ts` externalUploads
+
+---
+
+### Abin → Fee Analytics Screen
+**Backend:**
+- Payment statistics query
+- Pending dues query
+- Monthly collection query
+
+**Frontend:**
+- Collection stats cards
+- Pending dues chart
+- Monthly trend chart
+- Export report
+
+**Store:**
+- `analyticsStore.ts` fees
+
+---
+
+### Christo → Library Fine Management Screen
+**Backend:**
+- Fines query
+- Waive fine mutation
+- Fine collection mutation
+
+**Frontend:**
+- Fines list
+- Waive fine button
+- Collect fine button
+- Fine details modal
+
+**Store:**
+- `libraryAdminStore.ts` fines
+
+---
+
+### Deon → Substitution Override Screen
+**Backend:**
+- Active substitutions query
+- Override substitution mutation
+- Cancel substitution mutation
+
+**Frontend:**
+- Substitutions list
+- Override teacher dropdown
+- Cancel button
+- History view
+
+**Store:**
+- `timetableAdminStore.ts` substitutions
+
+---
+
+## Day 19
+
+### Ash → Pending Approvals Summary Screen
+**Backend:**
+- Pending counts query (users, marks, etc.)
+- Quick action links
+
+**Frontend:**
+- Pending counts cards
+- Quick navigation to each
+- Refresh button
+- Priority indicators
+
+**Store:**
+- `adminDashboardStore.ts` pendingCounts
+
+---
+
+### Abin → Student Bulk Import Screen
+**Backend:**
+- CSV parsing function
+- Bulk create students mutation
+- Error handling per row
+
+**Frontend:**
+- CSV upload picker
+- Preview data table
+- Column mapping
+- Import button
+- Error log display
+
+**Store:**
+- `userManagementStore.ts` bulkImport
+
+---
+
+### Christo → Teacher Bulk Import Screen
+**Backend:**
+- CSV parsing function
+- Bulk create teachers mutation
+- Role assignment
+
+**Frontend:**
+- CSV upload picker
+- Preview data table
+- Column mapping
+- Import button
+- Error log display
+
+**Store:**
+- `userManagementStore.ts` bulkImportTeachers
+
+---
+
+### Deon → Admin Profile Screen
+**Backend:**
+- Get admin profile query
+- Update profile mutation
+- Change password mutation
+
+**Frontend:**
+- Profile view
+- Edit mode
+- Change password form
+- Photo upload
+- Save button
+
+**Store:**
+- `authStore.ts` profile
+
+---
+
+## Day 20
+
+### Ash → Admin Notifications Screen
+**Backend:**
+- Admin notifications query
+- Mark read mutation
+- Notification preferences
+
+**Frontend:**
+- Notifications list
+- Mark all read button
+- Notification preferences toggles
+- Delete old notifications
+
+**Store:**
+- `notificationStore.ts` adminNotifications
+
+---
+
+### Abin → System Health Screen
+**Backend:**
+- Database stats query
+- Storage usage query
+- API response times
+
+**Frontend:**
+- Health status indicators
+- Database size display
+- Storage usage bar
+- Performance metrics
+
+**Store:**
+- `settingsAdminStore.ts` systemHealth
+
+---
+
+### Christo → Role Permissions Screen
+**Backend:**
+- Permissions matrix query
+- Update permissions mutation
+
+**Frontend:**
+- Roles list
+- Permissions checkboxes per role
+- Save changes button
+- Reset to default
+
+**Store:**
+- `settingsAdminStore.ts` permissions
+
+---
+
+### Deon → Admin Settings Screen
+**Backend:**
+- Admin preferences query
+- Update preferences mutation
+
+**Frontend:**
+- Theme toggle
+- Notification preferences
+- Session timeout settings
+- About/version info
+
+**Store:**
+- `settingsAdminStore.ts` preferences
+
+---
+
+# END OF ADMIN MODULE (20 Days)
+
+Next: Teacher Module (Days 21-35), Student Module (Days 36-50)
