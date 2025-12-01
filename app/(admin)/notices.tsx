@@ -83,10 +83,19 @@ export default function NoticesScreen() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        // Table might not exist yet - show empty state
+        if (error.code === 'PGRST205') {
+          console.log('Notices table not found - showing empty state');
+          setNotices([]);
+          return;
+        }
+        throw error;
+      }
       setNotices(data || []);
     } catch (error) {
       console.error('Error fetching notices:', error);
+      setNotices([]);
     }
   };
 

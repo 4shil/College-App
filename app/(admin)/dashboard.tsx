@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -49,6 +50,7 @@ export default function AdminDashboard() {
   const { profile, primaryRole, user, logout } = useAuthStore();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     totalTeachers: 0,
@@ -128,46 +130,77 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      // Fetch students count
-      const { count: studentsCount } = await supabase
+      console.log('Fetching dashboard stats...');
+      
+      // Try fetching from students table first
+      const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
-        .select('*', { count: 'exact', head: true })
-        .eq('current_status', 'active');
+        .select('*', { count: 'exact', head: true });
+      
+      if (studentsError) console.error('Students fetch error:', studentsError);
 
-      // Fetch teachers count
-      const { count: teachersCount } = await supabase
+      // Try fetching from teachers table
+      const { count: teachersCount, error: teachersError } = await supabase
         .from('teachers')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .select('*', { count: 'exact', head: true });
+      
+      if (teachersError) console.error('Teachers fetch error:', teachersError);
 
       // Fetch departments count
-      const { count: deptsCount } = await supabase
+      const { count: deptsCount, error: deptsError } = await supabase
         .from('departments')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
+      
+      if (deptsError) console.error('Departments fetch error:', deptsError);
 
       // Fetch courses count
-      const { count: coursesCount } = await supabase
+      const { count: coursesCount, error: coursesError } = await supabase
         .from('courses')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
+      
+      if (coursesError) console.error('Courses fetch error:', coursesError);
 
-      // Fetch pending approvals
-      const { count: pendingCount } = await supabase
-        .from('students')
+      // Fetch pending approvals - profiles with status 'pending' or students with inactive status
+      const { count: pendingProfilesCount, error: pendingError } = await supabase
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('current_status', 'inactive');
+        .eq('status', 'pending');
+      
+      if (pendingError) console.error('Pending profiles fetch error:', pendingError);
+
+      // Alternative: Count profiles by role if specific tables are empty
+      const { count: studentProfilesCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('primary_role', 'student');
+
+      const { count: teacherProfilesCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator']);
+
+      // Use whichever count is higher (from specific table or profiles)
+      const finalStudentsCount = Math.max(studentsCount || 0, studentProfilesCount || 0);
+      const finalTeachersCount = Math.max(teachersCount || 0, teacherProfilesCount || 0);
+
+      console.log('Final counts - Students:', finalStudentsCount, 'Teachers:', finalTeachersCount, 'Depts:', deptsCount, 'Courses:', coursesCount);
 
       setStats({
-        totalStudents: studentsCount || 0,
-        totalTeachers: teachersCount || 0,
+        totalStudents: finalStudentsCount,
+        totalTeachers: finalTeachersCount,
         totalDepartments: deptsCount || 0,
         totalCourses: coursesCount || 0,
-        pendingApprovals: pendingCount || 0,
+        pendingApprovals: pendingProfilesCount || 0,
         todayAttendance: 85, // Placeholder
       });
+      
+      console.log('Stats updated successfully');
     } catch (error) {
       console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,7 +240,11 @@ export default function AdminDashboard() {
         <View style={[styles.statIconContainer, { backgroundColor: `${color}18` }]}>
           <FontAwesome5 name={icon} size={20} color={color} />
         </View>
-        <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={color} style={{ marginVertical: 10 }} />
+        ) : (
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
+        )}
         <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
       </LinearGradient>
     </Animated.View>

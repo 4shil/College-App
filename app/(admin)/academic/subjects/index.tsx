@@ -86,14 +86,30 @@ export default function SubjectsScreen() {
         supabase.from('courses').select('id, name, code, total_semesters').eq('is_active', true).order('name'),
       ]);
 
-      if (subjectsRes.error) throw subjectsRes.error;
-      if (coursesRes.error) throw coursesRes.error;
+      // Handle missing tables gracefully
+      if (subjectsRes.error) {
+        if (subjectsRes.error.code === 'PGRST205') {
+          console.log('Subjects table not found - showing empty state');
+          setSubjects([]);
+        } else {
+          throw subjectsRes.error;
+        }
+      } else {
+        setSubjects(subjectsRes.data || []);
+      }
 
-      setSubjects(subjectsRes.data || []);
-      setCourses(coursesRes.data || []);
+      if (coursesRes.error) {
+        if (coursesRes.error.code === 'PGRST205') {
+          console.log('Courses table not found - showing empty state');
+          setCourses([]);
+        } else {
+          throw coursesRes.error;
+        }
+      } else {
+        setCourses(coursesRes.data || []);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to fetch subjects');
     }
   };
 
