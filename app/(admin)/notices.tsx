@@ -16,7 +16,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { AnimatedBackground, GlassCard, PrimaryButton } from '../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
@@ -225,7 +225,7 @@ export default function NoticesScreen() {
         entering={FadeInRight.delay(100 + index * 50).duration(300)}
         style={styles.cardWrapper}
       >
-        <GlassCard style={styles.noticeCard}>
+        <Card style={styles.noticeCard}>
           <View style={styles.noticeHeader}>
             <View style={[styles.typeIcon, { backgroundColor: config.color + '20' }]}>
               <FontAwesome5 name={config.icon} size={16} color={config.color} />
@@ -286,7 +286,7 @@ export default function NoticesScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </GlassCard>
+        </Card>
       </Animated.View>
     );
   };

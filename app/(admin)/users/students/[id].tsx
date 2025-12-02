@@ -14,7 +14,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
-import { AnimatedBackground, GlassCard } from '../../../../components/ui';
+import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -255,7 +255,7 @@ export default function StudentDetailsScreen() {
         >
           {/* Profile Card */}
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-            <GlassCard style={styles.profileCard}>
+            <Card style={styles.profileCard}>
               <View style={styles.profileHeader}>
                 {student.profile?.photo_url ? (
                   <Image
@@ -282,12 +282,12 @@ export default function StudentDetailsScreen() {
                   </View>
                 </View>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Academic Info */}
           <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Academic Information
               </Text>
@@ -329,12 +329,12 @@ export default function StudentDetailsScreen() {
                   </Text>
                 </View>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Personal Info */}
           <Animated.View entering={FadeInDown.delay(250).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Personal Information
               </Text>
@@ -365,12 +365,12 @@ export default function StudentDetailsScreen() {
                   </Text>
                 </View>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Parent/Guardian Info */}
           <Animated.View entering={FadeInDown.delay(300).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Parent/Guardian Information
               </Text>
@@ -421,12 +421,12 @@ export default function StudentDetailsScreen() {
                   </Text>
                 </View>
               )}
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Quick Actions */}
           <Animated.View entering={FadeInDown.delay(350).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Quick Actions
               </Text>
@@ -459,7 +459,7 @@ export default function StudentDetailsScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Status Actions */}
@@ -713,3 +713,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

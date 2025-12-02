@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   AnimatedBackground,
-  GlassCard,
+  Card,
   ThemeToggle,
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
@@ -257,7 +257,7 @@ export default function VerifyOTPScreen() {
             entering={FadeInUp.delay(200).duration(500)}
             style={styles.cardContainer}
           >
-            <GlassCard style={styles.card}>
+            <Card style={styles.card}>
               {/* Icon */}
               <View
                 style={[
@@ -396,7 +396,7 @@ export default function VerifyOTPScreen() {
                   Please check your spam folder if you don't see the email in your inbox.
                 </Text>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>

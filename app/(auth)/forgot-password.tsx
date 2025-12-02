@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   AnimatedBackground,
-  GlassCard,
+  Card,
   GlassInput,
   PrimaryButton,
   ThemeToggle,
@@ -492,7 +492,7 @@ export default function ForgotPasswordScreen() {
             entering={FadeInUp.delay(200).duration(500)}
             style={styles.cardContainer}
           >
-            <GlassCard style={styles.card}>
+            <Card style={styles.card}>
               {renderContent()}
 
               {/* Error Message */}
@@ -518,7 +518,7 @@ export default function ForgotPasswordScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
-            </GlassCard>
+            </Card>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>

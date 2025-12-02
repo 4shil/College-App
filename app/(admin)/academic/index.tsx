@@ -11,7 +11,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard } from '../../../components/ui';
+import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 
 interface MenuOption {
@@ -94,7 +94,7 @@ export default function AcademicIndexScreen() {
         onPress={() => router.push(option.route as any)}
         activeOpacity={0.8}
       >
-        <GlassCard style={styles.menuCard}>
+        <Card style={styles.menuCard}>
           <View style={styles.menuCardContent}>
             <View style={[styles.iconContainer, { backgroundColor: option.color + '20' }]}>
               <FontAwesome5 name={option.icon} size={22} color={option.color} />
@@ -116,7 +116,7 @@ export default function AcademicIndexScreen() {
               <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
             </View>
           </View>
-        </GlassCard>
+        </Card>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -150,7 +150,7 @@ export default function AcademicIndexScreen() {
           entering={FadeInDown.delay(200).duration(400)}
           style={styles.statsContainer}
         >
-          <GlassCard style={styles.statsCard}>
+          <Card style={styles.statsCard}>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <FontAwesome5 name="building" size={16} color="#6366f1" />
@@ -170,7 +170,7 @@ export default function AcademicIndexScreen() {
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Subjects</Text>
               </View>
             </View>
-          </GlassCard>
+          </Card>
         </Animated.View>
 
         {/* Menu Options */}

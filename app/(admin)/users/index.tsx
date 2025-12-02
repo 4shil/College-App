@@ -17,7 +17,7 @@ import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-re
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -340,7 +340,7 @@ export default function UsersScreen() {
       entering={FadeInRight.delay(100 + index * 50).duration(300)}
       style={styles.userCardWrapper}
     >
-      <GlassCard style={styles.userCard}>
+      <Card style={styles.userCard}>
         <View style={styles.userHeader}>
           <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
             <FontAwesome5 name="user" size={18} color={colors.primary} />
@@ -432,14 +432,14 @@ export default function UsersScreen() {
             </>
           )}
         </View>
-      </GlassCard>
+      </Card>
     </Animated.View>
   );
 
   const renderRoleModal = () => (
     <Modal visible={showRoleModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <GlassCard style={styles.modalContent}>
+        <Card style={styles.modalContent}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Change Role for {selectedUser?.full_name}
           </Text>
@@ -477,7 +477,7 @@ export default function UsersScreen() {
               )}
             </TouchableOpacity>
           </View>
-        </GlassCard>
+        </Card>
       </View>
     </Modal>
   );

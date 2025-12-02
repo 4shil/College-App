@@ -15,7 +15,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard } from '../../../components/ui';
+import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -195,7 +195,7 @@ export default function PendingApprovalsScreen() {
         entering={FadeInRight.delay(100 + index * 50).duration(300)}
         style={styles.cardWrapper}
       >
-        <GlassCard style={styles.studentCard}>
+        <Card style={styles.studentCard}>
           {/* Header with Photo */}
           <View style={styles.cardHeader}>
             <View style={styles.photoContainer}>
@@ -287,7 +287,7 @@ export default function PendingApprovalsScreen() {
               )}
             </TouchableOpacity>
           </View>
-        </GlassCard>
+        </Card>
       </Animated.View>
     );
   };

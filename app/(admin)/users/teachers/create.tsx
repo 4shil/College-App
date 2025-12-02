@@ -16,7 +16,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -209,7 +209,7 @@ export default function CreateTeacherScreen() {
           >
             {/* Personal Info Section */}
             <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-              <GlassCard style={styles.formSection}>
+              <Card style={styles.formSection}>
                 <View style={styles.sectionHeader}>
                   <FontAwesome5 name="user" size={14} color={colors.primary} />
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -265,12 +265,12 @@ export default function CreateTeacherScreen() {
                     secureTextEntry
                   />
                 </View>
-              </GlassCard>
+              </Card>
             </Animated.View>
 
             {/* Professional Info Section */}
             <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-              <GlassCard style={styles.formSection}>
+              <Card style={styles.formSection}>
                 <View style={styles.sectionHeader}>
                   <FontAwesome5 name="briefcase" size={14} color={colors.primary} />
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -336,7 +336,7 @@ export default function CreateTeacherScreen() {
                     autoCapitalize="words"
                   />
                 </View>
-              </GlassCard>
+              </Card>
             </Animated.View>
 
             {/* Submit Button */}

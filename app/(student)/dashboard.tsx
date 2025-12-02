@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { AnimatedBackground, GlassCard, PrimaryButton, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, ThemeToggle } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -37,7 +37,7 @@ export default function StudentDashboard() {
           entering={FadeInDown.delay(200).duration(500)}
           style={styles.cardContainer}
         >
-          <GlassCard>
+          <Card>
             <View style={styles.iconContainer}>
               <FontAwesome5 name="user-graduate" size={48} color={colors.primary} />
             </View>
@@ -58,7 +58,7 @@ export default function StudentDashboard() {
                 variant="outline"
               />
             </View>
-          </GlassCard>
+          </Card>
         </Animated.View>
       </View>
     </AnimatedBackground>

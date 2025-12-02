@@ -16,7 +16,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -230,7 +230,7 @@ export default function DepartmentsScreen() {
       entering={FadeInRight.delay(100 + index * 50).duration(300)}
       style={styles.cardWrapper}
     >
-      <GlassCard style={styles.deptCard}>
+      <Card style={styles.deptCard}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: dept.is_active ? '#6366f120' : '#6b728020' }]}>
             <FontAwesome5 name="building" size={22} color={dept.is_active ? '#6366f1' : '#6b7280'} />
@@ -289,7 +289,7 @@ export default function DepartmentsScreen() {
             <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>Delete</Text>
           </TouchableOpacity>
         </View>
-      </GlassCard>
+      </Card>
     </Animated.View>
   );
 

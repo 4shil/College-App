@@ -14,7 +14,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
-import { AnimatedBackground, GlassCard } from '../../../../components/ui';
+import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -226,7 +226,7 @@ export default function TeacherDetailsScreen() {
         >
           {/* Profile Card */}
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-            <GlassCard style={styles.profileCard}>
+            <Card style={styles.profileCard}>
               <View style={styles.profileHeader}>
                 {teacher.profile?.photo_url ? (
                   <Image
@@ -253,12 +253,12 @@ export default function TeacherDetailsScreen() {
                   </View>
                 </View>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Contact Info */}
           <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Contact Information
               </Text>
@@ -274,12 +274,12 @@ export default function TeacherDetailsScreen() {
                   {teacher.profile?.phone || 'No phone'}
                 </Text>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Professional Info */}
           <Animated.View entering={FadeInDown.delay(250).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Professional Information
               </Text>
@@ -323,12 +323,12 @@ export default function TeacherDetailsScreen() {
                   Joined {formatDate(teacher.created_at)}
                 </Text>
               </View>
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Assigned Courses */}
           <Animated.View entering={FadeInDown.delay(300).duration(400)}>
-            <GlassCard style={styles.infoCard}>
+            <Card style={styles.infoCard}>
               <View style={styles.coursesHeader}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                   Assigned Courses ({courses.length})
@@ -364,7 +364,7 @@ export default function TeacherDetailsScreen() {
                   </Text>
                 </View>
               )}
-            </GlassCard>
+            </Card>
           </Animated.View>
 
           {/* Action Buttons */}
@@ -596,3 +596,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

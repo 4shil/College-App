@@ -15,7 +15,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard } from '../../../../components/ui';
+import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -158,7 +158,7 @@ export default function StudentsListScreen() {
         onPress={() => router.push(`/(admin)/users/students/${student.id}` as any)}
         activeOpacity={0.8}
       >
-        <GlassCard style={styles.studentCard}>
+        <Card style={styles.studentCard}>
           <View style={styles.cardContent}>
             {/* Avatar */}
             <View style={[styles.avatar, { backgroundColor: '#10b98120' }]}>
@@ -193,7 +193,7 @@ export default function StudentsListScreen() {
             {/* Arrow */}
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
           </View>
-        </GlassCard>
+        </Card>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -274,7 +274,7 @@ export default function StudentsListScreen() {
           entering={FadeInDown.delay(150).duration(400)}
           style={styles.searchContainer}
         >
-          <GlassCard style={styles.searchCard}>
+          <Card style={styles.searchCard}>
             <View style={styles.searchInputContainer}>
               <Ionicons name="search" size={18} color={colors.textMuted} />
               <TextInput
@@ -290,7 +290,7 @@ export default function StudentsListScreen() {
                 </TouchableOpacity>
               )}
             </View>
-          </GlassCard>
+          </Card>
         </Animated.View>
 
         {/* Filters */}

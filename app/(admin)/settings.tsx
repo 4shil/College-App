@@ -13,7 +13,7 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard } from '../../components/ui';
+import { AnimatedBackground, Card } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -326,7 +326,7 @@ export default function SettingsScreen() {
 
         {/* Admin Card */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-          <GlassCard style={styles.adminCard}>
+          <Card style={styles.adminCard}>
             <View style={styles.adminInfo}>
               <View style={[styles.adminAvatar, { backgroundColor: colors.primary + '20' }]}>
                 <FontAwesome5 name="user-shield" size={24} color={colors.primary} />
@@ -345,7 +345,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
             </View>
-          </GlassCard>
+          </Card>
         </Animated.View>
 
         {/* Settings Sections */}

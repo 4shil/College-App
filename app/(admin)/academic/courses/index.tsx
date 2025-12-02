@@ -16,7 +16,7 @@ import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -212,7 +212,7 @@ export default function CoursesScreen() {
       entering={FadeInRight.delay(100 + index * 50).duration(300)}
       style={styles.cardWrapper}
     >
-      <GlassCard style={styles.courseCard}>
+      <Card style={styles.courseCard}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: course.is_active ? '#10b98120' : '#6b728020' }]}>
             <FontAwesome5 name="graduation-cap" size={20} color={course.is_active ? '#10b981' : '#6b7280'} />
@@ -269,7 +269,7 @@ export default function CoursesScreen() {
             <FontAwesome5 name="trash" size={12} color="#ef4444" />
           </TouchableOpacity>
         </View>
-      </GlassCard>
+      </Card>
     </Animated.View>
   );
 

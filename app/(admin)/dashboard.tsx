@@ -15,7 +15,7 @@ import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-re
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, ThemeToggle } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
               <Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text>
             </TouchableOpacity>
           </View>
-          <GlassCard style={styles.activityCard}>
+          <Card style={styles.activityCard}>
             <View style={styles.activityItem}>
               <View style={[styles.activityDot, { backgroundColor: '#16A34A' }]} />
               <View style={styles.activityContent}>
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                 <Text style={[styles.activityTime, { color: colors.textMuted }]}>3 hours ago</Text>
               </View>
             </View>
-          </GlassCard>
+          </Card>
         </Animated.View>
       </ScrollView>
     </AnimatedBackground>

@@ -17,7 +17,7 @@ import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -235,7 +235,7 @@ export default function SubjectsScreen() {
       style={styles.cardWrapper}
     >
       <TouchableOpacity onPress={() => openEditModal(subject)} activeOpacity={0.8}>
-        <GlassCard style={styles.subjectCard}>
+        <Card style={styles.subjectCard}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconContainer, { backgroundColor: subject.is_lab ? '#f59e0b20' : '#6366f120' }]}>
               <FontAwesome5 name={subject.is_lab ? 'flask' : 'book'} size={16} color={subject.is_lab ? '#f59e0b' : '#6366f1'} />
@@ -267,7 +267,7 @@ export default function SubjectsScreen() {
               <Ionicons name="trash-outline" size={14} color="#ef4444" />
             </TouchableOpacity>
           </View>
-        </GlassCard>
+        </Card>
       </TouchableOpacity>
     </Animated.View>
   );
