@@ -18,6 +18,7 @@ export default function UsersLayout() {
       <Stack.Screen name="teachers/create" />
       <Stack.Screen name="teachers/[id]" />
       <Stack.Screen name="students/index" />
+      <Stack.Screen name="students/create" />
       <Stack.Screen name="students/[id]" />
     </Stack>
   );

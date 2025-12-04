@@ -20,19 +20,24 @@ import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../..
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
-interface Program {
+interface Course {
   id: string;
   name: string;
   code: string;
   short_name: string | null;
-  program_type: 'undergraduate' | 'postgraduate';
-  duration_years: number;
-  total_semesters: number;
+  course_type: string;
+  theory_hours: number;
+  lab_hours: number;
   is_active: boolean;
   department_id: string;
+  semester_id: string;
   department: {
     name: string;
     code: string;
+  } | null;
+  semester: {
+    semester_number: number;
+    name: string;
   } | null;
 }
 
@@ -42,6 +47,19 @@ interface Department {
   code: string;
 }
 
+interface Semester {
+  id: string;
+  semester_number: number;
+  name: string;
+}
+
+const COURSE_TYPES = [
+  { value: 'core', label: 'Core Subject', color: '#6366f1' },
+  { value: 'elective', label: 'Elective', color: '#10b981' },
+  { value: 'lab', label: 'Lab/Practical', color: '#f59e0b' },
+  { value: 'mandatory', label: 'Mandatory', color: '#ef4444' },
+];
+
 export default function CoursesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -49,10 +67,12 @@ export default function CoursesScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [selectedDept, setSelectedDept] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Form state
@@ -60,31 +80,43 @@ export default function CoursesScreen() {
   const [formCode, setFormCode] = useState('');
   const [formShortName, setFormShortName] = useState('');
   const [formDeptId, setFormDeptId] = useState('');
-  const [formProgramType, setFormProgramType] = useState<'undergraduate' | 'postgraduate'>('undergraduate');
-  const [formDuration, setFormDuration] = useState('3');
-  const [formSemesters, setFormSemesters] = useState('6');
+  const [formSemesterId, setFormSemesterId] = useState('');
+  const [formType, setFormType] = useState('core');
+  const [formTheoryHours, setFormTheoryHours] = useState('3');
+  const [formLabHours, setFormLabHours] = useState('0');
 
   const fetchData = async () => {
     try {
-      const [programsRes, deptsRes] = await Promise.all([
-        supabase
-          .from('programs')
-          .select(`
-            *,
-            department:departments(name, code)
-          `)
-          .order('name'),
+      // Fetch courses with department and semester info
+      let query = supabase
+        .from('courses')
+        .select(`
+          *,
+          department:departments(name, code),
+          semester:semesters(semester_number, name)
+        `)
+        .order('code');
+
+      if (selectedDept !== 'all') {
+        query = query.eq('department_id', selectedDept);
+      }
+
+      const [coursesRes, deptsRes, semsRes] = await Promise.all([
+        query,
         supabase.from('departments').select('id, name, code').eq('is_active', true).order('name'),
+        supabase.from('semesters').select('id, semester_number, name').order('semester_number'),
       ]);
 
-      if (programsRes.error) throw programsRes.error;
+      if (coursesRes.error) throw coursesRes.error;
       if (deptsRes.error) throw deptsRes.error;
+      if (semsRes.error) throw semsRes.error;
 
-      setPrograms(programsRes.data || []);
+      setCourses(coursesRes.data || []);
       setDepartments(deptsRes.data || []);
+      setSemesters(semsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to fetch programs');
+      Alert.alert('Error', 'Failed to fetch courses');
     }
   };
 
@@ -92,7 +124,7 @@ export default function CoursesScreen() {
     setLoading(true);
     await fetchData();
     setLoading(false);
-  }, []);
+  }, [selectedDept]);
 
   useEffect(() => {
     loadData();
@@ -109,10 +141,11 @@ export default function CoursesScreen() {
     setFormCode('');
     setFormShortName('');
     setFormDeptId('');
-    setFormProgramType('undergraduate');
-    setFormDuration('3');
-    setFormSemesters('6');
-    setEditingProgram(null);
+    setFormSemesterId('');
+    setFormType('core');
+    setFormTheoryHours('3');
+    setFormLabHours('0');
+    setEditingCourse(null);
   };
 
   const openAddModal = () => {
@@ -120,21 +153,22 @@ export default function CoursesScreen() {
     setShowAddModal(true);
   };
 
-  const openEditModal = (program: Program) => {
-    setFormName(program.name);
-    setFormCode(program.code);
-    setFormShortName(program.short_name || '');
-    setFormDeptId(program.department_id);
-    setFormProgramType(program.program_type);
-    setFormDuration(program.duration_years.toString());
-    setFormSemesters(program.total_semesters.toString());
-    setEditingProgram(program);
+  const openEditModal = (course: Course) => {
+    setFormName(course.name);
+    setFormCode(course.code);
+    setFormShortName(course.short_name || '');
+    setFormDeptId(course.department_id);
+    setFormSemesterId(course.semester_id);
+    setFormType(course.course_type);
+    setFormTheoryHours(course.theory_hours.toString());
+    setFormLabHours(course.lab_hours.toString());
+    setEditingCourse(course);
     setShowAddModal(true);
   };
 
   const handleSave = async () => {
-    if (!formName.trim() || !formCode.trim() || !formDeptId) {
-      Alert.alert('Validation Error', 'Name, Code, and Department are required');
+    if (!formName.trim() || !formCode.trim() || !formDeptId || !formSemesterId) {
+      Alert.alert('Validation Error', 'Name, Code, Department, and Semester are required');
       return;
     }
 
@@ -145,51 +179,37 @@ export default function CoursesScreen() {
         code: formCode.trim().toUpperCase(),
         short_name: formShortName.trim() || null,
         department_id: formDeptId,
-        program_type: formProgramType,
-        duration_years: parseInt(formDuration),
-        total_semesters: parseInt(formSemesters),
+        semester_id: formSemesterId,
+        course_type: formType,
+        theory_hours: parseInt(formTheoryHours) || 0,
+        lab_hours: parseInt(formLabHours) || 0,
       };
 
-      if (editingProgram) {
-        const { error } = await supabase.from('programs').update(payload).eq('id', editingProgram.id);
+      if (editingCourse) {
+        const { error } = await supabase.from('courses').update(payload).eq('id', editingCourse.id);
         if (error) throw error;
-        Alert.alert('Success', 'Program updated successfully');
+        Alert.alert('Success', 'Course updated successfully');
       } else {
-        const { error } = await supabase.from('programs').insert({ ...payload, is_active: true });
+        const { error } = await supabase.from('courses').insert({ ...payload, is_active: true });
         if (error) throw error;
-        Alert.alert('Success', 'Program created successfully');
+        Alert.alert('Success', 'Course created successfully');
       }
 
       setShowAddModal(false);
       resetForm();
       await fetchData();
     } catch (error: any) {
-      console.error('Error saving program:', error);
-      Alert.alert('Error', error.message || 'Failed to save program');
+      console.error('Error saving course:', error);
+      Alert.alert('Error', error.message || 'Failed to save course');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleToggleActive = async (program: Program) => {
-    try {
-      const { error } = await supabase
-        .from('programs')
-        .update({ is_active: !program.is_active })
-        .eq('id', program.id);
-
-      if (error) throw error;
-      await fetchData();
-    } catch (error) {
-      console.error('Error toggling program:', error);
-      Alert.alert('Error', 'Failed to update program');
-    }
-  };
-
-  const handleDelete = (program: Program) => {
+  const handleDelete = (course: Course) => {
     Alert.alert(
-      'Delete Program',
-      `Are you sure you want to delete ${program.name}?`,
+      'Delete Course',
+      `Are you sure you want to delete "${course.name}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -197,13 +217,13 @@ export default function CoursesScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase.from('programs').delete().eq('id', program.id);
+              const { error } = await supabase.from('courses').delete().eq('id', course.id);
               if (error) throw error;
-              Alert.alert('Success', 'Program deleted');
+              Alert.alert('Success', 'Course deleted');
               await fetchData();
-            } catch (error) {
-              console.error('Error deleting program:', error);
-              Alert.alert('Error', 'Failed to delete program. It may have associated students or subjects.');
+            } catch (error: any) {
+              console.error('Error deleting course:', error);
+              Alert.alert('Error', error.message || 'Failed to delete course');
             }
           },
         },
@@ -211,78 +231,118 @@ export default function CoursesScreen() {
     );
   };
 
-  const renderProgramCard = (program: Program, index: number) => (
-    <Animated.View
-      key={program.id}
-      entering={FadeInRight.delay(100 + index * 50).duration(300)}
-      style={styles.cardWrapper}
-    >
-      <Card style={styles.courseCard}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: program.is_active ? '#10b98120' : '#6b728020' }]}>
-            <FontAwesome5 name="graduation-cap" size={20} color={program.is_active ? '#10b981' : '#6b7280'} />
-          </View>
-          <View style={styles.cardInfo}>
-            <View style={styles.nameRow}>
-              <Text style={[styles.courseName, { color: colors.textPrimary }]} numberOfLines={1}>{program.name}</Text>
-              {!program.is_active && (
-                <View style={styles.inactiveBadge}>
-                  <Text style={styles.inactiveText}>Inactive</Text>
-                </View>
-              )}
+  const handleToggleActive = async (course: Course) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .update({ is_active: !course.is_active })
+        .eq('id', course.id);
+
+      if (error) throw error;
+      await fetchData();
+    } catch (error) {
+      console.error('Error toggling course:', error);
+      Alert.alert('Error', 'Failed to update course');
+    }
+  };
+
+  const getTypeConfig = (type: string) => {
+    return COURSE_TYPES.find(t => t.value === type) || COURSE_TYPES[0];
+  };
+
+  const renderCourseCard = (course: Course, index: number) => {
+    const typeConfig = getTypeConfig(course.course_type);
+    
+    return (
+      <Animated.View
+        key={course.id}
+        entering={FadeInRight.delay(100 + index * 50).duration(300)}
+        style={styles.cardWrapper}
+      >
+        <Card style={styles.courseCard}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: typeConfig.color + '20' }]}>
+              <FontAwesome5 
+                name={course.course_type === 'lab' ? 'flask' : 'book-open'} 
+                size={18} 
+                color={typeConfig.color} 
+              />
             </View>
-            <Text style={[styles.courseCode, { color: colors.primary }]}>{program.code}</Text>
+            <View style={styles.cardInfo}>
+              <View style={styles.nameRow}>
+                <Text style={[styles.courseName, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {course.name}
+                </Text>
+                {!course.is_active && (
+                  <View style={styles.inactiveBadge}>
+                    <Text style={styles.inactiveText}>Inactive</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.courseCode, { color: colors.primary }]}>{course.code}</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.detailsRow}>
-          <View style={[styles.detailBadge, { backgroundColor: '#6366f120' }]}>
-            <FontAwesome5 name="building" size={10} color="#6366f1" />
-            <Text style={[styles.detailText, { color: '#6366f1' }]}>{program.department?.code || 'N/A'}</Text>
+          <View style={styles.detailsRow}>
+            <View style={[styles.detailBadge, { backgroundColor: '#6366f120' }]}>
+              <FontAwesome5 name="building" size={10} color="#6366f1" />
+              <Text style={[styles.detailText, { color: '#6366f1' }]}>
+                {course.department?.code || 'N/A'}
+              </Text>
+            </View>
+            <View style={[styles.detailBadge, { backgroundColor: '#8b5cf620' }]}>
+              <FontAwesome5 name="layer-group" size={10} color="#8b5cf6" />
+              <Text style={[styles.detailText, { color: '#8b5cf6' }]}>
+                Sem {course.semester?.semester_number || '?'}
+              </Text>
+            </View>
+            <View style={[styles.detailBadge, { backgroundColor: typeConfig.color + '20' }]}>
+              <Text style={[styles.detailText, { color: typeConfig.color }]}>
+                {typeConfig.label}
+              </Text>
+            </View>
+            {(course.theory_hours > 0 || course.lab_hours > 0) && (
+              <View style={[styles.detailBadge, { backgroundColor: '#10b98120' }]}>
+                <FontAwesome5 name="clock" size={10} color="#10b981" />
+                <Text style={[styles.detailText, { color: '#10b981' }]}>
+                  {course.theory_hours}T + {course.lab_hours}L
+                </Text>
+              </View>
+            )}
           </View>
-          <View style={[styles.detailBadge, { backgroundColor: program.program_type === 'postgraduate' ? '#ec489920' : '#10b98120' }]}>
-            <FontAwesome5 name="award" size={10} color={program.program_type === 'postgraduate' ? '#ec4899' : '#10b981'} />
-            <Text style={[styles.detailText, { color: program.program_type === 'postgraduate' ? '#ec4899' : '#10b981' }]}>
-              {program.program_type === 'postgraduate' ? 'PG' : 'UG'}
-            </Text>
-          </View>
-          <View style={[styles.detailBadge, { backgroundColor: '#f59e0b20' }]}>
-            <FontAwesome5 name="clock" size={10} color="#f59e0b" />
-            <Text style={[styles.detailText, { color: '#f59e0b' }]}>{program.duration_years} Years</Text>
-          </View>
-          <View style={[styles.detailBadge, { backgroundColor: '#8b5cf620' }]}>
-            <FontAwesome5 name="layer-group" size={10} color="#8b5cf6" />
-            <Text style={[styles.detailText, { color: '#8b5cf6' }]}>{program.total_semesters} Sems</Text>
-          </View>
-        </View>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
-            onPress={() => openEditModal(program)}
-          >
-            <FontAwesome5 name="edit" size={12} color={colors.primary} />
-            <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: program.is_active ? '#f59e0b15' : '#10b98115' }]}
-            onPress={() => handleToggleActive(program)}
-          >
-            <FontAwesome5 name={program.is_active ? 'ban' : 'check'} size={12} color={program.is_active ? '#f59e0b' : '#10b981'} />
-            <Text style={[styles.actionBtnText, { color: program.is_active ? '#f59e0b' : '#10b981' }]}>
-              {program.is_active ? 'Disable' : 'Enable'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#ef444415' }]}
-            onPress={() => handleDelete(program)}
-          >
-            <FontAwesome5 name="trash" size={12} color="#ef4444" />
-          </TouchableOpacity>
-        </View>
-      </Card>
-    </Animated.View>
-  );
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
+              onPress={() => openEditModal(course)}
+            >
+              <FontAwesome5 name="edit" size={12} color={colors.primary} />
+              <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: course.is_active ? '#f59e0b15' : '#10b98115' }]}
+              onPress={() => handleToggleActive(course)}
+            >
+              <FontAwesome5 
+                name={course.is_active ? 'ban' : 'check'} 
+                size={12} 
+                color={course.is_active ? '#f59e0b' : '#10b981'} 
+              />
+              <Text style={[styles.actionBtnText, { color: course.is_active ? '#f59e0b' : '#10b981' }]}>
+                {course.is_active ? 'Disable' : 'Enable'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: '#ef444415' }]}
+              onPress={() => handleDelete(course)}
+            >
+              <FontAwesome5 name="trash" size={12} color="#ef4444" />
+            </TouchableOpacity>
+          </View>
+        </Card>
+      </Animated.View>
+    );
+  };
 
   return (
     <AnimatedBackground>
@@ -293,12 +353,50 @@ export default function CoursesScreen() {
             <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerContent}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Programs</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{programs.length} program(s)</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Courses</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {courses.length} course(s)
+            </Text>
           </View>
-          <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
+          <TouchableOpacity 
+            style={[styles.addBtn, { backgroundColor: colors.primary }]} 
+            onPress={openAddModal}
+          >
             <Ionicons name="add" size={22} color="#fff" />
           </TouchableOpacity>
+        </Animated.View>
+
+        {/* Department Filter */}
+        <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                selectedDept === 'all' && { backgroundColor: colors.primary },
+                { borderColor: colors.glassBorder }
+              ]}
+              onPress={() => setSelectedDept('all')}
+            >
+              <Text style={[styles.filterChipText, { color: selectedDept === 'all' ? '#fff' : colors.textSecondary }]}>
+                All Departments
+              </Text>
+            </TouchableOpacity>
+            {departments.map((dept) => (
+              <TouchableOpacity
+                key={dept.id}
+                style={[
+                  styles.filterChip,
+                  selectedDept === dept.id && { backgroundColor: colors.primary },
+                  { borderColor: colors.glassBorder }
+                ]}
+                onPress={() => setSelectedDept(dept.id)}
+              >
+                <Text style={[styles.filterChipText, { color: selectedDept === dept.id ? '#fff' : colors.textSecondary }]}>
+                  {dept.code}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </Animated.View>
 
         {/* Content */}
@@ -306,30 +404,42 @@ export default function CoursesScreen() {
           style={styles.scrollView}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
         >
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
-          ) : programs.length > 0 ? (
-            programs.map((program, index) => renderProgramCard(program, index))
+          ) : courses.length > 0 ? (
+            courses.map((course, index) => renderCourseCard(course, index))
           ) : (
             <View style={styles.emptyState}>
-              <FontAwesome5 name="graduation-cap" size={48} color={colors.textMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Programs</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Add your first program</Text>
+              <FontAwesome5 name="book-open" size={48} color={colors.textMuted} />
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Courses</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                Add courses for this department
+              </Text>
             </View>
           )}
         </ScrollView>
 
         {/* Add/Edit Modal */}
-        <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
+        <Modal 
+          visible={showAddModal} 
+          animationType="slide" 
+          transparent 
+          onRequestClose={() => setShowAddModal(false)}
+        >
           <View style={styles.modalOverlay}>
-            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+            <Animated.View 
+              entering={FadeInDown.duration(300)} 
+              style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}
+            >
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-                  {editingProgram ? 'Edit Program' : 'Add Program'}
+                  {editingCourse ? 'Edit Course' : 'Add Course'}
                 </Text>
                 <TouchableOpacity onPress={() => setShowAddModal(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
@@ -338,25 +448,43 @@ export default function CoursesScreen() {
 
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Program Name *</Text>
-                  <GlassInput placeholder="e.g., Bachelor of Commerce" value={formName} onChangeText={setFormName} autoCapitalize="words" />
+                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course Name *</Text>
+                  <GlassInput 
+                    placeholder="e.g., Data Structures" 
+                    value={formName} 
+                    onChangeText={setFormName}
+                    autoCapitalize="words"
+                  />
                 </View>
 
                 <View style={styles.formRow}>
                   <View style={[styles.formGroup, { flex: 1 }]}>
                     <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Code *</Text>
-                    <GlassInput placeholder="e.g., BCOM" value={formCode} onChangeText={setFormCode} autoCapitalize="characters" />
+                    <GlassInput 
+                      placeholder="e.g., CS301" 
+                      value={formCode} 
+                      onChangeText={setFormCode}
+                      autoCapitalize="characters"
+                    />
                   </View>
                   <View style={[styles.formGroup, { flex: 1 }]}>
                     <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Short Name</Text>
-                    <GlassInput placeholder="e.g., B.Com" value={formShortName} onChangeText={setFormShortName} />
+                    <GlassInput 
+                      placeholder="e.g., DS" 
+                      value={formShortName} 
+                      onChangeText={setFormShortName}
+                    />
                   </View>
                 </View>
 
                 <View style={styles.formGroup}>
                   <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
                   <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker selectedValue={formDeptId} onValueChange={setFormDeptId} style={{ color: colors.textPrimary }}>
+                    <Picker 
+                      selectedValue={formDeptId} 
+                      onValueChange={setFormDeptId} 
+                      style={{ color: colors.textPrimary }}
+                    >
                       <Picker.Item label="Select Department" value="" />
                       {departments.map((dept) => (
                         <Picker.Item key={dept.id} label={`${dept.name} (${dept.code})`} value={dept.id} />
@@ -366,33 +494,67 @@ export default function CoursesScreen() {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Program Type *</Text>
+                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Semester *</Text>
                   <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker selectedValue={formProgramType} onValueChange={(v) => setFormProgramType(v as 'undergraduate' | 'postgraduate')} style={{ color: colors.textPrimary }}>
-                      <Picker.Item label="Undergraduate (UG)" value="undergraduate" />
-                      <Picker.Item label="Postgraduate (PG)" value="postgraduate" />
+                    <Picker 
+                      selectedValue={formSemesterId} 
+                      onValueChange={setFormSemesterId} 
+                      style={{ color: colors.textPrimary }}
+                    >
+                      <Picker.Item label="Select Semester" value="" />
+                      {semesters.map((sem) => (
+                        <Picker.Item key={sem.id} label={sem.name} value={sem.id} />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course Type *</Text>
+                  <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                    <Picker 
+                      selectedValue={formType} 
+                      onValueChange={setFormType} 
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {COURSE_TYPES.map((type) => (
+                        <Picker.Item key={type.value} label={type.label} value={type.value} />
+                      ))}
                     </Picker>
                   </View>
                 </View>
 
                 <View style={styles.formRow}>
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Duration (Years)</Text>
-                    <GlassInput placeholder="3" value={formDuration} onChangeText={setFormDuration} keyboardType="numeric" />
+                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Theory Hours</Text>
+                    <GlassInput 
+                      placeholder="3" 
+                      value={formTheoryHours} 
+                      onChangeText={setFormTheoryHours}
+                      keyboardType="numeric"
+                    />
                   </View>
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Semesters</Text>
-                    <GlassInput placeholder="6" value={formSemesters} onChangeText={setFormSemesters} keyboardType="numeric" />
+                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Lab Hours</Text>
+                    <GlassInput 
+                      placeholder="0" 
+                      value={formLabHours} 
+                      onChangeText={setFormLabHours}
+                      keyboardType="numeric"
+                    />
                   </View>
                 </View>
               </ScrollView>
 
               <View style={styles.modalActions}>
-                <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.glassBorder }]} onPress={() => setShowAddModal(false)}>
+                <TouchableOpacity 
+                  style={[styles.cancelBtn, { borderColor: colors.glassBorder }]} 
+                  onPress={() => setShowAddModal(false)}
+                >
                   <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <PrimaryButton
-                  title={saving ? 'Saving...' : editingProgram ? 'Update' : 'Create'}
+                  title={saving ? 'Saving...' : editingCourse ? 'Update' : 'Create'}
                   onPress={handleSave}
                   disabled={saving}
                   style={styles.saveBtn}
@@ -414,23 +576,27 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '700' },
   subtitle: { fontSize: 13, marginTop: 2 },
   addBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  filterContainer: { paddingHorizontal: 20, marginBottom: 10 },
+  filterScroll: { gap: 8 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  filterChipText: { fontSize: 13, fontWeight: '500' },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 10 },
   loadingContainer: { alignItems: 'center', paddingTop: 60 },
   cardWrapper: { marginBottom: 14 },
   courseCard: { padding: 16 },
   cardHeader: { flexDirection: 'row' },
-  iconContainer: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  iconContainer: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   cardInfo: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  courseName: { fontSize: 16, fontWeight: '600' },
+  courseName: { fontSize: 15, fontWeight: '600', flex: 1 },
   inactiveBadge: { backgroundColor: '#ef444420', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   inactiveText: { fontSize: 10, fontWeight: '600', color: '#ef4444' },
   courseCode: { fontSize: 13, fontWeight: '600', marginTop: 2 },
-  detailsRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
-  detailBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, gap: 6 },
-  detailText: { fontSize: 11, fontWeight: '600' },
-  actionsRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
+  detailsRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 12, gap: 6 },
+  detailBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, gap: 4 },
+  detailText: { fontSize: 10, fontWeight: '600' },
+  actionsRow: { flexDirection: 'row', marginTop: 12, gap: 8 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, gap: 6 },
   actionBtnText: { fontSize: 12, fontWeight: '500' },
   emptyState: { alignItems: 'center', paddingTop: 80 },

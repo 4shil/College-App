@@ -37,50 +37,14 @@ export default function AcademicIndexScreen() {
       icon: 'building',
       color: '#6366f1',
       route: '/(admin)/academic/departments',
-      count: 6,
     },
     {
       id: 'courses',
       title: 'Courses',
-      subtitle: 'Degree programs and specializations',
-      icon: 'graduation-cap',
+      subtitle: 'Subjects taught in each department',
+      icon: 'book-open',
       color: '#10b981',
       route: '/(admin)/academic/courses',
-      count: 8,
-    },
-    {
-      id: 'subjects',
-      title: 'Subjects',
-      subtitle: 'Course subjects and curriculum',
-      icon: 'book',
-      color: '#f59e0b',
-      route: '/(admin)/academic/subjects',
-      count: 45,
-    },
-    {
-      id: 'years',
-      title: 'Years & Sections',
-      subtitle: 'Academic years and class sections',
-      icon: 'layer-group',
-      color: '#8b5cf6',
-      route: '/(admin)/academic/years',
-      count: 12,
-    },
-    {
-      id: 'batches',
-      title: 'Batches',
-      subtitle: 'Student batch management',
-      icon: 'users-cog',
-      color: '#3b82f6',
-      route: '/(admin)/academic/batches',
-    },
-    {
-      id: 'semesters',
-      title: 'Semesters',
-      subtitle: 'Academic terms and schedules',
-      icon: 'calendar-alt',
-      color: '#ec4899',
-      route: '/(admin)/academic/semesters',
     },
   ];
 
@@ -154,20 +118,14 @@ export default function AcademicIndexScreen() {
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <FontAwesome5 name="building" size={16} color="#6366f1" />
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>6</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Depts</Text>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>-</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Departments</Text>
               </View>
               <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
-                <FontAwesome5 name="graduation-cap" size={16} color="#10b981" />
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>8</Text>
+                <FontAwesome5 name="book-open" size={16} color="#10b981" />
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>-</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Courses</Text>
-              </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
-              <View style={styles.statItem}>
-                <FontAwesome5 name="book" size={16} color="#f59e0b" />
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>45</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Subjects</Text>
               </View>
             </View>
           </Card>

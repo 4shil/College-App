@@ -267,6 +267,12 @@ export default function StudentsListScreen() {
           >
             <Ionicons name="filter" size={18} color={showFilters ? '#fff' : colors.primary} />
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: '#10b981' }]}
+            onPress={() => router.push('/(admin)/users/students/create' as any)}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Search Bar */}
@@ -374,6 +380,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   searchContainer: {
     paddingHorizontal: 20,

@@ -10,6 +10,7 @@ export default function TeacherLayout() {
       }}
     >
       <Stack.Screen name="dashboard" />
+      <Stack.Screen name="attendance" />
     </Stack>
   );
 }

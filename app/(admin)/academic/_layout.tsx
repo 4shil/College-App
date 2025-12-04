@@ -15,7 +15,6 @@ export default function AcademicLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="departments/index" />
       <Stack.Screen name="courses/index" />
-      <Stack.Screen name="subjects/index" />
     </Stack>
   );
 }
