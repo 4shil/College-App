@@ -7,7 +7,7 @@
 // ENUMS
 // ============================================
 
-export type UserStatus = 'active' | 'inactive' | 'suspended' | 'graduated' | 'dropout';
+export type UserStatus = 'active' | 'inactive' | 'suspended' | 'graduated' | 'dropout' | 'pending';
 
 export type GenderType = 'male' | 'female' | 'other';
 
@@ -18,6 +18,12 @@ export type TeacherDesignation = 'professor' | 'associate_professor' | 'assistan
 export type CourseType = 'core' | 'elective' | 'open_elective' | 'lab' | 'mandatory' | 'major' | 'minor';
 
 export type RoleCategory = 'admin' | 'teacher' | 'student';
+
+export type ProgramType = 'undergraduate' | 'postgraduate';
+
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused' | 'od';
+
+export type HolidayType = 'college' | 'department';
 
 export type RoleName = 
   // Admin roles
@@ -123,6 +129,7 @@ export interface Profile {
   pincode: string | null;
   status: UserStatus;
   primary_role: RoleName | null;
+  department_id: string | null; // For HOD to identify their department
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
@@ -144,8 +151,11 @@ export interface Student {
   registration_number: string;
   roll_number: string | null;
   hall_ticket_number: string | null;
+  apaar_id: string | null;
+  program_id: string | null;
   department_id: string;
   year_id: string;
+  current_year_id: string | null; // Active year for frontend
   semester_id: string;
   section_id: string | null;
   academic_year_id: string;
@@ -178,6 +188,7 @@ export interface Teacher {
   experience_years: number;
   joining_date: string | null;
   is_active: boolean;
+  is_hod: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -217,6 +228,130 @@ export interface MentorAssignment {
   assigned_date: string;
   is_active: boolean;
   created_at: string;
+}
+
+// ============================================
+// PROGRAM TYPE
+// ============================================
+
+export interface Program {
+  id: string;
+  code: string;
+  name: string;
+  short_name: string | null;
+  program_type: ProgramType;
+  department_id: string;
+  duration_years: number;
+  total_semesters: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// TIMETABLE TYPES
+// ============================================
+
+export interface TimetableEntry {
+  id: string;
+  program_id: string;
+  year_id: string;
+  academic_year_id: string;
+  day_of_week: number; // 1-5 (Monday-Friday)
+  period: number; // 1-5
+  start_time: string;
+  end_time: string;
+  course_id: string | null;
+  teacher_id: string | null;
+  room: string | null;
+  is_lab: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PeriodTiming {
+  id: string;
+  period_number: number;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  is_break: boolean;
+  break_type: 'short' | 'lunch' | null;
+  created_at: string;
+}
+
+export interface Substitution {
+  id: string;
+  timetable_entry_id: string;
+  date: string;
+  original_teacher_id: string;
+  substitute_teacher_id: string;
+  reason: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
+// ============================================
+// ATTENDANCE TYPES
+// ============================================
+
+export interface Attendance {
+  id: string;
+  date: string;
+  period: number;
+  course_id: string;
+  section_id: string | null; // Now nullable, using program_id + year_id instead
+  program_id: string | null;
+  year_id: string | null;
+  academic_year_id: string;
+  timetable_entry_id: string | null;
+  marked_by: string;
+  marked_at: string;
+  is_locked: boolean;
+  locked_at: string | null;
+  late_minutes: number;
+  created_at: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  attendance_id: string;
+  student_id: string;
+  status: AttendanceStatus;
+  late_minutes: number;
+  marked_at: string;
+  edited_at: string | null;
+  edit_reason: string | null;
+  edited_by: string | null;
+  edit_count: number;
+}
+
+export interface Holiday {
+  id: string;
+  date: string;
+  title: string;
+  description: string | null;
+  holiday_type: HolidayType;
+  department_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LatePass {
+  id: string;
+  student_id: string;
+  academic_year_id: string;
+  month: number;
+  year: number;
+  late_count: number;
+  half_day_leaves_deducted: number;
+  last_deduction_type: 'morning' | 'afternoon' | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // ============================================

@@ -28,9 +28,17 @@ interface DashboardStats {
   totalStudents: number;
   totalTeachers: number;
   totalDepartments: number;
-  totalCourses: number;
+  totalPrograms: number;
   pendingApprovals: number;
   todayAttendance: number;
+}
+
+interface StatCardConfig {
+  title: string;
+  value: number;
+  icon: string;
+  color: string;
+  route: string;
 }
 
 interface QuickAction {
@@ -55,20 +63,51 @@ export default function AdminDashboard() {
     totalStudents: 0,
     totalTeachers: 0,
     totalDepartments: 0,
-    totalCourses: 0,
+    totalPrograms: 0,
     pendingApprovals: 0,
     todayAttendance: 0,
   });
 
+  // Stat cards configuration with navigation routes
+  const statCards: StatCardConfig[] = [
+    { 
+      title: 'Students', 
+      value: stats.totalStudents, 
+      icon: 'user-graduate', 
+      color: '#8B5CF6',
+      route: '/(admin)/users?tab=students'
+    },
+    { 
+      title: 'Teachers', 
+      value: stats.totalTeachers, 
+      icon: 'chalkboard-teacher', 
+      color: '#16A34A',
+      route: '/(admin)/users?tab=teachers'
+    },
+    { 
+      title: 'Departments', 
+      value: stats.totalDepartments, 
+      icon: 'building', 
+      color: '#06B6D4',
+      route: '/(admin)/academic'
+    },
+    { 
+      title: 'Programs', 
+      value: stats.totalPrograms, 
+      icon: 'book', 
+      color: '#6366F1',
+      route: '/(admin)/academic'
+    },
+  ];
+
   const quickActions: QuickAction[] = [
     {
-      id: 'pending',
-      title: 'Pending Approvals',
-      icon: 'user-clock',
+      id: 'students',
+      title: 'Manage Students',
+      icon: 'user-graduate',
       iconType: 'fa5',
-      color: '#F59E0B',
-      route: '/(admin)/users/pending',
-      badge: stats.pendingApprovals,
+      color: '#8B5CF6',
+      route: '/(admin)/users?tab=students',
     },
     {
       id: 'teachers',
@@ -76,55 +115,64 @@ export default function AdminDashboard() {
       icon: 'chalkboard-teacher',
       iconType: 'fa5',
       color: '#16A34A',
-      route: '/(admin)/users/teachers',
+      route: '/(admin)/users?tab=teachers',
     },
     {
-      id: 'departments',
-      title: 'Departments',
-      icon: 'building',
+      id: 'pending',
+      title: 'Pending Approvals',
+      icon: 'user-clock',
       iconType: 'fa5',
-      color: '#8B5CF6',
-      route: '/(admin)/academic/departments',
+      color: '#F59E0B',
+      route: '/(admin)/users?tab=pending',
+      badge: stats.pendingApprovals,
     },
     {
-      id: 'exams',
-      title: 'Exam Cell',
-      icon: 'file-document-edit',
-      iconType: 'mci',
-      color: '#DC2626',
-      route: '/(admin)/exams',
+      id: 'attendance',
+      title: 'Attendance',
+      icon: 'clipboard-check',
+      iconType: 'fa5',
+      color: '#10B981',
+      route: '/(admin)/attendance',
     },
     {
       id: 'timetable',
       title: 'Timetable',
       icon: 'calendar-alt',
       iconType: 'fa5',
-      color: '#06B6D4',
+      color: '#EC4899',
       route: '/(admin)/timetable',
     },
     {
-      id: 'library',
-      title: 'Library',
-      icon: 'library',
-      iconType: 'ion',
-      color: '#6366F1',
-      route: '/(admin)/library',
-    },
-    {
-      id: 'bus',
-      title: 'Bus Routes',
-      icon: 'bus-alt',
+      id: 'departments',
+      title: 'Departments',
+      icon: 'building',
       iconType: 'fa5',
-      color: '#7C3AED',
-      route: '/(admin)/bus',
+      color: '#06B6D4',
+      route: '/(admin)/academic',
     },
     {
-      id: 'fees',
-      title: 'Fee Management',
-      icon: 'cash',
-      iconType: 'ion',
-      color: '#16A34A',
-      route: '/(admin)/fees',
+      id: 'programs',
+      title: 'Programs/Courses',
+      icon: 'book-open',
+      iconType: 'fa5',
+      color: '#6366F1',
+      route: '/(admin)/academic',
+    },
+    {
+      id: 'notices',
+      title: 'Notices',
+      icon: 'bullhorn',
+      iconType: 'fa5',
+      color: '#F97316',
+      route: '/(admin)/notices',
+    },
+    {
+      id: 'settings',
+      title: 'Settings',
+      icon: 'cog',
+      iconType: 'fa5',
+      color: '#64748B',
+      route: '/(admin)/settings',
     },
   ];
 
@@ -132,67 +180,37 @@ export default function AdminDashboard() {
     try {
       console.log('Fetching dashboard stats...');
       
-      // Try fetching from students table first
-      const { count: studentsCount, error: studentsError } = await supabase
-        .from('students')
-        .select('*', { count: 'exact', head: true });
-      
-      if (studentsError) console.error('Students fetch error:', studentsError);
-
-      // Try fetching from teachers table
-      const { count: teachersCount, error: teachersError } = await supabase
-        .from('teachers')
-        .select('*', { count: 'exact', head: true });
-      
-      if (teachersError) console.error('Teachers fetch error:', teachersError);
-
-      // Fetch departments count
-      const { count: deptsCount, error: deptsError } = await supabase
-        .from('departments')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-      
-      if (deptsError) console.error('Departments fetch error:', deptsError);
-
-      // Fetch courses count
-      const { count: coursesCount, error: coursesError } = await supabase
-        .from('courses')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-      
-      if (coursesError) console.error('Courses fetch error:', coursesError);
-
-      // Fetch pending approvals - profiles with status 'pending' or students with inactive status
-      const { count: pendingProfilesCount, error: pendingError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-      
-      if (pendingError) console.error('Pending profiles fetch error:', pendingError);
-
-      // Alternative: Count profiles by role if specific tables are empty
-      const { count: studentProfilesCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('primary_role', 'student');
-
-      const { count: teacherProfilesCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator']);
+      // Run ALL queries in parallel for faster loading
+      const [
+        studentsResult,
+        teachersResult,
+        deptsResult,
+        programsResult,
+        pendingResult,
+        studentProfilesResult,
+        teacherProfilesResult
+      ] = await Promise.all([
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('departments').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('courses').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('primary_role', 'student'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'])
+      ]);
 
       // Use whichever count is higher (from specific table or profiles)
-      const finalStudentsCount = Math.max(studentsCount || 0, studentProfilesCount || 0);
-      const finalTeachersCount = Math.max(teachersCount || 0, teacherProfilesCount || 0);
+      const finalStudentsCount = Math.max(studentsResult.count || 0, studentProfilesResult.count || 0);
+      const finalTeachersCount = Math.max(teachersResult.count || 0, teacherProfilesResult.count || 0);
 
-      console.log('Final counts - Students:', finalStudentsCount, 'Teachers:', finalTeachersCount, 'Depts:', deptsCount, 'Courses:', coursesCount);
+      console.log('Final counts - Students:', finalStudentsCount, 'Teachers:', finalTeachersCount, 'Depts:', deptsResult.count, 'Programs:', programsResult.count);
 
       setStats({
         totalStudents: finalStudentsCount,
         totalTeachers: finalTeachersCount,
-        totalDepartments: deptsCount || 0,
-        totalCourses: coursesCount || 0,
-        pendingApprovals: pendingProfilesCount || 0,
+        totalDepartments: deptsResult.count || 0,
+        totalPrograms: programsResult.count || 0,
+        pendingApprovals: pendingResult.count || 0,
         todayAttendance: 85, // Placeholder
       });
       
@@ -225,28 +243,35 @@ export default function AdminDashboard() {
     value: number,
     icon: string,
     color: string,
-    delay: number
+    delay: number,
+    route?: string
   ) => (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(500).springify().damping(16)}
       style={[styles.statCard, { width: cardWidth }]}
     >
-      <LinearGradient
-        colors={isDark ? [`${color}20`, `${color}08`] : [`${color}12`, `${color}05`]}
-        style={styles.statCardGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => route && router.push(route as any)}
+        disabled={!route}
       >
-        <View style={[styles.statIconContainer, { backgroundColor: `${color}18` }]}>
-          <FontAwesome5 name={icon} size={20} color={color} />
-        </View>
-        {loading ? (
-          <ActivityIndicator size="small" color={color} style={{ marginVertical: 10 }} />
-        ) : (
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
-        )}
-        <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
-      </LinearGradient>
+        <LinearGradient
+          colors={isDark ? [`${color}20`, `${color}08`] : [`${color}12`, `${color}05`]}
+          style={styles.statCardGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={[styles.statIconContainer, { backgroundColor: `${color}18` }]}>
+            <FontAwesome5 name={icon} size={20} color={color} />
+          </View>
+          {loading ? (
+            <ActivityIndicator size="small" color={color} style={{ marginVertical: 10 }} />
+          ) : (
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
+          )}
+          <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
+        </LinearGradient>
+      </TouchableOpacity>
     </Animated.View>
   );
 
@@ -329,10 +354,10 @@ export default function AdminDashboard() {
         <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
           <View style={styles.statsGrid}>
-            {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200)}
-            {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260)}
-            {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320)}
-            {renderStatCard('Courses', stats.totalCourses, 'book', '#6366F1', 380)}
+            {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200, '/(admin)/users?tab=students')}
+            {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260, '/(admin)/users?tab=teachers')}
+            {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320, '/(admin)/academic?tab=departments')}
+            {renderStatCard('Programs', stats.totalPrograms, 'book', '#6366F1', 380, '/(admin)/academic?tab=programs')}
           </View>
         </Animated.View>
 

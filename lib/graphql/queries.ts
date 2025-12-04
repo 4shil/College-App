@@ -390,6 +390,7 @@ export const GET_ALL_DEPARTMENTS = gql`
       short_name
       description
       is_active
+      hod_user_id
       hod: profileByHodUserId {
         id
         full_name
@@ -405,6 +406,14 @@ export const GET_ALL_DEPARTMENTS = gql`
           count
         }
       }
+      programs(where: { is_active: { _eq: true } }) {
+        id
+        code
+        name
+        short_name
+        program_type
+        duration_years
+      }
     }
   }
 `;
@@ -418,6 +427,7 @@ export const GET_DEPARTMENT_BY_ID = gql`
       short_name
       description
       is_active
+      hod_user_id
       hod: profileByHodUserId {
         id
         full_name
@@ -445,6 +455,69 @@ export const GET_DEPARTMENT_BY_ID = gql`
         semester {
           id
           name
+        }
+      }
+      programs(where: { is_active: { _eq: true } }) {
+        id
+        code
+        name
+        short_name
+        program_type
+        duration_years
+        total_semesters
+      }
+    }
+  }
+`;
+
+// ============================================
+// PROGRAMS
+// ============================================
+
+export const GET_ALL_PROGRAMS = gql`
+  query GetAllPrograms($departmentId: uuid) {
+    programs(
+      where: { 
+        is_active: { _eq: true }
+        department_id: { _eq: $departmentId }
+      }
+      order_by: { name: asc }
+    ) {
+      id
+      code
+      name
+      short_name
+      program_type
+      duration_years
+      total_semesters
+      department {
+        id
+        code
+        name
+      }
+    }
+  }
+`;
+
+export const GET_PROGRAM_BY_ID = gql`
+  query GetProgramById($id: uuid!) {
+    programs_by_pk(id: $id) {
+      id
+      code
+      name
+      short_name
+      program_type
+      duration_years
+      total_semesters
+      is_active
+      department {
+        id
+        code
+        name
+      }
+      students_aggregate(where: { current_status: { _eq: "active" } }) {
+        aggregate {
+          count
         }
       }
     }
@@ -583,27 +656,37 @@ export const GET_ATTENDANCE_SUMMARY = gql`
     $startDate: date!
     $endDate: date!
   ) {
-    attendance_aggregate(
+    attendance(
       where: {
         course_id: { _eq: $courseId }
         section_id: { _eq: $sectionId }
         date: { _gte: $startDate, _lte: $endDate }
       }
+      order_by: { date: desc }
     ) {
-      aggregate {
-        count
-      }
-      nodes {
-        date
-        present_count: students_aggregate(where: { status: { _eq: "present" } }) {
-          aggregate {
-            count
-          }
+      id
+      date
+      period
+      is_locked
+      marked_at
+      attendance_records_aggregate {
+        aggregate {
+          count
         }
-        absent_count: students_aggregate(where: { status: { _eq: "absent" } }) {
-          aggregate {
-            count
-          }
+      }
+      present_count: attendance_records_aggregate(where: { status: { _eq: "present" } }) {
+        aggregate {
+          count
+        }
+      }
+      absent_count: attendance_records_aggregate(where: { status: { _eq: "absent" } }) {
+        aggregate {
+          count
+        }
+      }
+      late_count: attendance_records_aggregate(where: { status: { _eq: "late" } }) {
+        aggregate {
+          count
         }
       }
     }
@@ -626,6 +709,7 @@ export const GET_STUDENT_ATTENDANCE = gql`
       id
       status
       marked_at
+      late_minutes
       attendance {
         id
         date
@@ -637,7 +721,7 @@ export const GET_STUDENT_ATTENDANCE = gql`
         }
       }
     }
-    attendance_records_aggregate(
+    total: attendance_records_aggregate(
       where: {
         student_id: { _eq: $studentId }
         attendance: { date: { _gte: $startDate, _lte: $endDate } }
@@ -658,6 +742,129 @@ export const GET_STUDENT_ATTENDANCE = gql`
         count
       }
     }
+    absent: attendance_records_aggregate(
+      where: {
+        student_id: { _eq: $studentId }
+        status: { _eq: "absent" }
+        attendance: { date: { _gte: $startDate, _lte: $endDate } }
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
+    late: attendance_records_aggregate(
+      where: {
+        student_id: { _eq: $studentId }
+        status: { _eq: "late" }
+        attendance: { date: { _gte: $startDate, _lte: $endDate } }
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
+
+// Get attendance for marking (teacher view)
+export const GET_ATTENDANCE_FOR_MARKING = gql`
+  query GetAttendanceForMarking(
+    $courseId: uuid!
+    $sectionId: uuid!
+    $date: date!
+    $period: Int!
+  ) {
+    attendance(
+      where: {
+        course_id: { _eq: $courseId }
+        section_id: { _eq: $sectionId }
+        date: { _eq: $date }
+        period: { _eq: $period }
+      }
+    ) {
+      id
+      is_locked
+      marked_at
+      marked_by
+      attendance_records {
+        id
+        student_id
+        status
+        late_minutes
+        student {
+          id
+          registration_number
+          roll_number
+          profile {
+            full_name
+            photo_url
+          }
+        }
+      }
+    }
+    students(
+      where: {
+        section_id: { _eq: $sectionId }
+        current_status: { _eq: "active" }
+      }
+      order_by: { roll_number: asc }
+    ) {
+      id
+      registration_number
+      roll_number
+      profile {
+        full_name
+        photo_url
+      }
+    }
+  }
+`;
+
+// Get holidays
+export const GET_HOLIDAYS = gql`
+  query GetHolidays($startDate: date!, $endDate: date!, $departmentId: uuid) {
+    holidays(
+      where: {
+        date: { _gte: $startDate, _lte: $endDate }
+        _or: [
+          { holiday_type: { _eq: "college" } }
+          { department_id: { _eq: $departmentId } }
+        ]
+      }
+      order_by: { date: asc }
+    ) {
+      id
+      date
+      title
+      description
+      holiday_type
+      department {
+        id
+        name
+        code
+      }
+    }
+  }
+`;
+
+// Get late passes for a student
+export const GET_STUDENT_LATE_PASSES = gql`
+  query GetStudentLatePasses($studentId: uuid!, $academicYearId: uuid!) {
+    late_passes(
+      where: {
+        student_id: { _eq: $studentId }
+        academic_year_id: { _eq: $academicYearId }
+      }
+      order_by: [{ year: desc }, { month: desc }]
+    ) {
+      id
+      month
+      year
+      late_count
+      half_day_leaves_deducted
+      last_deduction_type
+    }
   }
 `;
 
@@ -665,8 +872,44 @@ export const GET_STUDENT_ATTENDANCE = gql`
 // TIMETABLE
 // ============================================
 
+// Get timetable for a specific program and year (updated structure)
 export const GET_TIMETABLE = gql`
-  query GetTimetable($sectionId: uuid!, $academicYearId: uuid!) {
+  query GetTimetable($programId: uuid!, $yearId: uuid!, $academicYearId: uuid!) {
+    timetable_entries(
+      where: {
+        program_id: { _eq: $programId }
+        year_id: { _eq: $yearId }
+        academic_year_id: { _eq: $academicYearId }
+        is_active: { _eq: true }
+      }
+      order_by: [{ day_of_week: asc }, { period: asc }]
+    ) {
+      id
+      day_of_week
+      period
+      start_time
+      end_time
+      room
+      is_lab
+      course {
+        id
+        code
+        name
+        short_name
+      }
+      teacher {
+        id
+        profile {
+          full_name
+        }
+      }
+    }
+  }
+`;
+
+// Legacy query for section-based timetable (for backwards compatibility)
+export const GET_SECTION_TIMETABLE = gql`
+  query GetSectionTimetable($sectionId: uuid!, $academicYearId: uuid!) {
     timetable_entries(
       where: {
         section_id: { _eq: $sectionId }
@@ -712,22 +955,38 @@ export const GET_TEACHER_TIMETABLE = gql`
       period
       start_time
       end_time
+      room
+      is_lab
       course {
         id
         code
         name
       }
-      section {
+      program {
+        id
+        code
+        short_name
+      }
+      year {
         id
         name
-        department {
-          code
-        }
-        year {
-          name
-        }
+        year_number
       }
-      room
+    }
+  }
+`;
+
+// Get period timings
+export const GET_PERIOD_TIMINGS = gql`
+  query GetPeriodTimings {
+    period_timings(order_by: { period_number: asc }) {
+      id
+      period_number
+      start_time
+      end_time
+      duration_minutes
+      is_break
+      break_type
     }
   }
 `;

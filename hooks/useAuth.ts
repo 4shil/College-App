@@ -2,6 +2,28 @@ import { useEffect, useCallback } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { supabase, signInWithEmail, signOut as supabaseSignOut } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
+import type { RoleName } from '../types/database';
+
+// Admin roles that should be redirected to admin dashboard
+const ADMIN_ROLES: RoleName[] = [
+  'super_admin',
+  'principal',
+  'department_admin',
+  'hod',
+  'exam_cell_admin',
+  'library_admin',
+  'bus_admin',
+  'canteen_admin',
+  'finance_admin',
+];
+
+// Teacher roles that should be redirected to teacher dashboard
+const TEACHER_ROLES: RoleName[] = [
+  'subject_teacher',
+  'class_teacher',
+  'mentor',
+  'coordinator',
+];
 
 export const useAuth = () => {
   const router = useRouter();
@@ -12,43 +34,147 @@ export const useAuth = () => {
     isLoading,
     isAuthenticated,
     userRole,
+    primaryRole,
+    profile,
     setSession,
+    setProfile,
+    setRoles,
     setLoading,
     setUserRole,
     logout: storeLogout,
   } = useAuthStore();
 
+  // Fetch user profile and roles from the database
+  const fetchUserData = useCallback(async (userId: string) => {
+    try {
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return null;
+      }
+
+      // Fetch user roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select(`
+          id,
+          is_active,
+          role:roles(name, category)
+        `)
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+      }
+
+      // Extract role names
+      const roleNames: RoleName[] = rolesData
+        ?.filter(ur => ur.role && ur.is_active)
+        .map(ur => (ur.role as any).name as RoleName) || [];
+
+      // If no roles from user_roles, use primary_role from profile
+      if (roleNames.length === 0 && profileData?.primary_role) {
+        roleNames.push(profileData.primary_role as RoleName);
+      }
+
+      // Set profile and roles in store
+      setProfile(profileData);
+      setRoles(roleNames);
+
+      // Determine user role for routing
+      const primaryRole = profileData?.primary_role as RoleName | null;
+      let userRoleCategory: 'admin' | 'teacher' | 'student' | null = null;
+
+      if (primaryRole) {
+        if (ADMIN_ROLES.includes(primaryRole)) {
+          userRoleCategory = 'admin';
+        } else if (TEACHER_ROLES.includes(primaryRole)) {
+          userRoleCategory = 'teacher';
+        } else if (primaryRole === 'student') {
+          userRoleCategory = 'student';
+        }
+      } else if (roleNames.length > 0) {
+        // Fallback to first role's category
+        if (roleNames.some(r => ADMIN_ROLES.includes(r))) {
+          userRoleCategory = 'admin';
+        } else if (roleNames.some(r => TEACHER_ROLES.includes(r))) {
+          userRoleCategory = 'teacher';
+        } else if (roleNames.includes('student')) {
+          userRoleCategory = 'student';
+        }
+      }
+
+      setUserRole(userRoleCategory);
+      return { profile: profileData, roles: roleNames, userRoleCategory };
+    } catch (error) {
+      console.error('Error in fetchUserData:', error);
+      return null;
+    }
+  }, [setProfile, setRoles, setUserRole]);
+
   // Listen for auth state changes
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        // Get user role from metadata or profile
-        const role = session.user.user_metadata?.role as 'admin' | 'teacher' | 'student' | null;
-        setUserRole(role);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) setLoading(false);
+          return;
+        }
+
+        if (mounted) {
+          setSession(session);
+          
+          if (session?.user) {
+            await fetchUserData(session.user.id);
+          }
+          
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
         setSession(session);
+        
         if (session?.user) {
-          const role = session.user.user_metadata?.role as 'admin' | 'teacher' | 'student' | null;
-          setUserRole(role);
+          await fetchUserData(session.user.id);
         } else {
           setUserRole(null);
+          setProfile(null);
+          setRoles([]);
         }
+        
         setLoading(false);
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserData, setSession, setLoading, setUserRole, setProfile, setRoles]);
 
   // Handle protected routes
   useEffect(() => {
@@ -71,52 +197,84 @@ export const useAuth = () => {
       } else if (userRole === 'student') {
         router.replace('/(student)/dashboard');
       } else {
-        // Default to student if no role
+        // Default to student if no role determined
+        router.replace('/(student)/dashboard');
+      }
+    } else if (isAuthenticated) {
+      // Check if user is trying to access wrong dashboard
+      if (inAdminGroup && userRole !== 'admin') {
+        // Non-admin trying to access admin area
+        if (userRole === 'teacher') {
+          router.replace('/(teacher)/dashboard');
+        } else {
+          router.replace('/(student)/dashboard');
+        }
+      } else if (inTeacherGroup && userRole !== 'admin' && userRole !== 'teacher') {
+        // Student trying to access teacher area
         router.replace('/(student)/dashboard');
       }
     }
-  }, [isAuthenticated, segments, isLoading, userRole]);
+  }, [isAuthenticated, segments, isLoading, userRole, router]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
       setLoading(true);
-      const { data, error } = await signInWithEmail(email, password);
       
-      if (error) {
+      try {
+        const { data, error } = await signInWithEmail(email, password);
+        
+        if (error) {
+          setLoading(false);
+          return { success: false, error: error.message };
+        }
+
+        if (data.session && data.user) {
+          // Fetch user data after successful login
+          const userData = await fetchUserData(data.user.id);
+          
+          if (!userData) {
+            setLoading(false);
+            return { success: false, error: 'Failed to load user profile' };
+          }
+        }
+
         setLoading(false);
-        return { success: false, error: error.message };
+        return { success: true, error: null };
+      } catch (error: any) {
+        setLoading(false);
+        return { success: false, error: error.message || 'An error occurred' };
       }
-
-      if (data.session) {
-        const role = data.user?.user_metadata?.role as 'admin' | 'teacher' | 'student' | null;
-        setUserRole(role);
-      }
-
-      setLoading(false);
-      return { success: true, error: null };
     },
-    []
+    [fetchUserData, setLoading]
   );
 
   const signOut = useCallback(async () => {
     setLoading(true);
-    const { error } = await supabaseSignOut();
-    if (!error) {
-      storeLogout();
-      router.replace('/(auth)/login');
+    try {
+      const { error } = await supabaseSignOut();
+      if (!error) {
+        storeLogout();
+        router.replace('/(auth)/login');
+      }
+      setLoading(false);
+      return { error };
+    } catch (error: any) {
+      setLoading(false);
+      return { error };
     }
-    setLoading(false);
-    return { error };
-  }, []);
+  }, [storeLogout, router, setLoading]);
 
   return {
     user,
     session,
+    profile,
+    primaryRole,
     isLoading,
     isAuthenticated,
     userRole,
     signIn,
     signOut,
+    refreshUserData: () => user?.id ? fetchUserData(user.id) : Promise.resolve(null),
   };
 };
 

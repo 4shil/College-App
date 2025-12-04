@@ -140,6 +140,13 @@ export default function AdminLayout() {
           ),
         }}
       />
+      {/* Hidden screens - accessed via navigation */}
+      <Tabs.Screen
+        name="timetable"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
     </Tabs>
   );
 }

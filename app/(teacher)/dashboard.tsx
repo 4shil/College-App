@@ -14,7 +14,7 @@ export default function TeacherDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors } = useThemeStore();
-  const { user, logout } = useAuthStore();
+  const { user, profile, logout } = useAuthStore();
 
   const handleLogout = async () => {
     await signOut();
@@ -45,7 +45,7 @@ export default function TeacherDashboard() {
               Teacher Dashboard
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Welcome back, {user?.email || 'Teacher'}!
+              Welcome back, {profile?.full_name || user?.email || 'Teacher'}!
             </Text>
             <Text style={[styles.placeholder, { color: colors.textMuted }]}>
               Your teacher dashboard is coming soon...

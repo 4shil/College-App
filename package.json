@@ -23,6 +23,7 @@
     "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.7",
     "expo-router": "~5.1.7",
+    "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
     "graphql": "^16.12.0",
     "graphql-request": "^7.3.5",

@@ -9,7 +9,7 @@
 -- ATTENDANCE TABLES
 -- ============================================
 
-CREATE TABLE attendance (
+CREATE TABLE IF NOT EXISTS attendance (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     date DATE NOT NULL,
     period INTEGER NOT NULL CHECK (period BETWEEN 1 AND 10),
@@ -23,7 +23,7 @@ CREATE TABLE attendance (
     UNIQUE(date, period, course_id, section_id)
 );
 
-CREATE TABLE attendance_records (
+CREATE TABLE IF NOT EXISTS attendance_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     attendance_id UUID NOT NULL REFERENCES attendance(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -35,15 +35,15 @@ CREATE TABLE attendance_records (
     UNIQUE(attendance_id, student_id)
 );
 
-CREATE INDEX idx_attendance_date ON attendance(date);
-CREATE INDEX idx_attendance_course ON attendance(course_id);
-CREATE INDEX idx_attendance_records_student ON attendance_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
+CREATE INDEX IF NOT EXISTS idx_attendance_course ON attendance(course_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_records_student ON attendance_records(student_id);
 
 -- ============================================
 -- TIMETABLE TABLES
 -- ============================================
 
-CREATE TABLE timetable_entries (
+CREATE TABLE IF NOT EXISTS timetable_entries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     section_id UUID NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
     academic_year_id UUID NOT NULL REFERENCES academic_years(id),
@@ -61,7 +61,7 @@ CREATE TABLE timetable_entries (
     UNIQUE(section_id, academic_year_id, day_of_week, period)
 );
 
-CREATE TABLE substitutions (
+CREATE TABLE IF NOT EXISTS substitutions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     timetable_entry_id UUID NOT NULL REFERENCES timetable_entries(id),
     date DATE NOT NULL,
@@ -75,14 +75,14 @@ CREATE TABLE substitutions (
     UNIQUE(timetable_entry_id, date)
 );
 
-CREATE INDEX idx_timetable_section ON timetable_entries(section_id);
-CREATE INDEX idx_timetable_teacher ON timetable_entries(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_timetable_program ON timetable_entries(program_id);
+CREATE INDEX IF NOT EXISTS idx_timetable_teacher ON timetable_entries(teacher_id);
 
 -- ============================================
 -- EXAM TABLES
 -- ============================================
 
-CREATE TABLE exams (
+CREATE TABLE IF NOT EXISTS exams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     exam_type VARCHAR(30) NOT NULL CHECK (exam_type IN ('internal', 'model', 'university', 'practical', 'viva')),
@@ -97,7 +97,7 @@ CREATE TABLE exams (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE exam_schedules (
+CREATE TABLE IF NOT EXISTS exam_schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     exam_id UUID NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
     course_id UUID NOT NULL REFERENCES courses(id),
@@ -111,7 +111,7 @@ CREATE TABLE exam_schedules (
     UNIQUE(exam_id, course_id)
 );
 
-CREATE TABLE exam_marks (
+CREATE TABLE IF NOT EXISTS exam_marks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     exam_schedule_id UUID NOT NULL REFERENCES exam_schedules(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -126,7 +126,7 @@ CREATE TABLE exam_marks (
     UNIQUE(exam_schedule_id, student_id)
 );
 
-CREATE TABLE external_marks (
+CREATE TABLE IF NOT EXISTS external_marks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     semester_id UUID NOT NULL REFERENCES semesters(id),
@@ -146,7 +146,7 @@ CREATE TABLE external_marks (
 -- ASSIGNMENTS TABLE
 -- ============================================
 
-CREATE TABLE assignments (
+CREATE TABLE IF NOT EXISTS assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(200) NOT NULL,
     description TEXT,
@@ -161,7 +161,7 @@ CREATE TABLE assignments (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE assignment_submissions (
+CREATE TABLE IF NOT EXISTS assignment_submissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -175,14 +175,14 @@ CREATE TABLE assignment_submissions (
     UNIQUE(assignment_id, student_id)
 );
 
-CREATE INDEX idx_assignments_course ON assignments(course_id);
-CREATE INDEX idx_assignment_submissions_student ON assignment_submissions(student_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_course ON assignments(course_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student ON assignment_submissions(student_id);
 
 -- ============================================
 -- TEACHING MATERIALS TABLE
 -- ============================================
 
-CREATE TABLE teaching_materials (
+CREATE TABLE IF NOT EXISTS teaching_materials (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(200) NOT NULL,
     description TEXT,
@@ -198,13 +198,13 @@ CREATE TABLE teaching_materials (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_materials_course ON teaching_materials(course_id);
+CREATE INDEX IF NOT EXISTS idx_materials_course ON teaching_materials(course_id);
 
 -- ============================================
 -- LESSON PLANNER & WORK DIARY
 -- ============================================
 
-CREATE TABLE lesson_planners (
+CREATE TABLE IF NOT EXISTS lesson_planners (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     teacher_id UUID NOT NULL REFERENCES teachers(id),
     course_id UUID NOT NULL REFERENCES courses(id),
@@ -224,7 +224,7 @@ CREATE TABLE lesson_planners (
     UNIQUE(teacher_id, course_id, section_id, week_start_date)
 );
 
-CREATE TABLE work_diaries (
+CREATE TABLE IF NOT EXISTS work_diaries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     teacher_id UUID NOT NULL REFERENCES teachers(id),
     academic_year_id UUID NOT NULL REFERENCES academic_years(id),
@@ -247,7 +247,7 @@ CREATE TABLE work_diaries (
 -- NOTICES TABLE
 -- ============================================
 
-CREATE TABLE notices (
+CREATE TABLE IF NOT EXISTS notices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(200) NOT NULL,
     content TEXT NOT NULL,
@@ -264,7 +264,7 @@ CREATE TABLE notices (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE notice_reads (
+CREATE TABLE IF NOT EXISTS notice_reads (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     notice_id UUID NOT NULL REFERENCES notices(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -272,14 +272,14 @@ CREATE TABLE notice_reads (
     UNIQUE(notice_id, user_id)
 );
 
-CREATE INDEX idx_notices_scope ON notices(scope);
-CREATE INDEX idx_notices_department ON notices(department_id);
+CREATE INDEX IF NOT EXISTS idx_notices_scope ON notices(scope);
+CREATE INDEX IF NOT EXISTS idx_notices_department ON notices(department_id);
 
 -- ============================================
 -- LIBRARY TABLES
 -- ============================================
 
-CREATE TABLE books (
+CREATE TABLE IF NOT EXISTS books (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     isbn VARCHAR(20),
     title VARCHAR(300) NOT NULL,
@@ -298,7 +298,7 @@ CREATE TABLE books (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE book_issues (
+CREATE TABLE IF NOT EXISTS book_issues (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id UUID NOT NULL REFERENCES books(id),
     user_id UUID NOT NULL REFERENCES profiles(id),
@@ -313,7 +313,7 @@ CREATE TABLE book_issues (
     status VARCHAR(20) DEFAULT 'issued' CHECK (status IN ('issued', 'returned', 'overdue', 'lost'))
 );
 
-CREATE TABLE book_reservations (
+CREATE TABLE IF NOT EXISTS book_reservations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id UUID NOT NULL REFERENCES books(id),
     user_id UUID NOT NULL REFERENCES profiles(id),
@@ -324,14 +324,14 @@ CREATE TABLE book_reservations (
     UNIQUE(book_id, user_id, status)
 );
 
-CREATE INDEX idx_books_title ON books(title);
-CREATE INDEX idx_book_issues_user ON book_issues(user_id);
+CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
+CREATE INDEX IF NOT EXISTS idx_book_issues_user ON book_issues(user_id);
 
 -- ============================================
 -- BUS TABLES
 -- ============================================
 
-CREATE TABLE bus_routes (
+CREATE TABLE IF NOT EXISTS bus_routes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     route_number VARCHAR(20) NOT NULL UNIQUE,
     route_name VARCHAR(100) NOT NULL,
@@ -343,7 +343,7 @@ CREATE TABLE bus_routes (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE bus_stops (
+CREATE TABLE IF NOT EXISTS bus_stops (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     route_id UUID NOT NULL REFERENCES bus_routes(id) ON DELETE CASCADE,
     stop_name VARCHAR(100) NOT NULL,
@@ -355,7 +355,7 @@ CREATE TABLE bus_stops (
     UNIQUE(route_id, stop_order)
 );
 
-CREATE TABLE student_bus_registrations (
+CREATE TABLE IF NOT EXISTS student_bus_registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     route_id UUID NOT NULL REFERENCES bus_routes(id),
@@ -368,7 +368,7 @@ CREATE TABLE student_bus_registrations (
     UNIQUE(student_id, academic_year_id)
 );
 
-CREATE TABLE bus_announcements (
+CREATE TABLE IF NOT EXISTS bus_announcements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     route_id UUID REFERENCES bus_routes(id), -- NULL = all routes
     title VARCHAR(200) NOT NULL,
@@ -384,7 +384,7 @@ CREATE TABLE bus_announcements (
 -- CANTEEN TABLES
 -- ============================================
 
-CREATE TABLE canteen_menu_items (
+CREATE TABLE IF NOT EXISTS canteen_menu_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -397,7 +397,7 @@ CREATE TABLE canteen_menu_items (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE canteen_daily_menu (
+CREATE TABLE IF NOT EXISTS canteen_daily_menu (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     date DATE NOT NULL,
     menu_item_id UUID NOT NULL REFERENCES canteen_menu_items(id),
@@ -406,7 +406,7 @@ CREATE TABLE canteen_daily_menu (
     UNIQUE(date, menu_item_id)
 );
 
-CREATE TABLE canteen_tokens (
+CREATE TABLE IF NOT EXISTS canteen_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     token_number VARCHAR(20) NOT NULL,
     user_id UUID NOT NULL REFERENCES profiles(id),
@@ -423,7 +423,7 @@ CREATE TABLE canteen_tokens (
 -- FEE TABLES
 -- ============================================
 
-CREATE TABLE fee_structures (
+CREATE TABLE IF NOT EXISTS fee_structures (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     academic_year_id UUID NOT NULL REFERENCES academic_years(id),
@@ -436,7 +436,7 @@ CREATE TABLE fee_structures (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE student_fees (
+CREATE TABLE IF NOT EXISTS student_fees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     fee_structure_id UUID NOT NULL REFERENCES fee_structures(id),
@@ -449,7 +449,7 @@ CREATE TABLE student_fees (
     UNIQUE(student_id, fee_structure_id)
 );
 
-CREATE TABLE fee_payments (
+CREATE TABLE IF NOT EXISTS fee_payments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_fee_id UUID NOT NULL REFERENCES student_fees(id),
     amount DECIMAL(12,2) NOT NULL,
@@ -468,7 +468,7 @@ CREATE TABLE fee_payments (
 -- EVENTS TABLE
 -- ============================================
 
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(200) NOT NULL,
     description TEXT,
@@ -484,7 +484,7 @@ CREATE TABLE events (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE event_certificates (
+CREATE TABLE IF NOT EXISTS event_certificates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -498,7 +498,7 @@ CREATE TABLE event_certificates (
 -- FEEDBACK & COMPLAINTS
 -- ============================================
 
-CREATE TABLE feedback (
+CREATE TABLE IF NOT EXISTS feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES profiles(id),
     feedback_type VARCHAR(30) NOT NULL CHECK (feedback_type IN ('teacher', 'course', 'facility', 'general')),
@@ -509,7 +509,7 @@ CREATE TABLE feedback (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE complaints (
+CREATE TABLE IF NOT EXISTS complaints (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES profiles(id),
     ticket_number VARCHAR(20) NOT NULL UNIQUE,
@@ -530,7 +530,7 @@ CREATE TABLE complaints (
 -- AUDIT LOGS TABLE
 -- ============================================
 
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES profiles(id),
     action VARCHAR(50) NOT NULL, -- create, update, delete, login, logout
@@ -543,15 +543,15 @@ CREATE TABLE audit_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_table ON audit_logs(table_name);
-CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_table ON audit_logs(table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
 
 -- ============================================
 -- MENTORING NOTES (for Mentor feature)
 -- ============================================
 
-CREATE TABLE mentoring_sessions (
+CREATE TABLE IF NOT EXISTS mentoring_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     mentor_assignment_id UUID NOT NULL REFERENCES mentor_assignments(id) ON DELETE CASCADE,
     session_date DATE NOT NULL,
@@ -567,7 +567,7 @@ CREATE TABLE mentoring_sessions (
 -- HONORS/MAJOR-MINOR SYSTEM
 -- ============================================
 
-CREATE TABLE minor_subjects (
+CREATE TABLE IF NOT EXISTS minor_subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id UUID NOT NULL REFERENCES courses(id),
     available_seats INTEGER DEFAULT 30,
@@ -576,7 +576,7 @@ CREATE TABLE minor_subjects (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE student_minor_registrations (
+CREATE TABLE IF NOT EXISTS student_minor_registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     minor_subject_id UUID NOT NULL REFERENCES minor_subjects(id),
@@ -632,6 +632,36 @@ ALTER TABLE student_minor_registrations ENABLE ROW LEVEL SECURITY;
 -- ============================================
 -- BASIC RLS POLICIES (Admin full access + User own data)
 -- ============================================
+
+-- Drop existing policies first to allow re-running
+DROP POLICY IF EXISTS "Admins full access attendance" ON attendance;
+DROP POLICY IF EXISTS "Admins full access attendance_records" ON attendance_records;
+DROP POLICY IF EXISTS "Admins full access timetable" ON timetable_entries;
+DROP POLICY IF EXISTS "Admins full access exams" ON exams;
+DROP POLICY IF EXISTS "Admins full access assignments" ON assignments;
+DROP POLICY IF EXISTS "Admins full access notices" ON notices;
+DROP POLICY IF EXISTS "Admins full access books" ON books;
+DROP POLICY IF EXISTS "Admins full access bus_routes" ON bus_routes;
+DROP POLICY IF EXISTS "Admins full access canteen" ON canteen_menu_items;
+DROP POLICY IF EXISTS "Admins full access fees" ON fee_structures;
+DROP POLICY IF EXISTS "Admins full access events" ON events;
+DROP POLICY IF EXISTS "Admins full access audit_logs" ON audit_logs;
+DROP POLICY IF EXISTS "Auth users read timetable" ON timetable_entries;
+DROP POLICY IF EXISTS "Auth users read exams" ON exams;
+DROP POLICY IF EXISTS "Auth users read notices" ON notices;
+DROP POLICY IF EXISTS "Auth users read books" ON books;
+DROP POLICY IF EXISTS "Auth users read bus_routes" ON bus_routes;
+DROP POLICY IF EXISTS "Auth users read canteen" ON canteen_menu_items;
+DROP POLICY IF EXISTS "Auth users read events" ON events;
+DROP POLICY IF EXISTS "Teachers manage own attendance" ON attendance;
+DROP POLICY IF EXISTS "Teachers manage own assignments" ON assignments;
+DROP POLICY IF EXISTS "Teachers manage own materials" ON teaching_materials;
+DROP POLICY IF EXISTS "Teachers manage own planners" ON lesson_planners;
+DROP POLICY IF EXISTS "Teachers manage own diaries" ON work_diaries;
+DROP POLICY IF EXISTS "Students view own attendance" ON attendance_records;
+DROP POLICY IF EXISTS "Students manage own submissions" ON assignment_submissions;
+DROP POLICY IF EXISTS "Students view own fees" ON student_fees;
+DROP POLICY IF EXISTS "Students manage own complaints" ON complaints;
 
 -- Admin policies for all new tables
 CREATE POLICY "Admins full access attendance" ON attendance FOR ALL USING (is_admin());

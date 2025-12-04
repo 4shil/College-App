@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  Switch,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -21,27 +20,46 @@ import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../..
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
+// Subject = courses table in DB (actual subjects like DBMS, OS)
 interface Subject {
   id: string;
   name: string;
   code: string;
-  credits: number;
-  subject_type: string;
-  is_lab: boolean;
+  short_name: string | null;
+  course_type: string;
+  theory_hours: number;
+  lab_hours: number;
   is_active: boolean;
-  course_id: string;
-  semester: number | null;
-  course: {
+  department_id: string;
+  semester_id: string;
+  department: {
     name: string;
     code: string;
   } | null;
+  semester: {
+    semester_number: number;
+  } | null;
 }
 
-interface Course {
+// Program for filtering (programs table)
+interface Program {
   id: string;
   name: string;
   code: string;
   total_semesters: number;
+  department_id: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface Semester {
+  id: string;
+  semester_number: number;
+  name: string;
 }
 
 export default function SubjectsScreen() {
@@ -52,8 +70,9 @@ export default function SubjectsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<string>('all');
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [selectedDept, setSelectedDept] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [saving, setSaving] = useState(false);
@@ -61,53 +80,41 @@ export default function SubjectsScreen() {
   // Form state
   const [formName, setFormName] = useState('');
   const [formCode, setFormCode] = useState('');
-  const [formCourseId, setFormCourseId] = useState('');
-  const [formCredits, setFormCredits] = useState('3');
+  const [formShortName, setFormShortName] = useState('');
+  const [formDeptId, setFormDeptId] = useState('');
+  const [formSemesterId, setFormSemesterId] = useState('');
+  const [formTheoryHours, setFormTheoryHours] = useState('3');
+  const [formLabHours, setFormLabHours] = useState('0');
   const [formType, setFormType] = useState('core');
-  const [formIsLab, setFormIsLab] = useState(false);
-  const [formSemester, setFormSemester] = useState('');
 
   const fetchData = async () => {
     try {
       let query = supabase
-        .from('subjects')
+        .from('courses')
         .select(`
           *,
-          course:courses!subjects_course_id_fkey(name, code)
+          department:departments(name, code),
+          semester:semesters(semester_number)
         `)
         .order('code');
 
-      if (selectedCourse !== 'all') {
-        query = query.eq('course_id', selectedCourse);
+      if (selectedDept !== 'all') {
+        query = query.eq('department_id', selectedDept);
       }
 
-      const [subjectsRes, coursesRes] = await Promise.all([
+      const [subjectsRes, deptsRes, semsRes] = await Promise.all([
         query,
-        supabase.from('courses').select('id, name, code, total_semesters').eq('is_active', true).order('name'),
+        supabase.from('departments').select('id, name, code').eq('is_active', true).order('name'),
+        supabase.from('semesters').select('id, semester_number, name').order('semester_number'),
       ]);
 
-      // Handle missing tables gracefully
-      if (subjectsRes.error) {
-        if (subjectsRes.error.code === 'PGRST205') {
-          console.log('Subjects table not found - showing empty state');
-          setSubjects([]);
-        } else {
-          throw subjectsRes.error;
-        }
-      } else {
-        setSubjects(subjectsRes.data || []);
-      }
+      if (subjectsRes.error) throw subjectsRes.error;
+      if (deptsRes.error) throw deptsRes.error;
+      if (semsRes.error) throw semsRes.error;
 
-      if (coursesRes.error) {
-        if (coursesRes.error.code === 'PGRST205') {
-          console.log('Courses table not found - showing empty state');
-          setCourses([]);
-        } else {
-          throw coursesRes.error;
-        }
-      } else {
-        setCourses(coursesRes.data || []);
-      }
+      setSubjects(subjectsRes.data || []);
+      setDepartments(deptsRes.data || []);
+      setSemesters(semsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -117,7 +124,7 @@ export default function SubjectsScreen() {
     setLoading(true);
     await fetchData();
     setLoading(false);
-  }, [selectedCourse]);
+  }, [selectedDept]);
 
   useEffect(() => {
     loadData();
@@ -132,11 +139,12 @@ export default function SubjectsScreen() {
   const resetForm = () => {
     setFormName('');
     setFormCode('');
-    setFormCourseId('');
-    setFormCredits('3');
+    setFormShortName('');
+    setFormDeptId('');
+    setFormSemesterId('');
+    setFormTheoryHours('3');
+    setFormLabHours('0');
     setFormType('core');
-    setFormIsLab(false);
-    setFormSemester('');
     setEditingSubject(null);
   };
 
@@ -148,18 +156,19 @@ export default function SubjectsScreen() {
   const openEditModal = (subject: Subject) => {
     setFormName(subject.name);
     setFormCode(subject.code);
-    setFormCourseId(subject.course_id);
-    setFormCredits(subject.credits.toString());
-    setFormType(subject.subject_type);
-    setFormIsLab(subject.is_lab);
-    setFormSemester(subject.semester?.toString() || '');
+    setFormShortName(subject.short_name || '');
+    setFormDeptId(subject.department_id);
+    setFormSemesterId(subject.semester_id);
+    setFormTheoryHours(subject.theory_hours.toString());
+    setFormLabHours(subject.lab_hours.toString());
+    setFormType(subject.course_type);
     setEditingSubject(subject);
     setShowAddModal(true);
   };
 
   const handleSave = async () => {
-    if (!formName.trim() || !formCode.trim() || !formCourseId) {
-      Alert.alert('Validation Error', 'Name, Code, and Course are required');
+    if (!formName.trim() || !formCode.trim() || !formDeptId || !formSemesterId) {
+      Alert.alert('Validation Error', 'Name, Code, Department, and Semester are required');
       return;
     }
 
@@ -168,19 +177,20 @@ export default function SubjectsScreen() {
       const payload = {
         name: formName.trim(),
         code: formCode.trim().toUpperCase(),
-        course_id: formCourseId,
-        credits: parseInt(formCredits),
-        subject_type: formType,
-        is_lab: formIsLab,
-        semester: formSemester ? parseInt(formSemester) : null,
+        short_name: formShortName.trim() || null,
+        department_id: formDeptId,
+        semester_id: formSemesterId,
+        theory_hours: parseInt(formTheoryHours) || 0,
+        lab_hours: parseInt(formLabHours) || 0,
+        course_type: formType,
       };
 
       if (editingSubject) {
-        const { error } = await supabase.from('subjects').update(payload).eq('id', editingSubject.id);
+        const { error } = await supabase.from('courses').update(payload).eq('id', editingSubject.id);
         if (error) throw error;
         Alert.alert('Success', 'Subject updated successfully');
       } else {
-        const { error } = await supabase.from('subjects').insert({ ...payload, is_active: true });
+        const { error } = await supabase.from('courses').insert({ ...payload, is_active: true });
         if (error) throw error;
         Alert.alert('Success', 'Subject created successfully');
       }
@@ -207,7 +217,7 @@ export default function SubjectsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase.from('subjects').delete().eq('id', subject.id);
+              const { error } = await supabase.from('courses').delete().eq('id', subject.id);
               if (error) throw error;
               await fetchData();
             } catch (error) {
@@ -224,9 +234,14 @@ export default function SubjectsScreen() {
       case 'core': return '#10b981';
       case 'elective': return '#8b5cf6';
       case 'open_elective': return '#3b82f6';
+      case 'lab': return '#f59e0b';
+      case 'major': return '#ec4899';
+      case 'minor': return '#06b6d4';
       default: return '#6b7280';
     }
   };
+
+  const isLabSubject = (subject: Subject) => subject.lab_hours > 0 && subject.theory_hours === 0;
 
   const renderSubjectCard = (subject: Subject, index: number) => (
     <Animated.View
@@ -237,8 +252,8 @@ export default function SubjectsScreen() {
       <TouchableOpacity onPress={() => openEditModal(subject)} activeOpacity={0.8}>
         <Card style={styles.subjectCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: subject.is_lab ? '#f59e0b20' : '#6366f120' }]}>
-              <FontAwesome5 name={subject.is_lab ? 'flask' : 'book'} size={16} color={subject.is_lab ? '#f59e0b' : '#6366f1'} />
+            <View style={[styles.iconContainer, { backgroundColor: isLabSubject(subject) ? '#f59e0b20' : '#6366f120' }]}>
+              <FontAwesome5 name={isLabSubject(subject) ? 'flask' : 'book'} size={16} color={isLabSubject(subject) ? '#f59e0b' : '#6366f1'} />
             </View>
             <View style={styles.cardInfo}>
               <Text style={[styles.subjectName, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -247,21 +262,23 @@ export default function SubjectsScreen() {
               <Text style={[styles.subjectCode, { color: colors.textSecondary }]}>{subject.code}</Text>
             </View>
             <View style={[styles.creditBadge, { backgroundColor: colors.primary + '20' }]}>
-              <Text style={[styles.creditText, { color: colors.primary }]}>{subject.credits} Cr</Text>
+              <Text style={[styles.creditText, { color: colors.primary }]}>
+                {subject.theory_hours + subject.lab_hours}h
+              </Text>
             </View>
           </View>
 
           <View style={styles.metaRow}>
-            <View style={[styles.typeBadge, { backgroundColor: getTypeColor(subject.subject_type) + '20' }]}>
-              <Text style={[styles.typeText, { color: getTypeColor(subject.subject_type) }]}>
-                {subject.subject_type.replace('_', ' ').toUpperCase()}
+            <View style={[styles.typeBadge, { backgroundColor: getTypeColor(subject.course_type) + '20' }]}>
+              <Text style={[styles.typeText, { color: getTypeColor(subject.course_type) }]}>
+                {subject.course_type.replace('_', ' ').toUpperCase()}
               </Text>
             </View>
             <Text style={[styles.courseName, { color: colors.textMuted }]}>
-              {subject.course?.code || 'N/A'}
+              {subject.department?.code || 'N/A'}
             </Text>
             {subject.semester && (
-              <Text style={[styles.semesterText, { color: colors.textMuted }]}>Sem {subject.semester}</Text>
+              <Text style={[styles.semesterText, { color: colors.textMuted }]}>Sem {subject.semester.semester_number}</Text>
             )}
             <TouchableOpacity onPress={() => handleDelete(subject)} style={styles.deleteBtn}>
               <Ionicons name="trash-outline" size={14} color="#ef4444" />
@@ -271,8 +288,6 @@ export default function SubjectsScreen() {
       </TouchableOpacity>
     </Animated.View>
   );
-
-  const selectedCourseData = courses.find(c => c.id === formCourseId);
 
   return (
     <AnimatedBackground>
@@ -295,21 +310,21 @@ export default function SubjectsScreen() {
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.filterContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             <TouchableOpacity
-              style={[styles.filterChip, selectedCourse === 'all' && { backgroundColor: colors.primary }]}
-              onPress={() => setSelectedCourse('all')}
+              style={[styles.filterChip, selectedDept === 'all' && { backgroundColor: colors.primary }]}
+              onPress={() => setSelectedDept('all')}
             >
-              <Text style={[styles.filterChipText, { color: selectedCourse === 'all' ? '#fff' : colors.textMuted }]}>
-                All Courses
+              <Text style={[styles.filterChipText, { color: selectedDept === 'all' ? '#fff' : colors.textMuted }]}>
+                All Depts
               </Text>
             </TouchableOpacity>
-            {courses.map((course) => (
+            {departments.map((dept) => (
               <TouchableOpacity
-                key={course.id}
-                style={[styles.filterChip, selectedCourse === course.id && { backgroundColor: colors.primary }]}
-                onPress={() => setSelectedCourse(course.id)}
+                key={dept.id}
+                style={[styles.filterChip, selectedDept === dept.id && { backgroundColor: colors.primary }]}
+                onPress={() => setSelectedDept(dept.id)}
               >
-                <Text style={[styles.filterChipText, { color: selectedCourse === course.id ? '#fff' : colors.textMuted }]}>
-                  {course.code}
+                <Text style={[styles.filterChipText, { color: selectedDept === dept.id ? '#fff' : colors.textMuted }]}>
+                  {dept.code}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -359,18 +374,36 @@ export default function SubjectsScreen() {
                   <GlassInput placeholder="e.g., Data Structures" value={formName} onChangeText={setFormName} autoCapitalize="words" />
                 </View>
 
-                <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Code *</Text>
-                  <GlassInput placeholder="e.g., CS201" value={formCode} onChangeText={setFormCode} autoCapitalize="characters" />
+                <View style={styles.formRow}>
+                  <View style={[styles.formGroup, { flex: 1 }]}>
+                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Code *</Text>
+                    <GlassInput placeholder="e.g., CS201" value={formCode} onChangeText={setFormCode} autoCapitalize="characters" />
+                  </View>
+                  <View style={[styles.formGroup, { flex: 1 }]}>
+                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Short Name</Text>
+                    <GlassInput placeholder="e.g., DS" value={formShortName} onChangeText={setFormShortName} />
+                  </View>
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
                   <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker selectedValue={formCourseId} onValueChange={setFormCourseId} style={{ color: colors.textPrimary }}>
-                      <Picker.Item label="Select Course" value="" />
-                      {courses.map((course) => (
-                        <Picker.Item key={course.id} label={`${course.name} (${course.code})`} value={course.id} />
+                    <Picker selectedValue={formDeptId} onValueChange={setFormDeptId} style={{ color: colors.textPrimary }}>
+                      <Picker.Item label="Select Department" value="" />
+                      {departments.map((dept) => (
+                        <Picker.Item key={dept.id} label={`${dept.name} (${dept.code})`} value={dept.id} />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Semester *</Text>
+                  <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                    <Picker selectedValue={formSemesterId} onValueChange={setFormSemesterId} style={{ color: colors.textPrimary }}>
+                      <Picker.Item label="Select Semester" value="" />
+                      {semesters.map((sem) => (
+                        <Picker.Item key={sem.id} label={sem.name} value={sem.id} />
                       ))}
                     </Picker>
                   </View>
@@ -378,19 +411,12 @@ export default function SubjectsScreen() {
 
                 <View style={styles.formRow}>
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Credits</Text>
-                    <GlassInput placeholder="3" value={formCredits} onChangeText={setFormCredits} keyboardType="numeric" />
+                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Theory Hours</Text>
+                    <GlassInput placeholder="3" value={formTheoryHours} onChangeText={setFormTheoryHours} keyboardType="numeric" />
                   </View>
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Semester</Text>
-                    <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                      <Picker selectedValue={formSemester} onValueChange={setFormSemester} style={{ color: colors.textPrimary }}>
-                        <Picker.Item label="Any" value="" />
-                        {Array.from({ length: selectedCourseData?.total_semesters || 8 }, (_, i) => (
-                          <Picker.Item key={i + 1} label={`Sem ${i + 1}`} value={(i + 1).toString()} />
-                        ))}
-                      </Picker>
-                    </View>
+                    <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Lab Hours</Text>
+                    <GlassInput placeholder="0" value={formLabHours} onChangeText={setFormLabHours} keyboardType="numeric" />
                   </View>
                 </View>
 
@@ -401,13 +427,12 @@ export default function SubjectsScreen() {
                       <Picker.Item label="Core" value="core" />
                       <Picker.Item label="Elective" value="elective" />
                       <Picker.Item label="Open Elective" value="open_elective" />
+                      <Picker.Item label="Lab" value="lab" />
+                      <Picker.Item label="Major" value="major" />
+                      <Picker.Item label="Minor" value="minor" />
+                      <Picker.Item label="Mandatory" value="mandatory" />
                     </Picker>
                   </View>
-                </View>
-
-                <View style={styles.switchRow}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Is Lab Subject?</Text>
-                  <Switch value={formIsLab} onValueChange={setFormIsLab} trackColor={{ true: colors.primary }} />
                 </View>
               </ScrollView>
 

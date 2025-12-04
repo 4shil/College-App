@@ -18,13 +18,35 @@ END $$;
 -- 2. UPDATE DEPARTMENTS FOR JPM COLLEGE
 -- ============================================
 
--- First, delete courses that reference the old departments
+-- First, delete teachers that reference the old departments
+DELETE FROM teachers WHERE department_id IN (
+    SELECT id FROM departments WHERE code IN ('CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AIML', 'MBA', 'MCA')
+);
+
+-- Delete students that reference the old departments
+DELETE FROM students WHERE department_id IN (
+    SELECT id FROM departments WHERE code IN ('CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AIML', 'MBA', 'MCA')
+);
+
+-- Delete teacher_courses that reference old departments via courses
+DELETE FROM teacher_courses WHERE course_id IN (
+    SELECT id FROM courses WHERE department_id IN (
+        SELECT id FROM departments WHERE code IN ('CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AIML', 'MBA', 'MCA')
+    )
+);
+
+-- Delete courses that reference the old departments
 DELETE FROM courses WHERE department_id IN (
     SELECT id FROM departments WHERE code IN ('CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AIML', 'MBA', 'MCA')
 );
 
 -- Delete sections that reference the old departments
 DELETE FROM sections WHERE department_id IN (
+    SELECT id FROM departments WHERE code IN ('CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AIML', 'MBA', 'MCA')
+);
+
+-- Delete user_roles referencing old departments
+DELETE FROM user_roles WHERE department_id IN (
     SELECT id FROM departments WHERE code IN ('CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AIML', 'MBA', 'MCA')
 );
 
@@ -149,8 +171,8 @@ CREATE TABLE IF NOT EXISTS allowed_students (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_allowed_students_apaar ON allowed_students(apaar_id);
-CREATE INDEX idx_allowed_students_used ON allowed_students(is_used);
+CREATE INDEX IF NOT EXISTS idx_allowed_students_apaar ON allowed_students(apaar_id);
+CREATE INDEX IF NOT EXISTS idx_allowed_students_used ON allowed_students(is_used);
 
 -- ============================================
 -- 5. OTP VERIFICATIONS TABLE
@@ -171,8 +193,8 @@ CREATE TABLE IF NOT EXISTS otp_verifications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_otp_email ON otp_verifications(email);
-CREATE INDEX idx_otp_expires ON otp_verifications(expires_at);
+CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_verifications(email);
+CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_verifications(expires_at);
 
 -- ============================================
 -- 6. ADD APAAR ID TO STUDENTS TABLE
@@ -382,6 +404,14 @@ ALTER TABLE programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE allowed_students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE otp_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admission_config ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies first to allow re-running
+DROP POLICY IF EXISTS "Anyone can read programs" ON programs;
+DROP POLICY IF EXISTS "Admins manage allowed_students" ON allowed_students;
+DROP POLICY IF EXISTS "Service role manages OTP" ON otp_verifications;
+DROP POLICY IF EXISTS "Admins manage admission_config" ON admission_config;
+DROP POLICY IF EXISTS "Public can read programs" ON programs;
+DROP POLICY IF EXISTS "Public can read departments" ON departments;
 
 -- Programs: Anyone can read
 CREATE POLICY "Anyone can read programs" ON programs

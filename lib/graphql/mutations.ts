@@ -324,7 +324,9 @@ export const CREATE_ATTENDANCE = gql`
       period
       course_id
       section_id
+      timetable_entry_id
       marked_by
+      is_locked
     }
   }
 `;
@@ -335,7 +337,7 @@ export const MARK_ATTENDANCE = gql`
       objects: $data
       on_conflict: {
         constraint: attendance_records_attendance_id_student_id_key
-        update_columns: [status, marked_at]
+        update_columns: [status, marked_at, late_minutes]
       }
     ) {
       affected_rows
@@ -343,20 +345,79 @@ export const MARK_ATTENDANCE = gql`
         id
         student_id
         status
+        late_minutes
       }
     }
   }
 `;
 
 export const UPDATE_ATTENDANCE_RECORD = gql`
-  mutation UpdateAttendanceRecord($id: uuid!, $status: String!, $reason: String) {
+  mutation UpdateAttendanceRecord($id: uuid!, $status: String!, $reason: String, $editedBy: uuid!) {
     update_attendance_records_by_pk(
       pk_columns: { id: $id }
-      _set: { status: $status, edit_reason: $reason, edited_at: "now()" }
+      _set: { 
+        status: $status, 
+        edit_reason: $reason, 
+        edited_at: "now()",
+        edited_by: $editedBy,
+        edit_count: 1
+      }
+      _inc: { edit_count: 1 }
     ) {
       id
       status
       edited_at
+      edit_count
+    }
+  }
+`;
+
+export const LOCK_ATTENDANCE = gql`
+  mutation LockAttendance($id: uuid!) {
+    update_attendance_by_pk(
+      pk_columns: { id: $id }
+      _set: { is_locked: true, locked_at: "now()" }
+    ) {
+      id
+      is_locked
+      locked_at
+    }
+  }
+`;
+
+// ============================================
+// HOLIDAYS
+// ============================================
+
+export const CREATE_HOLIDAY = gql`
+  mutation CreateHoliday($data: holidays_insert_input!) {
+    insert_holidays_one(object: $data) {
+      id
+      date
+      title
+      description
+      holiday_type
+      department_id
+    }
+  }
+`;
+
+export const UPDATE_HOLIDAY = gql`
+  mutation UpdateHoliday($id: uuid!, $data: holidays_set_input!) {
+    update_holidays_by_pk(pk_columns: { id: $id }, _set: $data) {
+      id
+      date
+      title
+      description
+      updated_at
+    }
+  }
+`;
+
+export const DELETE_HOLIDAY = gql`
+  mutation DeleteHoliday($id: uuid!) {
+    delete_holidays_by_pk(id: $id) {
+      id
     }
   }
 `;
@@ -371,9 +432,14 @@ export const CREATE_TIMETABLE_ENTRY = gql`
       id
       day_of_week
       period
+      start_time
+      end_time
       course_id
       teacher_id
-      section_id
+      program_id
+      year_id
+      room
+      is_lab
     }
   }
 `;
@@ -385,6 +451,7 @@ export const UPDATE_TIMETABLE_ENTRY = gql`
       course_id
       teacher_id
       room
+      is_lab
       updated_at
     }
   }
@@ -403,10 +470,25 @@ export const CREATE_SUBSTITUTION = gql`
   mutation CreateSubstitution($data: substitutions_insert_input!) {
     insert_substitutions_one(object: $data) {
       id
+      timetable_entry_id
       original_teacher_id
       substitute_teacher_id
       date
-      period
+      reason
+      status
+    }
+  }
+`;
+
+export const APPROVE_SUBSTITUTION = gql`
+  mutation ApproveSubstitution($id: uuid!, $approvedBy: uuid!) {
+    update_substitutions_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: "approved", approved_by: $approvedBy, approved_at: "now()" }
+    ) {
+      id
+      status
+      approved_at
     }
   }
 `;

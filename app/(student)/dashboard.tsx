@@ -14,7 +14,7 @@ export default function StudentDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors } = useThemeStore();
-  const { user, logout } = useAuthStore();
+  const { user, profile, logout } = useAuthStore();
 
   const handleLogout = async () => {
     await signOut();
@@ -45,7 +45,7 @@ export default function StudentDashboard() {
               Student Dashboard
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Welcome back, {user?.email || 'Student'}!
+              Welcome back, {profile?.full_name || user?.email || 'Student'}!
             </Text>
             <Text style={[styles.placeholder, { color: colors.textMuted }]}>
               Your student dashboard is coming soon...

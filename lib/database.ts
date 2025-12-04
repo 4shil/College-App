@@ -12,6 +12,11 @@ import type {
   AcademicYear,
   RoleName,
   AuthUser,
+  Program,
+  Holiday,
+  Attendance,
+  AttendanceRecord,
+  LatePass,
 } from '../types/database';
 
 // ============================================
@@ -356,4 +361,167 @@ export const getRolesByCategory = async (category: 'admin' | 'teacher' | 'studen
     return [];
   }
   return data || [];
+};
+
+// ============================================
+// PROGRAM FUNCTIONS
+// ============================================
+
+export const getAllPrograms = async (): Promise<Program[]> => {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching programs:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const getProgramsByDepartment = async (departmentId: string): Promise<Program[]> => {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('department_id', departmentId)
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching programs:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const getProgramById = async (programId: string): Promise<Program | null> => {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('id', programId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching program:', error);
+    return null;
+  }
+  return data;
+};
+
+// ============================================
+// HOLIDAY FUNCTIONS
+// ============================================
+
+export const getHolidays = async (
+  startDate: string,
+  endDate: string,
+  departmentId?: string
+): Promise<Holiday[]> => {
+  let query = supabase
+    .from('holidays')
+    .select('*')
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date');
+
+  if (departmentId) {
+    query = query.or(`holiday_type.eq.college,department_id.eq.${departmentId}`);
+  } else {
+    query = query.eq('holiday_type', 'college');
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching holidays:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const createHoliday = async (holiday: Partial<Holiday>): Promise<{ success: boolean; error: string | null; data?: Holiday }> => {
+  const { data, error } = await supabase
+    .from('holidays')
+    .insert(holiday)
+    .select()
+    .single();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true, error: null, data };
+};
+
+export const deleteHoliday = async (holidayId: string): Promise<{ success: boolean; error: string | null }> => {
+  const { error } = await supabase
+    .from('holidays')
+    .delete()
+    .eq('id', holidayId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true, error: null };
+};
+
+// ============================================
+// ATTENDANCE FUNCTIONS
+// ============================================
+
+export const getStudentLatePasses = async (
+  studentId: string,
+  academicYearId: string
+): Promise<LatePass[]> => {
+  const { data, error } = await supabase
+    .from('late_passes')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('academic_year_id', academicYearId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching late passes:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const getAttendanceSummary = async (
+  studentId: string,
+  startDate: string,
+  endDate: string
+): Promise<{
+  total: number;
+  present: number;
+  absent: number;
+  late: number;
+  percentage: number;
+}> => {
+  const { data, error } = await supabase
+    .from('attendance_records')
+    .select(`
+      id,
+      status,
+      attendance!inner(date)
+    `)
+    .eq('student_id', studentId)
+    .gte('attendance.date', startDate)
+    .lte('attendance.date', endDate);
+
+  if (error) {
+    console.error('Error fetching attendance summary:', error);
+    return { total: 0, present: 0, absent: 0, late: 0, percentage: 0 };
+  }
+
+  const records = data || [];
+  const total = records.length;
+  const present = records.filter(r => r.status === 'present').length;
+  const absent = records.filter(r => r.status === 'absent').length;
+  const late = records.filter(r => r.status === 'late').length;
+  const percentage = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+
+  return { total, present, absent, late, percentage };
 };

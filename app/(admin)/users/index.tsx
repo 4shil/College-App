@@ -169,6 +169,30 @@ export default function UsersScreen() {
     fetchData().finally(() => setLoading(false));
   }, [fetchData]);
 
+  // Real-time subscription for user updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+        },
+        (payload) => {
+          console.log('Profile change:', payload.eventType);
+          // Refetch data when any profile changes
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchData();
@@ -580,19 +604,19 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '700' },
   subtitle: { fontSize: 13, marginTop: 2 },
   statsContainer: { marginBottom: 16 },
-  statsScroll: { paddingHorizontal: 20, gap: 12 },
-  statCard: { alignItems: 'center', paddingVertical: 14, paddingHorizontal: 20, borderRadius: 16, borderWidth: 1, minWidth: 90 },
+  statsScroll: { paddingHorizontal: 20, gap: 10 },
+  statCard: { alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5, minWidth: 85 },
   statValue: { fontSize: 22, fontWeight: '700', marginTop: 6 },
   statLabel: { fontSize: 11, marginTop: 2 },
   searchContainer: { paddingHorizontal: 20, marginBottom: 16 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, gap: 10 },
-  searchInput: { flex: 1, fontSize: 15 },
+  searchBox: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, gap: 12, borderWidth: 1, borderColor: 'rgba(99, 102, 241, 0.15)' },
+  searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
   userCardWrapper: { marginBottom: 14 },
-  userCard: { padding: 16 },
+  userCard: { padding: 16, borderRadius: 16 },
   userHeader: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   userInfo: { flex: 1 },
   userName: { fontSize: 16, fontWeight: '600' },
   userEmail: { fontSize: 12, marginTop: 2 },
@@ -602,9 +626,9 @@ const styles = StyleSheet.create({
   userMeta: { flexDirection: 'row', marginTop: 12, gap: 16 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   metaText: { fontSize: 12 },
-  actionRow: { flexDirection: 'row', marginTop: 14, gap: 10 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 14, borderRadius: 10, gap: 6 },
-  actionText: { fontSize: 12, fontWeight: '600' },
+  actionRow: { flexDirection: 'row', marginTop: 14, gap: 8, flexWrap: 'wrap' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 12, borderRadius: 10, gap: 6 },
+  actionText: { fontSize: 11, fontWeight: '600' },
   emptyState: { alignItems: 'center', paddingTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptySubtitle: { fontSize: 13, marginTop: 4 },
