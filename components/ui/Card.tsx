@@ -55,7 +55,7 @@ export const Card: React.FC<CardProps> = ({
       case 'filled':
         return isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
       default:
-        return isDark ? 'rgba(30, 30, 50, 0.8)' : 'rgba(255, 255, 255, 0.9)';
+        return isDark ? 'rgba(30, 30, 50, 0.25)' : 'rgba(255, 255, 255, 0.9)';
     }
   };
 

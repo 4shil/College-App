@@ -25,7 +25,7 @@ interface ModuleCard {
 export default function RoleBasedDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
   const { roleDisplayName, highestRole, accessibleModules, loading } = useRBAC();
 
   // All possible modules with their configurations
@@ -154,15 +154,20 @@ export default function RoleBasedDashboard() {
           </View>
         </View>
 
-        {/* Role Badge */}
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <Card style={[styles.roleBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
-            <FontAwesome5 name="shield-alt" size={24} color={colors.primary} />
+        {/* Role Badge - Redesigned without Card background */}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
+          <View style={[styles.roleBadge, { 
+            backgroundColor: isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(124, 58, 237, 0.08)',
+            borderColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(124, 58, 237, 0.2)',
+          }]}>
+            <View style={[styles.roleIconContainer, { backgroundColor: colors.primary + '20' }]}>
+              <FontAwesome5 name="shield-alt" size={20} color={colors.primary} />
+            </View>
             <View style={styles.roleInfo}>
               <Text style={[styles.roleLabel, { color: colors.textSecondary }]}>Current Role</Text>
               <Text style={[styles.roleName, { color: colors.primary }]}>{roleDisplayName}</Text>
             </View>
-          </Card>
+          </View>
         </Animated.View>
 
         {/* Modules Grid */}
@@ -218,16 +223,26 @@ const styles = StyleSheet.create({
   header: { marginBottom: 24 },
   greeting: { fontSize: 16, marginBottom: 4 },
   title: { fontSize: 32, fontWeight: 'bold' },
+  roleBadgeContainer: {
+    marginBottom: 28,
+  },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  roleIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   roleInfo: { marginLeft: 16, flex: 1 },
-  roleLabel: { fontSize: 12, marginBottom: 4 },
-  roleName: { fontSize: 18, fontWeight: 'bold' },
+  roleLabel: { fontSize: 12, marginBottom: 4, fontWeight: '500' },
+  roleName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
   modulesGrid: {
     flexDirection: 'row',
