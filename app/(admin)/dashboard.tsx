@@ -522,6 +522,24 @@ export default function AdminDashboard() {
             </View>
           </Card>
         </Animated.View>
+        )}
+
+        {/* Module-specific Welcome Message for non-users access */}
+        {!canAccessModule('users') && visibleActions.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(200).duration(500).springify()} style={styles.section}>
+            <Card style={styles.welcomeCard}>
+              <View style={[styles.welcomeIcon, { backgroundColor: colors.primary + '20' }]}>
+                <FontAwesome5 name="hand-sparkles" size={32} color={colors.primary} />
+              </View>
+              <Text style={[styles.welcomeTitle, { color: colors.textPrimary }]}>
+                Welcome, {profile?.full_name}!
+              </Text>
+              <Text style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>
+                Access your modules through Quick Actions below
+              </Text>
+            </Card>
+          </Animated.View>
+        )}
       </ScrollView>
     </AnimatedBackground>
   );
@@ -721,7 +739,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   activityTime: {
-    fontSize: 12,
-    marginTop: 3,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  welcomeCard: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  welcomeIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
