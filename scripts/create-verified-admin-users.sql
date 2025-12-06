@@ -166,15 +166,39 @@ INSERT INTO public.profiles (id, email, full_name, primary_role, phone) VALUES
   ('00000000-0000-0000-0000-000000000009', 'canteenadmin@college.com', 'Jessica Taylor', 'canteen_admin', '+1234567898')
 ON CONFLICT (id) DO NOTHING;
 
--- Assign roles to admin users
-INSERT INTO public.user_roles (user_id, role) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'super_admin'),
-  ('00000000-0000-0000-0000-000000000002', 'principal'),
-  ('00000000-0000-0000-0000-000000000003', 'exam_cell_admin'),
-  ('00000000-0000-0000-0000-000000000004', 'library_admin'),
-  ('00000000-0000-0000-0000-000000000005', 'finance_admin'),
-  ('00000000-0000-0000-0000-000000000006', 'hod'),
-  ('00000000-0000-0000-0000-000000000007', 'department_admin'),
-  ('00000000-0000-0000-0000-000000000008', 'bus_admin'),
-  ('00000000-0000-0000-0000-000000000009', 'canteen_admin')
+-- Assign roles to admin users (using role_id from roles table)
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000001', id FROM roles WHERE name = 'super_admin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000002', id FROM roles WHERE name = 'principal'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000003', id FROM roles WHERE name = 'exam_cell_admin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000004', id FROM roles WHERE name = 'library_admin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000005', id FROM roles WHERE name = 'finance_admin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000006', id FROM roles WHERE name = 'hod'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000007', id FROM roles WHERE name = 'department_admin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000008', id FROM roles WHERE name = 'bus_admin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.user_roles (user_id, role_id) 
+SELECT '00000000-0000-0000-0000-000000000009', id FROM roles WHERE name = 'canteen_admin'
 ON CONFLICT DO NOTHING;

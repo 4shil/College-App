@@ -1,34 +1,36 @@
-# Setup Instructions: Programs & Verified Admin Users
+# Setup Instructions: Degree Programs & Verified Admin Users
 
 ## Overview
 Two major updates have been completed:
-1. **Programs Table**: Separates degree programs (BCA, MCA, B.Tech, etc.) from individual subject courses
+1. **Extended Courses Table**: Courses table now supports both degree programs (BCA, MCA, B.Tech) AND individual subjects
 2. **Verified Admin Users**: SQL script to create pre-verified admin accounts
 
 ---
 
-## Part 1: Add Programs Table
+## Part 1: Extend Courses Table for Degree Programs
 
 ### What Changed
-- Created `programs` table for degree programs (BCA, MCA, MBA, B.Tech, etc.)
-- Updated student creation form to use `programs` instead of `courses`
-- `courses` table now only stores individual subjects (like "Data Structures", "Algorithms")
-- `programs` table stores degree programs with duration and semester information
+- The `courses` table now serves dual purpose:
+  - **Degree Programs**: BCA, MCA, MBA, B.Tech (with `is_degree_program = true`)
+  - **Subject Courses**: Data Structures, Algorithms (with `is_degree_program = false`)
+- Added new columns: `program_level`, `duration_years`, `total_semesters`, `is_degree_program`
+- Student creation form filters courses by `is_degree_program = true` to show only degree programs
 
 ### Migration File
 **File**: `supabase/migrations/20251206000001_add_programs_table.sql`
 
 ### What the Migration Does
-1. Creates `program_type` enum (undergraduate, postgraduate, diploma, certificate, phd)
-2. Creates `programs` table with fields:
-   - code, name, short_name
-   - department_id (foreign key)
-   - program_type
-   - duration_years (e.g., 3 for BCA, 4 for B.Tech)
-   - total_semesters (e.g., 6 for 3-year, 8 for 4-year)
-   - eligibility, total_seats
-3. Adds `program_id` column to `students` table
-4. Inserts 8 sample programs:
+1. Creates `program_level` enum (undergraduate, postgraduate, diploma, certificate, phd)
+2. Adds new columns to `courses` table:
+   - `program_level` - Type of degree program
+   - `duration_years` - Duration (e.g., 3 for BCA, 4 for B.Tech)
+   - `total_semesters` - Total semesters (e.g., 6 for 3-year, 8 for 4-year)
+   - `is_degree_program` - Boolean to distinguish degree programs from subject courses
+   - `eligibility` - Eligibility criteria
+   - `total_seats` - Number of seats
+3. Makes `semester_id` nullable (degree programs span multiple semesters)
+4. Adds `course_id` column to `students` table (references their degree program)
+5. Inserts 8 degree programs:
    - BCA (3 years, 6 semesters)
    - MCA (2 years, 4 semesters)
    - BBA (3 years, 6 semesters)
@@ -37,7 +39,6 @@ Two major updates have been completed:
    - B.Sc CS (3 years, 6 semesters)
    - B.Tech CS (4 years, 8 semesters)
    - M.Tech CS (2 years, 4 semesters)
-5. Sets up RLS policies (viewable by all, manageable by admins)
 
 ### How to Apply
 Run this in **Supabase SQL Editor**:
@@ -52,12 +53,11 @@ supabase db push
 ```
 
 ### Updated Files
-- ✅ `app/(admin)/users/students/create.tsx` - Updated to use programs
-  - Changed `Course` interface to `Program`
-  - Changed `courses` state to `programs`
-  - Changed `course_id` to `program_id` throughout
-  - Updated form labels (Course → Program)
-  - Updated validation messages
+- ✅ `app/(admin)/users/students/create.tsx` - Updated to use degree programs from courses table
+  - Course interface includes `is_degree_program`, `program_level`, `duration_years`
+  - Query filters: `.eq('is_degree_program', true)` to fetch only degree programs
+  - Form shows "Course" label but displays degree programs (BCA, MCA, etc.)
+  - Years filter based on selected course's duration
 
 ---
 
@@ -111,7 +111,7 @@ supabase db push
 
 ## Complete Setup Process
 
-### Step 1: Apply Programs Migration
+### Step 1: Apply Courses Extension Migration
 ```bash
 # Option A: CLI
 supabase db push
@@ -132,8 +132,8 @@ supabase db push
 ### Step 3: Test Student Creation
 1. Login as `superadmin@college.com` / `Super@2024`
 2. Navigate to **Users** → **Students** → **Add Student**
-3. Select Department → See programs filter automatically
-4. Select Program → See years filter based on program duration
+3. Select Department → See degree programs filter automatically (BCA, MCA, etc.)
+4. Select Course (degree program) → See years filter based on program duration
 5. Create a test student
 
 ### Step 4: Test Each Admin Role
@@ -152,14 +152,15 @@ Login with each account to verify:
 
 ## Verification Checklist
 
-### Programs Table
+### Courses Table Extension
 - [ ] Migration applied successfully
-- [ ] `programs` table visible in Supabase Table Editor
-- [ ] 8 programs inserted (BCA, MCA, MBA, etc.)
-- [ ] `students` table has `program_id` column
+- [ ] `courses` table has new columns: `is_degree_program`, `program_level`, `duration_years`, `total_semesters`
+- [ ] 8 degree programs inserted (BCA, MCA, MBA, etc.) with `is_degree_program = true`
+- [ ] `students` table has `course_id` column
 - [ ] Student creation form loads without errors
-- [ ] Department selection filters programs correctly
-- [ ] Program selection filters years correctly
+- [ ] Department selection filters degree programs correctly
+- [ ] Course selection shows only degree programs (BCA, MCA, not subject courses)
+- [ ] Year selection filters based on course duration
 
 ### Admin Users
 - [ ] SQL script executed successfully
@@ -174,12 +175,21 @@ Login with each account to verify:
 
 ## Troubleshooting
 
-### Issue: Migration fails - programs table already exists
+### Issue: Migration fails - columns already exist
 ```sql
--- Run this first to clean up:
-DROP TABLE IF EXISTS programs CASCADE;
-DROP TYPE IF EXISTS program_type CASCADE;
--- Then run the migration again
+-- Check current courses table structure:
+SELECT column_name, data_type FROM information_schema.columns 
+WHERE table_name = 'courses';
+
+-- If columns exist, migration is already applied
+```
+
+### Issue: No degree programs showing in dropdown
+```sql
+-- Check if degree programs exist:
+SELECT code, name, is_degree_program FROM courses WHERE is_degree_program = true;
+
+-- If empty, run the INSERT statements from the migration
 ```
 
 ### Issue: Admin user creation fails - users already exist
@@ -189,30 +199,31 @@ DELETE FROM auth.users WHERE email LIKE '%@college.com';
 -- Then run the script again
 ```
 
-### Issue: Student creation fails - program_id constraint
+### Issue: Student creation fails - course_id constraint
 Make sure the migration was applied before creating students.
 
-### Issue: Can't see programs in dropdown
+### Issue: Can't see degree programs in dropdown
 Check that:
 1. Migration was applied
-2. Programs were inserted
+2. Degree programs were inserted with `is_degree_program = true`
 3. Departments exist and match the department codes in the INSERT statements
+4. Student form query includes `.eq('is_degree_program', true)`
 
 ---
 
 ## Files Modified
 
 ### New Files
-1. `supabase/migrations/20251206000001_add_programs_table.sql` - Programs table migration
+1. `supabase/migrations/20251206000001_add_programs_table.sql` - Extends courses table for degree programs
 2. `scripts/create-verified-admin-users.sql` - Verified admin users SQL
 3. `ADMIN_CREDENTIALS.md` - Credentials reference
 4. `SETUP_INSTRUCTIONS.md` - This file
 
 ### Modified Files
-1. `app/(admin)/users/students/create.tsx` - Updated to use programs
-   - Changed interfaces, state variables, form fields
-   - Updated validation and submission logic
-   - Changed UI labels (Course → Program)
+1. `app/(admin)/users/students/create.tsx` - Updated to query degree programs
+   - Course interface updated with degree program fields
+   - Query filters by `is_degree_program = true`
+   - Year filtering based on course duration_years
 
 ---
 
@@ -220,10 +231,14 @@ Check that:
 
 After setup is complete:
 
-1. **Add More Programs**: Use Supabase dashboard or SQL to add department-specific programs
-2. **Test Student Registration**: Create test students in different programs
-3. **Test Role-Based Access**: Validate each admin role's permissions
-4. **Customize Programs**: Update program details (eligibility, seats, etc.)
+1. **Add More Degree Programs**: Use Supabase dashboard to add department-specific programs
+   ```sql
+   INSERT INTO courses (code, name, short_name, department_id, is_degree_program, program_level, duration_years, total_semesters, is_active)
+   VALUES ('YOUR-CODE', 'Program Name', 'Short Name', 'dept-uuid', true, 'undergraduate', 3, 6, true);
+   ```
+2. **Add Subject Courses**: Add individual subjects with `is_degree_program = false`
+3. **Test Student Registration**: Create test students in different degree programs
+4. **Test Role-Based Access**: Validate each admin role's permissions
 5. **Production Ready**: System is ready for real user testing
 
 ---
