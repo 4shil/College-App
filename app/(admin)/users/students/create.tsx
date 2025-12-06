@@ -27,7 +27,7 @@ interface Department {
   code: string;
 }
 
-interface Course {
+interface Program {
   id: string;
   name: string;
   code: string;
@@ -50,7 +50,7 @@ interface FormData {
   phone: string;
   password: string;
   department_id: string;
-  course_id: string;
+  program_id: string;
   year_id: string;
   roll_number: string;
   registration_number: string;
@@ -67,8 +67,8 @@ export default function CreateStudentScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('manual');
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([]);
   const [years, setYears] = useState<Year[]>([]);
   const [filteredYears, setFilteredYears] = useState<Year[]>([]);
   
@@ -78,7 +78,7 @@ export default function CreateStudentScreen() {
     phone: '',
     password: '',
     department_id: '',
-    course_id: '',
+    program_id: '',
     year_id: '',
     roll_number: '',
     registration_number: '',
@@ -94,53 +94,53 @@ export default function CreateStudentScreen() {
     fetchInitialData();
   }, []);
 
-  // Filter courses when department changes
+  // Filter programs when department changes
   useEffect(() => {
     if (formData.department_id) {
-      const deptCourses = courses.filter(c => c.department_id === formData.department_id);
-      setFilteredCourses(deptCourses);
-      // Reset course selection if current course is not in filtered list
-      if (!deptCourses.find(c => c.id === formData.course_id)) {
-        setFormData(prev => ({ ...prev, course_id: '' }));
+      const deptPrograms = programs.filter(p => p.department_id === formData.department_id);
+      setFilteredPrograms(deptPrograms);
+      // Reset program selection if current program is not in filtered list
+      if (!deptPrograms.find(p => p.id === formData.program_id)) {
+        setFormData(prev => ({ ...prev, program_id: '' }));
       }
     } else {
-      setFilteredCourses([]);
+      setFilteredPrograms([]);
     }
-  }, [formData.department_id, courses]);
+  }, [formData.department_id, programs]);
 
-  // Filter years when course changes
+  // Filter years when program changes
   useEffect(() => {
-    if (formData.course_id) {
-      const course = courses.find(c => c.id === formData.course_id);
-      if (course) {
-        // Filter years based on course duration
-        const courseYears = years.filter(y => y.year_number <= course.duration_years);
-        setFilteredYears(courseYears);
-        // Reset year selection if current year exceeds course duration
+    if (formData.program_id) {
+      const program = programs.find(p => p.id === formData.program_id);
+      if (program) {
+        // Filter years based on program duration
+        const programYears = years.filter(y => y.year_number <= program.duration_years);
+        setFilteredYears(programYears);
+        // Reset year selection if current year exceeds program duration
         const currentYear = years.find(y => y.id === formData.year_id);
-        if (currentYear && currentYear.year_number > course.duration_years) {
+        if (currentYear && currentYear.year_number > program.duration_years) {
           setFormData(prev => ({ ...prev, year_id: '' }));
         }
       }
     } else {
       setFilteredYears(years);
     }
-  }, [formData.course_id, courses, years]);
+  }, [formData.program_id, programs, years]);
 
   const fetchInitialData = async () => {
     try {
-      const [deptsRes, coursesRes, yearsRes] = await Promise.all([
+      const [deptsRes, programsRes, yearsRes] = await Promise.all([
         supabase.from('departments').select('id, name, code').eq('is_active', true).order('name'),
-        supabase.from('courses').select('*').not('program_type', 'is', null).eq('is_active', true).order('name'),
+        supabase.from('programs').select('*').eq('is_active', true).order('name'),
         supabase.from('years').select('*').eq('is_active', true).order('year_number'),
       ]);
 
       if (deptsRes.error) throw deptsRes.error;
-      if (coursesRes.error) throw coursesRes.error;
+      if (programsRes.error) throw programsRes.error;
       if (yearsRes.error) throw yearsRes.error;
 
       setDepartments(deptsRes.data || []);
-      setCourses(coursesRes.data || []);
+      setPrograms(programsRes.data || []);
       setYears(yearsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -169,8 +169,8 @@ export default function CreateStudentScreen() {
       Alert.alert('Validation Error', 'Please select a department');
       return false;
     }
-    if (!formData.course_id) {
-      Alert.alert('Validation Error', 'Please select a course');
+    if (!formData.program_id) {
+      Alert.alert('Validation Error', 'Please select a program');
       return false;
     }
     if (!formData.year_id) {
@@ -237,6 +237,7 @@ export default function CreateStudentScreen() {
         .insert({
           user_id: authData.user.id,
           department_id: formData.department_id,
+          program_id: formData.program_id,
           year_id: formData.year_id,
           semester_id: semester?.id,
           academic_year_id: academicYear?.id,
@@ -342,8 +343,8 @@ export default function CreateStudentScreen() {
   };
 
   const processBulkImport = async (students: any[]) => {
-    if (!formData.department_id || !formData.course_id || !formData.year_id) {
-      Alert.alert('Error', 'Please select Department, Course, and Year before bulk import');
+    if (!formData.department_id || !formData.program_id || !formData.year_id) {
+      Alert.alert('Error', 'Please select Department, Program, and Year before bulk import');
       return;
     }
 
@@ -409,6 +410,7 @@ export default function CreateStudentScreen() {
         await supabase.from('students').insert({
           user_id: authData.user.id,
           department_id: formData.department_id,
+          program_id: formData.program_id,
           year_id: formData.year_id,
           semester_id: semester?.id,
           academic_year_id: academicYear?.id,
@@ -521,17 +523,17 @@ export default function CreateStudentScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Program *</Text>
           <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
             <Picker
-              selectedValue={formData.course_id}
-              onValueChange={(v) => updateFormData('course_id', v)}
+              selectedValue={formData.program_id}
+              onValueChange={(v) => updateFormData('program_id', v)}
               style={{ color: colors.textPrimary }}
-              enabled={filteredCourses.length > 0}
+              enabled={filteredPrograms.length > 0}
             >
-              <Picker.Item label={filteredCourses.length > 0 ? "Select Course" : "Select Department first"} value="" />
-              {filteredCourses.map((course) => (
-                <Picker.Item key={course.id} label={`${course.name} (${course.code})`} value={course.id} />
+              <Picker.Item label={filteredPrograms.length > 0 ? "Select Program" : "Select Department first"} value="" />
+              {filteredPrograms.map((program) => (
+                <Picker.Item key={program.id} label={`${program.name} (${program.code})`} value={program.id} />
               ))}
             </Picker>
           </View>
@@ -627,17 +629,17 @@ export default function CreateStudentScreen() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Program *</Text>
             <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
               <Picker
-                selectedValue={formData.course_id}
-                onValueChange={(v) => updateFormData('course_id', v)}
+                selectedValue={formData.program_id}
+                onValueChange={(v) => updateFormData('program_id', v)}
                 style={{ color: colors.textPrimary }}
-                enabled={filteredCourses.length > 0}
+                enabled={filteredPrograms.length > 0}
               >
-                <Picker.Item label={filteredCourses.length > 0 ? "Select Course" : "Select Dept first"} value="" />
-                {filteredCourses.map((course) => (
-                  <Picker.Item key={course.id} label={course.code} value={course.id} />
+                <Picker.Item label={filteredPrograms.length > 0 ? "Select Program" : "Select Dept first"} value="" />
+                {filteredPrograms.map((program) => (
+                  <Picker.Item key={program.id} label={`${program.name} (${program.code})`} value={program.id} />
                 ))}
               </Picker>
             </View>
