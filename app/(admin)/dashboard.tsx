@@ -219,6 +219,16 @@ export default function AdminDashboard() {
       module: 'notices',
     },
     {
+      id: 'role-management',
+      title: 'Role Management',
+      icon: 'user-shield',
+      iconType: 'fa5',
+      color: '#DC2626',
+      route: '/(admin)/users/assign-roles',
+      module: 'users',
+      permission: PERMISSIONS.CREATE_DELETE_ADMINS,
+    },
+    {
       id: 'settings',
       title: 'Settings',
       icon: 'cog',

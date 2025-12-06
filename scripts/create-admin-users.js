@@ -1,0 +1,188 @@
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+// Use anon key - we'll create users via public API
+const supabase = createClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL,
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+);
+
+const adminUsers = [
+  {
+    email: 'superadmin@college.edu',
+    password: 'Super@2024',
+    full_name: 'Robert Johnson',
+    phone: '+1234567890',
+    primary_role: 'super_admin',
+    role_id: 'super_admin'
+  },
+  {
+    email: 'principal@college.edu',
+    password: 'Principal@2024',
+    full_name: 'Dr. Sarah Williams',
+    phone: '+1234567891',
+    primary_role: 'principal',
+    role_id: 'principal'
+  },
+  {
+    email: 'examadmin@college.edu',
+    password: 'Exam@2024',
+    full_name: 'Michael Brown',
+    phone: '+1234567892',
+    primary_role: 'exam_cell_admin',
+    role_id: 'exam_cell_admin'
+  },
+  {
+    email: 'librarian@college.edu',
+    password: 'Library@2024',
+    full_name: 'Emily Davis',
+    phone: '+1234567893',
+    primary_role: 'library_admin',
+    role_id: 'library_admin'
+  },
+  {
+    email: 'financeadmin@college.edu',
+    password: 'Finance@2024',
+    full_name: 'David Martinez',
+    phone: '+1234567894',
+    primary_role: 'finance_admin',
+    role_id: 'finance_admin'
+  },
+  {
+    email: 'hod.cs@college.edu',
+    password: 'Hod@2024',
+    full_name: 'Dr. Jennifer Taylor',
+    phone: '+1234567895',
+    primary_role: 'hod',
+    role_id: 'hod'
+  },
+  {
+    email: 'deptadmin@college.edu',
+    password: 'Dept@2024',
+    full_name: 'James Anderson',
+    phone: '+1234567896',
+    primary_role: 'department_admin',
+    role_id: 'department_admin'
+  },
+  {
+    email: 'busadmin@college.edu',
+    password: 'Bus@2024',
+    full_name: 'Patricia Wilson',
+    phone: '+1234567897',
+    primary_role: 'bus_admin',
+    role_id: 'bus_admin'
+  },
+  {
+    email: 'canteenadmin@college.edu',
+    password: 'Canteen@2024',
+    full_name: 'Christopher Moore',
+    phone: '+1234567898',
+    primary_role: 'canteen_admin',
+    role_id: 'canteen_admin'
+  }
+];
+
+async function createAdminUsers() {
+  console.log('🚀 Creating admin users...\n');
+
+  // First, get role IDs
+  const { data: roles, error: rolesError } = await supabase
+    .from('roles')
+    .select('id, name');
+
+  if (rolesError) {
+    console.error('❌ Error fetching roles:', rolesError);
+    return;
+  }
+
+  const roleMap = {};
+  roles.forEach(role => {
+    roleMap[role.name] = role.id;
+  });
+
+  const credentials = [];
+
+  for (const admin of adminUsers) {
+    try {
+      console.log(`Creating ${admin.full_name} (${admin.email})...`);
+
+      // Create auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: admin.email,
+        password: admin.password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: admin.full_name
+        }
+      });
+
+      if (authError) {
+        console.error(`  ❌ Auth error: ${authError.message}`);
+        continue;
+      }
+
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: admin.full_name,
+          phone: admin.phone,
+          primary_role: admin.primary_role,
+          status: 'active'
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) {
+        console.error(`  ❌ Profile error: ${profileError.message}`);
+        continue;
+      }
+
+      // Assign role in user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: authData.user.id,
+          role_id: roleMap[admin.role_id]
+        });
+
+      if (roleError) {
+        console.error(`  ⚠️  Role assignment error: ${roleError.message}`);
+      }
+
+      credentials.push({
+        name: admin.full_name,
+        role: admin.primary_role,
+        email: admin.email,
+        password: admin.password
+      });
+
+      console.log(`  ✅ Created successfully`);
+    } catch (error) {
+      console.error(`  ❌ Error:`, error.message);
+    }
+  }
+
+  console.log('\n' + '='.repeat(80));
+  console.log('📋 ADMIN CREDENTIALS\n');
+  console.log('='.repeat(80));
+  
+  credentials.forEach(cred => {
+    console.log(`\n${cred.name} (${cred.role.toUpperCase()})`);
+    console.log(`  Email:    ${cred.email}`);
+    console.log(`  Password: ${cred.password}`);
+  });
+  
+  console.log('\n' + '='.repeat(80));
+  console.log(`\n✅ Created ${credentials.length} admin users successfully!`);
+  console.log('\n💡 You can now login with any of these credentials to test RBAC.');
+}
+
+createAdminUsers()
+  .then(() => {
+    console.log('\n✅ Script completed!');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('\n❌ Script failed:', error);
+    process.exit(1);
+  });

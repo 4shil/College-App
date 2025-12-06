@@ -110,7 +110,7 @@ export default function AssignRolesScreen() {
 
       if (error) throw error;
 
-      const usersWithRoles: UserWithRoles[] = (data || []).map(user => ({
+      const usersWithRoles: UserWithRoles[] = (data || []).map((user: any) => ({
         ...user,
         assignedRoles: user.user_roles.map((ur: UserRole) => ur.roles.display_name),
       }));
@@ -278,7 +278,7 @@ export default function AssignRolesScreen() {
             />
           </View>
 
-          <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
+          <View style={[styles.pickerContainer, { borderColor: colors.glassBorder }]}>
             <Picker
               selectedValue={filterRole}
               onValueChange={setFilterRole}
@@ -513,5 +513,6 @@ const styles = StyleSheet.create({
   modalUserName: { fontSize: 20, fontWeight: '600', marginBottom: 4 },
   modalUserEmail: { fontSize: 14, marginBottom: 20 },
   inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 16 },
-  saveButton: { marginTop: 20 },
+  saveButton: { marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
+  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
