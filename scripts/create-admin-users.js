@@ -9,7 +9,7 @@ const supabase = createClient(
 
 const adminUsers = [
   {
-    email: 'superadmin@college.edu',
+    email: 'superadmin@college.com',
     password: 'Super@2024',
     full_name: 'Robert Johnson',
     phone: '+1234567890',
@@ -17,7 +17,7 @@ const adminUsers = [
     role_id: 'super_admin'
   },
   {
-    email: 'principal@college.edu',
+    email: 'principal@college.com',
     password: 'Principal@2024',
     full_name: 'Dr. Sarah Williams',
     phone: '+1234567891',
@@ -25,7 +25,7 @@ const adminUsers = [
     role_id: 'principal'
   },
   {
-    email: 'examadmin@college.edu',
+    email: 'examadmin@college.com',
     password: 'Exam@2024',
     full_name: 'Michael Brown',
     phone: '+1234567892',
@@ -33,7 +33,7 @@ const adminUsers = [
     role_id: 'exam_cell_admin'
   },
   {
-    email: 'librarian@college.edu',
+    email: 'librarian@college.com',
     password: 'Library@2024',
     full_name: 'Emily Davis',
     phone: '+1234567893',
@@ -41,7 +41,7 @@ const adminUsers = [
     role_id: 'library_admin'
   },
   {
-    email: 'financeadmin@college.edu',
+    email: 'financeadmin@college.com',
     password: 'Finance@2024',
     full_name: 'David Martinez',
     phone: '+1234567894',
@@ -49,7 +49,7 @@ const adminUsers = [
     role_id: 'finance_admin'
   },
   {
-    email: 'hod.cs@college.edu',
+    email: 'hod@college.com',
     password: 'Hod@2024',
     full_name: 'Dr. Jennifer Taylor',
     phone: '+1234567895',
@@ -57,7 +57,7 @@ const adminUsers = [
     role_id: 'hod'
   },
   {
-    email: 'deptadmin@college.edu',
+    email: 'deptadmin@college.com',
     password: 'Dept@2024',
     full_name: 'James Anderson',
     phone: '+1234567896',
@@ -65,7 +65,7 @@ const adminUsers = [
     role_id: 'department_admin'
   },
   {
-    email: 'busadmin@college.edu',
+    email: 'busadmin@college.com',
     password: 'Bus@2024',
     full_name: 'Patricia Wilson',
     phone: '+1234567897',
@@ -73,7 +73,7 @@ const adminUsers = [
     role_id: 'bus_admin'
   },
   {
-    email: 'canteenadmin@college.edu',
+    email: 'canteenadmin@college.com',
     password: 'Canteen@2024',
     full_name: 'Christopher Moore',
     phone: '+1234567898',
@@ -106,13 +106,16 @@ async function createAdminUsers() {
     try {
       console.log(`Creating ${admin.full_name} (${admin.email})...`);
 
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Create auth user via signup
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: admin.email,
         password: admin.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: admin.full_name
+        options: {
+          data: {
+            full_name: admin.full_name,
+            phone: admin.phone,
+            primary_role: admin.primary_role
+          }
         }
       });
 
@@ -121,20 +124,25 @@ async function createAdminUsers() {
         continue;
       }
 
-      // Update profile
+      if (!authData.user) {
+        console.error(`  ❌ No user created`);
+        continue;
+      }
+
+      // Wait a bit for profile trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Update profile with role
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: admin.full_name,
-          phone: admin.phone,
           primary_role: admin.primary_role,
           status: 'active'
         })
         .eq('id', authData.user.id);
 
       if (profileError) {
-        console.error(`  ❌ Profile error: ${profileError.message}`);
-        continue;
+        console.error(`  ⚠️  Profile update error: ${profileError.message}`);
       }
 
       // Assign role in user_roles table
