@@ -20,6 +20,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
 import { supabase } from '../../lib/supabase';
+import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
@@ -49,6 +50,8 @@ interface QuickAction {
   color: string;
   route: string;
   badge?: number;
+  module?: string;
+  permission?: string;
 }
 
 export default function AdminDashboard() {
@@ -56,6 +59,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
   const { profile, primaryRole, user, logout } = useAuthStore();
+  const { hasPermission, canAccessModule, accessibleModules } = useRBAC();
 
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -108,6 +112,8 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#8B5CF6',
       route: '/(admin)/users?tab=students',
+      module: 'users',
+      permission: PERMISSIONS.VIEW_ALL_USERS,
     },
     {
       id: 'teachers',
@@ -116,6 +122,8 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#16A34A',
       route: '/(admin)/users?tab=teachers',
+      module: 'users',
+      permission: PERMISSIONS.VIEW_ALL_USERS,
     },
     {
       id: 'pending',
@@ -125,6 +133,7 @@ export default function AdminDashboard() {
       color: '#F59E0B',
       route: '/(admin)/users?tab=pending',
       badge: stats.pendingApprovals,
+      module: 'users',
     },
     {
       id: 'attendance',
@@ -133,6 +142,43 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#10B981',
       route: '/(admin)/attendance',
+      module: 'attendance',
+    },
+    {
+      id: 'exams',
+      title: 'Exams',
+      icon: 'file-alt',
+      iconType: 'fa5',
+      color: '#F59E0B',
+      route: '/(admin)/exams',
+      module: 'exams',
+    },
+    {
+      id: 'assignments',
+      title: 'Assignments',
+      icon: 'tasks',
+      iconType: 'fa5',
+      color: '#10B981',
+      route: '/(admin)/assignments',
+      module: 'assignments',
+    },
+    {
+      id: 'fees',
+      title: 'Fee Management',
+      icon: 'money-bill-wave',
+      iconType: 'fa5',
+      color: '#16A34A',
+      route: '/(admin)/fees',
+      module: 'fees',
+    },
+    {
+      id: 'library',
+      title: 'Library',
+      icon: 'book',
+      iconType: 'fa5',
+      color: '#6366F1',
+      route: '/(admin)/library',
+      module: 'library',
     },
     {
       id: 'timetable',
@@ -141,6 +187,7 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#EC4899',
       route: '/(admin)/timetable',
+      module: 'academic',
     },
     {
       id: 'departments',
@@ -149,6 +196,8 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#06B6D4',
       route: '/(admin)/academic',
+      module: 'academic',
+      permission: PERMISSIONS.MANAGE_ACADEMIC_STRUCTURE,
     },
     {
       id: 'courses',
@@ -157,6 +206,8 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#6366F1',
       route: '/(admin)/academic',
+      module: 'academic',
+      permission: PERMISSIONS.MANAGE_ACADEMIC_STRUCTURE,
     },
     {
       id: 'notices',
@@ -165,6 +216,7 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#F97316',
       route: '/(admin)/notices',
+      module: 'notices',
     },
     {
       id: 'settings',
@@ -173,6 +225,7 @@ export default function AdminDashboard() {
       iconType: 'fa5',
       color: '#64748B',
       route: '/(admin)/settings',
+      module: 'dashboard',
     },
   ];
 
@@ -237,6 +290,23 @@ export default function AdminDashboard() {
     logout();
     router.replace('/(auth)/login');
   };
+
+  // Filter quick actions based on user's module access and permissions
+  const visibleActions = quickActions.filter(action => {
+    // If action has a module requirement, check module access
+    if (action.module) {
+      const hasModuleAccess = canAccessModule(action.module);
+      if (!hasModuleAccess) return false;
+    }
+    
+    // If action has a specific permission requirement, check it
+    if (action.permission) {
+      return hasPermission(action.permission);
+    }
+    
+    // If no specific requirements, show it (like settings, dashboard)
+    return true;
+  });
 
   const renderStatCard = (
     title: string,
@@ -395,7 +465,7 @@ export default function AdminDashboard() {
         <Animated.View entering={FadeInDown.delay(500).duration(500).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
-            {quickActions.map((action, index) => renderQuickAction(action, index))}
+            {visibleActions.map((action, index) => renderQuickAction(action, index))}
           </View>
         </Animated.View>
 

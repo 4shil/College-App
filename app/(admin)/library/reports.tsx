@@ -7,6 +7,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 const { width } = Dimensions.get('window');
 
@@ -68,6 +70,7 @@ export default function LibraryReportsScreen() {
   if (loading) return <AnimatedBackground><View style={[styles.container, { paddingTop: insets.top + 60 }]}><ActivityIndicator size="large" color={colors.primary} /></View></AnimatedBackground>;
 
   return (
+    <Restricted permissions={PERMISSIONS.MANAGE_LIBRARY} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
@@ -148,6 +151,7 @@ export default function LibraryReportsScreen() {
         )}
       </ScrollView>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

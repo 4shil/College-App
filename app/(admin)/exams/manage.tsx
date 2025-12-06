@@ -19,6 +19,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface Exam {
   id: string;
@@ -241,6 +243,7 @@ export default function ManageExamsScreen() {
   }
 
   return (
+    <Restricted permissions={PERMISSIONS.SCHEDULE_EXAMS} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -433,6 +436,7 @@ export default function ManageExamsScreen() {
         </View>
       </Modal>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

@@ -18,6 +18,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface Student {
   id: string;
@@ -241,6 +243,7 @@ export default function FeePaymentScreen() {
   }
 
   return (
+    <Restricted permissions={PERMISSIONS.PROCESS_PAYMENTS} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -421,6 +424,7 @@ export default function FeePaymentScreen() {
         </View>
       </Modal>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

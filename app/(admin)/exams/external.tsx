@@ -19,6 +19,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface Semester {
   id: string;
@@ -285,6 +287,7 @@ export default function ExternalMarksScreen() {
   }
 
   return (
+    <Restricted permissions={PERMISSIONS.VERIFY_MARKS} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -494,6 +497,7 @@ export default function ExternalMarksScreen() {
         </View>
       </Modal>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

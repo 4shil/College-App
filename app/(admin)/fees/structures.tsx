@@ -19,6 +19,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface FeeStructure {
   id: string;
@@ -266,6 +268,7 @@ export default function FeeStructuresScreen() {
   }
 
   return (
+    <Restricted permissions={PERMISSIONS.MANAGE_FEE_STRUCTURES} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -415,6 +418,7 @@ export default function FeeStructuresScreen() {
         </View>
       </Modal>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

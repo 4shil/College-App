@@ -16,6 +16,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface Defaulter {
   id: string;
@@ -118,6 +120,7 @@ export default function FeeDefaultersScreen() {
   }
 
   return (
+    <Restricted permissions={PERMISSIONS.MANAGE_FEES} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -223,6 +226,7 @@ export default function FeeDefaultersScreen() {
         )}
       </ScrollView>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

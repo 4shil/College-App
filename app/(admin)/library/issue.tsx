@@ -7,6 +7,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface Book { id: string; title: string; isbn: string; available_copies: number; }
 interface User { id: string; full_name: string; }
@@ -93,6 +95,7 @@ export default function LibraryIssueScreen() {
   if (loading) return <AnimatedBackground><View style={[styles.container, { paddingTop: insets.top + 60 }]}><ActivityIndicator size="large" color={colors.primary} /></View></AnimatedBackground>;
 
   return (
+    <Restricted permissions={PERMISSIONS.ISSUE_RETURN_BOOKS} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
@@ -154,6 +157,7 @@ export default function LibraryIssueScreen() {
         </View>
       </Modal>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

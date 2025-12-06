@@ -14,6 +14,7 @@ export default function UsersLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="pending" />
+      <Stack.Screen name="assign-roles" />
       <Stack.Screen name="teachers/index" />
       <Stack.Screen name="teachers/create" />
       <Stack.Screen name="teachers/[id]" />

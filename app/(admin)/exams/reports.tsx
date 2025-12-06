@@ -17,6 +17,8 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 const { width } = Dimensions.get('window');
 
@@ -211,6 +213,7 @@ export default function ExamReportsScreen() {
   }
 
   return (
+    <Restricted permissions={[PERMISSIONS.SCHEDULE_EXAMS, PERMISSIONS.VERIFY_MARKS]} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -400,6 +403,7 @@ export default function ExamReportsScreen() {
         )}
       </ScrollView>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 

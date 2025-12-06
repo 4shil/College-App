@@ -17,6 +17,8 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { Restricted } from '../../../components/Restricted';
+import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface StudentFee {
   id: string;
@@ -134,6 +136,7 @@ export default function StudentFeesScreen() {
   }
 
   return (
+    <Restricted permissions={PERMISSIONS.MANAGE_FEES} showDeniedMessage={true}>
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
@@ -256,6 +259,7 @@ export default function StudentFeesScreen() {
         )}
       </ScrollView>
     </AnimatedBackground>
+    </Restricted>
   );
 }
 
