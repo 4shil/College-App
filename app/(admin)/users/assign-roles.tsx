@@ -214,7 +214,7 @@ export default function AssignRolesScreen() {
     );
   };
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user: UserWithRoles) => {
     const matchesSearch = user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           user.email.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -429,7 +429,7 @@ export default function AssignRolesScreen() {
                 <Text style={[styles.inputLabel, { color: colors.textPrimary }]}>
                   Select Role to Assign
                 </Text>
-                <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
+                <View style={[styles.pickerContainer, { borderColor: colors.glassBorder }]}>
                   <Picker
                     selectedValue={selectedRoleId}
                     onValueChange={setSelectedRoleId}
@@ -449,13 +449,19 @@ export default function AssignRolesScreen() {
                   </Picker>
                 </View>
 
-                <PrimaryButton
+                <TouchableOpacity
                   onPress={handleAssignRole}
-                  style={styles.saveButton}
+                  style={[
+                    styles.saveButton,
+                    { backgroundColor: colors.primary },
+                    (saving || !selectedRoleId) && { opacity: 0.5 }
+                  ]}
                   disabled={saving || !selectedRoleId}
                 >
-                  {saving ? 'Assigning...' : 'Assign Role'}
-                </PrimaryButton>
+                  <Text style={styles.saveButtonText}>
+                    {saving ? 'Assigning...' : 'Assign Role'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>

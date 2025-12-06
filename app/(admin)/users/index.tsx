@@ -597,12 +597,20 @@ export default function UsersScreen() {
               Manage all users in the system
             </Text>
           </View>
-          <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.primary }]}
-            onPress={openAddUserModal}
-          >
-            <Ionicons name="add" size={22} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={[styles.roleBtn, { backgroundColor: colors.primary + '20', marginRight: 8 }]}
+              onPress={() => router.push('/(admin)/users/assign-roles')}
+            >
+              <FontAwesome5 name="user-shield" size={18} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: colors.primary }]}
+              onPress={openAddUserModal}
+            >
+              <Ionicons name="add" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
         {/* Stats */}
@@ -783,6 +791,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
   backBtn: { padding: 8, marginRight: 12 },
+  headerButtons: { flexDirection: 'row', alignItems: 'center' },
+  roleBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   addBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   headerContent: { flex: 1 },
   title: { fontSize: 22, fontWeight: '700' },
