@@ -28,7 +28,7 @@ interface DashboardStats {
   totalStudents: number;
   totalTeachers: number;
   totalDepartments: number;
-  totalPrograms: number;
+  totalCourses: number;
   pendingApprovals: number;
   todayAttendance: number;
 }
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
     totalStudents: 0,
     totalTeachers: 0,
     totalDepartments: 0,
-    totalPrograms: 0,
+    totalCourses: 0,
     pendingApprovals: 0,
     todayAttendance: 0,
   });
@@ -92,8 +92,8 @@ export default function AdminDashboard() {
       route: '/(admin)/academic'
     },
     { 
-      title: 'Programs', 
-      value: stats.totalPrograms, 
+      title: 'Courses', 
+      value: stats.totalCourses, 
       icon: 'book', 
       color: '#6366F1',
       route: '/(admin)/academic'
@@ -151,8 +151,8 @@ export default function AdminDashboard() {
       route: '/(admin)/academic',
     },
     {
-      id: 'programs',
-      title: 'Programs/Courses',
+      id: 'courses',
+      title: 'Courses/Degrees',
       icon: 'book-open',
       iconType: 'fa5',
       color: '#6366F1',
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
         studentsResult,
         teachersResult,
         deptsResult,
-        programsResult,
+        coursesResult,
         pendingResult,
         studentProfilesResult,
         teacherProfilesResult
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
         supabase.from('students').select('*', { count: 'exact', head: true }),
         supabase.from('teachers').select('*', { count: 'exact', head: true }),
         supabase.from('departments').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('courses').select('*', { count: 'exact', head: true }),
+        supabase.from('courses').select('*', { count: 'exact', head: true }).eq('is_active', true).not('program_type', 'is', null),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('primary_role', 'student'),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'])
@@ -203,13 +203,13 @@ export default function AdminDashboard() {
       const finalStudentsCount = Math.max(studentsResult.count || 0, studentProfilesResult.count || 0);
       const finalTeachersCount = Math.max(teachersResult.count || 0, teacherProfilesResult.count || 0);
 
-      console.log('Final counts - Students:', finalStudentsCount, 'Teachers:', finalTeachersCount, 'Depts:', deptsResult.count, 'Programs:', programsResult.count);
+      console.log('Final counts - Students:', finalStudentsCount, 'Teachers:', finalTeachersCount, 'Depts:', deptsResult.count, 'Courses:', coursesResult.count);
 
       setStats({
         totalStudents: finalStudentsCount,
         totalTeachers: finalTeachersCount,
         totalDepartments: deptsResult.count || 0,
-        totalPrograms: programsResult.count || 0,
+        totalCourses: coursesResult.count || 0,
         pendingApprovals: pendingResult.count || 0,
         todayAttendance: 85, // Placeholder
       });
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
             {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200, '/(admin)/users?tab=students')}
             {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260, '/(admin)/users?tab=teachers')}
             {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320, '/(admin)/academic?tab=departments')}
-            {renderStatCard('Programs', stats.totalPrograms, 'book', '#6366F1', 380, '/(admin)/academic?tab=programs')}
+            {renderStatCard('Courses', stats.totalCourses, 'book', '#6366F1', 380, '/(admin)/academic')}
           </View>
         </Animated.View>
 

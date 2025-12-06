@@ -53,8 +53,7 @@ interface TimetableEntry {
   year_id: string;
   courses: { code: string; name: string; short_name: string };
   teachers: { id: string; employee_id: string; profiles: { full_name: string } };
-  programs: { code: string; name: string };
-  years: { name: string };
+  year: { name: string };
 }
 
 interface Substitution {
@@ -113,12 +112,11 @@ export default function SubstitutionsScreen() {
           *,
           original_teacher:teachers!substitutions_original_teacher_id_fkey(id, employee_id, profiles(full_name)),
           substitute_teacher:teachers!substitutions_substitute_teacher_id_fkey(id, employee_id, profiles(full_name)),
-          timetable_entries(
+          timetable_entry:timetable_entry_id(
             id, day_of_week, period, course_id, teacher_id, room, program_id, year_id,
             courses(code, name, short_name),
             teachers(id, employee_id, profiles(full_name)),
-            programs(code, name),
-            years(name)
+            year:year_id(name)
           )
         `)
         .order('date', { ascending: activeTab === 'history' ? false : true });
@@ -193,8 +191,7 @@ export default function SubstitutionsScreen() {
         id, day_of_week, period, course_id, teacher_id, room, program_id, year_id,
         courses(code, name, short_name),
         teachers(id, employee_id, profiles(full_name)),
-        programs(code, name),
-        years(name)
+        year:year_id(name)
       `)
       .eq('day_of_week', dayOfWeek)
       .eq('academic_year_id', academicYear.id)
@@ -388,7 +385,7 @@ export default function SubstitutionsScreen() {
             </Text>
             <View style={[styles.classBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
               <Text style={[styles.classText, { color: colors.textSecondary }]}>
-                {entry?.years?.name} {entry?.programs?.code}
+                {entry?.year?.name} - P{entry?.period}
               </Text>
             </View>
           </View>
@@ -504,7 +501,7 @@ export default function SubstitutionsScreen() {
                 {availableEntries.map(entry => (
                   <Picker.Item
                     key={entry.id}
-                    label={`P${entry.period} | ${entry.years?.name} ${entry.programs?.code} | ${entry.courses?.short_name} (${entry.teachers?.profiles?.full_name})`}
+                    label={`P${entry.period} | ${entry.year?.name} | ${entry.courses?.short_name} (${entry.teachers?.profiles?.full_name})`}
                     value={entry.id}
                   />
                 ))}
@@ -516,7 +513,7 @@ export default function SubstitutionsScreen() {
               <View style={[styles.selectedInfo, { backgroundColor: colors.primary + '10' }]}>
                 <Text style={[styles.selectedLabel, { color: colors.primary }]}>Selected:</Text>
                 <Text style={[styles.selectedText, { color: colors.textPrimary }]}>
-                  Period {getSelectedEntry()?.period} • {getSelectedEntry()?.years?.name} {getSelectedEntry()?.programs?.code}
+                  Period {getSelectedEntry()?.period} • {getSelectedEntry()?.year?.name}
                 </Text>
                 <Text style={[styles.selectedText, { color: colors.textSecondary }]}>
                   {getSelectedEntry()?.courses?.name}

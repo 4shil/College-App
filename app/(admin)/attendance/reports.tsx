@@ -18,10 +18,11 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
-interface Program {
+interface DegreeProgram {
   id: string;
   name: string;
   code: string;
+  short_name: string | null;
 }
 
 interface Year {
@@ -68,13 +69,13 @@ export default function AttendanceReportsScreen() {
   const { colors, isDark } = useThemeStore();
 
   // Selection states
-  const [selectedProgram, setSelectedProgram] = useState('');
+  const [selectedDegree, setSelectedDegree] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [reportType, setReportType] = useState<ReportType>('student');
 
   // Data states
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [degreePrograms, setDegreePrograms] = useState<DegreeProgram[]>([]);
   const [years, setYears] = useState<Year[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentData, setStudentData] = useState<AttendanceSummary[]>([]);
@@ -91,12 +92,13 @@ export default function AttendanceReportsScreen() {
 
   const fetchInitialData = useCallback(async () => {
     try {
-      const [programsRes, yearsRes] = await Promise.all([
-        supabase.from('programs').select('id, name, code').eq('is_active', true).order('code'),
+      const [degreesRes, yearsRes] = await Promise.all([
+        // Fetch courses that have program_type (these are degree programs like BCA, BBA)
+        supabase.from('courses').select('id, name, code, short_name').not('program_type', 'is', null).eq('is_active', true).order('code'),
         supabase.from('years').select('id, year_number, name').order('year_number'),
       ]);
 
-      setPrograms(programsRes.data || []);
+      setDegreePrograms(degreesRes.data || []);
       setYears(((yearsRes.data || []) as Array<{ year_number: number; id: string; name: string }>).filter(y => y.year_number <= 3));
     } catch (error) {
       console.error('Error fetching initial data:', error);
@@ -106,7 +108,7 @@ export default function AttendanceReportsScreen() {
   }, []);
 
   const fetchCourses = useCallback(async () => {
-    if (!selectedProgram || !selectedYear) {
+    if (!selectedDegree || !selectedYear) {
       setCourses([]);
       return;
     }
@@ -123,7 +125,7 @@ export default function AttendanceReportsScreen() {
       const { data: entries } = await supabase
         .from('timetable_entries')
         .select('course_id, courses(id, name, code)')
-        .eq('program_id', selectedProgram)
+        .eq('course_id', selectedDegree)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('is_active', true);
@@ -142,14 +144,21 @@ export default function AttendanceReportsScreen() {
     } catch (error) {
       console.error('Error fetching courses:', error);
     }
-  }, [selectedProgram, selectedYear]);
+  }, [selectedDegree, selectedYear]);
 
   const fetchStudentReport = useCallback(async () => {
-    if (!selectedProgram || !selectedYear) return;
+    if (!selectedDegree || !selectedYear) return;
 
     setLoadingReport(true);
     try {
-      // Get students - use OR for both year column names
+      // Get course's department first
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('department_id')
+        .eq('id', selectedDegree)
+        .single();
+
+      // Get students in this department and year
       const { data: students } = await supabase
         .from('students')
         .select(`
@@ -158,9 +167,9 @@ export default function AttendanceReportsScreen() {
           registration_number,
           profiles:user_id(full_name)
         `)
-        .eq('program_id', selectedProgram)
-        .or(`year_id.eq.${selectedYear},current_year_id.eq.${selectedYear}`)
-        .eq('is_active', true)
+        .eq('department_id', courseData?.department_id)
+        .eq('year_id', selectedYear)
+        .eq('current_status', 'active')
         .order('roll_number');
 
       if (!students) {
@@ -244,10 +253,10 @@ export default function AttendanceReportsScreen() {
     } finally {
       setLoadingReport(false);
     }
-  }, [selectedProgram, selectedYear, selectedCourse]);
+  }, [selectedDegree, selectedYear, selectedCourse]);
 
   const fetchSubjectReport = useCallback(async () => {
-    if (!selectedProgram || !selectedYear) return;
+    if (!selectedDegree || !selectedYear) return;
 
     setLoadingReport(true);
     try {
@@ -267,7 +276,7 @@ export default function AttendanceReportsScreen() {
           course_id,
           courses(id, name, code)
         `)
-        .eq('program_id', selectedProgram)
+        .eq('course_id', selectedDegree)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('is_active', true);
@@ -354,7 +363,7 @@ export default function AttendanceReportsScreen() {
     } finally {
       setLoadingReport(false);
     }
-  }, [selectedProgram, selectedYear]);
+  }, [selectedDegree, selectedYear]);
 
   useEffect(() => {
     fetchInitialData();
@@ -362,17 +371,17 @@ export default function AttendanceReportsScreen() {
 
   useEffect(() => {
     fetchCourses();
-  }, [selectedProgram, selectedYear, fetchCourses]);
+  }, [selectedDegree, selectedYear, fetchCourses]);
 
   useEffect(() => {
-    if (selectedProgram && selectedYear) {
+    if (selectedDegree && selectedYear) {
       if (reportType === 'student') {
         fetchStudentReport();
       } else if (reportType === 'subject') {
         fetchSubjectReport();
       }
     }
-  }, [selectedProgram, selectedYear, selectedCourse, reportType, fetchStudentReport, fetchSubjectReport]);
+  }, [selectedDegree, selectedYear, selectedCourse, reportType, fetchStudentReport, fetchSubjectReport]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -557,17 +566,17 @@ export default function AttendanceReportsScreen() {
               <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.filtersRow}>
                 <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                   <Picker
-                    selectedValue={selectedProgram}
+                    selectedValue={selectedDegree}
                     onValueChange={val => {
-                      setSelectedProgram(val);
+                      setSelectedDegree(val);
                       setSelectedCourse('');
                     }}
                     style={{ color: colors.textPrimary }}
                     dropdownIconColor={colors.textMuted}
                   >
-                    <Picker.Item label="Select Program" value="" />
-                    {programs.map(p => (
-                      <Picker.Item key={p.id} label={`${p.code} - ${p.name}`} value={p.id} />
+                    <Picker.Item label="Select Course" value="" />
+                    {degreePrograms.map(p => (
+                      <Picker.Item key={p.id} label={`${p.code} - ${p.short_name || p.name}`} value={p.id} />
                     ))}
                   </Picker>
                 </View>
@@ -610,7 +619,7 @@ export default function AttendanceReportsScreen() {
               )}
 
               {/* Class Summary Card */}
-              {selectedProgram && selectedYear && reportType === 'student' && studentData.length > 0 && (
+              {selectedDegree && selectedYear && reportType === 'student' && studentData.length > 0 && (
                 <Animated.View entering={FadeInDown.delay(300).duration(400)}>
                   <Card style={styles.summaryCard}>
                     <View style={styles.summaryHeader}>

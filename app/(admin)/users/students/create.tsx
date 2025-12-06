@@ -27,20 +27,20 @@ interface Department {
   code: string;
 }
 
-interface Program {
+interface Course {
   id: string;
   name: string;
   code: string;
+  short_name: string | null;
+  program_type: string;
+  duration_years: number;
+  total_semesters: number;
+  department_id: string;
 }
 
 interface Year {
   id: string;
-  name: string;
   year_number: number;
-}
-
-interface Section {
-  id: string;
   name: string;
 }
 
@@ -50,102 +50,101 @@ interface FormData {
   phone: string;
   password: string;
   department_id: string;
-  program_id: string;
+  course_id: string;
   year_id: string;
-  section_id: string;
-  registration_number: string;
   roll_number: string;
+  registration_number: string;
   admission_year: string;
 }
+
+type TabType = 'manual' | 'bulk';
 
 export default function CreateStudentScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
 
+  const [activeTab, setActiveTab] = useState<TabType>('manual');
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [years, setYears] = useState<Year[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
-  const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
-  const [importing, setImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
-
+  const [filteredYears, setFilteredYears] = useState<Year[]>([]);
+  
   const [formData, setFormData] = useState<FormData>({
     full_name: '',
     email: '',
     phone: '',
     password: '',
     department_id: '',
-    program_id: '',
+    course_id: '',
     year_id: '',
-    section_id: '',
-    registration_number: '',
     roll_number: '',
+    registration_number: '',
     admission_year: new Date().getFullYear().toString(),
   });
+
+  // Bulk import state
+  const [bulkStudents, setBulkStudents] = useState<any[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     fetchInitialData();
   }, []);
 
+  // Filter courses when department changes
   useEffect(() => {
     if (formData.department_id) {
-      fetchPrograms(formData.department_id);
+      const deptCourses = courses.filter(c => c.department_id === formData.department_id);
+      setFilteredCourses(deptCourses);
+      // Reset course selection if current course is not in filtered list
+      if (!deptCourses.find(c => c.id === formData.course_id)) {
+        setFormData(prev => ({ ...prev, course_id: '' }));
+      }
+    } else {
+      setFilteredCourses([]);
     }
-  }, [formData.department_id]);
+  }, [formData.department_id, courses]);
 
+  // Filter years when course changes
   useEffect(() => {
-    if (formData.program_id && formData.year_id) {
-      fetchSections(formData.program_id, formData.year_id);
+    if (formData.course_id) {
+      const course = courses.find(c => c.id === formData.course_id);
+      if (course) {
+        // Filter years based on course duration
+        const courseYears = years.filter(y => y.year_number <= course.duration_years);
+        setFilteredYears(courseYears);
+        // Reset year selection if current year exceeds course duration
+        const currentYear = years.find(y => y.id === formData.year_id);
+        if (currentYear && currentYear.year_number > course.duration_years) {
+          setFormData(prev => ({ ...prev, year_id: '' }));
+        }
+      }
+    } else {
+      setFilteredYears(years);
     }
-  }, [formData.program_id, formData.year_id]);
+  }, [formData.course_id, courses, years]);
 
   const fetchInitialData = async () => {
     try {
-      const [deptsRes, yearsRes] = await Promise.all([
+      const [deptsRes, coursesRes, yearsRes] = await Promise.all([
         supabase.from('departments').select('id, name, code').eq('is_active', true).order('name'),
-        supabase.from('years').select('id, name, year_number').order('year_number'),
+        supabase.from('courses').select('*').not('program_type', 'is', null).eq('is_active', true).order('name'),
+        supabase.from('years').select('*').eq('is_active', true).order('year_number'),
       ]);
 
+      if (deptsRes.error) throw deptsRes.error;
+      if (coursesRes.error) throw coursesRes.error;
+      if (yearsRes.error) throw yearsRes.error;
+
       setDepartments(deptsRes.data || []);
+      setCourses(coursesRes.data || []);
       setYears(yearsRes.data || []);
     } catch (error) {
-      console.error('Error fetching initial data:', error);
-    }
-  };
-
-  const fetchPrograms = async (deptId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('programs')
-        .select('id, name, code')
-        .eq('department_id', deptId)
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setPrograms(data || []);
-    } catch (error) {
-      console.error('Error fetching programs:', error);
-    }
-  };
-
-  const fetchSections = async (programId: string, yearId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('sections')
-        .select('id, name')
-        .eq('program_id', programId)
-        .eq('year_id', yearId)
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setSections(data || []);
-    } catch (error) {
-      console.error('Error fetching sections:', error);
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Failed to load form data');
     }
   };
 
@@ -170,8 +169,8 @@ export default function CreateStudentScreen() {
       Alert.alert('Validation Error', 'Please select a department');
       return false;
     }
-    if (!formData.program_id) {
-      Alert.alert('Validation Error', 'Please select a program');
+    if (!formData.course_id) {
+      Alert.alert('Validation Error', 'Please select a course');
       return false;
     }
     if (!formData.year_id) {
@@ -186,13 +185,30 @@ export default function CreateStudentScreen() {
 
     setLoading(true);
     try {
+      // Get current academic year
+      const { data: academicYear } = await supabase
+        .from('academic_years')
+        .select('id')
+        .eq('is_current', true)
+        .single();
+
+      // Get semester based on year
+      const selectedYear = years.find(y => y.id === formData.year_id);
+      const semesterNumber = selectedYear ? (selectedYear.year_number - 1) * 2 + 1 : 1;
+      
+      const { data: semester } = await supabase
+        .from('semesters')
+        .select('id')
+        .eq('semester_number', semesterNumber)
+        .single();
+
       // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email.trim(),
+        email: formData.email,
         password: formData.password,
         options: {
           data: {
-            full_name: formData.full_name.trim(),
+            full_name: formData.full_name,
             role: 'student',
           },
         },
@@ -201,16 +217,17 @@ export default function CreateStudentScreen() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('Failed to create user');
 
-      // Update profile
+      // Create profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name.trim(),
-          phone: formData.phone.trim() || null,
+        .insert({
+          id: authData.user.id,
+          email: formData.email,
+          full_name: formData.full_name,
+          phone: formData.phone || null,
           primary_role: 'student',
           status: 'active',
-        })
-        .eq('id', authData.user.id);
+        });
 
       if (profileError) throw profileError;
 
@@ -220,17 +237,32 @@ export default function CreateStudentScreen() {
         .insert({
           user_id: authData.user.id,
           department_id: formData.department_id,
-          program_id: formData.program_id,
           year_id: formData.year_id,
-          section_id: formData.section_id || null,
-          registration_number: formData.registration_number.trim() || null,
-          roll_number: formData.roll_number.trim() || null,
-          admission_year: parseInt(formData.admission_year) || new Date().getFullYear(),
+          semester_id: semester?.id,
+          academic_year_id: academicYear?.id,
+          roll_number: formData.roll_number || null,
+          registration_number: formData.registration_number || `JPM${formData.admission_year}${Date.now().toString().slice(-4)}`,
+          admission_year: parseInt(formData.admission_year),
           current_status: 'active',
-          is_active: true,
         });
 
       if (studentError) throw studentError;
+
+      // Assign student role
+      const { data: roleData } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'student')
+        .single();
+
+      if (roleData) {
+        await supabase.from('user_roles').insert({
+          user_id: authData.user.id,
+          role_id: roleData.id,
+          department_id: formData.department_id,
+          is_active: true,
+        });
+      }
 
       Alert.alert('Success', 'Student created successfully!', [
         { text: 'OK', onPress: () => router.back() },
@@ -262,20 +294,14 @@ export default function CreateStudentScreen() {
       const response = await fetch(file.uri);
       const csvText = await response.text();
       
-      const rows = csvText.split('\n').map(row => 
-        row.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''))
-      );
-      
-      if (rows.length < 2) {
-        Alert.alert('Error', 'CSV file is empty or has no data rows');
+      const lines = csvText.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        Alert.alert('Error', 'CSV file must have header row and at least one data row');
         return;
       }
 
-      const headers = rows[0].map(h => h.toLowerCase());
-      const dataRows = rows.slice(1).filter(row => row.some(cell => cell.length > 0));
-
-      // Expected headers: full_name, email, phone, registration_number, roll_number
-      const requiredHeaders = ['full_name', 'email'];
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const requiredHeaders = ['full_name', 'email', 'password'];
       const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
       
       if (missingHeaders.length > 0) {
@@ -283,125 +309,383 @@ export default function CreateStudentScreen() {
         return;
       }
 
+      const students: any[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const student: any = {};
+        headers.forEach((header, index) => {
+          student[header] = values[index] || '';
+        });
+        if (student.full_name && student.email && student.password) {
+          students.push(student);
+        }
+      }
+
+      if (students.length === 0) {
+        Alert.alert('Error', 'No valid student records found in CSV');
+        return;
+      }
+
+      setBulkStudents(students);
       Alert.alert(
         'Confirm Import',
-        `Found ${dataRows.length} students to import. Continue?`,
+        `Found ${students.length} student(s) to import. Continue?`,
         [
           { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Import',
-            onPress: () => processImport(headers, dataRows),
-          },
+          { text: 'Import', onPress: () => processBulkImport(students) },
         ]
       );
-    } catch (error) {
-      console.error('Error reading file:', error);
-      Alert.alert('Error', 'Failed to read the CSV file');
+    } catch (error: any) {
+      console.error('Error reading CSV:', error);
+      Alert.alert('Error', 'Failed to read CSV file');
     }
   };
 
-  const processImport = async (headers: string[], dataRows: string[][]) => {
-    if (!formData.department_id || !formData.program_id || !formData.year_id) {
-      Alert.alert('Error', 'Please select department, program, and year before importing');
+  const processBulkImport = async (students: any[]) => {
+    if (!formData.department_id || !formData.course_id || !formData.year_id) {
+      Alert.alert('Error', 'Please select Department, Course, and Year before bulk import');
       return;
     }
 
-    setImporting(true);
-    setImportProgress({ current: 0, total: dataRows.length });
+    setBulkLoading(true);
+    setBulkProgress({ current: 0, total: students.length });
 
     let successCount = 0;
-    let failedRows: { row: number; email: string; error: string }[] = [];
+    let failedStudents: string[] = [];
 
-    for (let i = 0; i < dataRows.length; i++) {
-      const row = dataRows[i];
-      const data: Record<string, string> = {};
-      
-      headers.forEach((header, idx) => {
-        data[header] = row[idx] || '';
-      });
+    // Get academic year and semester
+    const { data: academicYear } = await supabase
+      .from('academic_years')
+      .select('id')
+      .eq('is_current', true)
+      .single();
 
-      setImportProgress({ current: i + 1, total: dataRows.length });
+    const selectedYear = years.find(y => y.id === formData.year_id);
+    const semesterNumber = selectedYear ? (selectedYear.year_number - 1) * 2 + 1 : 1;
+    
+    const { data: semester } = await supabase
+      .from('semesters')
+      .select('id')
+      .eq('semester_number', semesterNumber)
+      .single();
 
-      if (!data.full_name || !data.email) {
-        failedRows.push({ row: i + 2, email: data.email || 'N/A', error: 'Missing name or email' });
-        continue;
-      }
+    const { data: roleData } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('name', 'student')
+      .single();
+
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
+      setBulkProgress({ current: i + 1, total: students.length });
 
       try {
-        // Generate a random password for bulk import
-        const password = `Student@${Math.random().toString(36).substring(2, 8)}`;
-
         // Create auth user
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: data.email.trim(),
-          password,
+          email: student.email,
+          password: student.password,
           options: {
             data: {
-              full_name: data.full_name.trim(),
+              full_name: student.full_name,
               role: 'student',
             },
           },
         });
 
         if (authError) throw authError;
-        if (!authData.user) throw new Error('Failed to create user');
+        if (!authData.user) throw new Error('User creation failed');
 
-        // Update profile
-        await supabase
-          .from('profiles')
-          .update({
-            full_name: data.full_name.trim(),
-            phone: data.phone?.trim() || null,
-            primary_role: 'student',
-            status: 'active',
-          })
-          .eq('id', authData.user.id);
+        // Create profile
+        await supabase.from('profiles').insert({
+          id: authData.user.id,
+          email: student.email,
+          full_name: student.full_name,
+          phone: student.phone || null,
+          primary_role: 'student',
+          status: 'active',
+        });
 
         // Create student record
-        await supabase
-          .from('students')
-          .insert({
+        await supabase.from('students').insert({
+          user_id: authData.user.id,
+          department_id: formData.department_id,
+          year_id: formData.year_id,
+          semester_id: semester?.id,
+          academic_year_id: academicYear?.id,
+          roll_number: student.roll_number || null,
+          registration_number: student.registration_number || `JPM${formData.admission_year}${Date.now().toString().slice(-6)}`,
+          admission_year: parseInt(formData.admission_year),
+          current_status: 'active',
+        });
+
+        // Assign role
+        if (roleData) {
+          await supabase.from('user_roles').insert({
             user_id: authData.user.id,
+            role_id: roleData.id,
             department_id: formData.department_id,
-            program_id: formData.program_id,
-            year_id: formData.year_id,
-            section_id: formData.section_id || null,
-            registration_number: data.registration_number?.trim() || null,
-            roll_number: data.roll_number?.trim() || null,
-            admission_year: parseInt(formData.admission_year) || new Date().getFullYear(),
-            current_status: 'active',
             is_active: true,
           });
+        }
 
         successCount++;
       } catch (error: any) {
-        failedRows.push({ row: i + 2, email: data.email, error: error.message || 'Unknown error' });
+        console.error(`Failed to create ${student.email}:`, error);
+        failedStudents.push(`${student.full_name} (${student.email}): ${error.message}`);
       }
     }
 
-    setImporting(false);
+    setBulkLoading(false);
+    setBulkStudents([]);
 
-    if (failedRows.length > 0) {
-      const failedSummary = failedRows.slice(0, 5).map(f => `Row ${f.row}: ${f.email} - ${f.error}`).join('\n');
+    if (failedStudents.length > 0) {
       Alert.alert(
-        'Import Complete',
-        `Imported: ${successCount}\nFailed: ${failedRows.length}\n\n${failedSummary}${failedRows.length > 5 ? '\n...' : ''}`,
-        [{ text: 'OK', onPress: () => router.back() }]
+        'Import Completed with Errors',
+        `Successfully imported: ${successCount}\nFailed: ${failedStudents.length}\n\nFailed students:\n${failedStudents.slice(0, 3).join('\n')}${failedStudents.length > 3 ? `\n...and ${failedStudents.length - 3} more` : ''}`
       );
     } else {
-      Alert.alert('Success', `Successfully imported ${successCount} students!`, [
+      Alert.alert('Success', `All ${successCount} students imported successfully!`, [
         { text: 'OK', onPress: () => router.back() },
       ]);
     }
   };
 
+  const renderManualForm = () => (
+    <ScrollView showsVerticalScrollIndicator={false} style={styles.formScroll}>
+      <View style={styles.formSection}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          <FontAwesome5 name="user" size={14} color={colors.primary} /> Personal Info
+        </Text>
+        
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Full Name *</Text>
+          <GlassInput
+            placeholder="Enter full name"
+            value={formData.full_name}
+            onChangeText={(v) => updateFormData('full_name', v)}
+            autoCapitalize="words"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Email *</Text>
+          <GlassInput
+            placeholder="student@email.com"
+            value={formData.email}
+            onChangeText={(v) => updateFormData('email', v)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Phone</Text>
+          <GlassInput
+            placeholder="Phone number"
+            value={formData.phone}
+            onChangeText={(v) => updateFormData('phone', v)}
+            keyboardType="phone-pad"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Password *</Text>
+          <GlassInput
+            placeholder="Minimum 6 characters"
+            value={formData.password}
+            onChangeText={(v) => updateFormData('password', v)}
+            secureTextEntry
+          />
+        </View>
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          <FontAwesome5 name="graduation-cap" size={14} color={colors.primary} /> Academic Info
+        </Text>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
+          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <Picker
+              selectedValue={formData.department_id}
+              onValueChange={(v) => updateFormData('department_id', v)}
+              style={{ color: colors.textPrimary }}
+            >
+              <Picker.Item label="Select Department" value="" />
+              {departments.map((dept) => (
+                <Picker.Item key={dept.id} label={`${dept.name} (${dept.code})`} value={dept.id} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <Picker
+              selectedValue={formData.course_id}
+              onValueChange={(v) => updateFormData('course_id', v)}
+              style={{ color: colors.textPrimary }}
+              enabled={filteredCourses.length > 0}
+            >
+              <Picker.Item label={filteredCourses.length > 0 ? "Select Course" : "Select Department first"} value="" />
+              {filteredCourses.map((course) => (
+                <Picker.Item key={course.id} label={`${course.name} (${course.code})`} value={course.id} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Year *</Text>
+          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <Picker
+              selectedValue={formData.year_id}
+              onValueChange={(v) => updateFormData('year_id', v)}
+              style={{ color: colors.textPrimary }}
+              enabled={filteredYears.length > 0}
+            >
+              <Picker.Item label={filteredYears.length > 0 ? "Select Year" : "Select Course first"} value="" />
+              {filteredYears.map((year) => (
+                <Picker.Item key={year.id} label={year.name} value={year.id} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.formRow}>
+          <View style={[styles.formGroup, { flex: 1 }]}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Roll Number</Text>
+            <GlassInput
+              placeholder="e.g., 23BCA001"
+              value={formData.roll_number}
+              onChangeText={(v) => updateFormData('roll_number', v)}
+              autoCapitalize="characters"
+            />
+          </View>
+          <View style={[styles.formGroup, { flex: 1 }]}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Admission Year</Text>
+            <GlassInput
+              placeholder="2024"
+              value={formData.admission_year}
+              onChangeText={(v) => updateFormData('admission_year', v)}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <PrimaryButton
+          title={loading ? 'Creating...' : 'Create Student'}
+          onPress={handleCreateStudent}
+          disabled={loading}
+        />
+      </View>
+    </ScrollView>
+  );
+
+  const renderBulkImport = () => (
+    <View style={styles.bulkContainer}>
+      <Card style={styles.bulkCard}>
+        <FontAwesome5 name="file-csv" size={48} color={colors.primary} style={styles.bulkIcon} />
+        <Text style={[styles.bulkTitle, { color: colors.textPrimary }]}>Bulk Import Students</Text>
+        <Text style={[styles.bulkSubtitle, { color: colors.textSecondary }]}>
+          Upload a CSV file with student data
+        </Text>
+
+        <View style={styles.csvInfo}>
+          <Text style={[styles.csvInfoTitle, { color: colors.textPrimary }]}>Required CSV columns:</Text>
+          <Text style={[styles.csvInfoText, { color: colors.textMuted }]}>
+            • full_name (required){'\n'}
+            • email (required){'\n'}
+            • password (required){'\n'}
+            • phone (optional){'\n'}
+            • roll_number (optional){'\n'}
+            • registration_number (optional)
+          </Text>
+        </View>
+
+        <View style={styles.formSection}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Select Class for Import</Text>
+          
+          <View style={styles.formGroup}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
+            <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+              <Picker
+                selectedValue={formData.department_id}
+                onValueChange={(v) => updateFormData('department_id', v)}
+                style={{ color: colors.textPrimary }}
+              >
+                <Picker.Item label="Select Department" value="" />
+                {departments.map((dept) => (
+                  <Picker.Item key={dept.id} label={`${dept.name}`} value={dept.id} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+            <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+              <Picker
+                selectedValue={formData.course_id}
+                onValueChange={(v) => updateFormData('course_id', v)}
+                style={{ color: colors.textPrimary }}
+                enabled={filteredCourses.length > 0}
+              >
+                <Picker.Item label={filteredCourses.length > 0 ? "Select Course" : "Select Dept first"} value="" />
+                {filteredCourses.map((course) => (
+                  <Picker.Item key={course.id} label={course.code} value={course.id} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Year *</Text>
+            <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+              <Picker
+                selectedValue={formData.year_id}
+                onValueChange={(v) => updateFormData('year_id', v)}
+                style={{ color: colors.textPrimary }}
+                enabled={filteredYears.length > 0}
+              >
+                <Picker.Item label={filteredYears.length > 0 ? "Select Year" : "Select Course first"} value="" />
+                {filteredYears.map((year) => (
+                  <Picker.Item key={year.id} label={year.name} value={year.id} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+        </View>
+
+        {bulkLoading ? (
+          <View style={styles.progressContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+              Importing {bulkProgress.current} of {bulkProgress.total}...
+            </Text>
+          </View>
+        ) : (
+          <PrimaryButton
+            title="Select CSV File"
+            onPress={handleBulkImport}
+            style={styles.uploadBtn}
+          />
+        )}
+      </Card>
+    </View>
+  );
+
   return (
     <AnimatedBackground>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.content, { paddingTop: insets.top }]}>
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -409,272 +693,60 @@ export default function CreateStudentScreen() {
             </TouchableOpacity>
             <View style={styles.headerContent}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>Add Student</Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Add single or bulk students
-              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Create new student account</Text>
             </View>
           </Animated.View>
 
-          {/* Tab Switcher */}
-          <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.tabContainer}>
+          {/* Tabs */}
+          <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.tabContainer}>
             <TouchableOpacity
-              style={[styles.tab, activeTab === 'single' && { backgroundColor: colors.primary }]}
-              onPress={() => setActiveTab('single')}
+              style={[
+                styles.tab,
+                activeTab === 'manual' && { backgroundColor: colors.primary },
+              ]}
+              onPress={() => setActiveTab('manual')}
             >
-              <FontAwesome5 name="user-plus" size={14} color={activeTab === 'single' ? '#fff' : colors.textMuted} />
-              <Text style={[styles.tabText, { color: activeTab === 'single' ? '#fff' : colors.textMuted }]}>
-                Single
+              <FontAwesome5
+                name="user-plus"
+                size={14}
+                color={activeTab === 'manual' ? '#fff' : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: activeTab === 'manual' ? '#fff' : colors.textSecondary },
+                ]}
+              >
+                Manual Entry
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, activeTab === 'bulk' && { backgroundColor: colors.primary }]}
+              style={[
+                styles.tab,
+                activeTab === 'bulk' && { backgroundColor: colors.primary },
+              ]}
               onPress={() => setActiveTab('bulk')}
             >
-              <FontAwesome5 name="file-csv" size={14} color={activeTab === 'bulk' ? '#fff' : colors.textMuted} />
-              <Text style={[styles.tabText, { color: activeTab === 'bulk' ? '#fff' : colors.textMuted }]}>
+              <FontAwesome5
+                name="file-upload"
+                size={14}
+                color={activeTab === 'bulk' ? '#fff' : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: activeTab === 'bulk' ? '#fff' : colors.textSecondary },
+                ]}
+              >
                 Bulk Import
               </Text>
             </TouchableOpacity>
           </Animated.View>
 
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            {activeTab === 'single' ? (
-              // Single Student Form
-              <>
-                <Card style={styles.formCard}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                    <FontAwesome5 name="user" size={14} color={colors.primary} /> Personal Info
-                  </Text>
-
-                  <GlassInput
-                    placeholder="Full Name *"
-                    value={formData.full_name}
-                    onChangeText={(v) => updateFormData('full_name', v)}
-                  />
-                  <GlassInput
-                    placeholder="Email Address *"
-                    value={formData.email}
-                    onChangeText={(v) => updateFormData('email', v)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                  <GlassInput
-                    placeholder="Phone Number"
-                    value={formData.phone}
-                    onChangeText={(v) => updateFormData('phone', v)}
-                    keyboardType="phone-pad"
-                  />
-                  <GlassInput
-                    placeholder="Password *"
-                    value={formData.password}
-                    onChangeText={(v) => updateFormData('password', v)}
-                    secureTextEntry
-                  />
-                </Card>
-
-                <Card style={styles.formCard}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                    <FontAwesome5 name="graduation-cap" size={14} color={colors.primary} /> Academic Info
-                  </Text>
-
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker
-                      selectedValue={formData.department_id}
-                      onValueChange={(v) => updateFormData('department_id', v)}
-                      style={{ color: colors.textPrimary }}
-                    >
-                      <Picker.Item label="Select Department *" value="" />
-                      {departments.map(d => (
-                        <Picker.Item key={d.id} label={`${d.code} - ${d.name}`} value={d.id} />
-                      ))}
-                    </Picker>
-                  </View>
-
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker
-                      selectedValue={formData.program_id}
-                      onValueChange={(v) => updateFormData('program_id', v)}
-                      style={{ color: colors.textPrimary }}
-                      enabled={programs.length > 0}
-                    >
-                      <Picker.Item label={programs.length > 0 ? "Select Program *" : "Select department first"} value="" />
-                      {programs.map(p => (
-                        <Picker.Item key={p.id} label={`${p.code} - ${p.name}`} value={p.id} />
-                      ))}
-                    </Picker>
-                  </View>
-
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker
-                      selectedValue={formData.year_id}
-                      onValueChange={(v) => updateFormData('year_id', v)}
-                      style={{ color: colors.textPrimary }}
-                    >
-                      <Picker.Item label="Select Year *" value="" />
-                      {years.map(y => (
-                        <Picker.Item key={y.id} label={y.name} value={y.id} />
-                      ))}
-                    </Picker>
-                  </View>
-
-                  {sections.length > 0 && (
-                    <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                      <Picker
-                        selectedValue={formData.section_id}
-                        onValueChange={(v) => updateFormData('section_id', v)}
-                        style={{ color: colors.textPrimary }}
-                      >
-                        <Picker.Item label="Select Section" value="" />
-                        {sections.map(s => (
-                          <Picker.Item key={s.id} label={s.name} value={s.id} />
-                        ))}
-                      </Picker>
-                    </View>
-                  )}
-
-                  <GlassInput
-                    placeholder="Registration Number"
-                    value={formData.registration_number}
-                    onChangeText={(v) => updateFormData('registration_number', v)}
-                  />
-                  <GlassInput
-                    placeholder="Roll Number"
-                    value={formData.roll_number}
-                    onChangeText={(v) => updateFormData('roll_number', v)}
-                  />
-                  <GlassInput
-                    placeholder="Admission Year"
-                    value={formData.admission_year}
-                    onChangeText={(v) => updateFormData('admission_year', v)}
-                    keyboardType="numeric"
-                  />
-                </Card>
-
-                <PrimaryButton
-                  title={loading ? 'Creating...' : 'Create Student'}
-                  onPress={handleCreateStudent}
-                  disabled={loading}
-                  style={styles.submitBtn}
-                />
-              </>
-            ) : (
-              // Bulk Import
-              <>
-                <Card style={styles.formCard}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                    <FontAwesome5 name="file-csv" size={14} color={colors.primary} /> Bulk Import Settings
-                  </Text>
-                  <Text style={[styles.helpText, { color: colors.textSecondary }]}>
-                    Select the department, program, and year for all imported students.
-                  </Text>
-
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker
-                      selectedValue={formData.department_id}
-                      onValueChange={(v) => updateFormData('department_id', v)}
-                      style={{ color: colors.textPrimary }}
-                    >
-                      <Picker.Item label="Select Department *" value="" />
-                      {departments.map(d => (
-                        <Picker.Item key={d.id} label={`${d.code} - ${d.name}`} value={d.id} />
-                      ))}
-                    </Picker>
-                  </View>
-
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker
-                      selectedValue={formData.program_id}
-                      onValueChange={(v) => updateFormData('program_id', v)}
-                      style={{ color: colors.textPrimary }}
-                      enabled={programs.length > 0}
-                    >
-                      <Picker.Item label={programs.length > 0 ? "Select Program *" : "Select department first"} value="" />
-                      {programs.map(p => (
-                        <Picker.Item key={p.id} label={`${p.code} - ${p.name}`} value={p.id} />
-                      ))}
-                    </Picker>
-                  </View>
-
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                    <Picker
-                      selectedValue={formData.year_id}
-                      onValueChange={(v) => updateFormData('year_id', v)}
-                      style={{ color: colors.textPrimary }}
-                    >
-                      <Picker.Item label="Select Year *" value="" />
-                      {years.map(y => (
-                        <Picker.Item key={y.id} label={y.name} value={y.id} />
-                      ))}
-                    </Picker>
-                  </View>
-                </Card>
-
-                <Card style={styles.formCard}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                    <FontAwesome5 name="info-circle" size={14} color={colors.primary} /> CSV Format
-                  </Text>
-                  <Text style={[styles.helpText, { color: colors.textSecondary }]}>
-                    Your CSV file should have the following columns:{'\n'}
-                    • full_name (required){'\n'}
-                    • email (required){'\n'}
-                    • phone (optional){'\n'}
-                    • registration_number (optional){'\n'}
-                    • roll_number (optional)
-                  </Text>
-
-                  <View style={[styles.sampleCsv, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
-                    <Text style={[styles.csvCode, { color: colors.textMuted }]}>
-                      full_name,email,phone,registration_number,roll_number{'\n'}
-                      John Doe,john@email.com,9876543210,REG001,101{'\n'}
-                      Jane Smith,jane@email.com,9876543211,REG002,102
-                    </Text>
-                  </View>
-                </Card>
-
-                {importing && (
-                  <Card style={styles.progressCard}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <Text style={[styles.progressText, { color: colors.textPrimary }]}>
-                      Importing students...
-                    </Text>
-                    <Text style={[styles.progressCount, { color: colors.textSecondary }]}>
-                      {importProgress.current} / {importProgress.total}
-                    </Text>
-                    <View style={styles.progressBar}>
-                      <View 
-                        style={[
-                          styles.progressFill, 
-                          { 
-                            backgroundColor: colors.primary,
-                            width: `${(importProgress.current / importProgress.total) * 100}%`,
-                          }
-                        ]} 
-                      />
-                    </View>
-                  </Card>
-                )}
-
-                <TouchableOpacity
-                  style={[
-                    styles.importBtn,
-                    { 
-                      backgroundColor: colors.primary,
-                      opacity: !formData.department_id || !formData.program_id || !formData.year_id || importing ? 0.5 : 1,
-                    },
-                  ]}
-                  onPress={handleBulkImport}
-                  disabled={!formData.department_id || !formData.program_id || !formData.year_id || importing}
-                >
-                  <FontAwesome5 name="file-upload" size={18} color="#fff" />
-                  <Text style={styles.importBtnText}>Select CSV File</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </ScrollView>
+          {/* Content */}
+          <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.formContainer}>
+            {activeTab === 'manual' ? renderManualForm() : renderBulkImport()}
+          </Animated.View>
         </View>
       </KeyboardAvoidingView>
     </AnimatedBackground>
@@ -683,23 +755,17 @@ export default function CreateStudentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
+  content: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
   backBtn: { padding: 8, marginRight: 12 },
   headerContent: { flex: 1 },
   title: { fontSize: 22, fontWeight: '700' },
   subtitle: { fontSize: 13, marginTop: 2 },
-  
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    marginBottom: 16,
+    backgroundColor: 'rgba(0,0,0,0.1)',
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     padding: 4,
   },
   tab: {
@@ -707,59 +773,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 10,
+    gap: 8,
   },
-  tabText: { fontSize: 13, fontWeight: '600' },
-  
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20 },
-  
-  formCard: { padding: 20, marginBottom: 16 },
+  tabText: { fontSize: 14, fontWeight: '600' },
+  formContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
+  formScroll: { flex: 1 },
+  formSection: { marginBottom: 24 },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 16 },
-  helpText: { fontSize: 13, lineHeight: 20, marginBottom: 16 },
-  
-  pickerWrapper: {
-    borderRadius: 12,
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  
-  submitBtn: { marginTop: 8 },
-  
-  sampleCsv: {
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-  },
-  csvCode: { fontSize: 11, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
-  
-  importBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    padding: 18,
-    borderRadius: 14,
-    marginTop: 8,
-  },
-  importBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  
-  progressCard: {
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  progressText: { fontSize: 16, fontWeight: '600', marginTop: 16 },
-  progressCount: { fontSize: 14, marginTop: 4 },
-  progressBar: {
-    width: '100%',
-    height: 6,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 3,
-    marginTop: 16,
-    overflow: 'hidden',
-  },
-  progressFill: { height: '100%', borderRadius: 3 },
+  formGroup: { marginBottom: 16 },
+  formLabel: { fontSize: 13, fontWeight: '500', marginBottom: 8 },
+  formRow: { flexDirection: 'row', gap: 12 },
+  pickerContainer: { borderRadius: 12, overflow: 'hidden' },
+  buttonContainer: { paddingVertical: 20 },
+  bulkContainer: { flex: 1 },
+  bulkCard: { padding: 24, alignItems: 'center' },
+  bulkIcon: { marginBottom: 16 },
+  bulkTitle: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
+  bulkSubtitle: { fontSize: 14, textAlign: 'center', marginBottom: 24 },
+  csvInfo: { width: '100%', padding: 16, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 12, marginBottom: 24 },
+  csvInfoTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  csvInfoText: { fontSize: 13, lineHeight: 22 },
+  uploadBtn: { width: '100%' },
+  progressContainer: { alignItems: 'center', paddingVertical: 24 },
+  progressText: { marginTop: 16, fontSize: 14 },
 });

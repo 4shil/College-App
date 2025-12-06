@@ -59,10 +59,11 @@ interface TimetableSlot {
   isLabContinuation?: boolean; // For 2-hour labs (second period)
 }
 
-interface Program {
+interface DegreeProgram {
   id: string;
   name: string;
   code: string;
+  short_name: string | null;
   department_id: string;
 }
 
@@ -75,12 +76,12 @@ interface Year {
 export default function CreateTimetableScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const params = useLocalSearchParams<{ programId: string; yearId: string }>();
+  const params = useLocalSearchParams<{ courseId: string; yearId: string }>();
   const { colors, isDark } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [program, setProgram] = useState<Program | null>(null);
+  const [degreeProgram, setDegreeProgram] = useState<DegreeProgram | null>(null);
   const [year, setYear] = useState<Year | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -118,28 +119,28 @@ export default function CreateTimetableScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      // Get program, year, academic year, courses for this program's department, and teachers
-      const [programRes, yearRes, academicYearRes] = await Promise.all([
-        supabase.from('programs').select('id, name, code, department_id').eq('id', params.programId).single(),
+      // Get degree course, year, academic year, and subjects for this course's department
+      const [courseRes, yearRes, academicYearRes] = await Promise.all([
+        supabase.from('courses').select('id, name, code, short_name, department_id').eq('id', params.courseId).single(),
         supabase.from('years').select('id, year_number, name').eq('id', params.yearId).single(),
         supabase.from('academic_years').select('id').eq('is_current', true).single(),
       ]);
 
-      if (programRes.error || !programRes.data) {
-        Alert.alert('Error', 'Program not found');
+      if (courseRes.error || !courseRes.data) {
+        Alert.alert('Error', 'Course not found');
         router.back();
         return;
       }
 
-      setProgram(programRes.data);
+      setDegreeProgram(courseRes.data);
       setYear(yearRes.data);
       setAcademicYearId(academicYearRes.data?.id || '');
 
-      // Get courses for this program's department
+      // Get subjects (courses) for this degree's department
       const { data: coursesData } = await supabase
         .from('courses')
         .select('id, code, name, short_name, theory_hours, lab_hours')
-        .eq('department_id', programRes.data.department_id)
+        .eq('department_id', courseRes.data.department_id)
         .eq('is_active', true)
         .order('code');
 
@@ -159,7 +160,7 @@ export default function CreateTimetableScreen() {
         const { data: existingEntries } = await supabase
           .from('timetable_entries')
           .select('*')
-          .eq('program_id', params.programId)
+          .eq('course_id', params.courseId)
           .eq('year_id', params.yearId)
           .eq('academic_year_id', academicYearRes.data.id)
           .eq('is_active', true);
@@ -195,7 +196,7 @@ export default function CreateTimetableScreen() {
     } finally {
       setLoading(false);
     }
-  }, [params.programId, params.yearId]);
+  }, [params.courseId, params.yearId]);
 
   useEffect(() => {
     fetchData();
@@ -311,18 +312,18 @@ export default function CreateTimetableScreen() {
   };
 
   const handleSaveTimetable = async () => {
-    if (!academicYearId || !program || !year) {
+    if (!academicYearId || !degreeProgram || !year) {
       Alert.alert('Error', 'Missing required data');
       return;
     }
 
     setSaving(true);
     try {
-      // Delete existing entries for this program/year/academic year
+      // Delete existing entries for this course/year/academic year
       await supabase
         .from('timetable_entries')
         .delete()
-        .eq('program_id', program.id)
+        .eq('course_id', degreeProgram.id)
         .eq('year_id', year.id)
         .eq('academic_year_id', academicYearId);
 
@@ -330,14 +331,13 @@ export default function CreateTimetableScreen() {
       const entries = slots
         .filter(s => s.courseId)
         .map(s => ({
-          program_id: program.id,
+          course_id: s.courseId, // Subject course being taught
           year_id: year.id,
           academic_year_id: academicYearId,
           day_of_week: s.day,
           period: s.period,
           start_time: PERIOD_TIMINGS[s.period - 1].startTime,
           end_time: PERIOD_TIMINGS[s.period - 1].endTime,
-          course_id: s.courseId,
           teacher_id: s.teacherId,
           room: s.room,
           is_lab: s.isLab,
@@ -609,7 +609,7 @@ export default function CreateTimetableScreen() {
           </TouchableOpacity>
           <View style={styles.headerContent}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>
-              {year?.name} {program?.code}
+              {year?.name} {degreeProgram?.code}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Edit Timetable

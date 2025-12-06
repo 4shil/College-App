@@ -364,13 +364,14 @@ export const getRolesByCategory = async (category: 'admin' | 'teacher' | 'studen
 };
 
 // ============================================
-// PROGRAM FUNCTIONS
+// PROGRAM FUNCTIONS (Using courses table with program_type)
 // ============================================
 
 export const getAllPrograms = async (): Promise<Program[]> => {
   const { data, error } = await supabase
-    .from('programs')
+    .from('courses')
     .select('*')
+    .not('program_type', 'is', null)
     .eq('is_active', true)
     .order('name');
 
@@ -383,9 +384,10 @@ export const getAllPrograms = async (): Promise<Program[]> => {
 
 export const getProgramsByDepartment = async (departmentId: string): Promise<Program[]> => {
   const { data, error } = await supabase
-    .from('programs')
+    .from('courses')
     .select('*')
     .eq('department_id', departmentId)
+    .not('program_type', 'is', null)
     .eq('is_active', true)
     .order('name');
 
@@ -398,7 +400,7 @@ export const getProgramsByDepartment = async (departmentId: string): Promise<Pro
 
 export const getProgramById = async (programId: string): Promise<Program | null> => {
   const { data, error } = await supabase
-    .from('programs')
+    .from('courses')
     .select('*')
     .eq('id', programId)
     .single();
@@ -518,9 +520,9 @@ export const getAttendanceSummary = async (
 
   const records = data || [];
   const total = records.length;
-  const present = records.filter(r => r.status === 'present').length;
-  const absent = records.filter(r => r.status === 'absent').length;
-  const late = records.filter(r => r.status === 'late').length;
+  const present = records.filter((r: any) => r.status === 'present').length;
+  const absent = records.filter((r: any) => r.status === 'absent').length;
+  const late = records.filter((r: any) => r.status === 'late').length;
   const percentage = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
 
   return { total, present, absent, late, percentage };

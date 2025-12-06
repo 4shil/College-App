@@ -1,138 +1,237 @@
 -- ============================================
--- SIMPLIFY SCHEMA MIGRATION
--- - Remove sections (only 1 class per year)
--- - Remove programs table (courses = programs)
--- - Simplify relationships
+-- SCHEMA SIMPLIFICATION MIGRATION
+-- 1. Merge programs and courses -> courses become the primary table
+-- 2. Remove sections concept (1 class per year)
+-- 3. Update student table references
 -- ============================================
 
 -- ============================================
--- 1. Make section_id nullable and optional in students
+-- STEP 1: Add program fields to courses table (courses = programs now)
 -- ============================================
 
--- Drop the old constraint if exists and make section_id nullable
-ALTER TABLE students 
-  ALTER COLUMN section_id DROP NOT NULL;
+-- Add program-related columns to courses table
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS program_type VARCHAR(20) DEFAULT 'undergraduate';
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS duration_years INTEGER DEFAULT 3;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_semesters INTEGER DEFAULT 6;
+
+-- Create a view to get courses as programs (for backward compatibility during transition)
+CREATE OR REPLACE VIEW programs_view AS
+SELECT DISTINCT ON (department_id, code)
+    id,
+    code,
+    name,
+    short_name,
+    program_type,
+    department_id,
+    duration_years,
+    total_semesters,
+    is_active,
+    created_at,
+    updated_at
+FROM courses
+WHERE program_type IS NOT NULL;
 
 -- ============================================
--- 2. Remove section_id from teacher_courses
+-- STEP 2: Update students table - remove section_id requirement
 -- ============================================
 
--- Drop unique constraint first
-ALTER TABLE teacher_courses 
-  DROP CONSTRAINT IF EXISTS teacher_courses_teacher_id_course_id_section_id_academic_yea_key;
+-- Make section_id nullable (we're removing sections concept)
+ALTER TABLE students ALTER COLUMN section_id DROP NOT NULL;
 
--- Add new unique constraint without section
-ALTER TABLE teacher_courses 
-  ADD CONSTRAINT teacher_courses_unique_assignment 
-  UNIQUE(teacher_id, course_id, academic_year_id);
-
--- Make section_id nullable
-ALTER TABLE teacher_courses 
-  ALTER COLUMN section_id DROP NOT NULL;
-
--- ============================================
--- 3. Drop sections from timetable entries if exists
--- ============================================
-
-DO $$ 
+-- Add program_id column if it doesn't exist (for backward compatibility during migration)
+DO $$
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'timetable_entries' AND column_name = 'section_id'
-  ) THEN
-    ALTER TABLE timetable_entries ALTER COLUMN section_id DROP NOT NULL;
-  END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'students' AND column_name = 'program_id'
+    ) THEN
+        ALTER TABLE students ADD COLUMN program_id UUID REFERENCES courses(id);
+    END IF;
 END $$;
 
 -- ============================================
--- 4. Update attendance records section references
+-- STEP 3: Update teacher_courses - remove section_id requirement
 -- ============================================
 
-DO $$ 
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'attendance_records' AND column_name = 'section_id'
-  ) THEN
-    ALTER TABLE attendance_records ALTER COLUMN section_id DROP NOT NULL;
-  END IF;
-END $$;
+-- Make section_id nullable in teacher_courses
+ALTER TABLE teacher_courses ALTER COLUMN section_id DROP NOT NULL;
 
 -- ============================================
--- 5. Create a simple view for class hierarchy
+-- STEP 4: Create helper function to get course/program info
 -- ============================================
 
--- View: Get class structure (Department -> Year -> Students)
-CREATE OR REPLACE VIEW class_structure AS
-SELECT 
-  d.id as department_id,
-  d.name as department_name,
-  d.code as department_code,
-  y.id as year_id,
-  y.year_number,
-  y.name as year_name,
-  COUNT(s.id) as student_count
-FROM departments d
-CROSS JOIN years y
-LEFT JOIN students s ON s.department_id = d.id AND s.year_id = y.id AND s.current_status = 'active'
-WHERE d.is_active = true AND y.is_active = true
-GROUP BY d.id, d.name, d.code, y.id, y.year_number, y.name
-ORDER BY d.name, y.year_number;
-
--- ============================================
--- 6. Helper function to get students for a class
--- ============================================
-
-CREATE OR REPLACE FUNCTION get_class_students(
-  p_department_id UUID,
-  p_year_id UUID
-)
+CREATE OR REPLACE FUNCTION get_course_programs(dept_id UUID DEFAULT NULL)
 RETURNS TABLE (
-  student_id UUID,
-  user_id UUID,
-  full_name TEXT,
-  roll_number TEXT,
-  registration_number TEXT,
-  email TEXT,
-  photo_url TEXT
+    id UUID,
+    code VARCHAR,
+    name VARCHAR,
+    short_name VARCHAR,
+    program_type VARCHAR,
+    department_id UUID,
+    department_name VARCHAR,
+    duration_years INTEGER,
+    total_semesters INTEGER,
+    is_active BOOLEAN
 ) AS $$
 BEGIN
-  RETURN QUERY
-  SELECT 
-    s.id as student_id,
-    s.user_id,
-    p.full_name,
-    s.roll_number,
-    s.registration_number,
-    p.email,
-    p.photo_url
-  FROM students s
-  JOIN profiles p ON p.id = s.user_id
-  WHERE s.department_id = p_department_id
-    AND s.year_id = p_year_id
-    AND s.current_status = 'active'
-  ORDER BY s.roll_number, p.full_name;
+    RETURN QUERY
+    SELECT 
+        c.id,
+        c.code,
+        c.name,
+        c.short_name,
+        c.program_type,
+        c.department_id,
+        d.name as department_name,
+        c.duration_years,
+        c.total_semesters,
+        c.is_active
+    FROM courses c
+    JOIN departments d ON c.department_id = d.id
+    WHERE (dept_id IS NULL OR c.department_id = dept_id)
+    AND c.program_type IS NOT NULL
+    ORDER BY d.name, c.name;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
--- 7. Update RLS policies for simplified structure
+-- STEP 5: Insert JPM College programs as courses
 -- ============================================
 
--- Drop old section-related policies if they exist
-DROP POLICY IF EXISTS "Authenticated users can read sections" ON sections;
+-- Commerce Department Programs
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BCOM_COOP', 'B.Com (Co-operation)', 'B.Com Coop', d.id, 'undergraduate', 3, 6, 
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'COM'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BCOM_FT', 'B.Com (Finance & Taxation)', 'B.Com F&T', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'COM'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BCOM_LM', 'B.Com (Logistics Management)', 'B.Com LM', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'COM'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+-- English Department
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BA_ENG', 'BA English (Cultural Studies & Film Studies)', 'BA English', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'ENG'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+-- Management Department
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BBA', 'BBA', 'BBA', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'MGT'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+-- Computer Science Department
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BCA', 'BCA', 'BCA', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'CS'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+-- Social Work Department
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BSW', 'BSW (Development Social Work)', 'BSW', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'SW'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+-- Tourism Department
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'BTTM', 'BTTM (Tour Operation & Aviation)', 'BTTM', d.id, 'undergraduate', 3, 6,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'TM'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'undergraduate',
+    duration_years = 3,
+    total_semesters = 6;
+
+-- Postgraduate Programs
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'MCOM_FT', 'M.Com (Finance & Taxation)', 'M.Com F&T', d.id, 'postgraduate', 2, 4,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'COM'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'postgraduate',
+    duration_years = 2,
+    total_semesters = 4;
+
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'MSC_CS', 'M.Sc (Computer Science)', 'M.Sc CS', d.id, 'postgraduate', 2, 4,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'CS'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'postgraduate',
+    duration_years = 2,
+    total_semesters = 4;
+
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'MA_ENG', 'MA (English Language & Literature)', 'MA English', d.id, 'postgraduate', 2, 4,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'ENG'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'postgraduate',
+    duration_years = 2,
+    total_semesters = 4;
+
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'MA_HRM', 'MA (Human Resource Management)', 'MA HRM', d.id, 'postgraduate', 2, 4,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'MGT'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'postgraduate',
+    duration_years = 2,
+    total_semesters = 4;
+
+INSERT INTO courses (code, name, short_name, department_id, program_type, duration_years, total_semesters, semester_id, course_type)
+SELECT 'MSW', 'MSW (Social Work)', 'MSW', d.id, 'postgraduate', 2, 4,
+       (SELECT id FROM semesters WHERE semester_number = 1 LIMIT 1), 'core'
+FROM departments d WHERE d.code = 'SW'
+ON CONFLICT (code) DO UPDATE SET 
+    program_type = 'postgraduate',
+    duration_years = 2,
+    total_semesters = 4;
 
 -- ============================================
--- 8. Add comment explaining the simplified structure
+-- STEP 6: Update attendance_delegations to use course_id instead of program_id
 -- ============================================
 
-COMMENT ON TABLE departments IS 'Departments in the college (e.g., BCA, BBA, CSE)';
-COMMENT ON TABLE years IS 'Academic years (1st Year, 2nd Year, etc.)';
-COMMENT ON TABLE courses IS 'Subjects/Courses taught in each department per semester';
-COMMENT ON TABLE students IS 'Students enrolled - identified by department + year (no sections)';
+-- Add course_id if it doesn't exist
+ALTER TABLE attendance_delegations ADD COLUMN IF NOT EXISTS course_id UUID REFERENCES courses(id);
 
 -- ============================================
--- DONE: Schema simplified
--- Structure is now: Department -> Year -> Students
--- No sections needed (1 class per department-year combination)
+-- STEP 7: Grant necessary permissions
 -- ============================================
+
+GRANT EXECUTE ON FUNCTION get_course_programs TO authenticated;
+GRANT SELECT ON programs_view TO authenticated;

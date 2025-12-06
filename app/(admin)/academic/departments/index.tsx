@@ -54,6 +54,7 @@ export default function DepartmentsScreen() {
       const { data: depts, error } = await supabase
         .from('departments')
         .select('*')
+        .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
@@ -89,6 +90,22 @@ export default function DepartmentsScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    // Live refresh when departments change server-side
+    const channel = supabase
+      .channel('departments-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'departments' },
+        () => fetchDepartments()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -192,13 +209,17 @@ export default function DepartmentsScreen() {
 
   const handleDelete = (dept: Department) => {
     if (dept.students_count || dept.teachers_count) {
-      Alert.alert('Cannot Delete', 'This department has students or teachers assigned. Remove them first.');
+      Alert.alert(
+        'Cannot Delete',
+        `This department has ${dept.students_count || 0} students and ${dept.teachers_count || 0} teachers assigned. Remove them first.`,
+        [{ text: 'OK' }]
+      );
       return;
     }
 
     Alert.alert(
       'Delete Department',
-      `Are you sure you want to delete ${dept.name}? This action cannot be undone.`,
+      `Are you sure you want to delete "${dept.name}"? This will deactivate it but data will be preserved.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -206,17 +227,28 @@ export default function DepartmentsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              setSaving(true);
               const { error } = await supabase
                 .from('departments')
-                .delete()
+                .update({ is_active: false })
                 .eq('id', dept.id);
 
-              if (error) throw error;
-              Alert.alert('Success', 'Department deleted');
+              if (error) {
+                console.error('Delete error:', error);
+                throw new Error(error.message || 'Failed to delete department');
+              }
+              
+              Alert.alert('Success', `${dept.name} has been deactivated`);
               await fetchDepartments();
-            } catch (error) {
+            } catch (error: any) {
               console.error('Error deleting department:', error);
-              Alert.alert('Error', 'Failed to delete department');
+              Alert.alert(
+                'Delete Failed',
+                error.message || 'Unable to delete department. Please try again.',
+                [{ text: 'OK' }]
+              );
+            } finally {
+              setSaving(false);
             }
           },
         },
@@ -266,15 +298,17 @@ export default function DepartmentsScreen() {
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
+            style={[styles.actionBtn, { backgroundColor: colors.primary + '15', opacity: saving ? 0.5 : 1 }]}
             onPress={() => openEditModal(dept)}
+            disabled={saving}
           >
             <FontAwesome5 name="edit" size={12} color={colors.primary} />
             <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: dept.is_active ? '#f59e0b15' : '#10b98115' }]}
+            style={[styles.actionBtn, { backgroundColor: dept.is_active ? '#f59e0b15' : '#10b98115', opacity: saving ? 0.5 : 1 }]}
             onPress={() => handleToggleActive(dept)}
+            disabled={saving}
           >
             <FontAwesome5 name={dept.is_active ? 'ban' : 'check'} size={12} color={dept.is_active ? '#f59e0b' : '#10b981'} />
             <Text style={[styles.actionBtnText, { color: dept.is_active ? '#f59e0b' : '#10b981' }]}>
@@ -282,8 +316,9 @@ export default function DepartmentsScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#ef444415' }]}
+            style={[styles.actionBtn, { backgroundColor: '#ef444415', opacity: saving ? 0.5 : 1 }]}
             onPress={() => handleDelete(dept)}
+            disabled={saving}
           >
             <FontAwesome5 name="trash" size={12} color="#ef4444" />
             <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>Delete</Text>

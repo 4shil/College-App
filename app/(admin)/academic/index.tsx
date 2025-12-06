@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -13,6 +15,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
+import { supabase } from '../../../lib/supabase';
 
 interface MenuOption {
   id: string;
@@ -29,6 +32,68 @@ export default function AcademicIndexScreen() {
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
 
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [counts, setCounts] = useState({
+    departments: 0,
+    courses: 0,
+    subjects: 0,
+    years: 0,
+    semesters: 0,
+  });
+
+  const fetchCounts = useCallback(async () => {
+    try {
+      const [depts, courses, subjects, years, semesters] = await Promise.all([
+        supabase.from('departments').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('courses').select('id', { count: 'exact', head: true }).eq('is_active', true).not('program_type', 'is', null),
+        supabase.from('subjects').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('years').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('semesters').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      ]);
+
+      setCounts({
+        departments: depts.count || 0,
+        courses: courses.count || 0,
+        subjects: subjects.count || 0,
+        years: years.count || 0,
+        semesters: semesters.count || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching academic counts:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await fetchCounts();
+      setLoading(false);
+    };
+    loadData();
+  }, [fetchCounts]);
+
+  useEffect(() => {
+    // Real-time updates when any academic table changes
+    const channels = [
+      supabase.channel('academic-depts').on('postgres_changes', { event: '*', schema: 'public', table: 'departments' }, fetchCounts).subscribe(),
+      supabase.channel('academic-courses').on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, fetchCounts).subscribe(),
+      supabase.channel('academic-subjects').on('postgres_changes', { event: '*', schema: 'public', table: 'subjects' }, fetchCounts).subscribe(),
+      supabase.channel('academic-years').on('postgres_changes', { event: '*', schema: 'public', table: 'years' }, fetchCounts).subscribe(),
+      supabase.channel('academic-semesters').on('postgres_changes', { event: '*', schema: 'public', table: 'semesters' }, fetchCounts).subscribe(),
+    ];
+
+    return () => {
+      channels.forEach(ch => supabase.removeChannel(ch));
+    };
+  }, [fetchCounts]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCounts();
+    setRefreshing(false);
+  };
+
   const menuOptions: MenuOption[] = [
     {
       id: 'departments',
@@ -37,14 +102,51 @@ export default function AcademicIndexScreen() {
       icon: 'building',
       color: '#6366f1',
       route: '/(admin)/academic/departments',
+      count: counts.departments,
     },
     {
       id: 'courses',
       title: 'Courses',
-      subtitle: 'Subjects taught in each department',
-      icon: 'book-open',
+      subtitle: 'Degree programs and specializations',
+      icon: 'graduation-cap',
       color: '#10b981',
       route: '/(admin)/academic/courses',
+      count: counts.courses,
+    },
+    {
+      id: 'subjects',
+      title: 'Subjects',
+      subtitle: 'Course subjects and curriculum',
+      icon: 'book',
+      color: '#f59e0b',
+      route: '/(admin)/academic/subjects',
+      count: counts.subjects,
+    },
+    {
+      id: 'years',
+      title: 'Years & Sections',
+      subtitle: 'Academic years and class sections',
+      icon: 'layer-group',
+      color: '#8b5cf6',
+      route: '/(admin)/academic/years',
+      count: counts.years,
+    },
+    {
+      id: 'batches',
+      title: 'Batches',
+      subtitle: 'Student batch management',
+      icon: 'users-cog',
+      color: '#3b82f6',
+      route: '/(admin)/academic/batches',
+    },
+    {
+      id: 'semesters',
+      title: 'Semesters',
+      subtitle: 'Academic terms and schedules',
+      icon: 'calendar-alt',
+      color: '#ec4899',
+      route: '/(admin)/academic/semesters',
+      count: counts.semesters,
     },
   ];
 
@@ -115,19 +217,29 @@ export default function AcademicIndexScreen() {
           style={styles.statsContainer}
         >
           <Card style={styles.statsCard}>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <FontAwesome5 name="building" size={16} color="#6366f1" />
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>-</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Departments</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <FontAwesome5 name="building" size={16} color="#6366f1" />
+                  <Text style={[styles.statValue, { color: colors.textPrimary }]}>{counts.departments}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Depts</Text>
+                </View>
+                <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
+                <View style={styles.statItem}>
+                  <FontAwesome5 name="graduation-cap" size={16} color="#10b981" />
+                  <Text style={[styles.statValue, { color: colors.textPrimary }]}>{counts.courses}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Courses</Text>
+                </View>
+                <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
+                <View style={styles.statItem}>
+                  <FontAwesome5 name="book" size={16} color="#f59e0b" />
+                  <Text style={[styles.statValue, { color: colors.textPrimary }]}>{counts.subjects}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Subjects</Text>
+                </View>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
-              <View style={styles.statItem}>
-                <FontAwesome5 name="book-open" size={16} color="#10b981" />
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>-</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Courses</Text>
-              </View>
-            </View>
+            )}
           </Card>
         </Animated.View>
 
@@ -139,6 +251,9 @@ export default function AcademicIndexScreen() {
             { paddingBottom: insets.bottom + 20 },
           ]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
         >
           {menuOptions.map((option, index) => renderMenuCard(option, index))}
         </ScrollView>

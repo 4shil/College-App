@@ -58,7 +58,7 @@ export default function TeacherMarkAttendanceScreen() {
   const params = useLocalSearchParams<{
     entryId: string;
     courseName: string;
-    programId: string;
+    courseId: string;
     yearId: string;
     period: string;
   }>();
@@ -68,7 +68,7 @@ export default function TeacherMarkAttendanceScreen() {
   // Data from params
   const entryId = params.entryId;
   const courseName = params.courseName || '';
-  const programId = params.programId || '';
+  const courseId = params.courseId || '';
   const yearId = params.yearId || '';
   const periodNum = parseInt(params.period || '0');
 
@@ -109,7 +109,7 @@ export default function TeacherMarkAttendanceScreen() {
   }, [user?.id]);
 
   const fetchData = useCallback(async () => {
-    if (!entryId || !programId || !yearId) return;
+    if (!entryId || !courseId || !yearId) return;
 
     try {
       // Get teacher ID first
@@ -144,7 +144,14 @@ export default function TeacherMarkAttendanceScreen() {
 
       setEntry(entryData as TimetableEntry);
 
-      // Get students in this program and year
+      // Get course's department first
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('department_id')
+        .eq('id', courseId)
+        .single();
+
+      // Get students in this department and year
       const { data: studentsData } = await supabase
         .from('students')
         .select(`
@@ -154,9 +161,9 @@ export default function TeacherMarkAttendanceScreen() {
           user_id,
           profiles:user_id(full_name)
         `)
-        .eq('program_id', programId)
-        .or(`year_id.eq.${yearId},current_year_id.eq.${yearId}`)
-        .eq('is_active', true)
+        .eq('department_id', courseData?.department_id)
+        .eq('year_id', yearId)
+        .eq('current_status', 'active')
         .order('roll_number');
 
       if (!studentsData) {
@@ -205,7 +212,7 @@ export default function TeacherMarkAttendanceScreen() {
     } finally {
       setLoading(false);
     }
-  }, [entryId, programId, yearId, dateStr, periodNum, fetchTeacherId, router]);
+  }, [entryId, courseId, yearId, dateStr, periodNum, fetchTeacherId, router]);
 
   useEffect(() => {
     fetchData();
@@ -312,7 +319,6 @@ export default function TeacherMarkAttendanceScreen() {
             date: dateStr,
             period: entry.period,
             course_id: entry.course_id,
-            program_id: programId,
             year_id: yearId,
             timetable_entry_id: entry.id,
             academic_year_id: academicYear?.id,

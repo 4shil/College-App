@@ -40,7 +40,7 @@ const { width } = Dimensions.get('window');
 
 type ProgramType = 'undergraduate' | 'postgraduate';
 
-interface Program {
+interface DegreeProgram {
   id: string;
   code: string;
   name: string;
@@ -102,7 +102,7 @@ export default function RegisterScreen() {
   // State
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [degreePrograms, setDegreePrograms] = useState<DegreeProgram[]>([]);
   const [loading, setLoading] = useState(false);
   const [verifyingApaar, setVerifyingApaar] = useState(false);
   const [apaarVerified, setApaarVerified] = useState(false);
@@ -117,13 +117,14 @@ export default function RegisterScreen() {
   const fetchPrograms = async () => {
     try {
       const { data, error } = await supabase
-        .from('programs')
+        .from('courses')
         .select('*, department:departments(name, code)')
+        .not('program_type', 'is', null)
         .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
-      setPrograms(data || []);
+      setDegreePrograms(data || []);
     } catch (err) {
       console.error('Error fetching programs:', err);
     }
@@ -135,12 +136,12 @@ export default function RegisterScreen() {
   };
 
   // Filter programs by type
-  const filteredPrograms = programs.filter(
+  const filteredPrograms = degreePrograms.filter(
     (p) => p.program_type === formData.program_type
   );
 
   // Get year options based on program
-  const selectedProgram = programs.find((p) => p.id === formData.program_id);
+  const selectedProgram = degreePrograms.find((p) => p.id === formData.program_id);
   const maxYears = selectedProgram?.duration_years || (formData.program_type === 'undergraduate' ? 3 : 2);
   const maxSemesters = selectedProgram?.total_semesters || (formData.program_type === 'undergraduate' ? 6 : 4);
 

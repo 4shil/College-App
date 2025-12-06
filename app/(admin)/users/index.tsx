@@ -349,6 +349,83 @@ export default function UsersScreen() {
     setShowRoleModal(true);
   };
 
+  const openAddUserModal = () => {
+    setFormName('');
+    setFormEmail('');
+    setFormPhone('');
+    setFormRole('');
+    setFormDepartment('');
+    setShowAddModal(true);
+  };
+
+  const handleCreateUser = async () => {
+    if (!formName.trim() || !formEmail.trim() || !formRole) {
+      Alert.alert('Validation Error', 'Name, email, and role are required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Create user with Supabase Auth (will auto-create profile via trigger)
+      const tempPassword = `Temp${Math.random().toString(36).slice(2, 10)}!`;
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: formEmail.trim(),
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: formName.trim(),
+          phone: formPhone.trim() || null,
+        },
+      });
+
+      if (authError) throw authError;
+
+      // Update profile with role and department
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            primary_role: formRole,
+            status: 'active',
+          })
+          .eq('id', authData.user.id);
+
+        if (profileError) throw profileError;
+
+        // Add to specific table based on role
+        if (formRole === 'student' && formDepartment) {
+          await supabase.from('students').insert({
+            id: authData.user.id,
+            department_id: formDepartment,
+          });
+        } else if (['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(formRole) && formDepartment) {
+          await supabase.from('teachers').insert({
+            id: authData.user.id,
+            department_id: formDepartment,
+          });
+        }
+
+        // Add to user_roles table
+        const role = roles.find(r => r.name === formRole);
+        if (role) {
+          await supabase.from('user_roles').insert({
+            user_id: authData.user.id,
+            role_id: role.id,
+          });
+        }
+      }
+
+      Alert.alert('Success', `User created with temporary password: ${tempPassword}\nPlease share this with the user.`);
+      setShowAddModal(false);
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      Alert.alert('Error', error.message || 'Failed to create user');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getStatusColor = (status: UserStatus) => {
     switch (status) {
       case 'active': return '#10b981';
@@ -520,6 +597,12 @@ export default function UsersScreen() {
               Manage all users in the system
             </Text>
           </View>
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: colors.primary }]}
+            onPress={openAddUserModal}
+          >
+            <Ionicons name="add" size={22} color="#fff" />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Stats */}
@@ -591,6 +674,106 @@ export default function UsersScreen() {
         </ScrollView>
 
         {renderRoleModal()}
+
+        {/* Add User Modal */}
+        <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
+          <View style={styles.modalOverlay}>
+            <Card style={styles.modalContent}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create New User</Text>
+              
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+                <View style={{ gap: 16 }}>
+                  <View>
+                    <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Full Name *</Text>
+                    <GlassInput
+                      placeholder="Enter full name"
+                      value={formName}
+                      onChangeText={setFormName}
+                      autoCapitalize="words"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Email *</Text>
+                    <GlassInput
+                      placeholder="user@example.com"
+                      value={formEmail}
+                      onChangeText={setFormEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Phone</Text>
+                    <GlassInput
+                      placeholder="1234567890"
+                      value={formPhone}
+                      onChangeText={setFormPhone}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Role *</Text>
+                    <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                      <Picker
+                        selectedValue={formRole}
+                        onValueChange={setFormRole}
+                        style={{ color: colors.textPrimary }}
+                        dropdownIconColor={colors.textMuted}
+                      >
+                        <Picker.Item label="Select Role" value="" />
+                        {roles.map(role => (
+                          <Picker.Item key={role.id} label={role.display_name} value={role.name} />
+                        ))}
+                      </Picker>
+                    </View>
+                  </View>
+
+                  {(formRole === 'student' || ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(formRole)) && (
+                    <View>
+                      <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Department</Text>
+                      <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Picker
+                          selectedValue={formDepartment}
+                          onValueChange={setFormDepartment}
+                          style={{ color: colors.textPrimary }}
+                          dropdownIconColor={colors.textMuted}
+                        >
+                          <Picker.Item label="Select Department" value="" />
+                          {departments.map(dept => (
+                            <Picker.Item key={dept.id} label={`${dept.name} (${dept.code})`} value={dept.id} />
+                          ))}
+                        </Picker>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </ScrollView>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, { backgroundColor: colors.glassBackground }]}
+                  onPress={() => setShowAddModal(false)}
+                >
+                  <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, { backgroundColor: colors.primary }]}
+                  onPress={handleCreateUser}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={[styles.modalBtnText, { color: '#fff' }]}>Create</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </Card>
+          </View>
+        </Modal>
       </View>
     </AnimatedBackground>
   );
@@ -600,6 +783,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
   backBtn: { padding: 8, marginRight: 12 },
+  addBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   headerContent: { flex: 1 },
   title: { fontSize: 22, fontWeight: '700' },
   subtitle: { fontSize: 13, marginTop: 2 },

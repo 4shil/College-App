@@ -63,17 +63,25 @@ export default function TeacherAttendanceHistory() {
       const dateStr = selectedDate.toISOString().split('T')[0];
 
       // Get attendance records for teacher on selected date
+      // Note: attendance.timetable_entry_id references timetable_entries.id
       const { data: attendanceData } = await supabase
         .from('attendance')
         .select(`
           id,
           date,
           period,
-          timetable_entries(
+          timetable_entry_id,
+          timetable_entry:timetable_entry_id(
             id,
-            courses(code, name),
-            programs(name),
-            years(name)
+            course:course_id(
+              code,
+              name,
+              program_type
+            ),
+            year:year_id(
+              name
+            ),
+            teacher_id
           )
         `)
         .eq('date', dateStr)
@@ -84,16 +92,9 @@ export default function TeacherAttendanceHistory() {
         return;
       }
 
-      // Filter by teacher's timetable entries
-      const { data: teacherEntries } = await supabase
-        .from('timetable_entries')
-        .select('id')
-        .eq('teacher_id', teacherId);
-
-      const teacherEntryIds = new Set((teacherEntries || []).map(e => e.id));
-
+      // Filter by teacher's timetable entries (attendance already has the timetable_entry with teacher_id)
       const filteredAttendance = (attendanceData as any[]).filter(a => 
-        a.timetable_entries && teacherEntryIds.has(a.timetable_entries.id)
+        a.timetable_entry && a.timetable_entry.teacher_id === teacherId
       );
 
       // Get counts for each attendance record
@@ -104,19 +105,25 @@ export default function TeacherAttendanceHistory() {
             .select('status')
             .eq('attendance_id', att.id);
 
-          const records = recordsData || [];
-          const presentCount = records.filter(r => r.status === 'present').length;
-          const lateCount = records.filter(r => r.status === 'late').length;
-          const absentCount = records.filter(r => r.status === 'absent').length;
+          const records: Array<{ status: string }> = recordsData || [];
+          const presentCount = records.filter((r) => r.status === 'present').length;
+          const lateCount = records.filter((r) => r.status === 'late').length;
+          const absentCount = records.filter((r) => r.status === 'absent').length;
+
+          // Get degree program name from course (courses with program_type are degree programs)
+          const courseData = att.timetable_entry?.course;
+          const programName = courseData?.program_type 
+            ? courseData.name // If course has program_type, it IS the degree program (BCA, BBA, etc.)
+            : '';
 
           return {
             id: att.id,
             date: att.date,
             period: att.period,
-            courseName: att.timetable_entries?.courses?.name || '',
-            courseCode: att.timetable_entries?.courses?.code || '',
-            programName: att.timetable_entries?.programs?.name || '',
-            yearName: att.timetable_entries?.years?.name || '',
+            courseName: courseData?.name || '',
+            courseCode: courseData?.code || '',
+            programName: programName,
+            yearName: att.timetable_entry?.year?.name || '',
             presentCount,
             lateCount,
             absentCount,

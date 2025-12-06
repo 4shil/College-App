@@ -76,8 +76,8 @@ export const useAuth = () => {
 
       // Extract role names
       const roleNames: RoleName[] = rolesData
-        ?.filter(ur => ur.role && ur.is_active)
-        .map(ur => (ur.role as any).name as RoleName) || [];
+        ?.filter((ur: any) => ur.role && ur.is_active)
+        .map((ur: any) => (ur.role as any).name as RoleName) || [];
 
       // If no roles from user_roles, use primary_role from profile
       if (roleNames.length === 0 && profileData?.primary_role) {

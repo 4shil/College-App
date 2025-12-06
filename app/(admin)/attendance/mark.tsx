@@ -31,10 +31,11 @@ const PERIOD_TIMINGS = [
   { period: 5, start: '14:20', end: '15:10', label: 'Period 5 (14:20 - 15:10)' },
 ];
 
-interface Program {
+interface Course {
   id: string;
   name: string;
   code: string;
+  short_name: string | null;
 }
 
 interface Year {
@@ -76,7 +77,7 @@ interface Delegation {
   granted_by: string;
   valid_from: string;
   valid_until: string;
-  program_id?: string;
+  course_id?: string;
   year_id?: string;
   is_active: boolean;
   reason?: string;
@@ -94,13 +95,13 @@ export default function ViewAttendanceScreen() {
   // Selection states
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState(0);
   const [selectedEntry, setSelectedEntry] = useState<TimetableEntry | null>(null);
 
   // Data states
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [years, setYears] = useState<Year[]>([]);
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -127,21 +128,22 @@ export default function ViewAttendanceScreen() {
 
   const fetchInitialData = useCallback(async () => {
     try {
-      const [programsRes, yearsRes, teachersRes, delegationsRes] = await Promise.all([
-        supabase.from('programs').select('id, name, code').eq('is_active', true).order('code'),
+      const [coursesRes, yearsRes, teachersRes, delegationsRes] = await Promise.all([
+        // Fetch courses that have program_type (these are degree programs like BCA, BBA)
+        supabase.from('courses').select('id, name, code, short_name').not('program_type', 'is', null).eq('is_active', true).order('code'),
         supabase.from('years').select('id, year_number, name').order('year_number'),
         supabase.from('teachers').select('id, user_id, profiles:user_id(full_name)').eq('is_active', true),
         supabase.from('attendance_delegations')
           .select(`
             id, teacher_id, granted_by, valid_from, valid_until, 
-            program_id, year_id, is_active, reason,
+            course_id, year_id, is_active, reason,
             teachers(profiles:user_id(full_name))
           `)
           .eq('is_active', true)
           .gte('valid_until', new Date().toISOString()),
       ]);
 
-      setPrograms(programsRes.data || []);
+      setCourses(coursesRes.data || []);
       setYears(((yearsRes.data || []) as Array<{ year_number: number; id: string; name: string }>).filter(y => y.year_number <= 3));
       setTeachers((teachersRes.data || []) as Teacher[]);
       setDelegations((delegationsRes.data || []) as Delegation[]);
@@ -153,7 +155,7 @@ export default function ViewAttendanceScreen() {
   }, []);
 
   const fetchTimetableEntries = useCallback(async () => {
-    if (!selectedProgram || !selectedYear || !selectedDate) return;
+    if (!selectedCourse || !selectedYear || !selectedDate) return;
 
     try {
       let dayOfWeek = selectedDate.getDay();
@@ -190,7 +192,7 @@ export default function ViewAttendanceScreen() {
           courses(code, name, short_name),
           teachers(id, profiles:user_id(full_name))
         `)
-        .eq('program_id', selectedProgram)
+        .eq('course_id', selectedCourse)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('day_of_week', dayOfWeek)
@@ -201,7 +203,7 @@ export default function ViewAttendanceScreen() {
     } catch (error) {
       console.error('Error fetching timetable:', error);
     }
-  }, [selectedProgram, selectedYear, selectedDate]);
+  }, [selectedCourse, selectedYear, selectedDate]);
 
   const fetchStudents = useCallback(async () => {
     if (!selectedEntry) return;
@@ -210,15 +212,27 @@ export default function ViewAttendanceScreen() {
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
 
+      // Get course's department first
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('department_id')
+        .eq('id', selectedCourse)
+        .single();
+
+      if (!courseData) {
+        setStudents([]);
+        return;
+      }
+
       const { data: studentsData } = await supabase
         .from('students')
         .select(`
           id, roll_number, registration_number, user_id,
           profiles:user_id(full_name)
         `)
-        .eq('program_id', selectedProgram)
-        .or(`year_id.eq.${selectedYear},current_year_id.eq.${selectedYear}`)
-        .eq('is_active', true)
+        .eq('department_id', courseData.department_id)
+        .eq('year_id', selectedYear)
+        .eq('current_status', 'active')
         .order('roll_number');
 
       if (!studentsData) {
@@ -265,7 +279,7 @@ export default function ViewAttendanceScreen() {
     } finally {
       setLoadingStudents(false);
     }
-  }, [selectedEntry, selectedDate, selectedProgram, selectedYear]);
+  }, [selectedEntry, selectedDate, selectedCourse, selectedYear]);
 
   const updateCounts = (studentList: Student[]) => {
     setPresentCount(studentList.filter(s => s.status === 'present').length);
@@ -278,10 +292,10 @@ export default function ViewAttendanceScreen() {
   }, [fetchInitialData]);
 
   useEffect(() => {
-    if (selectedProgram && selectedYear && selectedDate) {
+    if (selectedCourse && selectedYear && selectedDate) {
       fetchTimetableEntries();
     }
-  }, [selectedProgram, selectedYear, selectedDate, fetchTimetableEntries]);
+  }, [selectedCourse, selectedYear, selectedDate, fetchTimetableEntries]);
 
   useEffect(() => {
     if (selectedEntry) {
@@ -313,7 +327,7 @@ export default function ViewAttendanceScreen() {
         granted_by: profile.id,
         valid_from: validFrom.toISOString(),
         valid_until: validUntil.toISOString(),
-        program_id: selectedProgram || null,
+        course_id: selectedCourse || null,
         year_id: selectedYear || null,
         reason: delegationReason || 'Delegated by admin',
         is_active: true,
@@ -690,13 +704,13 @@ export default function ViewAttendanceScreen() {
               <View style={styles.filtersRow}>
                 <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                   <Picker
-                    selectedValue={selectedProgram}
-                    onValueChange={setSelectedProgram}
+                    selectedValue={selectedCourse}
+                    onValueChange={setSelectedCourse}
                     style={{ color: colors.textPrimary }}
                   >
-                    <Picker.Item label="Select Program" value="" />
-                    {programs.map(p => (
-                      <Picker.Item key={p.id} label={`${p.code} - ${p.name}`} value={p.id} />
+                    <Picker.Item label="Select Course" value="" />
+                    {courses.map(c => (
+                      <Picker.Item key={c.id} label={`${c.code} - ${c.short_name || c.name}`} value={c.id} />
                     ))}
                   </Picker>
                 </View>

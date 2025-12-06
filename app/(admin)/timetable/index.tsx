@@ -34,10 +34,11 @@ const PERIOD_TIMINGS = [
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
-interface Program {
+interface DegreeProgram {
   id: string;
   name: string;
   code: string;
+  short_name: string | null;
   department_id: string;
   departments: { name: string; code: string };
 }
@@ -61,9 +62,9 @@ interface TimetableEntry {
 }
 
 interface TimetableSummary {
-  program_id: string;
+  course_id: string;
   year_id: string;
-  program: Program;
+  course: DegreeProgram;
   year: Year;
   entry_count: number;
   last_updated: string;
@@ -85,9 +86,9 @@ export default function TimetableScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [degreePrograms, setDegreePrograms] = useState<DegreeProgram[]>([]);
   const [years, setYears] = useState<Year[]>([]);
-  const [selectedProgram, setSelectedProgram] = useState<string>('');
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
   const [todaySubstitutions, setTodaySubstitutions] = useState<Substitution[]>([]);
@@ -95,19 +96,19 @@ export default function TimetableScreen() {
 
   const fetchInitialData = useCallback(async () => {
     try {
-      const [programsRes, yearsRes] = await Promise.all([
-        supabase.from('programs').select('id, name, code, department_id, departments(name, code)').eq('is_active', true).order('code'),
+      const [coursesRes, yearsRes] = await Promise.all([
+        supabase.from('courses').select('id, name, code, short_name, department_id, departments(name, code)').not('program_type', 'is', null).eq('is_active', true).order('code'),
         supabase.from('years').select('id, year_number, name').order('year_number'),
       ]);
 
-      setPrograms(programsRes.data || []);
+      setDegreePrograms(coursesRes.data || []);
       // Filter out 4th year (optional) - show only 1-3 by default
       const filteredYears = ((yearsRes.data || []) as Array<{ year_number: number; id: string; name: string }>).filter(y => y.year_number <= 3);
       setYears(filteredYears);
 
-      // Auto-select first program and year
-      if (programsRes.data && programsRes.data.length > 0) {
-        setSelectedProgram(programsRes.data[0].id);
+      // Auto-select first course and year
+      if (coursesRes.data && coursesRes.data.length > 0) {
+        setSelectedCourse(coursesRes.data[0].id);
       }
       if (filteredYears.length > 0) {
         setSelectedYear(filteredYears[0].id);
@@ -118,7 +119,7 @@ export default function TimetableScreen() {
   }, []);
 
   const fetchTimetable = useCallback(async () => {
-    if (!selectedProgram || !selectedYear) return;
+    if (!selectedCourse || !selectedYear) return;
 
     try {
       // Get current academic year
@@ -130,7 +131,7 @@ export default function TimetableScreen() {
 
       if (!academicYear) return;
 
-      // Fetch timetable entries
+      // Fetch timetable entries - for degree programs, course_id = degree course
       const { data, error } = await supabase
         .from('timetable_entries')
         .select(`
@@ -144,7 +145,7 @@ export default function TimetableScreen() {
           courses(code, short_name, name),
           teachers(id, profiles(full_name))
         `)
-        .eq('program_id', selectedProgram)
+        .eq('course_id', selectedCourse)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('is_active', true)
@@ -152,7 +153,6 @@ export default function TimetableScreen() {
         .order('period');
 
       if (error) {
-        // Table might need program_id column - check schema
         console.log('Timetable query error:', error.message);
         setTimetableEntries([]);
         return;
@@ -177,7 +177,7 @@ export default function TimetableScreen() {
       console.error('Error fetching timetable:', error);
       setTimetableEntries([]);
     }
-  }, [selectedProgram, selectedYear]);
+  }, [selectedCourse, selectedYear]);
 
   useEffect(() => {
     setLoading(true);
@@ -185,10 +185,10 @@ export default function TimetableScreen() {
   }, [fetchInitialData]);
 
   useEffect(() => {
-    if (selectedProgram && selectedYear) {
+    if (selectedCourse && selectedYear) {
       fetchTimetable();
     }
-  }, [selectedProgram, selectedYear, fetchTimetable]);
+  }, [selectedCourse, selectedYear, fetchTimetable]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -210,10 +210,10 @@ export default function TimetableScreen() {
   };
 
   const handleEditTimetable = () => {
-    if (selectedProgram && selectedYear) {
+    if (selectedCourse && selectedYear) {
       router.push({
         pathname: '/(admin)/timetable/create',
-        params: { programId: selectedProgram, yearId: selectedYear },
+        params: { courseId: selectedCourse, yearId: selectedYear },
       } as any);
     }
   };
@@ -328,11 +328,11 @@ export default function TimetableScreen() {
       <FontAwesome5 name="calendar-alt" size={64} color={colors.textMuted} />
       <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No Timetable</Text>
       <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-        {selectedProgram && selectedYear
+        {selectedCourse && selectedYear
           ? 'Timetable has not been created for this class yet'
-          : 'Select a program and year to view timetable'}
+          : 'Select a course and year to view timetable'}
       </Text>
-      {selectedProgram && selectedYear && (
+      {selectedCourse && selectedYear && (
         <TouchableOpacity
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={handleEditTimetable}
@@ -344,7 +344,7 @@ export default function TimetableScreen() {
     </View>
   );
 
-  const selectedProgramData = programs.find(p => p.id === selectedProgram);
+  const selectedCourseData = degreePrograms.find(p => p.id === selectedCourse);
   const selectedYearData = years.find(y => y.id === selectedYear);
 
   return (
@@ -361,7 +361,7 @@ export default function TimetableScreen() {
               Manage class schedules
             </Text>
           </View>
-          {selectedProgram && selectedYear && timetableEntries.length > 0 && (
+          {selectedCourse && selectedYear && timetableEntries.length > 0 && (
             <TouchableOpacity
               style={[styles.editBtn, { backgroundColor: colors.primary }]}
               onPress={handleEditTimetable}
@@ -373,21 +373,21 @@ export default function TimetableScreen() {
 
         {/* Filters */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.filtersContainer}>
-          {/* Program Picker */}
+          {/* Course Picker */}
           <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
             <FontAwesome5 name="graduation-cap" size={14} color={colors.textMuted} style={styles.pickerIcon} />
             <Picker
-              selectedValue={selectedProgram}
-              onValueChange={setSelectedProgram}
+              selectedValue={selectedCourse}
+              onValueChange={setSelectedCourse}
               style={[styles.picker, { color: colors.textPrimary }]}
               dropdownIconColor={colors.textMuted}
             >
-              <Picker.Item label="Select Program" value="" />
-              {programs.map(program => (
+              <Picker.Item label="Select Course" value="" />
+              {degreePrograms.map(course => (
                 <Picker.Item 
-                  key={program.id} 
-                  label={`${program.code} - ${program.name}`} 
-                  value={program.id} 
+                  key={course.id} 
+                  label={`${course.code} - ${course.short_name || course.name}`} 
+                  value={course.id} 
                 />
               ))}
             </Picker>
@@ -410,16 +410,16 @@ export default function TimetableScreen() {
         </Animated.View>
 
         {/* Selected Info */}
-        {selectedProgramData && selectedYearData && (
+        {selectedCourseData && selectedYearData && (
           <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.selectedInfo}>
             <View style={[styles.infoBadge, { backgroundColor: colors.primary + '15' }]}>
               <FontAwesome5 name="book" size={12} color={colors.primary} />
               <Text style={[styles.infoText, { color: colors.primary }]}>
-                {selectedYearData.name} {selectedProgramData.code}
+                {selectedYearData.name} {selectedCourseData.code}
               </Text>
             </View>
             <Text style={[styles.deptText, { color: colors.textMuted }]}>
-              {selectedProgramData.departments?.name}
+              {selectedCourseData.departments?.name}
             </Text>
           </Animated.View>
         )}
