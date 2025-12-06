@@ -5,10 +5,12 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../../store/themeStore';
+import { useRBAC } from '../../hooks/useRBAC';
 
 export default function AdminLayout() {
   const { colors, isDark } = useThemeStore();
   const insets = useSafeAreaInsets();
+  const { canAccessModule, isSuperAdmin } = useRBAC();
 
   return (
     <Tabs
@@ -94,26 +96,14 @@ export default function AdminLayout() {
           ),
         }}
       />
-      {/* Users tab - points to users folder */}
       <Tabs.Screen
         name="users"
         options={{
           title: 'Users',
+          href: canAccessModule('users') ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? [styles.activeIconContainer, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.18)' : 'rgba(124, 58, 237, 0.12)' }] : undefined}>
               <FontAwesome5 name="users" size={18} color={color} solid={focused} />
-            </View>
-          ),
-        }}
-      />
-      {/* Academic tab - points to academic folder */}
-      <Tabs.Screen
-        name="academic"
-        options={{
-          title: 'Academic',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? [styles.activeIconContainer, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.18)' : 'rgba(124, 58, 237, 0.12)' }] : undefined}>
-              <FontAwesome5 name="graduation-cap" size={18} color={color} solid={focused} />
             </View>
           ),
         }}
@@ -122,9 +112,21 @@ export default function AdminLayout() {
         name="notices"
         options={{
           title: 'Notices',
+          href: canAccessModule('notices') ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? [styles.activeIconContainer, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.18)' : 'rgba(124, 58, 237, 0.12)' }] : undefined}>
               <Ionicons name={focused ? 'megaphone' : 'megaphone-outline'} size={22} color={color} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="role-dashboard"
+        options={{
+          title: 'Modules',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? [styles.activeIconContainer, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.18)' : 'rgba(124, 58, 237, 0.12)' }] : undefined}>
+              <Ionicons name={focused ? 'apps' : 'apps-outline'} size={22} color={color} />
             </View>
           ),
         }}
@@ -140,13 +142,14 @@ export default function AdminLayout() {
           ),
         }}
       />
-      {/* Hidden screens - accessed via navigation */}
-      <Tabs.Screen
-        name="timetable"
-        options={{
-          href: null, // Hide from tab bar
-        }}
-      />
+      {/* Hidden screens */}
+      <Tabs.Screen name="academic" options={{ href: null }} />
+      <Tabs.Screen name="timetable" options={{ href: null }} />
+      <Tabs.Screen name="attendance" options={{ href: null }} />
+      <Tabs.Screen name="exams" options={{ href: null }} />
+      <Tabs.Screen name="fees" options={{ href: null }} />
+      <Tabs.Screen name="library" options={{ href: null }} />
+      <Tabs.Screen name="assignments" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -59,7 +59,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
   const { profile, primaryRole, user, logout } = useAuthStore();
-  const { hasPermission, canAccessModule, accessibleModules } = useRBAC();
+  const { hasPermission, canAccessModule, accessibleModules, loading: rbacLoading } = useRBAC();
 
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
   };
 
   // Filter quick actions based on user's module access and permissions
-  const visibleActions = quickActions.filter(action => {
+  const visibleActions = rbacLoading ? quickActions : quickActions.filter(action => {
     // If action has a module requirement, check module access
     if (action.module) {
       const hasModuleAccess = canAccessModule(action.module);
@@ -431,18 +431,20 @@ export default function AdminDashboard() {
         </Animated.View>
 
         {/* Stats Grid */}
-        <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
-          <View style={styles.statsGrid}>
-            {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200, '/(admin)/users?tab=students')}
-            {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260, '/(admin)/users?tab=teachers')}
-            {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320, '/(admin)/academic?tab=departments')}
-            {renderStatCard('Courses', stats.totalCourses, 'book', '#6366F1', 380, '/(admin)/academic')}
-          </View>
-        </Animated.View>
+        {canAccessModule('users') && (
+          <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
+            <View style={styles.statsGrid}>
+              {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200, '/(admin)/users?tab=students')}
+              {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260, '/(admin)/users?tab=teachers')}
+              {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320, '/(admin)/academic?tab=departments')}
+              {renderStatCard('Courses', stats.totalCourses, 'book', '#6366F1', 380, '/(admin)/academic')}
+            </View>
+          </Animated.View>
+        )}
 
         {/* Pending Approvals Alert */}
-        {stats.pendingApprovals > 0 && (
+        {canAccessModule('users') && stats.pendingApprovals > 0 && (
           <Animated.View entering={FadeInDown.delay(440).duration(500).springify()}>
             <TouchableOpacity
               style={styles.alertCard}
@@ -472,22 +474,25 @@ export default function AdminDashboard() {
         )}
 
         {/* Quick Actions */}
-        <Animated.View entering={FadeInDown.delay(500).duration(500).springify()} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
-          <View style={styles.actionsGrid}>
-            {visibleActions.map((action, index) => renderQuickAction(action, index))}
-          </View>
-        </Animated.View>
+        {visibleActions.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(500).duration(500).springify()} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
+            <View style={styles.actionsGrid}>
+              {visibleActions.map((action, index) => renderQuickAction(action, index))}
+            </View>
+          </Animated.View>
+        )}
 
         {/* Recent Activity */}
-        <Animated.View entering={FadeInDown.delay(560).duration(500).springify()} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
-            <TouchableOpacity>
-              <Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <Card style={styles.activityCard}>
+        {canAccessModule('users') && (
+          <Animated.View entering={FadeInDown.delay(560).duration(500).springify()} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+              <TouchableOpacity>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <Card style={styles.activityCard}>
             <View style={styles.activityItem}>
               <View style={[styles.activityDot, { backgroundColor: '#16A34A' }]} />
               <View style={styles.activityContent}>
