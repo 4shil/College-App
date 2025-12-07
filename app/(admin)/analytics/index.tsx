@@ -165,7 +165,7 @@ export default function AnalyticsScreen() {
         booksRes,
       ] = await Promise.all([
         // Get all profiles to count students and teachers
-        supabase.from('profiles').select('id, role, status'),
+        supabase.from('profiles').select('id, primary_role, status, department_id'),
         supabase.from('courses').select('id', { count: 'exact' }),
         supabase.from('departments').select('id, name', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'pending_approval'),
@@ -173,7 +173,7 @@ export default function AnalyticsScreen() {
         // Today's attendance
         supabase.from('attendance').select('id, status', { count: 'exact' }).gte('created_at', todayISO).lt('created_at', tomorrowISO),
         // Average attendance calculation for selected period
-        supabase.from('attendance').select('status').gte('created_at', periodStart.toISOString()),
+        supabase.from('attendance').select('status, created_at').gte('created_at', periodStart.toISOString()),
         // Upcoming exams (future exams)
         supabase.from('exams').select('id', { count: 'exact' }).gte('date', new Date().toISOString()),
         // Active assignments
@@ -190,8 +190,10 @@ export default function AnalyticsScreen() {
       const allProfiles = allProfilesRes.data || [];
       
       // Count students and teachers from profiles
-      const students = allProfiles.filter((p: any) => p.role === 'student');
-      const teachers = allProfiles.filter((p: any) => p.role === 'teacher');
+      const students = allProfiles.filter((p: any) => p.primary_role === 'student');
+      const teachers = allProfiles.filter((p: any) => 
+        ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(p.primary_role)
+      );
       const activeStudents = students.filter((s: any) => s.status === 'approved').length;
       
       const totalStudents = students.length;
@@ -212,8 +214,8 @@ export default function AnalyticsScreen() {
       // Get department distribution from profiles
       const deptMap = new Map<string, number>();
       students.forEach((student: any) => {
-        if (student.status === 'approved') {
-          const deptId = student.department_id || 'unassigned';
+        if (student.status === 'approved' && student.department_id) {
+          const deptId = student.department_id;
           deptMap.set(deptId, (deptMap.get(deptId) || 0) + 1);
         }
       });

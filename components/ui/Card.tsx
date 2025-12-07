@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, ViewStyle, Platform, StyleProp } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,23 +13,25 @@ import { useThemeStore } from '../../store/themeStore';
 interface CardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  intensity?: number;
   delay?: number;
   noPadding?: boolean;
-  variant?: 'default' | 'outlined' | 'filled';
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   style,
+  intensity,
   delay = 0,
   noPadding = false,
-  variant = 'default',
 }) => {
-  const { colors, animationsEnabled } = useThemeStore();
-  const progress = useSharedValue(0);
+  const { isDark, colors, animationsEnabled } = useThemeStore();
+  const blurAmount = intensity ?? colors.blurIntensity;
+  const shouldAnimate = animationsEnabled;
+  const progress = useSharedValue(shouldAnimate ? 0 : 1);
 
-  React.useEffect(() => {
-    if (animationsEnabled) {
+  useEffect(() => {
+    if (shouldAnimate) {
       progress.value = withDelay(
         delay,
         withSpring(1, {
@@ -40,10 +43,10 @@ export const Card: React.FC<CardProps> = ({
     } else {
       progress.value = 1;
     }
-  }, [animationsEnabled]);
+  }, [shouldAnimate]);
 
   const animatedStyle = useAnimatedStyle(() => {
-    if (!animationsEnabled) {
+    if (!shouldAnimate) {
       return { opacity: 1, transform: [{ translateY: 0 }] };
     }
     const translateY = interpolate(progress.value, [0, 1], [16, 0]);
@@ -55,51 +58,49 @@ export const Card: React.FC<CardProps> = ({
     };
   });
 
-  const getBackgroundColor = () => {
-    switch (variant) {
-      case 'outlined':
-        return 'transparent';
-      case 'filled':
-        return colors.cardBackground;
-      default:
-        return colors.cardBackground;
-    }
-  };
+  const borderColor = colors.glassBorder;
 
-  const getBorderColor = () => {
-    if (variant === 'outlined') {
-      return colors.glassBorder;
-    }
-    return colors.cardBorder;
-  };
+  const renderContent = () => (
+    <View
+      style={[
+        styles.content,
+        {
+          backgroundColor: Platform.OS === 'android' ? colors.glassBackground : 'transparent',
+          borderColor,
+          borderWidth: colors.borderWidth,
+          borderRadius: colors.borderRadius,
+          padding: noPadding ? 0 : 18,
+        },
+      ]}
+    >
+      {children}
+    </View>
+  );
 
   return (
     <Animated.View style={[styles.wrapper, { borderRadius: colors.borderRadius }, animatedStyle, style]}>
-      <View
-        style={[
-          styles.content,
-          {
-            backgroundColor: getBackgroundColor(),
-            borderColor: getBorderColor(),
-            borderWidth: colors.borderWidth,
-            borderRadius: colors.borderRadius,
-            padding: noPadding ? 0 : 18,
-            shadowColor: colors.shadowColor,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: colors.shadowIntensity,
-            shadowRadius: 8,
-            elevation: colors.shadowIntensity * 10,
-          },
-        ]}
-      >
-        {children}
-      </View>
+      {Platform.OS === 'ios' && blurAmount > 0 ? (
+        <BlurView
+          intensity={blurAmount}
+          style={[styles.blur, { backgroundColor: colors.glassBackground, borderRadius: colors.borderRadius }]}
+          tint={isDark ? 'dark' : 'light'}
+        >
+          {renderContent()}
+        </BlurView>
+      ) : (
+        <View style={[styles.blur, { backgroundColor: colors.glassBackground, borderRadius: colors.borderRadius }]}>
+          {renderContent()}
+        </View>
+      )}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
+    overflow: 'hidden',
+  },
+  blur: {
     overflow: 'hidden',
   },
   content: {

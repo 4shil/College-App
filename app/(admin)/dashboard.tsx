@@ -34,6 +34,15 @@ interface DashboardStats {
   todayAttendance: number;
 }
 
+interface RecentActivity {
+  id: string;
+  action: string;
+  description: string;
+  timestamp: string;
+  color: string;
+  user_name?: string;
+}
+
 interface StatCardConfig {
   title: string;
   value: number;
@@ -71,6 +80,8 @@ export default function AdminDashboard() {
     pendingApprovals: 0,
     todayAttendance: 0,
   });
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   // Stat cards configuration with navigation routes
   const statCards: StatCardConfig[] = [
@@ -285,13 +296,86 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchRecentActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select(`
+          id,
+          action,
+          table_name,
+          created_at,
+          user_id,
+          profiles:user_id(full_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+
+      const activities: RecentActivity[] = (data || []).map(log => {
+        const actionColors: { [key: string]: string } = {
+          INSERT: '#16A34A',
+          UPDATE: '#8B5CF6',
+          DELETE: '#DC2626',
+        };
+
+        const actionLabels: { [key: string]: string } = {
+          INSERT: 'created',
+          UPDATE: 'updated',
+          DELETE: 'deleted',
+        };
+
+        const tableName = log.table_name?.replace('_', ' ') || 'record';
+        const userName = (log.profiles as any)?.full_name || 'Someone';
+
+        return {
+          id: log.id,
+          action: log.action,
+          description: `${userName} ${actionLabels[log.action] || log.action} ${tableName}`,
+          timestamp: log.created_at,
+          color: actionColors[log.action] || '#F59E0B',
+          user_name: userName,
+        };
+      });
+
+      setRecentActivities(activities);
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchRecentActivities();
+
+    // Set up real-time subscription for audit logs
+    const channel = supabase
+      .channel('dashboard-activities')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'audit_logs',
+        },
+        () => {
+          fetchRecentActivities();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchStats();
+    await Promise.all([fetchStats(), fetchRecentActivities()]);
     setRefreshing(false);
   };
 
@@ -299,6 +383,20 @@ export default function AdminDashboard() {
     await signOut();
     logout();
     router.replace('/(auth)/login');
+  };
+
+  const getTimeAgo = (timestamp: string): string => {
+    const now = new Date();
+    const activityTime = new Date(timestamp);
+    const diffMs = now.getTime() - activityTime.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
   // Filter quick actions based on user's module access and permissions
@@ -493,33 +591,40 @@ export default function AdminDashboard() {
               </TouchableOpacity>
             </View>
             <Card style={styles.activityCard}>
-            <View style={styles.activityItem}>
-              <View style={[styles.activityDot, { backgroundColor: '#16A34A' }]} />
-              <View style={styles.activityContent}>
-                <Text style={[styles.activityText, { color: colors.textPrimary }]}>
-                  New student registration
-                </Text>
-                <Text style={[styles.activityTime, { color: colors.textMuted }]}>2 min ago</Text>
-              </View>
-            </View>
-            <View style={styles.activityItem}>
-              <View style={[styles.activityDot, { backgroundColor: '#8B5CF6' }]} />
-              <View style={styles.activityContent}>
-                <Text style={[styles.activityText, { color: colors.textPrimary }]}>
-                  Exam timetable published
-                </Text>
-                <Text style={[styles.activityTime, { color: colors.textMuted }]}>1 hour ago</Text>
-              </View>
-            </View>
-            <View style={[styles.activityItem, { borderBottomWidth: 0 }]}>
-              <View style={[styles.activityDot, { backgroundColor: '#F59E0B' }]} />
-              <View style={styles.activityContent}>
-                <Text style={[styles.activityText, { color: colors.textPrimary }]}>
-                  Fee reminder sent to 45 students
-                </Text>
-                <Text style={[styles.activityTime, { color: colors.textMuted }]}>3 hours ago</Text>
-              </View>
-            </View>
+              {activitiesLoading ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : recentActivities.length === 0 ? (
+                <View style={styles.activityItem}>
+                  <Text style={[styles.activityText, { color: colors.textSecondary }]}>
+                    No recent activity
+                  </Text>
+                </View>
+              ) : (
+                recentActivities.map((activity, index) => {
+                  const timeAgo = getTimeAgo(activity.timestamp);
+                  return (
+                    <View
+                      key={activity.id}
+                      style={[
+                        styles.activityItem,
+                        index === recentActivities.length - 1 && { borderBottomWidth: 0 },
+                      ]}
+                    >
+                      <View style={[styles.activityDot, { backgroundColor: activity.color }]} />
+                      <View style={styles.activityContent}>
+                        <Text style={[styles.activityText, { color: colors.textPrimary }]}>
+                          {activity.description}
+                        </Text>
+                        <Text style={[styles.activityTime, { color: colors.textMuted }]}>
+                          {timeAgo}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
           </Card>
         </Animated.View>
         )}

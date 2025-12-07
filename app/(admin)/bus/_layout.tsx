@@ -1,3 +1,11 @@
+import { Stack } from 'expo-router';
+
 export default function BusLayout() {
-  return null; // Stack layout by default
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    />
+  );
 }

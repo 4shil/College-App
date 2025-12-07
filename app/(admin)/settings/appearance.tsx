@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,56 +13,13 @@ import { useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
 
 import { AnimatedBackground } from '../../../components/ui';
-import { useThemeStore, styleMetadata, UIStyle } from '../../../store/themeStore';
+import { useThemeStore } from '../../../store/themeStore';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 60) / 2; // 2 columns with padding
 
 export default function AppearanceSettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, uiStyle, setUIStyle, animationsEnabled } = useThemeStore();
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-
-  const categories = ['All', 'Depth & Texture', 'Retro & Nostalgia', 'Clean & Corporate', 'High Contrast & Bold', 'Artistic & Niche'];
-
-  const styles = Object.entries(styleMetadata).filter(([_, meta]) => 
-    selectedCategory === 'All' || meta.category === selectedCategory
-  );
-
-  const getStylePreview = (style: UIStyle) => {
-    const meta = styleMetadata[style];
-    // Preview colors based on style
-    const previewColors: Record<UIStyle, { bg: string; accent: string; text: string }> = {
-      glassmorphism: { bg: 'rgba(139, 92, 246, 0.1)', accent: '#8B5CF6', text: '#FFFFFF' },
-      neumorphism: { bg: '#E6E6EB', accent: '#5A5A6B', text: '#5A5A6B' },
-      claymorphism: { bg: 'rgba(255, 107, 157, 0.15)', accent: '#FF6B9D', text: '#FF6B9D' },
-      skeuomorphism: { bg: 'rgba(139, 69, 19, 0.1)', accent: '#8B4513', text: '#8B4513' },
-      papercraft: { bg: '#FFFFFF', accent: '#3B82F6', text: '#1F2937' },
-      y2k: { bg: '#C0C0C0', accent: '#000080', text: '#000000' },
-      pixel: { bg: 'rgba(74, 222, 128, 1)', accent: '#EF4444', text: '#000000' },
-      terminal: { bg: 'rgba(0, 255, 0, 0.1)', accent: '#00FF00', text: '#00FF00' },
-      synthwave: { bg: 'rgba(255, 0, 255, 0.15)', accent: '#FF00FF', text: '#FF00FF' },
-      cyberpunk: { bg: 'rgba(0, 255, 255, 0.1)', accent: '#00FFFF', text: '#00FFFF' },
-      material: { bg: '#FFFFFF', accent: '#6200EE', text: '#1F2937' },
-      fluent: { bg: 'rgba(249, 249, 249, 0.7)', accent: '#0078D4', text: '#1F2937' },
-      saas: { bg: '#FFFFFF', accent: '#635BFF', text: '#1F2937' },
-      minimalist: { bg: '#FFFFFF', accent: '#000000', text: '#000000' },
-      neobrutalism: { bg: 'rgba(255, 255, 0, 1)', accent: '#FF0000', text: '#000000' },
-      bauhaus: { bg: '#FFFFFF', accent: '#E30613', text: '#000000' },
-      swiss: { bg: '#FFFFFF', accent: '#000000', text: '#000000' },
-      popart: { bg: 'rgba(255, 237, 0, 1)', accent: '#FF6EC7', text: '#000000' },
-      memphis: { bg: 'rgba(255, 195, 0, 1)', accent: '#FF0080', text: '#000000' },
-      industrial: { bg: 'rgba(66, 66, 66, 1)', accent: '#FFEB3B', text: '#FFFFFF' },
-      sketch: { bg: 'rgba(255, 255, 255, 0.95)', accent: '#4A5568', text: '#4A5568' },
-      blueprint: { bg: 'rgba(12, 74, 110, 0.8)', accent: '#FFFFFF', text: '#FFFFFF' },
-      magazine: { bg: '#FFFFFF', accent: '#1A1A1A', text: '#1A1A1A' },
-      artdeco: { bg: 'rgba(0, 0, 0, 0.9)', accent: '#D4AF37', text: '#D4AF37' },
-      aurora: { bg: 'rgba(167, 139, 250, 0.1)', accent: '#A78BFA', text: '#FFFFFF' },
-    };
-
-    return previewColors[style];
-  };
+  const { colors, animationsEnabled, toggleAnimations, mode, setMode } = useThemeStore();
 
   return (
     <AnimatedBackground>
@@ -79,125 +35,165 @@ export default function AppearanceSettingsScreen() {
             </TouchableOpacity>
             <View style={styles2.headerContent}>
               <Text style={[styles2.title, { color: colors.textPrimary }]}>
-                UI Themes
+                Appearance
               </Text>
               <Text style={[styles2.subtitle, { color: colors.textSecondary }]}>
-                Choose your visual style
+                Customize theme and animations
               </Text>
             </View>
           </View>
-
-          {/* Category Filter */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles2.categoryScroll}
-          >
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                onPress={() => setSelectedCategory(cat)}
-                style={[
-                  styles2.categoryChip,
-                  {
-                    backgroundColor: selectedCategory === cat ? colors.primary : colors.cardBackground,
-                    borderColor: colors.glassBorder,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles2.categoryText,
-                    { color: selectedCategory === cat ? '#FFFFFF' : colors.textSecondary },
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </BlurView>
 
-        {/* Theme Grid */}
+        {/* Content */}
         <ScrollView
           style={styles2.scrollView}
           contentContainerStyle={[
             styles2.content,
-            { paddingTop: 180, paddingBottom: insets.bottom + 120 },
+            { paddingTop: insets.top + 100, paddingBottom: insets.bottom + 40 },
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles2.grid}>
-            {styles.map(([styleKey, meta], index) => {
-              const style = styleKey as UIStyle;
-              const preview = getStylePreview(style);
-              const isActive = uiStyle === style;
+          {/* Theme Mode Section */}
+          <Animated.View entering={FadeInDown.delay(100).duration(400)}>
+            <BlurView
+              intensity={animationsEnabled ? 60 : 0}
+              tint="dark"
+              style={[styles2.section, { borderColor: colors.glassBorder }]}
+            >
+              <View style={styles2.sectionHeader}>
+                <Ionicons name="color-palette" size={24} color={colors.primary} />
+                <Text style={[styles2.sectionTitle, { color: colors.textPrimary }]}>
+                  Theme Mode
+                </Text>
+              </View>
+              <Text style={[styles2.sectionDesc, { color: colors.textSecondary }]}>
+                Choose between light, dark, or system theme
+              </Text>
 
-              return (
-                <Animated.View
-                  key={style}
-                  entering={FadeInDown.delay(index * 50).duration(400)}
-                >
+              <View style={styles2.modeButtons}>
+                {(['light', 'dark', 'system'] as const).map((themeMode) => (
                   <TouchableOpacity
-                    onPress={() => setUIStyle(style)}
+                    key={themeMode}
+                    onPress={() => setMode(themeMode)}
                     style={[
-                      styles2.themeCard,
+                      styles2.modeButton,
                       {
-                        width: CARD_WIDTH,
-                        borderColor: isActive ? colors.primary : colors.glassBorder,
-                        borderWidth: isActive ? 3 : 1,
+                        backgroundColor: mode === themeMode ? colors.primary : 'rgba(255, 255, 255, 0.05)',
+                        borderColor: mode === themeMode ? colors.primary : colors.glassBorder,
                       },
                     ]}
                     activeOpacity={0.7}
                   >
-                    {/* Preview Box */}
-                    <View
+                    <Ionicons
+                      name={
+                        themeMode === 'light'
+                          ? 'sunny'
+                          : themeMode === 'dark'
+                          ? 'moon'
+                          : 'phone-portrait'
+                      }
+                      size={24}
+                      color={mode === themeMode ? '#FFFFFF' : colors.textSecondary}
+                    />
+                    <Text
                       style={[
-                        styles2.previewBox,
-                        { backgroundColor: preview.bg },
+                        styles2.modeText,
+                        {
+                          color: mode === themeMode ? '#FFFFFF' : colors.textPrimary,
+                        },
                       ]}
                     >
-                      <View style={[styles2.previewElement, { backgroundColor: preview.accent }]} />
-                      <View style={[styles2.previewElement, { backgroundColor: preview.accent, opacity: 0.5 }]} />
-                      <Text style={[styles2.previewText, { color: preview.text }]}>Aa</Text>
-                    </View>
-
-                    {/* Info */}
-                    <View style={[styles2.themeInfo, { backgroundColor: colors.cardBackground }]}>
-                      <View style={styles2.themeHeader}>
-                        <Text style={[styles2.themeName, { color: colors.textPrimary }]} numberOfLines={1}>
-                          {meta.name}
-                        </Text>
-                        {isActive && (
-                          <View style={[styles2.activeBadge, { backgroundColor: colors.primary }]}>
-                            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-                          </View>
-                        )}
+                      {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
+                    </Text>
+                    {mode === themeMode && (
+                      <View style={styles2.checkmark}>
+                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                       </View>
-                      <Text style={[styles2.themeDesc, { color: colors.textSecondary }]} numberOfLines={2}>
-                        {meta.description}
-                      </Text>
-                    </View>
+                    )}
                   </TouchableOpacity>
-                </Animated.View>
-              );
-            })}
-          </View>
+                ))}
+              </View>
+            </BlurView>
+          </Animated.View>
 
-          {/* Current Selection Info */}
-          <Animated.View entering={FadeInDown.delay(600).duration(400)} style={styles2.currentInfo}>
+          {/* Animations Section */}
+          <Animated.View entering={FadeInDown.delay(200).duration(400)}>
             <BlurView
               intensity={animationsEnabled ? 60 : 0}
               tint="dark"
-              style={[styles2.currentCard, { borderColor: colors.glassBorder }]}
+              style={[styles2.section, { borderColor: colors.glassBorder }]}
+            >
+              <View style={styles2.sectionHeader}>
+                <Ionicons name="sparkles" size={24} color={colors.primary} />
+                <Text style={[styles2.sectionTitle, { color: colors.textPrimary }]}>
+                  Animations
+                </Text>
+              </View>
+              <Text style={[styles2.sectionDesc, { color: colors.textSecondary }]}>
+                Enable or disable UI animations and effects
+              </Text>
+
+              <TouchableOpacity
+                onPress={toggleAnimations}
+                style={[
+                  styles2.toggleRow,
+                  {
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderColor: colors.glassBorder,
+                  },
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={styles2.toggleLeft}>
+                  <Ionicons
+                    name={animationsEnabled ? 'play-circle' : 'pause-circle'}
+                    size={28}
+                    color={animationsEnabled ? colors.primary : colors.textSecondary}
+                  />
+                  <View style={styles2.toggleTextContainer}>
+                    <Text style={[styles2.toggleTitle, { color: colors.textPrimary }]}>
+                      {animationsEnabled ? 'Enabled' : 'Disabled'}
+                    </Text>
+                    <Text style={[styles2.toggleDesc, { color: colors.textSecondary }]}>
+                      Smooth transitions and effects
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={[
+                    styles2.toggle,
+                    {
+                      backgroundColor: animationsEnabled ? colors.primary : colors.glassBorder,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles2.toggleKnob,
+                      {
+                        transform: [{ translateX: animationsEnabled ? 22 : 2 }],
+                      },
+                    ]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </BlurView>
+          </Animated.View>
+
+          {/* Info Card */}
+          <Animated.View entering={FadeInDown.delay(300).duration(400)}>
+            <BlurView
+              intensity={animationsEnabled ? 60 : 0}
+              tint="dark"
+              style={[styles2.infoCard, { borderColor: colors.glassBorder }]}
             >
               <Ionicons name="information-circle" size={24} color={colors.primary} />
-              <View style={styles2.currentText}>
-                <Text style={[styles2.currentTitle, { color: colors.textPrimary }]}>
-                  Current: {styleMetadata[uiStyle].name}
+              <View style={styles2.infoText}>
+                <Text style={[styles2.infoTitle, { color: colors.textPrimary }]}>
+                  Glassmorphism Theme
                 </Text>
-                <Text style={[styles2.currentDesc, { color: colors.textSecondary }]}>
-                  Theme applied across all screens
+                <Text style={[styles2.infoDesc, { color: colors.textSecondary }]}>
+                  Modern translucent blur effects with elegant colors
                 </Text>
               </View>
             </BlurView>
@@ -218,13 +214,12 @@ const styles2 = StyleSheet.create({
     right: 0,
     zIndex: 100,
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    marginBottom: 16,
   },
   backBtn: {
     width: 40,
@@ -237,104 +232,116 @@ const styles2 = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '700', marginBottom: 4 },
   subtitle: { fontSize: 14 },
 
-  categoryScroll: {
-    gap: 8,
-    paddingVertical: 4,
-  },
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  categoryText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
   scrollView: { flex: 1 },
   content: {
     paddingHorizontal: 20,
-  },
-
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 16,
-    justifyContent: 'space-between',
   },
 
-  themeCard: {
+  section: {
     borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
     overflow: 'hidden',
-    marginBottom: 4,
   },
-
-  previewBox: {
-    height: 120,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  previewElement: {
-    width: 40,
-    height: 8,
-    borderRadius: 4,
-  },
-  previewText: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-
-  themeInfo: {
-    padding: 12,
-  },
-  themeHeader: {
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  themeName: {
-    fontSize: 15,
-    fontWeight: '700',
-    flex: 1,
-  },
-  activeBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeDesc: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-
-  currentInfo: {
-    marginTop: 24,
+    gap: 12,
     marginBottom: 8,
   },
-  currentCard: {
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  sectionDesc: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+
+  modeButtons: {
+    gap: 12,
+  },
+  modeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: 12,
+  },
+  modeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+  },
+  checkmark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  toggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  toggleTextContainer: {
+    flex: 1,
+  },
+  toggleTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  toggleDesc: {
+    fontSize: 13,
+  },
+  toggle: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    padding: 2,
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+
+  infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     gap: 12,
+    overflow: 'hidden',
   },
-  currentText: {
+  infoText: {
     flex: 1,
   },
-  currentTitle: {
+  infoTitle: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  currentDesc: {
+  infoDesc: {
     fontSize: 13,
+    lineHeight: 18,
   },
 });

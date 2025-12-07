@@ -1,7 +1,7 @@
 // Backup and Restore utility for database
 import { Alert } from 'react-native';
 import { supabase } from './supabase';
-import { Paths, File } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -220,14 +220,14 @@ export const exportBackupToFile = async (userId?: string): Promise<boolean> => {
 
     // Save to file system
     const filename = `college_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    const file = new File(Paths.cache, filename);
+    const fileUri = (FileSystem.cacheDirectory || '') + filename;
     
-    await file.write(backupJson);
+    await FileSystem.writeAsStringAsync(fileUri, backupJson);
 
-    console.log('Backup file created:', file.uri);
+    console.log('Backup file created:', fileUri);
 
     // Share the file
-    await Sharing.shareAsync(file.uri, {
+    await Sharing.shareAsync(fileUri, {
       mimeType: 'application/json',
       dialogTitle: 'Export Database Backup',
       UTI: 'public.json',
@@ -265,8 +265,7 @@ export const importBackupFromFile = async (): Promise<boolean> => {
       throw new Error('No file selected');
     }
 
-    const file = new File(fileUri);
-    const fileContent = await file.text();
+    const fileContent = await FileSystem.readAsStringAsync(fileUri);
 
     // Restore from the backup
     const success = await restoreBackup(fileContent);
@@ -302,10 +301,10 @@ export const quickBackup = async (userId?: string): Promise<string | null> => {
     if (backupJson) {
       // Silently save to device storage
       const filename = `quick_backup_${Date.now()}.json`;
-      const file = new File(Paths.cache, filename);
-      await file.write(backupJson);
-      console.log('Quick backup saved:', file.uri);
-      return file.uri;
+      const fileUri = (FileSystem.cacheDirectory || '') + filename;
+      await FileSystem.writeAsStringAsync(fileUri, backupJson);
+      console.log('Quick backup saved:', fileUri);
+      return fileUri;
     }
     return null;
   } catch (error) {
@@ -319,10 +318,13 @@ export const quickBackup = async (userId?: string): Promise<string | null> => {
  */
 export const listBackups = async (): Promise<string[]> => {
   try {
-    const files = Paths.cache.list();
+    const cacheDir = FileSystem.cacheDirectory;
+    if (!cacheDir) return [];
+    
+    const files = await FileSystem.readDirectoryAsync(cacheDir);
     const backupFiles = files
-      .filter(f => f instanceof File && f.name.includes('backup') && f.name.endsWith('.json'))
-      .map(f => f.name);
+      .filter((f: string) => f.includes('backup') && f.endsWith('.json'))
+      .map((f: string) => f);
     return backupFiles;
   } catch (error) {
     console.error('Error listing backups:', error);
@@ -335,8 +337,8 @@ export const listBackups = async (): Promise<string[]> => {
  */
 export const deleteBackup = async (filename: string): Promise<boolean> => {
   try {
-    const file = new File(Paths.cache, filename);
-    await file.delete();
+    const fileUri = (FileSystem.cacheDirectory || '') + filename;
+    await FileSystem.deleteAsync(fileUri);
     return true;
   } catch (error) {
     console.error('Error deleting backup:', error);
