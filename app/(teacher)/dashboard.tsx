@@ -32,7 +32,7 @@ export default function TeacherDashboard() {
         <ThemeToggle />
       </Animated.View>
 
-      <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
+      <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}>
         <Animated.View
           entering={FadeInDown.delay(200).duration(500)}
           style={styles.cardContainer}

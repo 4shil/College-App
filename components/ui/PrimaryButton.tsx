@@ -47,14 +47,14 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   glowing = true,
   icon,
 }) => {
-  const { isDark, colors } = useThemeStore();
+  const { colors, animationsEnabled } = useThemeStore();
   const scale = useSharedValue(1);
   const glowOpacity = useSharedValue(0.25);
   const pressProgress = useSharedValue(0);
   const shimmer = useSharedValue(0);
 
   useEffect(() => {
-    if (glowing && variant === 'primary' && !disabled) {
+    if (animationsEnabled && glowing && variant === 'primary' && !disabled) {
       // Subtle pulsing glow
       glowOpacity.value = withRepeat(
         withSequence(
@@ -72,7 +72,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
         false
       );
     }
-  }, [glowing, variant, disabled]);
+  }, [animationsEnabled, glowing, variant, disabled]);
 
   const handlePressIn = () => {
     scale.value = withSpring(0.965, { damping: 12, stiffness: 350 });
@@ -135,11 +135,12 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
             variant === 'outline' ? styles.outlineButton : styles.ghostButton,
             {
               height: heights[size],
+              borderRadius: colors.borderRadius,
               borderColor: variant === 'outline' 
-                ? (isDark ? 'rgba(139, 92, 246, 0.5)' : colors.primary)
+                ? colors.primary
                 : 'transparent',
               backgroundColor: variant === 'ghost' 
-                ? (isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(124, 58, 237, 0.08)')
+                ? colors.cardBackground
                 : 'transparent',
               opacity: disabled ? 0.5 : 1,
             },
@@ -193,7 +194,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           colors={getGradientColors()}
           style={[
             styles.gradient,
-            { height: heights[size], opacity: disabled ? 0.5 : 1 },
+            { height: heights[size], borderRadius: colors.borderRadius, opacity: disabled ? 0.5 : 1 },
             style,
           ]}
           start={{ x: 0, y: 0 }}
@@ -237,7 +238,6 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 18,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 6 },
@@ -250,7 +250,6 @@ const styles = StyleSheet.create({
     }),
   },
   gradient: {
-    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -263,8 +262,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '55%',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
   },
   bottomShadow: {
     position: 'absolute',
@@ -273,8 +270,6 @@ const styles = StyleSheet.create({
     right: 0,
     height: 4,
     backgroundColor: 'rgba(0,0,0,0.15)',
-    borderBottomLeftRadius: 18,
-    borderBottomRightRadius: 18,
   },
   text: {
     color: '#ffffff',
@@ -282,7 +277,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   outlineButton: {
-    borderRadius: 18,
     borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
@@ -290,7 +284,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
   },
   ghostButton: {
-    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

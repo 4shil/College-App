@@ -9,7 +9,7 @@ import Animated, {
 import { useThemeStore } from '../../store/themeStore';
 
 export const ThemeToggle: React.FC = () => {
-  const { isDark, toggleTheme } = useThemeStore();
+  const { isDark, toggleTheme, colors } = useThemeStore();
   const rotation = useSharedValue(0);
 
   const handlePress = () => {
@@ -27,9 +27,7 @@ export const ThemeToggle: React.FC = () => {
       style={[
         styles.container,
         {
-          backgroundColor: isDark
-            ? 'rgba(255, 255, 255, 0.1)'
-            : 'rgba(0, 0, 0, 0.05)',
+          backgroundColor: colors.glassBackground,
         },
       ]}
       activeOpacity={0.7}
@@ -38,7 +36,7 @@ export const ThemeToggle: React.FC = () => {
         <Ionicons
           name={isDark ? 'sunny' : 'moon'}
           size={22}
-          color={isDark ? '#FCD34D' : '#6366f1'}
+          color={colors.primary}
         />
       </Animated.View>
     </TouchableOpacity>

@@ -17,45 +17,48 @@ import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
-interface ExamStats {
-  upcoming: number;
-  ongoing: number;
-  completed: number;
-  pendingMarks: number;
+interface CanteenStats {
+  todayTokens: number;
+  pendingTokens: number;
+  readyTokens: number;
+  todaySales: number;
 }
 
-export default function ExamsIndexScreen() {
+export default function CanteenIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState<ExamStats>({
-    upcoming: 0,
-    ongoing: 0,
-    completed: 0,
-    pendingMarks: 0,
+  const [stats, setStats] = useState<CanteenStats>({
+    todayTokens: 0,
+    pendingTokens: 0,
+    readyTokens: 0,
+    todaySales: 0,
   });
 
   const fetchData = useCallback(async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      const [upcoming, ongoing, completed] = await Promise.all([
-        supabase.from('exams').select('id', { count: 'exact', head: true }).gt('start_date', today),
-        supabase.from('exams').select('id', { count: 'exact', head: true }).lte('start_date', today).gte('end_date', today),
-        supabase.from('exams').select('id', { count: 'exact', head: true }).lt('end_date', today),
+      const [totalTokens, pending, ready, sales] = await Promise.all([
+        supabase.from('canteen_tokens').select('id', { count: 'exact', head: true }).eq('token_date', today),
+        supabase.from('canteen_tokens').select('id', { count: 'exact', head: true }).eq('token_date', today).eq('status', 'pending'),
+        supabase.from('canteen_tokens').select('id', { count: 'exact', head: true }).eq('token_date', today).eq('status', 'ready'),
+        supabase.from('canteen_tokens').select('total_amount').eq('token_date', today).eq('payment_status', 'paid'),
       ]);
 
+      const totalSales = sales.data?.reduce((sum: number, token: any) => sum + (token.total_amount || 0), 0) || 0;
+
       setStats({
-        upcoming: upcoming.count || 0,
-        ongoing: ongoing.count || 0,
-        completed: completed.count || 0,
-        pendingMarks: 0, // Calculate from exam_marks
+        todayTokens: totalTokens.count || 0,
+        pendingTokens: pending.count || 0,
+        readyTokens: ready.count || 0,
+        todaySales: totalSales,
       });
     } catch (error) {
-      console.error('Error fetching exam stats:', error);
+      console.error('Error fetching canteen stats:', error);
     }
   }, []);
 
@@ -76,32 +79,41 @@ export default function ExamsIndexScreen() {
 
   const menuOptions = [
     {
-      title: 'Manage Exams',
-      subtitle: 'Create and schedule exams',
-      icon: 'file-alt',
+      title: 'Menu Management',
+      subtitle: 'Manage daily menu items',
+      icon: 'utensils',
       color: '#6366f1',
-      route: '/(admin)/exams/manage',
+      route: '/(admin)/canteen/menu',
     },
     {
-      title: 'Enter Marks',
-      subtitle: 'Record student marks',
-      icon: 'edit',
+      title: 'Token Dashboard',
+      subtitle: 'View and manage orders',
+      icon: 'ticket-alt',
       color: '#10b981',
-      route: '/(admin)/exams/marks',
+      route: '/(admin)/canteen/tokens',
+      badge: stats.pendingTokens,
     },
     {
-      title: 'External Marks',
-      subtitle: 'Upload university results',
-      icon: 'upload',
+      title: 'Ready Orders',
+      subtitle: 'Orders ready for pickup',
+      icon: 'check-circle',
       color: '#f59e0b',
-      route: '/(admin)/exams/external',
+      route: '/(admin)/canteen/ready',
+      badge: stats.readyTokens,
     },
     {
-      title: 'Reports',
-      subtitle: 'View results and analytics',
+      title: 'Refund Requests',
+      subtitle: 'Process refund requests',
+      icon: 'undo',
+      color: '#ef4444',
+      route: '/(admin)/canteen/refunds',
+    },
+    {
+      title: 'Sales Reports',
+      subtitle: 'Analytics and statistics',
       icon: 'chart-bar',
       color: '#8b5cf6',
-      route: '/(admin)/exams/reports',
+      route: '/(admin)/canteen/reports',
     },
   ];
 
@@ -124,9 +136,9 @@ export default function ExamsIndexScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Exam Management</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Canteen Management</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Manage exams, schedules and marks
+            Manage menu and token orders
           </Text>
         </Animated.View>
 
@@ -137,32 +149,10 @@ export default function ExamsIndexScreen() {
             borderColor: isDark ? `${colors.primary}30` : `${colors.primary}25`,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.primary }]}>
-              <FontAwesome5 name="clock" size={20} color="#fff" />
+              <FontAwesome5 name="ticket-alt" size={20} color="#fff" />
             </View>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.upcoming}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Upcoming</Text>
-          </View>
-
-          <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
-            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
-          }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
-              <FontAwesome5 name="play-circle" size={20} color="#fff" />
-            </View>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.ongoing}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ongoing</Text>
-          </View>
-
-          <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.info}15` : `${colors.info}10`,
-            borderColor: isDark ? `${colors.info}30` : `${colors.info}25`,
-          }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.info }]}>
-              <FontAwesome5 name="check-circle" size={20} color="#fff" />
-            </View>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.completed}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completed</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.todayTokens}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Today's Orders</Text>
           </View>
 
           <View style={[styles.statCard, { 
@@ -170,10 +160,32 @@ export default function ExamsIndexScreen() {
             borderColor: isDark ? `${colors.warning}30` : `${colors.warning}25`,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.warning }]}>
-              <FontAwesome5 name="edit" size={20} color="#fff" />
+              <FontAwesome5 name="clock" size={20} color="#fff" />
             </View>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pendingMarks}</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pendingTokens}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
+          </View>
+
+          <View style={[styles.statCard, { 
+            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
+            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
+          }]}>
+            <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
+              <FontAwesome5 name="check-circle" size={20} color="#fff" />
+            </View>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.readyTokens}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ready</Text>
+          </View>
+
+          <View style={[styles.statCard, { 
+            backgroundColor: isDark ? `${colors.info}15` : `${colors.info}10`,
+            borderColor: isDark ? `${colors.info}30` : `${colors.info}25`,
+          }]}>
+            <View style={[styles.statIcon, { backgroundColor: colors.info }]}>
+              <FontAwesome5 name="rupee-sign" size={20} color="#fff" />
+            </View>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.todaySales.toLocaleString()}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Today's Sales</Text>
           </View>
         </Animated.View>
 
@@ -199,6 +211,11 @@ export default function ExamsIndexScreen() {
                       {option.subtitle}
                     </Text>
                   </View>
+                  {option.badge && option.badge > 0 && (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>{option.badge}</Text>
+                    </View>
+                  )}
                   <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
                 </View>
               </Animated.View>
@@ -256,7 +273,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '800',
     marginBottom: 4,
     letterSpacing: -0.5,
@@ -291,5 +308,19 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: 14,
+  },
+  badge: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 12,
+    minWidth: 26,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

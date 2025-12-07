@@ -217,7 +217,7 @@ const ColorShiftBackground: React.FC<{ isDark: boolean }> = React.memo(({ isDark
 // ============================================================
 // MOVING GRADIENT MESH (optimized)
 // ============================================================
-const GradientMesh: React.FC<{ isDark: boolean }> = React.memo(({ isDark }) => {
+const GradientMesh: React.FC<{ isDark: boolean; primaryColor?: string; secondaryColor?: string }> = React.memo(({ isDark, primaryColor = 'rgba(139, 92, 246, 0.12)', secondaryColor = 'rgba(59, 130, 246, 0.08)' }) => {
   const offset1 = useSharedValue(0);
 
   useEffect(() => {
@@ -243,11 +243,7 @@ const GradientMesh: React.FC<{ isDark: boolean }> = React.memo(({ isDark }) => {
   return (
     <Animated.View style={[styles.meshLayer, animatedStyle1]} pointerEvents="none">
       <LinearGradient
-        colors={
-          isDark
-            ? ['transparent', 'rgba(139, 92, 246, 0.12)', 'transparent']
-            : ['transparent', 'rgba(59, 130, 246, 0.08)', 'transparent']
-        }
+        colors={['transparent', primaryColor, 'transparent']}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -272,7 +268,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   children,
   variant = 'default',
 }) => {
-  const { isDark, animationsEnabled } = useThemeStore();
+  const { isDark, animationsEnabled, colors, uiStyle } = useThemeStore();
   const fadeIn = useSharedValue(0);
 
   useEffect(() => {
@@ -284,121 +280,104 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     opacity: fadeIn.value,
   }));
 
-  // Disable animations if user turned them off, variant is minimal, OR in light mode (clean white theme)
-  const isMinimal = variant === 'minimal' || !animationsEnabled || !isDark;
+  // Disable animations if user turned them off or variant is minimal
+  const isMinimal = variant === 'minimal' || !animationsEnabled;
   // On Android, reduce number of animated layers for better performance
   const reducedAnimations = isAndroid && !isMinimal;
 
-  // Aurora wave colors - only used in dark mode now
+  // Determine background based on UI style
+  const getBackgroundColors = () => {
+    // Use theme's background colors
+    return [colors.backgroundGradientStart, colors.backgroundGradientEnd, colors.background];
+  };
+
+  // Aurora wave colors based on primary/secondary
   const auroraColors1: readonly [string, string, ...string[]] = 
-    ['transparent', 'rgba(139, 92, 246, 0.2)', 'rgba(99, 102, 241, 0.15)', 'transparent'];
+    ['transparent', `${colors.primary}33`, `${colors.secondary}26`, 'transparent'];
   
   const auroraColors2: readonly [string, string, ...string[]] = 
-    ['transparent', 'rgba(59, 130, 246, 0.18)', 'rgba(6, 182, 212, 0.12)', 'transparent'];
+    ['transparent', `${colors.secondary}2E`, `${colors.primaryLight}1F`, 'transparent'];
 
   const auroraColors3: readonly [string, string, ...string[]] = 
-    ['transparent', 'rgba(168, 85, 247, 0.15)', 'rgba(236, 72, 153, 0.1)', 'transparent'];
+    ['transparent', `${colors.primaryDark}26`, `${colors.primary}1A`, 'transparent'];
+
+  const bgColors = getBackgroundColors();
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? '#0a0a14' : '#FFFFFF' }]}>
-      {/* Animated color-shifting base - dark mode only */}
-      {!isMinimal && isDark && <ColorShiftBackground isDark={isDark} />}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Base gradient using theme colors */}
+      <LinearGradient
+        colors={bgColors as [string, string, ...string[]]}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
 
-      {/* Static base gradient for light mode - clean white */}
-      {!isDark && (
-        <LinearGradient
-          colors={['#FFFFFF', '#FAFAFA', '#FFFFFF']}
-          style={StyleSheet.absoluteFillObject}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      )}
-
-      {/* Static base gradient for minimal dark mode */}
-      {isMinimal && isDark && (
-        <LinearGradient
-          colors={['#0a0a14', '#0F0F1A', '#0a0a14']}
-          style={StyleSheet.absoluteFillObject}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      )}
-
-      {/* Animated layers - dark mode only */}
-      {isDark && (
+      {/* Animated layers - only if animations enabled and blur > 0 */}
+      {!isMinimal && colors.blurIntensity > 0 && (
         <Animated.View style={[StyleSheet.absoluteFillObject, containerStyle]}>
           {/* Moving gradient mesh */}
-          {!isMinimal && <GradientMesh isDark={isDark} />}
+          <GradientMesh isDark={isDark} primaryColor={`${colors.primary}1F`} secondaryColor={`${colors.secondary}14`} />
 
           {/* Aurora waves - reduced on Android for performance */}
-          {!isMinimal && (
-            <>
-              <AuroraWave isDark={isDark} colors={auroraColors1} delay={0} duration={12000} />
-              {!reducedAnimations && (
-                <AuroraWave isDark={isDark} colors={auroraColors2} delay={2000} duration={14000} reverse />
-              )}
-              {!reducedAnimations && (
-                <AuroraWave isDark={isDark} colors={auroraColors3} delay={4000} duration={16000} />
-              )}
-            </>
-          )}
+          <>
+            <AuroraWave isDark={isDark} colors={auroraColors1} delay={0} duration={12000} />
+            {!reducedAnimations && (
+              <AuroraWave isDark={isDark} colors={auroraColors2} delay={2000} duration={14000} reverse />
+            )}
+            {!reducedAnimations && (
+              <AuroraWave isDark={isDark} colors={auroraColors3} delay={4000} duration={16000} />
+            )}
+          </>
 
           {/* Breathing glows */}
-          {!isMinimal && !reducedAnimations && (
+          {!reducedAnimations && (
             <>
               <BreathingGlow 
                 isDark={isDark} 
                 position="top" 
-                color={'rgba(139, 92, 246, 0.25)'} 
+                color={`${colors.primary}40`} 
                 delay={0}
               />
               <BreathingGlow 
                 isDark={isDark} 
                 position="bottom" 
-                color={'rgba(59, 130, 246, 0.2)'} 
+                color={`${colors.secondary}33`} 
                 delay={2000}
               />
             </>
           )}
 
           {/* Shimmer effect - skip on Android for performance */}
-          {!isMinimal && !isAndroid && <ShimmerOverlay isDark={isDark} />}
+          {!isAndroid && <ShimmerOverlay isDark={isDark} />}
         </Animated.View>
       )}
 
-      {/* Top static glow - subtle for light mode */}
+      {/* Top static glow using theme colors */}
       <View style={styles.topGlow} pointerEvents="none">
         <LinearGradient
-          colors={
-            isDark
-              ? ['rgba(139, 92, 246, 0.12)', 'rgba(99, 102, 241, 0.06)', 'transparent']
-              : ['rgba(59, 130, 246, 0.04)', 'rgba(96, 165, 250, 0.02)', 'transparent']
-          }
+          colors={[`${colors.primary}1F`, `${colors.secondary}10`, 'transparent']}
           style={StyleSheet.absoluteFillObject}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
         />
       </View>
 
-      {/* Bottom static glow - subtle for light mode */}
+      {/* Bottom static glow using theme colors */}
       <View style={styles.bottomGlow} pointerEvents="none">
         <LinearGradient
-          colors={
-            isDark
-              ? ['transparent', 'rgba(59, 130, 246, 0.08)', 'rgba(139, 92, 246, 0.12)']
-              : ['transparent', 'rgba(59, 130, 246, 0.02)', 'rgba(96, 165, 250, 0.04)']
-          }
+          colors={['transparent', `${colors.secondary}14`, `${colors.primary}1F`]}
           style={StyleSheet.absoluteFillObject}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
         />
       </View>
 
-      {/* Vignette - dark mode only */}
-      {isDark && (
+      {/* Vignette - only if shadow intensity > 0 */}
+      {colors.shadowIntensity > 0 && (
         <View style={styles.vignette} pointerEvents="none">
           <LinearGradient
-            colors={['rgba(0, 0, 0, 0.25)', 'transparent', 'transparent', 'rgba(0, 0, 0, 0.2)']}
+            colors={[`${colors.shadowColor}40`, 'transparent', 'transparent', `${colors.shadowColor}33`]}
             style={StyleSheet.absoluteFillObject}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}

@@ -112,7 +112,7 @@ export default function SettingsScreen() {
           iconType: 'fa5',
           color: '#f59e0b',
           type: 'navigation',
-          route: '/(admin)/academic-year',
+          route: '/(admin)/settings/academic-year',
         },
         {
           id: 'fee-structure',
@@ -129,6 +129,16 @@ export default function SettingsScreen() {
     {
       title: 'Preferences',
       items: [
+        {
+          id: 'appearance',
+          title: 'Appearance & Theme',
+          subtitle: 'Customize app colors and style',
+          icon: 'color-palette',
+          iconType: 'ion',
+          color: '#a855f7',
+          type: 'navigation',
+          route: '/(admin)/settings/appearance',
+        },
         {
           id: 'dark-mode',
           title: 'Dark Mode',
@@ -210,7 +220,7 @@ export default function SettingsScreen() {
           iconType: 'fa5',
           color: '#64748b',
           type: 'navigation',
-          route: '/(admin)/audit-logs',
+          route: '/(admin)/audit/logs',
         },
         {
           id: 'backup',

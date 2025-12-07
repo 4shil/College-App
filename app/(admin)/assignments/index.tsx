@@ -13,7 +13,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -27,7 +27,7 @@ interface AssignmentStats {
 export default function AssignmentsIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -134,37 +134,49 @@ export default function AssignmentsIndexScreen() {
 
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
-          <Card style={[styles.statCard, { backgroundColor: `${colors.primary}15` }]}>
+          <View style={[styles.statCard, { 
+            backgroundColor: isDark ? `${colors.primary}15` : `${colors.primary}10`,
+            borderColor: isDark ? `${colors.primary}30` : `${colors.primary}25`,
+          }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.primary }]}>
               <FontAwesome5 name="tasks" size={20} color="#fff" />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.active}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Active</Text>
-          </Card>
+          </View>
 
-          <Card style={[styles.statCard, { backgroundColor: `${colors.warning}15` }]}>
+          <View style={[styles.statCard, { 
+            backgroundColor: isDark ? `${colors.warning}15` : `${colors.warning}10`,
+            borderColor: isDark ? `${colors.warning}30` : `${colors.warning}25`,
+          }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.warning }]}>
               <FontAwesome5 name="clock" size={20} color="#fff" />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pending}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
-          </Card>
+          </View>
 
-          <Card style={[styles.statCard, { backgroundColor: `${colors.success}15` }]}>
+          <View style={[styles.statCard, { 
+            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
+            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
+          }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
               <FontAwesome5 name="check-circle" size={20} color="#fff" />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.graded}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Graded</Text>
-          </Card>
+          </View>
 
-          <Card style={[styles.statCard, { backgroundColor: `${colors.error}15` }]}>
+          <View style={[styles.statCard, { 
+            backgroundColor: isDark ? `${colors.error}15` : `${colors.error}10`,
+            borderColor: isDark ? `${colors.error}30` : `${colors.error}25`,
+          }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.error }]}>
               <FontAwesome5 name="exclamation-triangle" size={20} color="#fff" />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.overdue}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Overdue</Text>
-          </Card>
+          </View>
         </Animated.View>
 
         {/* Menu Options */}
@@ -176,7 +188,10 @@ export default function AssignmentsIndexScreen() {
               activeOpacity={0.7}
             >
               <Animated.View entering={FadeInDown.delay(350 + index * 50).springify()}>
-                <Card style={styles.menuCard}>
+                <View style={[styles.menuCard, {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                }]}>
                   <View style={[styles.menuIcon, { backgroundColor: `${option.color}20` }]}>
                     <FontAwesome5 name={option.icon} size={24} color={option.color} />
                   </View>
@@ -187,7 +202,7 @@ export default function AssignmentsIndexScreen() {
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
-                </Card>
+                </View>
               </Animated.View>
             </TouchableOpacity>
           ))}
@@ -219,35 +234,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   statCard: {
     width: '48%',
-    padding: 16,
-    marginBottom: 12,
+    padding: 18,
+    marginBottom: 14,
     alignItems: 'center',
+    borderRadius: 18,
+    borderWidth: 1.5,
   },
   statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   statValue: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '800',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '600',
   },
   menuCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    marginBottom: 12,
+    padding: 18,
+    marginBottom: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
   },
   menuIcon: {
     width: 56,

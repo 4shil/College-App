@@ -21,25 +21,34 @@ interface GlassCardProps {
 export const GlassCard: React.FC<GlassCardProps> = ({
   children,
   style,
-  intensity = 50,
+  intensity,
   delay = 0,
   noPadding = false,
 }) => {
-  const { isDark } = useThemeStore();
-  const progress = useSharedValue(0);
+  const { isDark, colors, animationsEnabled } = useThemeStore();
+  const blurAmount = intensity ?? colors.blurIntensity;
+  const shouldAnimate = animationsEnabled;
+  const progress = useSharedValue(shouldAnimate ? 0 : 1);
 
   useEffect(() => {
-    progress.value = withDelay(
-      delay,
-      withSpring(1, {
-        damping: 18,
-        stiffness: 80,
-        mass: 0.8,
-      })
-    );
-  }, []);
+    if (shouldAnimate) {
+      progress.value = withDelay(
+        delay,
+        withSpring(1, {
+          damping: 18,
+          stiffness: 80,
+          mass: 0.8,
+        })
+      );
+    } else {
+      progress.value = 1;
+    }
+  }, [shouldAnimate]);
 
   const animatedStyle = useAnimatedStyle(() => {
+    if (!shouldAnimate) {
+      return { opacity: 1, transform: [{ translateY: 0 }] };
+    }
     const translateY = interpolate(progress.value, [0, 1], [16, 0]);
     const opacity = interpolate(progress.value, [0, 0.4, 1], [0, 0.6, 1]);
 
@@ -49,22 +58,18 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     };
   });
 
-  // Glass background colors - no shadows, just translucent blur
-  const glassBackground = isDark
-    ? 'rgba(30, 30, 50, 0.6)'
-    : 'rgba(255, 255, 255, 0.7)';
-
-  const borderColor = isDark
-    ? 'rgba(255, 255, 255, 0.08)'
-    : 'rgba(255, 255, 255, 0.5)';
+  // Use theme colors directly
+  const borderColor = colors.glassBorder;
 
   const renderContent = () => (
     <View
       style={[
         styles.content,
         {
-          backgroundColor: Platform.OS === 'android' ? glassBackground : 'transparent',
+          backgroundColor: Platform.OS === 'android' ? colors.glassBackground : 'transparent',
           borderColor,
+          borderWidth: colors.borderWidth,
+          borderRadius: colors.borderRadius,
           padding: noPadding ? 0 : 18,
         },
       ]}
@@ -74,17 +79,17 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   );
 
   return (
-    <Animated.View style={[styles.wrapper, animatedStyle, style]}>
-      {Platform.OS === 'ios' ? (
+    <Animated.View style={[styles.wrapper, { borderRadius: colors.borderRadius }, animatedStyle, style]}>
+      {Platform.OS === 'ios' && blurAmount > 0 ? (
         <BlurView
-          intensity={intensity}
-          style={[styles.blur, { backgroundColor: glassBackground }]}
+          intensity={blurAmount}
+          style={[styles.blur, { backgroundColor: colors.glassBackground, borderRadius: colors.borderRadius }]}
           tint={isDark ? 'dark' : 'light'}
         >
           {renderContent()}
         </BlurView>
       ) : (
-        <View style={[styles.blur, { backgroundColor: glassBackground }]}>
+        <View style={[styles.blur, { backgroundColor: colors.glassBackground, borderRadius: colors.borderRadius }]}>
           {renderContent()}
         </View>
       )}
@@ -94,16 +99,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 20,
     overflow: 'hidden',
   },
   blur: {
-    borderRadius: 20,
     overflow: 'hidden',
   },
   content: {
-    borderRadius: 20,
-    borderWidth: 1,
     overflow: 'hidden',
   },
 });

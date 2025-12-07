@@ -32,7 +32,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   error = false,
   ...props
 }) => {
-  const { isDark, colors } = useThemeStore();
+  const { colors } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -58,14 +58,12 @@ export const GlassInput: React.FC<GlassInputProps> = ({
       : interpolateColor(
           focusProgress.value,
           [0, 1],
-          [
-            isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-            isDark ? 'rgba(139, 92, 246, 0.6)' : 'rgba(59, 130, 246, 0.5)',
-          ]
+          [colors.inputBorder, colors.inputFocusBorder]
         );
     
     return {
       borderColor,
+      borderWidth: colors.borderWidth > 0 ? colors.borderWidth : 1,
     };
   });
 
@@ -75,9 +73,8 @@ export const GlassInput: React.FC<GlassInputProps> = ({
         style={[
           styles.container,
           {
-            backgroundColor: isDark
-              ? 'rgba(255, 255, 255, 0.08)'
-              : 'rgba(0, 0, 0, 0.05)',
+            backgroundColor: colors.inputBackground,
+            borderRadius: colors.borderRadius,
           },
           animatedBorderStyle,
         ]}
@@ -87,11 +84,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
             <Ionicons
               name={icon}
               size={20}
-              color={
-                isFocused
-                  ? isDark ? '#8B5CF6' : '#3B82F6'
-                  : isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)'
-              }
+              color={colors.textSecondary}
               style={styles.icon}
             />
           )}
@@ -99,15 +92,15 @@ export const GlassInput: React.FC<GlassInputProps> = ({
             style={[
               styles.input,
               {
-                color: isDark ? '#FFFFFF' : '#1F2937',
+                color: colors.textPrimary,
               },
             ]}
-            placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
+            placeholderTextColor={colors.placeholder}
             secureTextEntry={isPassword && !showPassword}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             autoCapitalize="none"
-            selectionColor={isDark ? '#8B5CF6' : '#3B82F6'}
+            selectionColor={colors.primary}
             {...props}
           />
           {isPassword && (
@@ -119,7 +112,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
               <Ionicons
                 name={showPassword ? 'eye' : 'eye-off'}
                 size={20}
-                color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           )}
@@ -134,8 +127,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   container: {
-    borderRadius: 14,
-    borderWidth: 1,
     height: 52,
     overflow: 'hidden',
   },

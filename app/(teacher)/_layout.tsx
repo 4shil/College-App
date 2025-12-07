@@ -1,16 +1,51 @@
-import React from 'react';
-import { Stack } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
+import { View } from 'react-native';
+import { BottomNav } from '../../components/ui';
+
+type NavPage = 'dashboard' | 'attendance' | 'materials' | 'results' | 'profile';
 
 export default function TeacherLayout() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [currentPage, setCurrentPage] = useState<NavPage>('dashboard');
+
+  // Update current page based on pathname
+  useEffect(() => {
+    if (pathname.includes('attendance')) setCurrentPage('attendance');
+    else if (pathname.includes('materials')) setCurrentPage('materials');
+    else if (pathname.includes('results')) setCurrentPage('results');
+    else if (pathname.includes('profile')) setCurrentPage('profile');
+    else setCurrentPage('dashboard');
+  }, [pathname]);
+
+  const handleNavigate = (page: NavPage) => {
+    // Navigate to the corresponding route
+    const routes: Record<NavPage, string> = {
+      dashboard: '/(teacher)/dashboard',
+      attendance: '/(teacher)/attendance',
+      materials: '/(teacher)/materials',
+      results: '/(teacher)/results',
+      profile: '/(teacher)/profile',
+    };
+    router.push(routes[page] as any);
+  };
+
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-      }}
-    >
-      <Stack.Screen name="dashboard" />
-      <Stack.Screen name="attendance" />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+        }}
+      >
+        <Stack.Screen name="dashboard" />
+        <Stack.Screen name="attendance" />
+        <Stack.Screen name="materials" />
+        <Stack.Screen name="results" />
+        <Stack.Screen name="profile" />
+      </Stack>
+      <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />
+    </View>
   );
 }
