@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AnimatedBackground, GlassCard } from '../../../components/ui';
+import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -321,7 +321,7 @@ export default function AnalyticsScreen() {
     delay?: number;
   }) => (
     <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.statCardWrapper}>
-      <GlassCard style={styles.statCard}>
+      <Card style={styles.statCard}>
         <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
           <FontAwesome5 name={icon} size={24} color={color} />
         </View>
@@ -351,7 +351,7 @@ export default function AnalyticsScreen() {
             </View>
           )}
         </View>
-      </GlassCard>
+      </Card>
     </Animated.View>
   );
 
@@ -369,7 +369,7 @@ export default function AnalyticsScreen() {
     delay?: number;
   }) => (
     <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.chartCardWrapper}>
-      <GlassCard style={styles.chartCard}>
+      <Card style={styles.chartCard}>
         <View style={styles.chartHeader}>
           <View style={[styles.chartIcon, { backgroundColor: `${color}20` }]}>
             <FontAwesome5 name={icon} size={18} color={color} />
@@ -399,7 +399,7 @@ export default function AnalyticsScreen() {
             </View>
           ))}
         </View>
-      </GlassCard>
+      </Card>
     </Animated.View>
   );
 
@@ -613,12 +613,12 @@ export default function AnalyticsScreen() {
           />
         ) : (
           <Animated.View entering={FadeInDown.delay(600).springify()}>
-            <GlassCard style={styles.emptyCard}>
+            <Card style={styles.emptyCard}>
               <FontAwesome5 name="chart-bar" size={32} color={colors.textMuted} />
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                 No department data available
               </Text>
-            </GlassCard>
+            </Card>
           </Animated.View>
         )}
 
@@ -640,12 +640,12 @@ export default function AnalyticsScreen() {
           />
         ) : (
           <Animated.View entering={FadeInDown.delay(650).springify()}>
-            <GlassCard style={styles.emptyCard}>
+            <Card style={styles.emptyCard}>
               <FontAwesome5 name="chart-line" size={32} color={colors.textMuted} />
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                 No attendance trend data for selected period
               </Text>
-            </GlassCard>
+            </Card>
           </Animated.View>
         )}
       </ScrollView>
