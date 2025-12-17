@@ -118,7 +118,7 @@ export default function UsersScreen() {
       if (activeTab === 'pending') {
         query = query.eq('status', 'pending');
       } else {
-        query = query.in('primary_role', roleFilter);
+        query = query.in('primary_role', roleFilter).neq('status', 'pending');
       }
 
       const { data, error } = await query;
@@ -137,9 +137,9 @@ export default function UsersScreen() {
 
       // Fetch stats
       const [teachersRes, studentsRes, adminsRes, pendingRes] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('primary_role', 'student'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['super_admin', 'principal', 'department_admin']),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']).neq('status', 'pending'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('primary_role', 'student').neq('status', 'pending'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['super_admin', 'principal', 'department_admin', 'exam_cell_admin', 'library_admin', 'bus_admin', 'canteen_admin', 'finance_admin']).neq('status', 'pending'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       ]);
 
