@@ -31,9 +31,9 @@ export default function LibraryReservationsScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [resRes, booksRes, usersRes] = await Promise.all([
-        supabase.from('book_reservations').select('*, book:books(title), users(full_name)').eq('status', 'pending').order('reservation_date'),
+        supabase.from('book_reservations').select('*, book:books(title), profiles(full_name)').eq('status', 'pending').order('reservation_date'),
         supabase.from('books').select('id, title').eq('is_active', true),
-        supabase.from('users').select('id, full_name').eq('is_active', true),
+        supabase.from('profiles').select('id, full_name').eq('status', 'active'),
       ]);
       if (resRes.error) throw resRes.error;
       if (booksRes.error) throw booksRes.error;

@@ -27,15 +27,15 @@ The JPM College App uses **Supabase** (PostgreSQL) as its backend database with 
 | Category | Tables |
 |----------|--------|
 | **User Management** | `profiles`, `roles`, `user_roles` |
-| **Academic Structure** | `departments`, `academic_years`, `years`, `semesters`, `sections`, `courses`, `programs` |
-| **People** | `students`, `teachers`, `teacher_courses`, `mentor_assignments` |
+| **Academic Structure** | `departments`, `academic_years`, `years`, `semesters`, `sections`, `courses`, `programs`, `batches` |
+| **People** | `students`, `teachers`, `parents`, `teacher_courses`, `mentor_assignments` |
 | **Attendance** | `attendance`, `attendance_records`, `attendance_logs`, `holidays`, `late_passes` |
 | **Timetable** | `timetable_entries`, `period_timings`, `substitutions` |
 | **Library** | `books`, `book_issues`, `book_reservations` |
 | **Exams** | `exams`, `exam_schedules`, `exam_results` |
 | **Assignments** | `assignments`, `assignment_submissions` |
 | **Fees** | `fee_structures`, `student_fees`, `fee_payments` |
-| **Bus** | `bus_routes`, `bus_subscriptions` |
+| **Bus** | `bus_routes`, `bus_subscriptions`, `bus_stops` |
 | **Notices** | `notices` |
 | **Audit** | `audit_logs` |
 
@@ -1120,6 +1120,134 @@ CREATE FUNCTION get_current_academic_year() RETURNS UUID;
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: December 2024*  
-*Database: Supabase (PostgreSQL)*
+## 📦 NEW TABLES (Added December 17, 2025)
+
+### 🎓 Batches Table
+
+**Purpose:** Manage student batches/cohorts by academic year, department, and section.
+
+**Table:** `batches`
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PRIMARY KEY | Unique batch identifier |
+| `batch_name` | VARCHAR(100) | NOT NULL | Batch display name (e.g., "CSE 2021-2025") |
+| `academic_year_id` | UUID | FK → academic_years | Academic year reference |
+| `department_id` | UUID | FK → departments | Department reference |
+| `year_id` | UUID | FK → years | Year reference (1st, 2nd, etc.) |
+| `section_id` | UUID | FK → sections | Section reference |
+| `start_year` | INTEGER | NOT NULL | Batch start year (e.g., 2021) |
+| `end_year` | INTEGER | NOT NULL | Batch end year (e.g., 2025) |
+| `is_active` | BOOLEAN | DEFAULT true | Active status |
+| `created_at` | TIMESTAMPTZ | DEFAULT NOW() | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | Last update timestamp |
+
+**Indexes:**
+- `idx_batches_academic_year` on `academic_year_id`
+- `idx_batches_department` on `department_id`
+- `idx_batches_year` on `year_id`
+- `idx_batches_section` on `section_id`
+- `idx_batches_active` on `is_active`
+
+**RLS Policies:**
+- Admins: Full access
+- Teachers: View all batches
+- Students: View their own batch only
+
+**Used By Pages:**
+- Admin → Academic → Batches Management
+- Admin → Reports → Batch-wise Analytics
+
+**Relations:**
+- `students.batch_id` → `batches.id` (One batch has many students)
+
+---
+
+### 👨‍👩‍👧 Parents Table
+
+**Purpose:** Store parent/guardian information for students separately from student records.
+
+**Table:** `parents`
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PRIMARY KEY | Unique parent record identifier |
+| `student_id` | UUID | FK → students, UNIQUE | Student reference (1:1) |
+| `father_name` | VARCHAR(100) | - | Father's full name |
+| `mother_name` | VARCHAR(100) | - | Mother's full name |
+| `guardian_name` | VARCHAR(100) | - | Guardian's name (if applicable) |
+| `father_phone` | VARCHAR(20) | - | Father's contact number |
+| `mother_phone` | VARCHAR(20) | - | Mother's contact number |
+| `father_email` | VARCHAR(255) | - | Father's email address |
+| `mother_email` | VARCHAR(255) | - | Mother's email address |
+| `address` | TEXT | - | Complete residential address |
+| `emergency_contact` | VARCHAR(20) | - | Emergency contact number |
+| `created_at` | TIMESTAMPTZ | DEFAULT NOW() | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | Last update timestamp |
+
+**Indexes:**
+- `idx_parents_student` on `student_id`
+
+**RLS Policies:**
+- Students: View their own parent info only
+- Teachers: View all parent info
+- Admins: Full access
+
+**Used By Pages:**
+- Admin → Users → Students → [Student Detail] (Parent Info Tab)
+- Teacher → Students → [Student Profile] (Contact Info)
+
+**Note:** Parent info also exists in `students` table (father_name, mother_name, parent_phone) for backward compatibility. This table provides extended parent information.
+
+---
+
+### 🚌 Bus Subscriptions Table
+
+**Purpose:** Manage student bus service subscriptions with approval workflow.
+
+**Table:** `bus_subscriptions`
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PRIMARY KEY | Unique subscription identifier |
+| `student_id` | UUID | FK → students | Student reference |
+| `route_id` | UUID | FK → bus_routes | Bus route reference |
+| `stop_id` | UUID | FK → bus_stops | Bus stop reference |
+| `academic_year_id` | UUID | FK → academic_years | Academic year reference |
+| `approval_status` | VARCHAR(20) | CHECK constraint | Status: pending/approved/rejected |
+| `approved_by` | UUID | FK → profiles | Approver reference (admin) |
+| `approved_at` | TIMESTAMPTZ | - | Approval timestamp |
+| `rejection_reason` | TEXT | - | Reason if rejected |
+| `created_at` | TIMESTAMPTZ | DEFAULT NOW() | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | Last update timestamp |
+
+**Unique Constraint:** `(student_id, academic_year_id)` - One subscription per student per year
+
+**Indexes:**
+- `idx_bus_subscriptions_student` on `student_id`
+- `idx_bus_subscriptions_route` on `route_id`
+- `idx_bus_subscriptions_status` on `approval_status`
+- `idx_bus_subscriptions_academic_year` on `academic_year_id`
+
+**RLS Policies:**
+- Students: View and insert their own subscription
+- Admins: Full access (approve/reject/modify)
+
+**Used By Pages:**
+- Admin → Bus → Management (All subscriptions)
+- Admin → Bus → Approvals (Pending requests)
+- Admin → Bus → Reports (Route-wise stats)
+- Student → Bus → Apply for Service
+
+**Status Flow:**
+```
+pending → approved (by admin)
+pending → rejected (by admin with reason)
+```
+
+---
+
+*Document Version: 2.0*  
+*Last Updated: December 17, 2025*  
+*Database: Supabase (PostgreSQL)*  
+*Recent Changes: Added batches, parents, and bus_subscriptions tables*

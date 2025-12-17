@@ -169,17 +169,17 @@ export default function AnalyticsScreen() {
         supabase.from('courses').select('id', { count: 'exact' }),
         supabase.from('departments').select('id, name', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'pending_approval'),
-        supabase.from('notices').select('id', { count: 'exact' }).eq('is_published', true),
-        // Today's attendance
-        supabase.from('attendance').select('id, status', { count: 'exact' }).gte('created_at', todayISO).lt('created_at', tomorrowISO),
+        supabase.from('notices').select('id', { count: 'exact' }).eq('is_active', true),
+        // Today's attendance records
+        supabase.from('attendance_records').select('id, status', { count: 'exact' }).gte('marked_at', todayISO).lt('marked_at', tomorrowISO),
         // Average attendance calculation for selected period
-        supabase.from('attendance').select('status, created_at').gte('created_at', periodStart.toISOString()),
+        supabase.from('attendance_records').select('status, marked_at').gte('marked_at', periodStart.toISOString()),
         // Upcoming exams (future exams)
-        supabase.from('exams').select('id', { count: 'exact' }).gte('date', new Date().toISOString()),
+        supabase.from('exams').select('id', { count: 'exact' }).gte('start_date', new Date().toISOString()),
         // Active assignments
         supabase.from('assignments').select('id', { count: 'exact' }).eq('status', 'active'),
         // Total library books
-        supabase.from('library_books').select('id', { count: 'exact' }),
+        supabase.from('books').select('id', { count: 'exact' }),
       ]);
 
       // Handle errors

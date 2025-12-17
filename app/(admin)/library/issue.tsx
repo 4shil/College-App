@@ -34,9 +34,9 @@ export default function LibraryIssueScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [issuesRes, booksRes, usersRes] = await Promise.all([
-        supabase.from('book_issues').select('*, book:books(id,title,isbn,available_copies), users(id,full_name)').eq('status', 'issued').order('issue_date', { ascending: false }),
+        supabase.from('book_issues').select('*, book:books(id,title,isbn,available_copies), profiles(id,full_name)').eq('status', 'issued').order('issue_date', { ascending: false }),
         supabase.from('books').select('id, title, isbn, available_copies').gt('available_copies', 0).eq('is_active', true),
-        supabase.from('users').select('id, full_name').eq('is_active', true),
+        supabase.from('profiles').select('id, full_name').eq('status', 'active'),
       ]);
       if (issuesRes.error) throw issuesRes.error;
       if (booksRes.error) throw booksRes.error;

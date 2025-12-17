@@ -25,6 +25,8 @@ export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused' | 'od';
 
 export type HolidayType = 'college' | 'department';
 
+export type BusApprovalStatus = 'pending' | 'approved' | 'rejected';
+
 export type RoleName = 
   // Admin roles
   | 'super_admin'
@@ -159,6 +161,7 @@ export interface Student {
   semester_id: string;
   section_id: string | null;
   academic_year_id: string;
+  batch_id: string | null; // Added: Batch reference
   admission_year: number;
   admission_date: string | null;
   admitted_through: string | null;
@@ -189,6 +192,50 @@ export interface Teacher {
   joining_date: string | null;
   is_active: boolean;
   is_hod: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Batch {
+  id: string;
+  batch_name: string;
+  academic_year_id: string | null;
+  department_id: string | null;
+  year_id: string | null;
+  section_id: string | null;
+  start_year: number;
+  end_year: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Parent {
+  id: string;
+  student_id: string;
+  father_name: string | null;
+  mother_name: string | null;
+  guardian_name: string | null;
+  father_phone: string | null;
+  mother_phone: string | null;
+  father_email: string | null;
+  mother_email: string | null;
+  address: string | null;
+  emergency_contact: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BusSubscription {
+  id: string;
+  student_id: string;
+  route_id: string;
+  stop_id: string | null;
+  academic_year_id: string;
+  approval_status: BusApprovalStatus;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
   created_at: string;
   updated_at: string;
 }
