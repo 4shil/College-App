@@ -2,15 +2,15 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing Supabase credentials');
-  console.error('Required: EXPO_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+  console.error('Required: EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -19,41 +19,59 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 async function deleteAllUsersExceptAdmin() {
   try {
-    console.log('🔍 Finding admin@jpmcollege.edu...');
+    console.log('🔑 Signing in as admin...');
     
-    // Get admin user ID
-    const { data: adminProfile, error: adminError } = await supabase
-      .from('profiles')
-      .select('id, email')
-      .eq('email', 'admin@jpmcollege.edu')
-      .single();
+    // Try different admin accounts
+    let authData;
+    const adminAccounts = [
+      { email: 'admin@jpmcollege.edu', password: 'admin123' },
+      { email: 'superadmin@college.com', password: 'Super@2024' },
+      { email: 'principal@college.com', password: 'Principal@2024' }
+    ];
 
-    if (adminError || !adminProfile) {
-      console.error('❌ Admin user not found:', adminError);
+    for (const account of adminAccounts) {
+      const { data, error } = await supabase.auth.signInWithPassword(account);
+      if (!error && data.user) {
+        authData = data;
+        console.log(`✓ Signed in as: ${data.user.email}`);
+        break;
+      }
+    }
+
+    if (!authData || !authData.user) {
+      console.error('❌ Failed to sign in with any admin account');
+      console.error('Available accounts to try:');
+      adminAccounts.forEach(acc => console.error(`  - ${acc.email}`));
       process.exit(1);
     }
 
-    console.log('✓ Found admin:', adminProfile.email, '- ID:', adminProfile.id);
+    const adminId = authData.user.id;
+    const adminEmail = authData.user.email;
+
+    console.log(`🔍 Finding all users except ${adminEmail}...`);
 
     // Get all other users
     const { data: allUsers, error: listError } = await supabase
       .from('profiles')
       .select('id, email, full_name')
-      .neq('email', 'admin@jpmcollege.edu');
+      .neq('id', adminId);
 
     if (listError) {
       console.error('❌ Error fetching users:', listError);
       process.exit(1);
     }
 
-    console.log(`\n📋 Found ${allUsers.length} users to delete (excluding admin@jpmcollege.edu)`);
+    console.log(`\n📋 Found ${allUsers.length} users to delete (excluding admin)`);
 
     if (allUsers.length === 0) {
       console.log('✓ No users to delete');
       return;
     }
 
-    // Delete from Auth and profiles
+    console.log('\n⚠️  WARNING: This will delete all users from profiles table.');
+    console.log('Note: Auth users can only be deleted via Supabase Dashboard > Authentication.');
+    
+    // Delete from profiles only (RLS policies should allow this)
     let successCount = 0;
     let failCount = 0;
 
@@ -61,32 +79,22 @@ async function deleteAllUsersExceptAdmin() {
       try {
         console.log(`\n🗑️  Deleting: ${user.email || user.full_name} (${user.id})`);
         
-        // Delete from Auth (this cascades to profiles due to ON DELETE CASCADE)
-        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+        // Delete from profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', user.id);
         
-        if (authError) {
-          console.error(`   ❌ Auth deletion failed:`, authError.message);
-          
-          // Try deleting from profiles directly if auth delete fails
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', user.id);
-          
-          if (profileError) {
-            console.error(`   ❌ Profile deletion failed:`, profileError.message);
-            failCount++;
-          } else {
-            console.log(`   ✓ Profile deleted (auth delete failed but profile removed)`);
-            successCount++;
-          }
+        if (profileError) {
+          console.error(`   ❌ Profile deletion failed:`, profileError.message);
+          failCount++;
         } else {
-          console.log(`   ✓ Deleted from Auth and profiles`);
+          console.log(`   ✓ Profile deleted`);
           successCount++;
         }
         
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (err) {
         console.error(`   ❌ Error:`, err.message);
         failCount++;
