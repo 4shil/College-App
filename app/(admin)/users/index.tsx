@@ -517,7 +517,7 @@ export default function UsersScreen() {
               ) : (
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
-                  onPress={() => handleActivateUser(user)}
+                  onPress={() => handleActivateUser(user.id)}
                 >
                   <FontAwesome5 name="check-circle" size={14} color="#10b981" />
                   <Text style={[styles.actionText, { color: '#10b981' }]}>Activate</Text>

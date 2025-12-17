@@ -17,6 +17,7 @@ export default function AcademicLayout() {
       <Stack.Screen name="courses/index" />
       <Stack.Screen name="subjects/index" />
       <Stack.Screen name="years/index" />
+      <Stack.Screen name="batches/index" />
       <Stack.Screen name="semesters/index" />
     </Stack>
   );

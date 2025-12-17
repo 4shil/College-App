@@ -65,13 +65,14 @@ INSERT INTO public.profiles (
   updated_at = now();
 
 -- Step 3: Assign super_admin role
-INSERT INTO public.user_roles (user_id, role_id)
+INSERT INTO public.user_roles (user_id, role_id, department_id)
 SELECT 
   'c60b6bba-4e7f-4e28-a826-db739aa93e4f',
-  id
+  id,
+  NULL
 FROM public.roles
 WHERE name = 'super_admin'
-ON CONFLICT (user_id, role_id) DO NOTHING;
+ON CONFLICT (user_id, role_id, department_id) DO NOTHING;
 
 -- Step 4: Verify creation
 SELECT 

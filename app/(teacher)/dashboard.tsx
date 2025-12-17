@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 export default function TeacherDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
   const { user, profile, logout } = useAuthStore();
 
   const handleLogout = async () => {
