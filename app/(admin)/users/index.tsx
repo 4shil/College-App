@@ -227,12 +227,12 @@ export default function UsersScreen() {
     );
   };
 
-  const handleActivateUser = async (user: User) => {
+  const handleActivateUser = async (userId: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ status: 'approved' })
-        .eq('id', user.id);
+        .update({ status: 'active' })
+        .eq('id', userId);
       if (error) throw error;
       Alert.alert('Success', 'User activated successfully');
       fetchData();
