@@ -166,7 +166,7 @@ export default function AnalyticsScreen() {
       ] = await Promise.all([
         // Get all profiles to count students and teachers
         supabase.from('profiles').select('id, primary_role, status, department_id'),
-        supabase.from('courses').select('id', { count: 'exact' }),
+        supabase.from('courses').select('id', { count: 'exact' }).eq('is_active', true),
         supabase.from('departments').select('id, name', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'pending_approval'),
         supabase.from('notices').select('id', { count: 'exact' }).eq('is_active', true),
@@ -241,7 +241,7 @@ export default function AnalyticsScreen() {
       // Process attendance trends by month
       const monthMap = new Map<string, { present: number; total: number }>();
       allAttendanceData.forEach((record: any) => {
-        const date = new Date(record.created_at);
+        const date = new Date(record.marked_at);
         const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
         
         if (!monthMap.has(monthKey)) {

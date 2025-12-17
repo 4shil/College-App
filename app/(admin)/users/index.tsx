@@ -231,7 +231,7 @@ export default function UsersScreen() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ status: 'active' })
+        .update({ status: 'approved' })
         .eq('id', user.id);
       if (error) throw error;
       Alert.alert('Success', 'User activated successfully');

@@ -314,7 +314,7 @@ export default function AdminDashboard() {
 
       if (error) throw error;
 
-      const activities: RecentActivity[] = (data || []).map(log => {
+      const activities: RecentActivity[] = (data || []).map((log: any) => {
         const actionColors: { [key: string]: string } = {
           INSERT: '#16A34A',
           UPDATE: '#8B5CF6',
