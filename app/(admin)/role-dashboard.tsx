@@ -65,6 +65,14 @@ export default function RoleBasedDashboard() {
       module: 'assignments',
     },
     {
+      id: 'fees',
+      title: 'Fee Management',
+      icon: 'money-bill-wave',
+      color: '#16A34A',
+      route: '/(admin)/fees',
+      module: 'fees',
+    },
+    {
       id: 'library',
       title: 'Library',
       icon: 'book',
