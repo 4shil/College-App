@@ -47,7 +47,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   glowing = true,
   icon,
 }) => {
-  const { colors, animationsEnabled } = useThemeStore();
+  const { colors, animationsEnabled, isDark } = useThemeStore();
   const scale = useSharedValue(1);
   const glowOpacity = useSharedValue(0.25);
   const pressProgress = useSharedValue(0);

@@ -11,7 +11,7 @@ import { signOut } from '../../lib/supabase';
 export default function StudentProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
   const { user, logout } = useAuthStore();
 
   const handleLogout = async () => {

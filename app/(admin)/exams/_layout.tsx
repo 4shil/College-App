@@ -11,6 +11,12 @@ export default function ExamsLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: colors.background },
       }}
-    />
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="manage" />
+      <Stack.Screen name="marks" />
+      <Stack.Screen name="external" />
+      <Stack.Screen name="reports" />
+    </Stack>
   );
 }

@@ -11,6 +11,12 @@ export default function AssignmentsLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: colors.background },
       }}
-    />
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="manage" />
+      <Stack.Screen name="submissions" />
+      <Stack.Screen name="grade" />
+      <Stack.Screen name="reports" />
+    </Stack>
   );
 }

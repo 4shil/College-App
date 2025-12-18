@@ -6,7 +6,7 @@ import { useThemeStore } from '../../store/themeStore';
 
 export default function StudentMaterialsScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
 
   return (
     <AnimatedBackground>

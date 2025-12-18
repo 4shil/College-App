@@ -74,6 +74,27 @@ export interface Department {
   updated_at: string;
 }
 
+export interface CollegeInfo {
+  id: string;
+  name: string;
+  short_name: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  phone: string;
+  email: string;
+  website: string | null;
+  established_year: number;
+  affiliation: string | null;
+  principal_name: string;
+  principal_email: string;
+  motto: string | null;
+  logo_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AcademicYear {
   id: string;
   name: string;

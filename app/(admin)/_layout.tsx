@@ -194,9 +194,12 @@ export default function AdminLayout() {
         <Stack.Screen name="bus" />
         <Stack.Screen name="canteen" />
         <Stack.Screen name="audit" />
+        <Stack.Screen name="college-info" />
       </Stack>
 
-      <GlassDock activeRoute={pathname} onNavigate={handleNavigate} />
+      {!pathname.includes('college-info') && (
+        <GlassDock activeRoute={pathname} onNavigate={handleNavigate} />
+      )}
     </View>
   );
 }

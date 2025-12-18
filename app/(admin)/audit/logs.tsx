@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -34,12 +42,12 @@ export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
-  
+
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAction, setSelectedAction] = useState<string>('ALL');
-  const [selectedEntity, setSelectedEntity] = useState<string>('ALL');
+  const [selectedAction, setSelectedAction] = useState('ALL');
+  const [selectedEntity, setSelectedEntity] = useState('ALL');
 
   const actionTypes = ['ALL', 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'APPROVE', 'REJECT'];
   const entityTypes = ['ALL', 'USER', 'STUDENT', 'TEACHER', 'COURSE', 'EXAM', 'NOTICE', 'FEE', 'BOOK'];
@@ -58,14 +66,11 @@ export default function AuditLogsScreen() {
         .limit(100);
 
       if (error) {
-        // Table might not exist yet - show empty state
-        console.log('Audit logs table not found:', error.message);
         setLogs([]);
         return;
       }
       setLogs(data || []);
-    } catch (error: any) {
-      console.error('Error fetching logs:', error.message);
+    } catch {
       setLogs([]);
     } finally {
       setLoading(false);
@@ -73,194 +78,147 @@ export default function AuditLogsScreen() {
   };
 
   const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         log.entity_type.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesAction = selectedAction === 'ALL' || log.action === selectedAction;
-    const matchesEntity = selectedEntity === 'ALL' || log.entity_type === selectedEntity;
-    
-    return matchesSearch && matchesAction && matchesEntity;
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      log.user_name.toLowerCase().includes(q) ||
+      log.action.toLowerCase().includes(q) ||
+      log.entity_type.toLowerCase().includes(q);
+
+    return (
+      matchesSearch &&
+      (selectedAction === 'ALL' || log.action === selectedAction) &&
+      (selectedEntity === 'ALL' || log.entity_type === selectedEntity)
+    );
   });
 
   const exportToCSV = async () => {
-    if (filteredLogs.length === 0) {
-      alert('No logs to export');
-      return;
-    }
-    try {
-      await exportAuditLogs(filteredLogs, 'csv');
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert('Failed to export logs');
-    }
+    if (!filteredLogs.length) return alert('No logs to export');
+    await exportAuditLogs(filteredLogs, 'csv');
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString() + ' ' + new Date(date).toLocaleTimeString();
 
   return (
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}
+        contentContainerStyle={{
+          paddingTop: insets.top + 16,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 20,
+        }}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <FontAwesome5 name="arrow-left" size={20} color={colors.textPrimary} />
+          <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
+            <FontAwesome5 name="arrow-left" size={18} color={colors.textPrimary} />
           </TouchableOpacity>
+
           <Text style={[styles.title, { color: colors.textPrimary }]}>Audit Logs</Text>
-          <TouchableOpacity onPress={exportToCSV} style={styles.exportButton}>
-            <FontAwesome5 name="file-export" size={20} color={colors.primary} />
+
+          <TouchableOpacity style={styles.iconBtn} onPress={exportToCSV}>
+            <FontAwesome5 name="file-export" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <View style={[styles.searchContainer, { 
-            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-            borderColor: `${colors.primary}30`
-          }]}>
-            <FontAwesome5 name="search" size={16} color={colors.textSecondary} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.textPrimary }]}
-              placeholder="Search logs..."
-              placeholderTextColor={colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-        </Animated.View>
-
-        {/* Filter Chips - Actions */}
-        <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Action Type</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            {actionTypes.map((action) => (
-              <TouchableOpacity
-                key={action}
-                onPress={() => setSelectedAction(action)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: selectedAction === action
-                      ? colors.primary
-                      : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                    borderColor: selectedAction === action ? colors.primary : `${colors.primary}30`,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    { color: selectedAction === action ? '#FFFFFF' : colors.textSecondary },
-                  ]}
-                >
-                  {action}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animated.View>
-
-        {/* Filter Chips - Entities */}
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Entity Type</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            {entityTypes.map((entity) => (
-              <TouchableOpacity
-                key={entity}
-                onPress={() => setSelectedEntity(entity)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: selectedEntity === entity
-                      ? colors.primary
-                      : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                    borderColor: selectedEntity === entity ? colors.primary : `${colors.primary}30`,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    { color: selectedEntity === entity ? '#FFFFFF' : colors.textSecondary },
-                  ]}
-                >
-                  {entity}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animated.View>
-
-        {/* Stats Cards */}
-        <View style={styles.statsGrid}>
-          <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.statCard}>
-            <GlassCard style={styles.statCardInner}>
-              <View style={[styles.statIcon, { backgroundColor: `${colors.primary}20` }]}>
-                <FontAwesome5 name="list" size={20} color={colors.primary} />
-              </View>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{filteredLogs.length}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Logs</Text>
-            </GlassCard>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(500).springify()} style={styles.statCard}>
-            <GlassCard style={styles.statCardInner}>
-              <View style={[styles.statIcon, { backgroundColor: `${ACTION_COLORS.CREATE}20` }]}>
-                <FontAwesome5 name="plus" size={20} color={ACTION_COLORS.CREATE} />
-              </View>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                {logs.filter(l => l.action === 'CREATE').length}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Created</Text>
-            </GlassCard>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(600).springify()} style={styles.statCard}>
-            <GlassCard style={styles.statCardInner}>
-              <View style={[styles.statIcon, { backgroundColor: `${ACTION_COLORS.UPDATE}20` }]}>
-                <FontAwesome5 name="edit" size={20} color={ACTION_COLORS.UPDATE} />
-              </View>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                {logs.filter(l => l.action === 'UPDATE').length}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Updated</Text>
-            </GlassCard>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(700).springify()} style={styles.statCard}>
-            <GlassCard style={styles.statCardInner}>
-              <View style={[styles.statIcon, { backgroundColor: `${ACTION_COLORS.DELETE}20` }]}>
-                <FontAwesome5 name="trash" size={20} color={ACTION_COLORS.DELETE} />
-              </View>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                {logs.filter(l => l.action === 'DELETE').length}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Deleted</Text>
-            </GlassCard>
-          </Animated.View>
+        {/* Search */}
+        <View
+          style={[
+            styles.searchBox,
+            {
+              backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+              borderColor: `${colors.primary}30`,
+            },
+          ]}
+        >
+          <FontAwesome5 name="search" size={14} color={colors.textSecondary} />
+          <TextInput
+            placeholder="Search logs..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+          />
         </View>
 
-        {/* Logs List */}
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+        {/* Filters */}
+        {[
+          { label: 'Action Type', data: actionTypes, value: selectedAction, set: setSelectedAction },
+          { label: 'Entity Type', data: entityTypes, value: selectedEntity, set: setSelectedEntity },
+        ].map((f, i) => (
+          <View key={i}>
+            <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>{f.label}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {f.data.map(item => (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => f.set(item)}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor:
+                        f.value === item ? colors.primary : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                      borderColor: f.value === item ? colors.primary : `${colors.primary}30`,
+                    },
+                  ]}
+                >
+                  <Text style={{ color: f.value === item ? '#fff' : colors.textSecondary, fontWeight: '600' }}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-        ) : (
+        ))}
+
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          {[
+            { label: 'Total Logs', value: logs.length, icon: 'list', color: '#3B82F6' },
+            { label: 'Created', value: logs.filter(l => l.action === 'CREATE').length, icon: 'plus-circle', color: '#10B981' },
+            { label: 'Updated', value: logs.filter(l => l.action === 'UPDATE').length, icon: 'edit', color: '#F59E0B' },
+            { label: 'Deleted', value: logs.filter(l => l.action === 'DELETE').length, icon: 'trash', color: '#EF4444' },
+          ].map((stat, i) => (
+            <View key={i} style={styles.statItem}>
+              <FontAwesome5 name={stat.icon} size={16} color={stat.color} />
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stat.value}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Logs */}
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          Activity Log ({filteredLogs.length})
+        </Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        ) : filteredLogs.length ? (
           <View style={styles.logsList}>
             {filteredLogs.map((log, index) => (
               <Animated.View
                 key={log.id}
-                entering={FadeInDown.delay(100 * (index % 10)).springify()}
+                entering={FadeInDown.delay(index * 50).springify()}
               >
-                <GlassCard style={styles.logCard}>
+                <View style={[styles.logCard, { 
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
+                  borderLeftColor: ACTION_COLORS[log.action] || colors.primary,
+                  borderLeftWidth: 4,
+                }]}>
+                  {/* Header with Action Badge and Time */}
                   <View style={styles.logHeader}>
-                    <View style={[styles.actionBadge, { backgroundColor: `${ACTION_COLORS[log.action] || colors.primary}20` }]}>
-                      <Text style={[styles.actionText, { color: ACTION_COLORS[log.action] || colors.primary }]}>
+                    <View style={[styles.badge, { 
+                      backgroundColor: `${ACTION_COLORS[log.action] || colors.primary}20`,
+                      borderColor: ACTION_COLORS[log.action] || colors.primary,
+                    }]}>
+                      <Text style={{ 
+                        color: ACTION_COLORS[log.action] || colors.primary, 
+                        fontWeight: '700', 
+                        fontSize: 11,
+                        letterSpacing: 0.5,
+                      }}>
                         {log.action}
                       </Text>
                     </View>
@@ -268,44 +226,49 @@ export default function AuditLogsScreen() {
                       {formatDate(log.created_at)}
                     </Text>
                   </View>
-                  
-                  <View style={styles.logBody}>
-                    <Text style={[styles.logUser, { color: colors.textPrimary }]}>
-                      <FontAwesome5 name="user" size={12} color={colors.textSecondary} /> {log.user_name}
-                    </Text>
-                    <Text style={[styles.logEntity, { color: colors.textSecondary }]}>
-                      {log.entity_type} #{log.entity_id.substring(0, 8)}
-                    </Text>
-                  </View>
 
-                  {log.changes && (
-                    <View style={[styles.changesContainer, { 
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'
-                    }]}>
-                      <Text style={[styles.changesLabel, { color: colors.textSecondary }]}>Changes:</Text>
-                      <Text style={[styles.changesText, { color: colors.textSecondary }]} numberOfLines={2}>
-                        {JSON.stringify(log.changes)}
+                  {/* User and Entity Info */}
+                  <View style={styles.logContent}>
+                    <View style={styles.logRow}>
+                      <View style={[styles.iconCircle, { backgroundColor: `${colors.primary}15` }]}>
+                        <FontAwesome5 name="user" size={11} color={colors.primary} />
+                      </View>
+                      <Text style={[styles.logUser, { color: colors.textPrimary }]}>
+                        {log.user_name}
                       </Text>
                     </View>
-                  )}
 
-                  {log.ip_address && (
-                    <Text style={[styles.ipAddress, { color: colors.textSecondary }]}>
-                      IP: {log.ip_address}
-                    </Text>
-                  )}
-                </GlassCard>
+                    <View style={styles.logRow}>
+                      <View style={[styles.iconCircle, { backgroundColor: `${colors.textSecondary}15` }]}>
+                        <FontAwesome5 name="database" size={10} color={colors.textSecondary} />
+                      </View>
+                      <Text style={[styles.logEntity, { color: colors.textSecondary }]}>
+                        {log.entity_type} <Text style={{ opacity: 0.6 }}>#{log.entity_id?.slice(0, 8)}</Text>
+                      </Text>
+                    </View>
+
+                    {/* Changes */}
+                    {log.changes && (
+                      <View style={[styles.changes, { 
+                        backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)',
+                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      }]}>
+                        <FontAwesome5 name="code" size={10} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                        <Text style={[styles.changesText, { color: colors.textSecondary }]} numberOfLines={2}>
+                          {JSON.stringify(log.changes)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
               </Animated.View>
             ))}
-
-            {filteredLogs.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <FontAwesome5 name="inbox" size={48} color={colors.textSecondary} />
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  No audit logs found
-                </Text>
-              </View>
-            )}
+          </View>
+        ) : (
+          <View style={styles.empty}>
+            <FontAwesome5 name="inbox" size={48} color={colors.textSecondary} />
+            <Text style={{ color: colors.textSecondary, marginTop: 16, fontSize: 15 }}>No audit logs found</Text>
+            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 13 }}>Try adjusting your filters</Text>
           </View>
         )}
       </ScrollView>
@@ -314,162 +277,255 @@ export default function AuditLogsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-  },
+  container: { flex: 1 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 24,
   },
-  backButton: {
+
+  title: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+
+  iconBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    flex: 1,
-    marginLeft: 16,
-  },
-  exportButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
+
+  searchBox: {
+    height: 48,
     borderRadius: 12,
     borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
   },
+
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: 10,
+    fontSize: 15,
   },
+
   filterLabel: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    marginTop: 8,
+    marginTop: 12,
   },
-  filterScroll: {
-    marginBottom: 16,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+
+  chip: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 22,
     borderWidth: 1.5,
-    marginRight: 8,
+    marginRight: 10,
   },
-  filterChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statsGrid: {
+
+  statsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 20,
-    gap: 12,
+    justifyContent: 'space-between',
+    marginVertical: 16,
+    gap: 10,
   },
+
+  statItem: {
+    flex: 1,
+    minWidth: '22%',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+
+  statValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+
+  statLabel: {
+    fontSize: 11,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
   statCard: {
     width: '48%',
-  },
-  statCardInner: {
-    padding: 16,
+    padding: 14,
+    borderRadius: 14,
     alignItems: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
+
   statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
+
   statValue: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 2,
   },
+
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '500',
   },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 24,
+    marginBottom: 16,
   },
+
   logsList: {
-    gap: 12,
+    marginBottom: 20,
   },
+
   logCard: {
-    padding: 16,
+    padding: 14,
+    marginBottom: 10,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
+
   logHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  actionBadge: {
+
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+
+  logTime: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+
+  logContent: {
+    gap: 8,
+  },
+
+  logRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  iconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  logUser: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  logEntity: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  changes: {
+    marginTop: 4,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+
+  changesText: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    flex: 1,
+    lineHeight: 16,
+  },
+
+  empty: {
+    paddingVertical: 6
+  },
+
+  statValue: {
+    fontSize: 26,
+    fontWeight: 'bold',
+  },
+
+  logCard: {
+    padding: 16,
+    marginBottom: 12,
+  },
+
+  logHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  badge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  logTime: {
-    fontSize: 12,
-  },
-  logBody: {
-    marginBottom: 8,
-  },
+
   logUser: {
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
   },
-  logEntity: {
-    fontSize: 13,
-  },
-  changesContainer: {
-    padding: 12,
-    borderRadius: 8,
+
+  changes: {
     marginTop: 8,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  changesLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
+
   changesText: {
     fontSize: 12,
     fontFamily: 'monospace',
+    color: '#A1A1AA',
   },
-  ipAddress: {
-    fontSize: 11,
-    marginTop: 8,
-  },
-  emptyContainer: {
-    padding: 40,
+
+  empty: {
+    paddingVertical: 80,
     alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    marginTop: 16,
   },
 });
