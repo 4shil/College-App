@@ -70,16 +70,6 @@ export default function SettingsScreen() {
       title: 'Account',
       items: [
         {
-          id: 'profile',
-          title: 'Profile Settings',
-          subtitle: 'Update your personal information',
-          icon: 'user-circle',
-          iconType: 'fa5',
-          color: '#6366f1',
-          type: 'navigation',
-          route: '/(admin)/profile',
-        },
-        {
           id: 'password',
           title: 'Change Password',
           subtitle: 'Update your login credentials',
@@ -113,16 +103,6 @@ export default function SettingsScreen() {
           color: '#f59e0b',
           type: 'navigation',
           route: '/(admin)/settings/academic-year',
-        },
-        {
-          id: 'fee-structure',
-          title: 'Fee Structure',
-          subtitle: 'Manage fee categories and amounts',
-          icon: 'rupee-sign',
-          iconType: 'fa5',
-          color: '#22c55e',
-          type: 'navigation',
-          route: '/(admin)/fee-structure',
         },
       ],
     },

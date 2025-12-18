@@ -127,6 +127,35 @@ export const updateUserPassword = async (password: string) => {
 };
 
 /**
+ * Change password with verification of the current password.
+ * This re-authenticates using the current password, then updates to the new password.
+ */
+export const changePassword = async (currentPassword: string, newPassword: string) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) return { data: null as any, error: userError };
+  if (!user?.email) {
+    return { data: null as any, error: { message: 'No authenticated user email found.' } as any };
+  }
+
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (reauthError) return { data: null as any, error: reauthError };
+
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  return { data, error };
+};
+
+/**
  * Update user metadata (name, role, etc.)
  */
 export const updateUserMetadata = async (metadata: Record<string, any>) => {

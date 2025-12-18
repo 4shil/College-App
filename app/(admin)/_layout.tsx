@@ -195,6 +195,7 @@ export default function AdminLayout() {
         <Stack.Screen name="canteen" />
         <Stack.Screen name="audit" />
         <Stack.Screen name="college-info" />
+        <Stack.Screen name="change-password" />
       </Stack>
 
       {!pathname.includes('college-info') && (
