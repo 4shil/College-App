@@ -559,14 +559,15 @@ Student: student
 | `id` | UUID | **PK** | Notice ID |
 | `title` | VARCHAR(200) | NOT NULL | Title |
 | `content` | TEXT | NOT NULL | Content |
-| `category` | VARCHAR(50) | | Category |
-| `priority` | VARCHAR(20) | | low/medium/high/urgent |
-| `target_roles` | JSONB | | Target audience roles |
+| `scope` | VARCHAR(30) | CHECK | college/department/class/exam/event/library/bus/canteen/fee |
+| `priority` | VARCHAR(10) | CHECK | low/normal/high/urgent |
 | `department_id` | UUID | **FK → departments(id)** | Target department |
-| `is_published` | BOOLEAN | DEFAULT false | Is published |
-| `published_at` | TIMESTAMPTZ | | Published date |
+| `section_id` | UUID | **FK → sections(id)** | Target section/class |
+| `author_id` | UUID | **FK → profiles(id)** | Author |
+| `attachment_url` | TEXT | | Attachment URL |
+| `publish_at` | TIMESTAMPTZ | | Scheduled/actual publish time |
 | `expires_at` | TIMESTAMPTZ | | Expiry date |
-| `created_by` | UUID | **FK → profiles(id)** | Author |
+| `is_active` | BOOLEAN | DEFAULT true | Active/visible flag |
 | `created_at` | TIMESTAMPTZ | DEFAULT NOW() | Created |
 | `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | Updated |
 

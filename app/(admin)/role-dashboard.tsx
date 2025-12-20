@@ -6,8 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
-import { useRBAC, ADMIN_ROLES, PERMISSIONS } from '../../hooks/useRBAC';
-import { Restricted } from '../../components/Restricted';
+import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
@@ -26,7 +25,7 @@ export default function RoleBasedDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
-  const { roleDisplayName, highestRole, accessibleModules, loading } = useRBAC();
+  const { roleDisplayName, accessibleModules, loading } = useRBAC();
 
   // All possible modules with their configurations
   const allModules: ModuleCard[] = [

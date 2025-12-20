@@ -4952,8 +4952,8 @@ on_fee_paid          → Update payment status
 |--------|--------|----------|
 | Authentication | ✅ Complete | 100% |
 | Admin Dashboard | ⚠️ Partial | 60% |
-| User Management | ❌ Not Started | 0% |
-| Academic Management | ❌ Not Started | 0% |
+| User Management | ⚠️ Partial | 60% |
+| Academic Management | ⚠️ Partial | 40% |
 | **Teacher Module** | ❌ Not Started | 0% |
 | ↳ Subject Teacher | ❌ Not Started | 0% |
 | ↳ Class Teacher | ❌ Not Started | 0% |
@@ -4995,16 +4995,16 @@ on_fee_paid          → Update payment status
 ## 🚀 Next Steps
 
 ### Immediate (This Week)
-1. Build `/(admin)/users/pending.tsx` - Pending approvals
-2. Build `/(admin)/users/students.tsx` - Students list
-3. Build `/(admin)/users/teachers.tsx` - Teachers list
-4. Create reusable `UserList` and `UserCard` components
+1. ✅ Verify User Management screens end-to-end (Students/Teachers/Pending tabs) with real data
+2. Fix Notices schema alignment (DB fields vs UI) and retest
+3. Add RBAC gating (`Restricted` + `PERMISSIONS`) to admin create/update/delete actions
+4. Seed test admin users for each admin role and validate Role Dashboard module visibility
 
 ### Short Term (Next 2 Weeks)
-1. Complete User Management module
-2. Build Academic Management screens
-3. Implement Teacher dashboard properly
-4. Add attendance marking feature
+1. Complete User Management module (role assignment UX, approvals, status changes)
+2. Finish Academic Management screens (departments/courses/years/semesters/batches wiring + validations)
+3. Implement Audit logging for critical admin actions (approvals, role assignment, notices, settings)
+4. Start Teacher module: enhanced dashboard + timetable + attendance marking (subject-wise)
 
 ### Medium Term (Next Month)
 1. Complete Teacher module

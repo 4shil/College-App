@@ -14,28 +14,40 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { AnimatedBackground, Card, PrimaryButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
+import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
 
 type NoticeType = 'general' | 'academic' | 'exam' | 'event' | 'urgent';
-type NoticeTab = 'all' | 'published' | 'draft';
+type NoticeTab = 'all' | 'active' | 'inactive';
+
+type NoticeScope =
+  | 'college'
+  | 'department'
+  | 'class'
+  | 'exam'
+  | 'event'
+  | 'library'
+  | 'bus'
+  | 'canteen'
+  | 'fee';
+
+type NoticePriority = 'low' | 'normal' | 'high' | 'urgent';
 
 interface Notice {
   id: string;
   title: string;
   content: string;
-  notice_type: NoticeType;
-  priority: number;
-  is_published: boolean;
-  publish_date: string | null;
-  expiry_date: string | null;
-  target_audience: string[];
+  scope: NoticeScope;
+  priority: NoticePriority;
+  is_active: boolean;
+  publish_at: string | null;
+  expires_at: string | null;
   created_at: string;
-  created_by: {
+  author: {
     full_name: string;
   } | null;
 }
@@ -52,6 +64,11 @@ export default function NoticesScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeStore();
   const { user, profile } = useAuthStore();
+  const { hasPermission } = useRBAC();
+
+  const canPostGlobalNotices = hasPermission(PERMISSIONS.POST_GLOBAL_NOTICES);
+  const canPostDeptNotices = hasPermission(PERMISSIONS.POST_DEPT_NOTICES);
+  const canManageNotices = canPostGlobalNotices || canPostDeptNotices;
 
   const [activeTab, setActiveTab] = useState<NoticeTab>('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -66,20 +83,52 @@ export default function NoticesScreen() {
   const [isPublished, setIsPublished] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const deriveDisplayType = (notice: Pick<Notice, 'scope' | 'priority'>): NoticeType => {
+    if (notice.priority === 'urgent') return 'urgent';
+    if (notice.scope === 'exam') return 'exam';
+    if (notice.scope === 'event') return 'event';
+    if (notice.scope === 'department') return 'academic';
+    return 'general';
+  };
+
+  const mapTypeToScopeAndPriority = (type: NoticeType): { scope: NoticeScope; priority: NoticePriority } => {
+    switch (type) {
+      case 'academic':
+        return { scope: 'department', priority: 'normal' };
+      case 'exam':
+        return { scope: 'exam', priority: 'normal' };
+      case 'event':
+        return { scope: 'event', priority: 'normal' };
+      case 'urgent':
+        return { scope: 'college', priority: 'urgent' };
+      case 'general':
+      default:
+        return { scope: 'college', priority: 'normal' };
+    }
+  };
+
   const fetchNotices = async () => {
     try {
       let query = supabase
         .from('notices')
         .select(`
-          *,
-          created_by:profiles!notices_created_by_fkey(full_name)
+          id,
+          title,
+          content,
+          scope,
+          priority,
+          is_active,
+          publish_at,
+          expires_at,
+          created_at,
+          author:profiles!notices_author_id_fkey(full_name)
         `)
         .order('created_at', { ascending: false });
 
-      if (activeTab === 'published') {
-        query = query.eq('is_published', true);
-      } else if (activeTab === 'draft') {
-        query = query.eq('is_published', false);
+      if (activeTab === 'active') {
+        query = query.eq('is_active', true);
+      } else if (activeTab === 'inactive') {
+        query = query.eq('is_active', false);
       }
 
       const { data, error } = await query;
@@ -121,16 +170,31 @@ export default function NoticesScreen() {
       return;
     }
 
+    if (!canManageNotices) {
+      Alert.alert('Access denied', 'You do not have permission to create notices.');
+      return;
+    }
+
     setSaving(true);
     try {
+      const { scope, priority } = mapTypeToScopeAndPriority(noticeType);
+
+      // Enforce scope based on permission
+      const effectiveScope: NoticeScope = scope === 'college' && !canPostGlobalNotices ? 'department' : scope;
+      if (effectiveScope === 'college' && !canPostGlobalNotices) {
+        Alert.alert('Access denied', 'You do not have permission to post global notices.');
+        return;
+      }
+
       const { error } = await supabase.from('notices').insert({
         title: title.trim(),
         content: content.trim(),
-        notice_type: noticeType,
-        is_published: isPublished,
-        publish_date: isPublished ? new Date().toISOString() : null,
-        target_audience: ['all'],
-        created_by: user?.id,
+        scope: effectiveScope,
+        priority,
+        is_active: isPublished,
+        publish_at: isPublished ? new Date().toISOString() : null,
+        department_id: effectiveScope === 'department' ? (profile as any)?.department_id ?? null : null,
+        author_id: user?.id,
       });
 
       if (error) throw error;
@@ -177,12 +241,17 @@ export default function NoticesScreen() {
   };
 
   const handleTogglePublish = async (notice: Notice) => {
+    if (!canManageNotices) {
+      Alert.alert('Access denied', 'You do not have permission to update notices.');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('notices')
         .update({
-          is_published: !notice.is_published,
-          publish_date: !notice.is_published ? new Date().toISOString() : null,
+          is_active: !notice.is_active,
+          publish_at: !notice.is_active ? new Date().toISOString() : null,
         })
         .eq('id', notice.id);
 
@@ -212,12 +281,13 @@ export default function NoticesScreen() {
 
   const tabs = [
     { key: 'all' as NoticeTab, label: 'All', count: notices.length },
-    { key: 'published' as NoticeTab, label: 'Published', count: notices.filter(n => n.is_published).length },
-    { key: 'draft' as NoticeTab, label: 'Drafts', count: notices.filter(n => !n.is_published).length },
+    { key: 'active' as NoticeTab, label: 'Active', count: notices.filter(n => n.is_active).length },
+    { key: 'inactive' as NoticeTab, label: 'Inactive', count: notices.filter(n => !n.is_active).length },
   ];
 
   const renderNoticeCard = (notice: Notice, index: number) => {
-    const config = noticeTypeConfig[notice.notice_type] || noticeTypeConfig.general;
+    const displayType = deriveDisplayType(notice);
+    const config = noticeTypeConfig[displayType] || noticeTypeConfig.general;
 
     return (
       <Animated.View
@@ -238,19 +308,24 @@ export default function NoticesScreen() {
                 <View style={[styles.typeBadge, { backgroundColor: config.color + '15' }]}>
                   <Text style={[styles.typeText, { color: config.color }]}>{config.label}</Text>
                 </View>
-                {!notice.is_published && (
+                {!notice.is_active && (
                   <View style={[styles.draftBadge, { backgroundColor: '#64748b20' }]}>
                     <Text style={[styles.draftText, { color: '#64748b' }]}>Draft</Text>
                   </View>
                 )}
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.moreBtn}
-              onPress={() => handleDeleteNotice(notice.id)}
+            <Restricted
+              permissions={[PERMISSIONS.POST_GLOBAL_NOTICES, PERMISSIONS.POST_DEPT_NOTICES]}
+              fallback={<View />}
             >
-              <Ionicons name="trash-outline" size={18} color="#ef4444" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.moreBtn}
+                onPress={() => handleDeleteNotice(notice.id)}
+              >
+                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+              </TouchableOpacity>
+            </Restricted>
           </View>
 
           <Text style={[styles.noticeContent, { color: colors.textSecondary }]} numberOfLines={3}>
@@ -264,27 +339,32 @@ export default function NoticesScreen() {
                 {formatDate(notice.created_at)}
               </Text>
             </View>
-            <TouchableOpacity
-              style={[
-                styles.publishToggle,
-                { backgroundColor: notice.is_published ? '#10b98115' : '#f59e0b15' },
-              ]}
-              onPress={() => handleTogglePublish(notice)}
+            <Restricted
+              permissions={[PERMISSIONS.POST_GLOBAL_NOTICES, PERMISSIONS.POST_DEPT_NOTICES]}
+              fallback={<View />}
             >
-              <Ionicons
-                name={notice.is_published ? 'eye' : 'eye-off'}
-                size={14}
-                color={notice.is_published ? '#10b981' : '#f59e0b'}
-              />
-              <Text
+              <TouchableOpacity
                 style={[
-                  styles.publishText,
-                  { color: notice.is_published ? '#10b981' : '#f59e0b' },
+                  styles.publishToggle,
+                  { backgroundColor: notice.is_active ? '#10b98115' : '#f59e0b15' },
                 ]}
+                onPress={() => handleTogglePublish(notice)}
               >
-                {notice.is_published ? 'Published' : 'Unpublished'}
-              </Text>
-            </TouchableOpacity>
+                <Ionicons
+                  name={notice.is_active ? 'eye' : 'eye-off'}
+                  size={14}
+                  color={notice.is_active ? '#10b981' : '#f59e0b'}
+                />
+                <Text
+                  style={[
+                    styles.publishText,
+                    { color: notice.is_active ? '#10b981' : '#f59e0b' },
+                  ]}
+                >
+                  {notice.is_active ? 'Active' : 'Inactive'}
+                </Text>
+              </TouchableOpacity>
+            </Restricted>
           </View>
         </Card>
       </Animated.View>
@@ -307,12 +387,17 @@ export default function NoticesScreen() {
         {/* Header */}
         <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Notices</Text>
-          <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.primary }]}
-            onPress={() => setShowModal(true)}
+          <Restricted
+            permissions={[PERMISSIONS.POST_GLOBAL_NOTICES, PERMISSIONS.POST_DEPT_NOTICES]}
+            fallback={<View />}
           >
-            <Ionicons name="add" size={22} color="#fff" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: colors.primary }]}
+              onPress={() => setShowModal(true)}
+            >
+              <Ionicons name="add" size={22} color="#fff" />
+            </TouchableOpacity>
+          </Restricted>
         </Animated.View>
 
         {/* Tab Bar */}

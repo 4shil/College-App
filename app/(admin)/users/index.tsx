@@ -19,7 +19,9 @@ import { Picker } from '@react-native-picker/picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
+import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { PERMISSIONS, useRBAC } from '../../../hooks/useRBAC';
 
 type UserTab = 'teachers' | 'students' | 'admins' | 'pending';
 type UserStatus = 'active' | 'suspended' | 'inactive';
@@ -31,6 +33,7 @@ interface User {
   phone: string | null;
   status: UserStatus;
   primary_role: string | null;
+  department_id: string | null;
   created_at: string;
   avatar_url: string | null;
 }
@@ -52,6 +55,45 @@ export default function UsersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+  const profile = useAuthStore(s => s.profile);
+  const { hasPermission, loading: rbacLoading } = useRBAC();
+
+  const canViewAllUsers = hasPermission(PERMISSIONS.VIEW_ALL_USERS);
+  const canViewDeptUsers = hasPermission(PERMISSIONS.VIEW_DEPT_USERS);
+  const canBlockAllUsers = hasPermission(PERMISSIONS.BLOCK_UNBLOCK_USERS);
+  const canBlockDeptUsers = hasPermission(PERMISSIONS.BLOCK_DEPT_USERS);
+  const canCreateDeleteUsers = hasPermission(PERMISSIONS.CREATE_DELETE_ADMINS);
+
+  const viewerDepartmentId = profile?.department_id ?? null;
+  const viewerScope: 'all' | 'department' | 'none' = canViewAllUsers
+    ? 'all'
+    : canViewDeptUsers
+      ? 'department'
+      : 'none';
+
+  const canManageTargetUser = (target: User, action: 'view' | 'block' | 'delete' | 'role' | 'approve') => {
+    if (action === 'view') {
+      if (canViewAllUsers) return true;
+      if (canViewDeptUsers) return !!viewerDepartmentId && target.department_id === viewerDepartmentId;
+      return false;
+    }
+
+    if (action === 'block' || action === 'approve') {
+      if (canBlockAllUsers) return true;
+      if (canBlockDeptUsers) return !!viewerDepartmentId && target.department_id === viewerDepartmentId;
+      return false;
+    }
+
+    if (action === 'delete' || action === 'role') {
+      // Currently modeled as an admin-only capability.
+      if (!canCreateDeleteUsers) return false;
+      if (canViewAllUsers) return true;
+      if (canViewDeptUsers) return !!viewerDepartmentId && target.department_id === viewerDepartmentId;
+      return false;
+    }
+
+    return false;
+  };
 
   const [activeTab, setActiveTab] = useState<UserTab>('teachers');
   const [loading, setLoading] = useState(true);
@@ -91,6 +133,18 @@ export default function UsersScreen() {
 
   const fetchData = useCallback(async () => {
     try {
+      if (rbacLoading) return;
+      if (viewerScope === 'none') {
+        setUsers([]);
+        setStats({ teachers: 0, students: 0, admins: 0, pending: 0 });
+        return;
+      }
+      if (viewerScope === 'department' && !viewerDepartmentId) {
+        setUsers([]);
+        setStats({ teachers: 0, students: 0, admins: 0, pending: 0 });
+        return;
+      }
+
       // Fetch users based on tab
       let roleFilter: string[] = [];
       let statusFilter: string = 'active';
@@ -115,6 +169,10 @@ export default function UsersScreen() {
         .select('*')
         .order('created_at', { ascending: false });
 
+      if (viewerScope === 'department' && viewerDepartmentId) {
+        query = query.eq('department_id', viewerDepartmentId);
+      }
+
       if (activeTab === 'pending') {
         query = query.eq('status', 'pending');
       } else {
@@ -136,11 +194,26 @@ export default function UsersScreen() {
       setUsers(filtered);
 
       // Fetch stats
+      const baseStatsFilter = (q: any) => {
+        if (viewerScope === 'department' && viewerDepartmentId) {
+          return q.eq('department_id', viewerDepartmentId);
+        }
+        return q;
+      };
+
       const [teachersRes, studentsRes, adminsRes, pendingRes] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']).neq('status', 'pending'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('primary_role', 'student').neq('status', 'pending'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['super_admin', 'principal', 'department_admin', 'exam_cell_admin', 'library_admin', 'bus_admin', 'canteen_admin', 'finance_admin']).neq('status', 'pending'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        baseStatsFilter(
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']).neq('status', 'pending')
+        ),
+        baseStatsFilter(
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('primary_role', 'student').neq('status', 'pending')
+        ),
+        baseStatsFilter(
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).in('primary_role', ['super_admin', 'principal', 'department_admin', 'exam_cell_admin', 'library_admin', 'bus_admin', 'canteen_admin', 'finance_admin']).neq('status', 'pending')
+        ),
+        baseStatsFilter(
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        ),
       ]);
 
       setStats({
@@ -162,7 +235,7 @@ export default function UsersScreen() {
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  }, [activeTab, searchQuery]);
+  }, [activeTab, searchQuery, rbacLoading, viewerScope, viewerDepartmentId]);
 
   useEffect(() => {
     setLoading(true);
@@ -200,6 +273,10 @@ export default function UsersScreen() {
   };
 
   const handleSuspendUser = async (user: User) => {
+    if (!canManageTargetUser(user, 'block')) {
+      Alert.alert('Access denied', 'You do not have permission to suspend this user.');
+      return;
+    }
     Alert.alert(
       'Suspend User',
       `Are you sure you want to suspend ${user.full_name}?`,
@@ -229,6 +306,11 @@ export default function UsersScreen() {
 
   const handleActivateUser = async (userId: string) => {
     try {
+      const target = users.find(u => u.id === userId);
+      if (target && !canManageTargetUser(target, 'block')) {
+        Alert.alert('Access denied', 'You do not have permission to activate this user.');
+        return;
+      }
       const { error } = await supabase
         .from('profiles')
         .update({ status: 'active' })
@@ -243,6 +325,10 @@ export default function UsersScreen() {
   };
 
   const handleDeleteUser = async (user: User) => {
+    if (!canManageTargetUser(user, 'delete')) {
+      Alert.alert('Access denied', 'You do not have permission to delete this user.');
+      return;
+    }
     Alert.alert(
       'Delete User',
       `Are you sure you want to permanently delete ${user.full_name}? This action cannot be undone.`,
@@ -273,6 +359,10 @@ export default function UsersScreen() {
 
   const handleApproveUser = async (user: User) => {
     try {
+      if (!canManageTargetUser(user, 'approve')) {
+        Alert.alert('Access denied', 'You do not have permission to approve this user.');
+        return;
+      }
       const { error } = await supabase
         .from('profiles')
         .update({ status: 'active' })
@@ -287,6 +377,10 @@ export default function UsersScreen() {
   };
 
   const handleRejectUser = async (user: User) => {
+    if (!canManageTargetUser(user, 'approve')) {
+      Alert.alert('Access denied', 'You do not have permission to reject this user.');
+      return;
+    }
     Alert.alert(
       'Reject User',
       `Are you sure you want to reject ${user.full_name}'s registration?`,
@@ -316,6 +410,11 @@ export default function UsersScreen() {
 
   const handleChangeRole = async (userId: string, newRole: string) => {
     try {
+      const target = users.find(u => u.id === userId);
+      if (target && !canManageTargetUser(target, 'role')) {
+        Alert.alert('Access denied', 'You do not have permission to change roles.');
+        return;
+      }
       setSaving(true);
       const { error } = await supabase
         .from('profiles')
@@ -344,12 +443,20 @@ export default function UsersScreen() {
   };
 
   const openRoleModal = (user: User) => {
+    if (!canManageTargetUser(user, 'role')) {
+      Alert.alert('Access denied', 'You do not have permission to change roles.');
+      return;
+    }
     setSelectedUser(user);
     setFormRole(user.primary_role || '');
     setShowRoleModal(true);
   };
 
   const openAddUserModal = () => {
+    if (!canCreateDeleteUsers) {
+      Alert.alert('Access denied', 'You do not have permission to create users.');
+      return;
+    }
     setFormName('');
     setFormEmail('');
     setFormPhone('');
@@ -359,6 +466,10 @@ export default function UsersScreen() {
   };
 
   const handleCreateUser = async () => {
+    if (!canCreateDeleteUsers) {
+      Alert.alert('Access denied', 'You do not have permission to create users.');
+      return;
+    }
     if (!formName.trim() || !formEmail.trim() || !formRole) {
       Alert.alert('Validation Error', 'Name, email, and role are required');
       return;
@@ -387,6 +498,7 @@ export default function UsersScreen() {
           .update({
             primary_role: formRole,
             status: 'active',
+            department_id: formDepartment || null,
           })
           .eq('id', authData.user.id);
 
@@ -480,24 +592,28 @@ export default function UsersScreen() {
         <View style={styles.actionRow}>
           {activeTab === 'pending' ? (
             <>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
-                onPress={() => handleApproveUser(user)}
-              >
-                <FontAwesome5 name="check" size={14} color="#10b981" />
-                <Text style={[styles.actionText, { color: '#10b981' }]}>Approve</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#ef4444' + '20' }]}
-                onPress={() => handleRejectUser(user)}
-              >
-                <FontAwesome5 name="times" size={14} color="#ef4444" />
-                <Text style={[styles.actionText, { color: '#ef4444' }]}>Reject</Text>
-              </TouchableOpacity>
+              {canManageTargetUser(user, 'approve') && (
+                <>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
+                    onPress={() => handleApproveUser(user)}
+                  >
+                    <FontAwesome5 name="check" size={14} color="#10b981" />
+                    <Text style={[styles.actionText, { color: '#10b981' }]}>Approve</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#ef4444' + '20' }]}
+                    onPress={() => handleRejectUser(user)}
+                  >
+                    <FontAwesome5 name="times" size={14} color="#ef4444" />
+                    <Text style={[styles.actionText, { color: '#ef4444' }]}>Reject</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </>
           ) : (
             <>
-              {activeTab === 'teachers' && (
+              {activeTab === 'teachers' && canManageTargetUser(user, 'role') && (
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: colors.primary + '20' }]}
                   onPress={() => openRoleModal(user)}
@@ -506,30 +622,34 @@ export default function UsersScreen() {
                   <Text style={[styles.actionText, { color: colors.primary }]}>Role</Text>
                 </TouchableOpacity>
               )}
-              {user.status === 'active' ? (
+              {canManageTargetUser(user, 'block') && (
+                user.status === 'active' ? (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#f59e0b' + '20' }]}
+                    onPress={() => handleSuspendUser(user)}
+                  >
+                    <FontAwesome5 name="ban" size={14} color="#f59e0b" />
+                    <Text style={[styles.actionText, { color: '#f59e0b' }]}>Suspend</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
+                    onPress={() => handleActivateUser(user.id)}
+                  >
+                    <FontAwesome5 name="check-circle" size={14} color="#10b981" />
+                    <Text style={[styles.actionText, { color: '#10b981' }]}>Activate</Text>
+                  </TouchableOpacity>
+                )
+              )}
+              {canManageTargetUser(user, 'delete') && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#f59e0b' + '20' }]}
-                  onPress={() => handleSuspendUser(user)}
+                  style={[styles.actionBtn, { backgroundColor: '#ef4444' + '20' }]}
+                  onPress={() => handleDeleteUser(user)}
                 >
-                  <FontAwesome5 name="ban" size={14} color="#f59e0b" />
-                  <Text style={[styles.actionText, { color: '#f59e0b' }]}>Suspend</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
-                  onPress={() => handleActivateUser(user.id)}
-                >
-                  <FontAwesome5 name="check-circle" size={14} color="#10b981" />
-                  <Text style={[styles.actionText, { color: '#10b981' }]}>Activate</Text>
+                  <FontAwesome5 name="trash" size={14} color="#ef4444" />
+                  <Text style={[styles.actionText, { color: '#ef4444' }]}>Delete</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#ef4444' + '20' }]}
-                onPress={() => handleDeleteUser(user)}
-              >
-                <FontAwesome5 name="trash" size={14} color="#ef4444" />
-                <Text style={[styles.actionText, { color: '#ef4444' }]}>Delete</Text>
-              </TouchableOpacity>
             </>
           )}
         </View>
@@ -598,18 +718,22 @@ export default function UsersScreen() {
             </Text>
           </View>
           <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={[styles.roleBtn, { backgroundColor: colors.primary + '20', marginRight: 8 }]}
-              onPress={() => router.push('/(admin)/users/assign-roles')}
-            >
-              <FontAwesome5 name="user-shield" size={18} color={colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.addBtn, { backgroundColor: colors.primary }]}
-              onPress={openAddUserModal}
-            >
-              <Ionicons name="add" size={22} color="#fff" />
-            </TouchableOpacity>
+            {canCreateDeleteUsers && (
+              <>
+                <TouchableOpacity
+                  style={[styles.roleBtn, { backgroundColor: colors.primary + '20', marginRight: 8 }]}
+                  onPress={() => router.push('/(admin)/users/assign-roles')}
+                >
+                  <FontAwesome5 name="user-shield" size={18} color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.addBtn, { backgroundColor: colors.primary }]}
+                  onPress={openAddUserModal}
+                >
+                  <Ionicons name="add" size={22} color="#fff" />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </Animated.View>
 

@@ -1,0 +1,2259 @@
+{
+  "generatedAt": "2025-12-20T07:55:07.891Z",
+  "sqlFileCount": 26,
+  "tables": [
+    {
+      "name": "academic_years",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "academic_years"
+      ]
+    },
+    {
+      "name": "admission_config",
+      "definedIn": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ],
+      "fullNames": [
+        "admission_config"
+      ]
+    },
+    {
+      "name": "allowed_students",
+      "definedIn": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ],
+      "fullNames": [
+        "allowed_students"
+      ]
+    },
+    {
+      "name": "assignment_submissions",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "assignment_submissions"
+      ]
+    },
+    {
+      "name": "assignments",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "assignments"
+      ]
+    },
+    {
+      "name": "attendance",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "attendance"
+      ]
+    },
+    {
+      "name": "attendance_delegations",
+      "definedIn": [
+        "supabase/migrations/20251205000001_attendance_delegations.sql"
+      ],
+      "fullNames": [
+        "public.attendance_delegations"
+      ]
+    },
+    {
+      "name": "attendance_logs",
+      "definedIn": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ],
+      "fullNames": [
+        "attendance_logs"
+      ]
+    },
+    {
+      "name": "attendance_records",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "attendance_records"
+      ]
+    },
+    {
+      "name": "audit_logs",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "audit_logs"
+      ]
+    },
+    {
+      "name": "batches",
+      "definedIn": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ],
+      "fullNames": [
+        "batches"
+      ]
+    },
+    {
+      "name": "book_issues",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "book_issues"
+      ]
+    },
+    {
+      "name": "book_reservations",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "book_reservations"
+      ]
+    },
+    {
+      "name": "books",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "books"
+      ]
+    },
+    {
+      "name": "bus_announcements",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "bus_announcements"
+      ]
+    },
+    {
+      "name": "bus_routes",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "bus_routes"
+      ]
+    },
+    {
+      "name": "bus_stops",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "bus_stops"
+      ]
+    },
+    {
+      "name": "bus_subscriptions",
+      "definedIn": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ],
+      "fullNames": [
+        "bus_subscriptions"
+      ]
+    },
+    {
+      "name": "canteen_daily_menu",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "canteen_daily_menu"
+      ]
+    },
+    {
+      "name": "canteen_menu_items",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "canteen_menu_items"
+      ]
+    },
+    {
+      "name": "canteen_tokens",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "canteen_tokens"
+      ]
+    },
+    {
+      "name": "college_info",
+      "definedIn": [
+        "supabase/migrations/20251218000001_college_info.sql",
+        "supabase/migrations/20251218000002_recreate_college_info.sql"
+      ],
+      "fullNames": [
+        "public.college_info"
+      ]
+    },
+    {
+      "name": "complaints",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "complaints"
+      ]
+    },
+    {
+      "name": "courses",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "courses",
+        "public.courses"
+      ]
+    },
+    {
+      "name": "departments",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "departments"
+      ]
+    },
+    {
+      "name": "event_certificates",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "event_certificates"
+      ]
+    },
+    {
+      "name": "events",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "events"
+      ]
+    },
+    {
+      "name": "exam_marks",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "exam_marks"
+      ]
+    },
+    {
+      "name": "exam_schedules",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "exam_schedules"
+      ]
+    },
+    {
+      "name": "exams",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "exams"
+      ]
+    },
+    {
+      "name": "external_marks",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "external_marks"
+      ]
+    },
+    {
+      "name": "fee_payments",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "fee_payments"
+      ]
+    },
+    {
+      "name": "fee_structures",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "fee_structures"
+      ]
+    },
+    {
+      "name": "feedback",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "feedback"
+      ]
+    },
+    {
+      "name": "holidays",
+      "definedIn": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ],
+      "fullNames": [
+        "holidays"
+      ]
+    },
+    {
+      "name": "late_passes",
+      "definedIn": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ],
+      "fullNames": [
+        "late_passes"
+      ]
+    },
+    {
+      "name": "lesson_planners",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "lesson_planners"
+      ]
+    },
+    {
+      "name": "mentor_assignments",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "mentor_assignments"
+      ]
+    },
+    {
+      "name": "mentoring_sessions",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "mentoring_sessions"
+      ]
+    },
+    {
+      "name": "minor_subjects",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "minor_subjects"
+      ]
+    },
+    {
+      "name": "notice_reads",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "notice_reads"
+      ]
+    },
+    {
+      "name": "notices",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "notices"
+      ]
+    },
+    {
+      "name": "otp_verifications",
+      "definedIn": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ],
+      "fullNames": [
+        "otp_verifications"
+      ]
+    },
+    {
+      "name": "parents",
+      "definedIn": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ],
+      "fullNames": [
+        "parents"
+      ]
+    },
+    {
+      "name": "period_timings",
+      "definedIn": [
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ],
+      "fullNames": [
+        "period_timings"
+      ]
+    },
+    {
+      "name": "profiles",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "profiles",
+        "public.profiles"
+      ]
+    },
+    {
+      "name": "programs",
+      "definedIn": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ],
+      "fullNames": [
+        "programs",
+        "public.programs"
+      ]
+    },
+    {
+      "name": "roles",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "roles"
+      ]
+    },
+    {
+      "name": "sections",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "sections"
+      ]
+    },
+    {
+      "name": "semesters",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "semesters"
+      ]
+    },
+    {
+      "name": "student_bus_registrations",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "student_bus_registrations"
+      ]
+    },
+    {
+      "name": "student_fees",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "student_fees"
+      ]
+    },
+    {
+      "name": "student_minor_registrations",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "student_minor_registrations"
+      ]
+    },
+    {
+      "name": "students",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "students"
+      ]
+    },
+    {
+      "name": "subjects",
+      "definedIn": [
+        "supabase/migrations/20251206000003_subjects.sql"
+      ],
+      "fullNames": [
+        "subjects"
+      ]
+    },
+    {
+      "name": "substitutions",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ],
+      "fullNames": [
+        "substitutions"
+      ]
+    },
+    {
+      "name": "teacher_courses",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "teacher_courses"
+      ]
+    },
+    {
+      "name": "teachers",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "public.teachers",
+        "teachers"
+      ]
+    },
+    {
+      "name": "teaching_materials",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "teaching_materials"
+      ]
+    },
+    {
+      "name": "timetable_entries",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ],
+      "fullNames": [
+        "timetable_entries"
+      ]
+    },
+    {
+      "name": "user_roles",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "user_roles"
+      ]
+    },
+    {
+      "name": "users",
+      "definedIn": [],
+      "fullNames": [
+        "auth.users"
+      ]
+    },
+    {
+      "name": "work_diaries",
+      "definedIn": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ],
+      "fullNames": [
+        "work_diaries"
+      ]
+    },
+    {
+      "name": "years",
+      "definedIn": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ],
+      "fullNames": [
+        "public.years",
+        "years"
+      ]
+    }
+  ],
+  "externalTables": [
+    "users"
+  ],
+  "foreignKeys": [
+    {
+      "fromTable": "admission_config",
+      "fromCol": "updated_by",
+      "toTable": "users",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ]
+    },
+    {
+      "fromTable": "allowed_students",
+      "fromCol": "added_by",
+      "toTable": "users",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ]
+    },
+    {
+      "fromTable": "allowed_students",
+      "fromCol": "expected_program_id",
+      "toTable": "programs",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ]
+    },
+    {
+      "fromTable": "allowed_students",
+      "fromCol": "used_by_user_id",
+      "toTable": "users",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ]
+    },
+    {
+      "fromTable": "assignment_submissions",
+      "fromCol": "assignment_id",
+      "toTable": "assignments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "assignment_submissions",
+      "fromCol": "graded_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "assignment_submissions",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "assignments",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "assignments",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "assignments",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_delegations",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251205000001_attendance_delegations.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_delegations",
+      "fromCol": "granted_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251205000001_attendance_delegations.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_delegations",
+      "fromCol": "program_id",
+      "toTable": "programs",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251205000001_attendance_delegations.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_delegations",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251205000001_attendance_delegations.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_delegations",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251205000001_attendance_delegations.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_logs",
+      "fromCol": "attendance_id",
+      "toTable": "attendance",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_logs",
+      "fromCol": "attendance_record_id",
+      "toTable": "attendance_records",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_logs",
+      "fromCol": "performed_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_logs",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_logs",
+      "fromCol": "timetable_entry_id",
+      "toTable": "timetable_entries",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_records",
+      "fromCol": "attendance_id",
+      "toTable": "attendance",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_records",
+      "fromCol": "edited_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance_records",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance",
+      "fromCol": "marked_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "attendance",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "audit_logs",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "batches",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "batches",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "batches",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "batches",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "book_issues",
+      "fromCol": "book_id",
+      "toTable": "books",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "book_issues",
+      "fromCol": "issued_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "book_issues",
+      "fromCol": "returned_to",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "book_issues",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "book_reservations",
+      "fromCol": "book_id",
+      "toTable": "books",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "book_reservations",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "books",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_announcements",
+      "fromCol": "created_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_announcements",
+      "fromCol": "route_id",
+      "toTable": "bus_routes",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_stops",
+      "fromCol": "route_id",
+      "toTable": "bus_routes",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_subscriptions",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_subscriptions",
+      "fromCol": "approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_subscriptions",
+      "fromCol": "route_id",
+      "toTable": "bus_routes",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_subscriptions",
+      "fromCol": "stop_id",
+      "toTable": "bus_stops",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "bus_subscriptions",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "canteen_daily_menu",
+      "fromCol": "menu_item_id",
+      "toTable": "canteen_menu_items",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "canteen_tokens",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "complaints",
+      "fromCol": "assigned_to",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "complaints",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "courses",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "courses",
+      "fromCol": "semester_id",
+      "toTable": "semesters",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "departments",
+      "fromCol": "hod_user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "event_certificates",
+      "fromCol": "event_id",
+      "toTable": "events",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "event_certificates",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "events",
+      "fromCol": "created_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "events",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exam_marks",
+      "fromCol": "entered_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exam_marks",
+      "fromCol": "exam_schedule_id",
+      "toTable": "exam_schedules",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exam_marks",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exam_marks",
+      "fromCol": "verified_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exam_schedules",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exam_schedules",
+      "fromCol": "exam_id",
+      "toTable": "exams",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exams",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exams",
+      "fromCol": "created_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "exams",
+      "fromCol": "semester_id",
+      "toTable": "semesters",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "external_marks",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "external_marks",
+      "fromCol": "semester_id",
+      "toTable": "semesters",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "external_marks",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "external_marks",
+      "fromCol": "verified_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "fee_payments",
+      "fromCol": "student_fee_id",
+      "toTable": "student_fees",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "fee_payments",
+      "fromCol": "verified_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "fee_structures",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "fee_structures",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "fee_structures",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "feedback",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "holidays",
+      "fromCol": "created_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "holidays",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "late_passes",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "late_passes",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000002_attendance_module.sql",
+        "supabase/migrations/20251204000001_attendance_fixes.sql",
+        "supabase/migrations/20251204000002_attendance_module_v2.sql"
+      ]
+    },
+    {
+      "fromTable": "lesson_planners",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "lesson_planners",
+      "fromCol": "approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "lesson_planners",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "lesson_planners",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "lesson_planners",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "mentor_assignments",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "mentor_assignments",
+      "fromCol": "mentor_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "mentor_assignments",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "mentoring_sessions",
+      "fromCol": "mentor_assignment_id",
+      "toTable": "mentor_assignments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "minor_subjects",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "notice_reads",
+      "fromCol": "notice_id",
+      "toTable": "notices",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "notice_reads",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "notices",
+      "fromCol": "author_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "notices",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "notices",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "parents",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251217000001_fix_missing_tables.sql"
+      ]
+    },
+    {
+      "fromTable": "profiles",
+      "fromCol": "id",
+      "toTable": "users",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "profiles",
+      "fromCol": "primary_role",
+      "toTable": "roles",
+      "toCol": "name",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "programs",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000001_student_registration.sql"
+      ]
+    },
+    {
+      "fromTable": "sections",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "sections",
+      "fromCol": "class_teacher_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "sections",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "sections",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "semesters",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_bus_registrations",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_bus_registrations",
+      "fromCol": "approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_bus_registrations",
+      "fromCol": "route_id",
+      "toTable": "bus_routes",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_bus_registrations",
+      "fromCol": "stop_id",
+      "toTable": "bus_stops",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_bus_registrations",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_fees",
+      "fromCol": "fee_structure_id",
+      "toTable": "fee_structures",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_fees",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_minor_registrations",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_minor_registrations",
+      "fromCol": "approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_minor_registrations",
+      "fromCol": "minor_subject_id",
+      "toTable": "minor_subjects",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "student_minor_registrations",
+      "fromCol": "student_id",
+      "toTable": "students",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "students",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "students",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "students",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "students",
+      "fromCol": "semester_id",
+      "toTable": "semesters",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "students",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "students",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "subjects",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251206000003_subjects.sql"
+      ]
+    },
+    {
+      "fromTable": "subjects",
+      "fromCol": "semester_id",
+      "toTable": "semesters",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251206000003_subjects.sql"
+      ]
+    },
+    {
+      "fromTable": "substitutions",
+      "fromCol": "approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "substitutions",
+      "fromCol": "original_teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "substitutions",
+      "fromCol": "substitute_teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "substitutions",
+      "fromCol": "timetable_entry_id",
+      "toTable": "timetable_entries",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "teacher_courses",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teacher_courses",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teacher_courses",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teacher_courses",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teachers",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teachers",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teaching_materials",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "teaching_materials",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "timetable_entries",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "timetable_entries",
+      "fromCol": "course_id",
+      "toTable": "courses",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "timetable_entries",
+      "fromCol": "program_id",
+      "toTable": "programs",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "timetable_entries",
+      "fromCol": "section_id",
+      "toTable": "sections",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "timetable_entries",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql",
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "timetable_entries",
+      "fromCol": "year_id",
+      "toTable": "years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251203000001_timetable_update.sql"
+      ]
+    },
+    {
+      "fromTable": "user_roles",
+      "fromCol": "assigned_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "user_roles",
+      "fromCol": "department_id",
+      "toTable": "departments",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "user_roles",
+      "fromCol": "role_id",
+      "toTable": "roles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "user_roles",
+      "fromCol": "user_id",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "database/schema.sql",
+        "supabase/migrations/20241127000000_initial_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "work_diaries",
+      "fromCol": "academic_year_id",
+      "toTable": "academic_years",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "work_diaries",
+      "fromCol": "hod_approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "work_diaries",
+      "fromCol": "principal_approved_by",
+      "toTable": "profiles",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    },
+    {
+      "fromTable": "work_diaries",
+      "fromCol": "teacher_id",
+      "toTable": "teachers",
+      "toCol": "id",
+      "sources": [
+        "supabase/migrations/20251130000002_extended_schema.sql"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "can_access_module",
+      "file": "supabase/migrations/20251206000012_role_permissions.sql"
+    },
+    {
+      "name": "check_proxy_attendance",
+      "file": "supabase/migrations/20251203000002_attendance_module.sql"
+    },
+    {
+      "name": "check_proxy_attendance",
+      "file": "supabase/migrations/20251204000001_attendance_fixes.sql"
+    },
+    {
+      "name": "check_proxy_attendance",
+      "file": "supabase/migrations/20251204000002_attendance_module_v2.sql"
+    },
+    {
+      "name": "complete_student_registration",
+      "file": "supabase/migrations/20251130000001_student_registration.sql"
+    },
+    {
+      "name": "create_audit_log",
+      "file": "supabase/migrations/20251130000002_extended_schema.sql"
+    },
+    {
+      "name": "decrement_available_copies",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "expire_delegations",
+      "file": "supabase/migrations/20251205000001_attendance_delegations.sql"
+    },
+    {
+      "name": "generate_otp",
+      "file": "supabase/migrations/20251130000001_student_registration.sql"
+    },
+    {
+      "name": "get_course_programs",
+      "file": "supabase/migrations/20251206000001_simplify_schema.sql"
+    },
+    {
+      "name": "get_current_academic_year",
+      "file": "supabase/migrations/20241127000000_initial_schema.sql"
+    },
+    {
+      "name": "get_current_academic_year",
+      "file": "database/schema.sql"
+    },
+    {
+      "name": "get_degree_programs",
+      "file": "supabase/migrations/20251206000004_remove_programs_table.sql"
+    },
+    {
+      "name": "get_fee_collection_stats",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "get_fee_collection_stats",
+      "file": "supabase/migrations/20251206000011_fix_backend_functions.sql"
+    },
+    {
+      "name": "get_library_stats",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "get_library_stats",
+      "file": "supabase/migrations/20251206000011_fix_backend_functions.sql"
+    },
+    {
+      "name": "get_popular_books",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "get_top_performers_assignments",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "get_top_performers_assignments",
+      "file": "supabase/migrations/20251206000011_fix_backend_functions.sql"
+    },
+    {
+      "name": "get_user_permissions",
+      "file": "supabase/migrations/20251206000012_role_permissions.sql"
+    },
+    {
+      "name": "get_user_roles",
+      "file": "supabase/migrations/20241127000000_initial_schema.sql"
+    },
+    {
+      "name": "get_user_roles",
+      "file": "database/schema.sql"
+    },
+    {
+      "name": "handle_new_user",
+      "file": "supabase/migrations/20241127000000_initial_schema.sql"
+    },
+    {
+      "name": "handle_new_user",
+      "file": "supabase/migrations/20241128000001_fix_trigger.sql"
+    },
+    {
+      "name": "handle_new_user",
+      "file": "database/schema.sql"
+    },
+    {
+      "name": "has_permission",
+      "file": "supabase/migrations/20251206000012_role_permissions.sql"
+    },
+    {
+      "name": "increment_available_copies",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "is_admin",
+      "file": "supabase/migrations/20241127000000_initial_schema.sql"
+    },
+    {
+      "name": "is_admin",
+      "file": "database/schema.sql"
+    },
+    {
+      "name": "is_teacher",
+      "file": "supabase/migrations/20241127000000_initial_schema.sql"
+    },
+    {
+      "name": "is_teacher",
+      "file": "database/schema.sql"
+    },
+    {
+      "name": "is_user_admin",
+      "file": "supabase/migrations/20251206000012_role_permissions.sql"
+    },
+    {
+      "name": "lock_old_attendance",
+      "file": "supabase/migrations/20251203000002_attendance_module.sql"
+    },
+    {
+      "name": "lock_old_attendance",
+      "file": "supabase/migrations/20251204000001_attendance_fixes.sql"
+    },
+    {
+      "name": "lock_old_attendance",
+      "file": "supabase/migrations/20251204000002_attendance_module_v2.sql"
+    },
+    {
+      "name": "log_attendance_action",
+      "file": "supabase/migrations/20251203000002_attendance_module.sql"
+    },
+    {
+      "name": "log_attendance_action",
+      "file": "supabase/migrations/20251204000001_attendance_fixes.sql"
+    },
+    {
+      "name": "log_attendance_action",
+      "file": "supabase/migrations/20251204000002_attendance_module_v2.sql"
+    },
+    {
+      "name": "set_subjects_updated_at",
+      "file": "supabase/migrations/20251206000003_subjects.sql"
+    },
+    {
+      "name": "setup_test_admin",
+      "file": "supabase/migrations/20251127181904_seed_data.sql"
+    },
+    {
+      "name": "setup_test_student",
+      "file": "supabase/migrations/20251127181904_seed_data.sql"
+    },
+    {
+      "name": "setup_test_teacher",
+      "file": "supabase/migrations/20251127181904_seed_data.sql"
+    },
+    {
+      "name": "teacher_has_delegation",
+      "file": "supabase/migrations/20251205000001_attendance_delegations.sql"
+    },
+    {
+      "name": "update_batches_updated_at",
+      "file": "supabase/migrations/20251217000001_fix_missing_tables.sql"
+    },
+    {
+      "name": "update_bus_subscriptions_updated_at",
+      "file": "supabase/migrations/20251217000001_fix_missing_tables.sql"
+    },
+    {
+      "name": "update_college_info_updated_at",
+      "file": "supabase/migrations/20251218000001_college_info.sql"
+    },
+    {
+      "name": "update_college_info_updated_at",
+      "file": "supabase/migrations/20251218000002_recreate_college_info.sql"
+    },
+    {
+      "name": "update_delegation_timestamp",
+      "file": "supabase/migrations/20251205000001_attendance_delegations.sql"
+    },
+    {
+      "name": "update_holidays_timestamp",
+      "file": "supabase/migrations/20251204000002_attendance_module_v2.sql"
+    },
+    {
+      "name": "update_late_passes",
+      "file": "supabase/migrations/20251203000002_attendance_module.sql"
+    },
+    {
+      "name": "update_late_passes",
+      "file": "supabase/migrations/20251204000001_attendance_fixes.sql"
+    },
+    {
+      "name": "update_late_passes",
+      "file": "supabase/migrations/20251204000002_attendance_module_v2.sql"
+    },
+    {
+      "name": "update_parents_updated_at",
+      "file": "supabase/migrations/20251217000001_fix_missing_tables.sql"
+    },
+    {
+      "name": "update_submission_status",
+      "file": "supabase/migrations/20251206000010_backend_functions.sql"
+    },
+    {
+      "name": "update_timetable_updated_at",
+      "file": "supabase/migrations/20251203000001_timetable_update.sql"
+    },
+    {
+      "name": "update_updated_at",
+      "file": "supabase/migrations/20241127000000_initial_schema.sql"
+    },
+    {
+      "name": "update_updated_at",
+      "file": "database/schema.sql"
+    },
+    {
+      "name": "verify_apaar_id",
+      "file": "supabase/migrations/20251130000001_student_registration.sql"
+    },
+    {
+      "name": "verify_otp",
+      "file": "supabase/migrations/20251130000001_student_registration.sql"
+    }
+  ],
+  "_mermaid": {}
+}
