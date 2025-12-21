@@ -8,6 +8,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface BookReturn {
   id: string; book_id: string; user_id: string; issue_date: string; due_date: string; fine_amount: number;
@@ -84,7 +85,16 @@ export default function LibraryReturnScreen() {
             <Animated.View key={issue.id} entering={FadeInDown.delay(i * 30).springify()}>
               <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <View style={[styles.bookIcon, { backgroundColor: isOverdue ? `${colors.error}20` : `${colors.success}20` }]}>
+                  <View
+                    style={[
+                      styles.bookIcon,
+                      {
+                        backgroundColor: isOverdue
+                          ? withAlpha(colors.error, 0.125)
+                          : withAlpha(colors.success, 0.125),
+                      },
+                    ]}
+                  >
                     <FontAwesome5 name="book-open" size={20} color={isOverdue ? colors.error : colors.success} />
                   </View>
                   <View style={styles.info}>
@@ -93,7 +103,7 @@ export default function LibraryReturnScreen() {
                   </View>
                   {isOverdue && (
                     <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                      <Text style={styles.badgeText}>Overdue</Text>
+                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>Overdue</Text>
                     </View>
                   )}
                 </View>
@@ -108,8 +118,8 @@ export default function LibraryReturnScreen() {
                   )}
                 </View>
                 <TouchableOpacity onPress={() => handleReturn(issue)} style={[styles.returnButton, { backgroundColor: colors.success }]}>
-                  <FontAwesome5 name="check" size={16} color="#fff" />
-                  <Text style={styles.returnText}>Return Book</Text>
+                  <FontAwesome5 name="check" size={16} color={colors.textInverse} />
+                  <Text style={[styles.returnText, { color: colors.textInverse }]}>Return Book</Text>
                 </TouchableOpacity>
               </Card>
             </Animated.View>
@@ -137,12 +147,12 @@ const styles = StyleSheet.create({
   info: { flex: 1 }, bookTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   meta: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
   details: { marginBottom: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   label: { fontSize: 14 }, value: { fontSize: 14, fontWeight: '600' },
   returnButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12 },
-  returnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  returnText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
 });

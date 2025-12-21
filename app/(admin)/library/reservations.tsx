@@ -9,6 +9,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Reservation {
   id: string; book_id: string; user_id: string; reservation_date: string; status: string;
@@ -107,14 +108,14 @@ export default function LibraryReservationsScreen() {
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Reservations</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{reservations.length} pending</Text></View>
           <TouchableOpacity onPress={openModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
         {reservations.map((res, i) => (
           <Animated.View key={res.id} entering={FadeInDown.delay(i * 30).springify()}>
             <Card style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.icon, { backgroundColor: `${colors.warning}20` }]}>
+                <View style={[styles.icon, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
                   <FontAwesome5 name="bookmark" size={20} color={colors.warning} />
                 </View>
                 <View style={styles.info}>
@@ -142,7 +143,7 @@ export default function LibraryReservationsScreen() {
         )}
       </ScrollView>
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Reserve Book</Text>
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
   cancelText: { fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },

@@ -21,6 +21,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
+import { withAlpha } from '../../theme/colorUtils';
 
 type NoticeType = 'general' | 'academic' | 'exam' | 'event' | 'urgent';
 type NoticeTab = 'all' | 'active' | 'inactive';
@@ -53,12 +54,12 @@ interface Notice {
   } | null;
 }
 
-const noticeTypeConfig: Record<NoticeType, { icon: string; color: string; label: string }> = {
-  general: { icon: 'info-circle', color: '#6366f1', label: 'General' },
-  academic: { icon: 'graduation-cap', color: '#10b981', label: 'Academic' },
-  exam: { icon: 'file-alt', color: '#f59e0b', label: 'Exam' },
-  event: { icon: 'calendar-alt', color: '#8b5cf6', label: 'Event' },
-  urgent: { icon: 'exclamation-triangle', color: '#ef4444', label: 'Urgent' },
+const noticeTypeConfig: Record<NoticeType, { icon: string; colorKey: 'info' | 'success' | 'warning' | 'primary' | 'error'; label: string }> = {
+  general: { icon: 'info-circle', colorKey: 'info', label: 'General' },
+  academic: { icon: 'graduation-cap', colorKey: 'success', label: 'Academic' },
+  exam: { icon: 'file-alt', colorKey: 'warning', label: 'Exam' },
+  event: { icon: 'calendar-alt', colorKey: 'primary', label: 'Event' },
+  urgent: { icon: 'exclamation-triangle', colorKey: 'error', label: 'Urgent' },
 };
 
 export default function NoticesScreen() {
@@ -66,6 +67,14 @@ export default function NoticesScreen() {
   const { colors, isDark } = useThemeStore();
   const { user, profile } = useAuthStore();
   const { hasPermission } = useRBAC();
+
+  const typeColorByKey = {
+    info: colors.info,
+    success: colors.success,
+    warning: colors.warning,
+    primary: colors.primary,
+    error: colors.error,
+  } as const;
 
   const canPostGlobalNotices = hasPermission(PERMISSIONS.POST_GLOBAL_NOTICES);
   const canPostDeptNotices = hasPermission(PERMISSIONS.POST_DEPT_NOTICES);
@@ -289,6 +298,7 @@ export default function NoticesScreen() {
   const renderNoticeCard = (notice: Notice, index: number) => {
     const displayType = deriveDisplayType(notice);
     const config = noticeTypeConfig[displayType] || noticeTypeConfig.general;
+    const typeColor = typeColorByKey[config.colorKey];
 
     return (
       <Animated.View
@@ -298,20 +308,20 @@ export default function NoticesScreen() {
       >
         <Card style={styles.noticeCard}>
           <View style={styles.noticeHeader}>
-            <View style={[styles.typeIcon, { backgroundColor: config.color + '20' }]}>
-              <FontAwesome5 name={config.icon} size={16} color={config.color} />
+            <View style={[styles.typeIcon, { backgroundColor: withAlpha(typeColor, 0.125) }]}>
+              <FontAwesome5 name={config.icon} size={16} color={typeColor} />
             </View>
             <View style={styles.noticeInfo}>
               <Text style={[styles.noticeTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                 {notice.title}
               </Text>
               <View style={styles.noticeMeta}>
-                <View style={[styles.typeBadge, { backgroundColor: config.color + '15' }]}>
-                  <Text style={[styles.typeText, { color: config.color }]}>{config.label}</Text>
+                <View style={[styles.typeBadge, { backgroundColor: withAlpha(typeColor, 0.08) }]}>
+                  <Text style={[styles.typeText, { color: typeColor }]}>{config.label}</Text>
                 </View>
                 {!notice.is_active && (
-                  <View style={[styles.draftBadge, { backgroundColor: '#64748b20' }]}>
-                    <Text style={[styles.draftText, { color: '#64748b' }]}>Draft</Text>
+                  <View style={[styles.draftBadge, { backgroundColor: withAlpha(colors.textMuted, 0.125) }]}>
+                    <Text style={[styles.draftText, { color: colors.textMuted }]}>Draft</Text>
                   </View>
                 )}
               </View>
@@ -324,7 +334,7 @@ export default function NoticesScreen() {
                 style={styles.moreBtn}
                 onPress={() => handleDeleteNotice(notice.id)}
               >
-                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                <Ionicons name="trash-outline" size={18} color={colors.error} />
               </TouchableOpacity>
             </Restricted>
           </View>
@@ -333,7 +343,7 @@ export default function NoticesScreen() {
             {notice.content}
           </Text>
 
-          <View style={styles.noticeFooter}>
+          <View style={[styles.noticeFooter, { borderTopColor: withAlpha(colors.textPrimary, 0.05) }]}>
             <View style={styles.footerLeft}>
               <FontAwesome5 name="calendar" size={11} color={colors.textMuted} />
               <Text style={[styles.footerText, { color: colors.textMuted }]}>
@@ -347,19 +357,23 @@ export default function NoticesScreen() {
               <TouchableOpacity
                 style={[
                   styles.publishToggle,
-                  { backgroundColor: notice.is_active ? '#10b98115' : '#f59e0b15' },
+                  {
+                    backgroundColor: notice.is_active
+                      ? withAlpha(colors.success, 0.08)
+                      : withAlpha(colors.warning, 0.08),
+                  },
                 ]}
                 onPress={() => handleTogglePublish(notice)}
               >
                 <Ionicons
                   name={notice.is_active ? 'eye' : 'eye-off'}
                   size={14}
-                  color={notice.is_active ? '#10b981' : '#f59e0b'}
+                  color={notice.is_active ? colors.success : colors.warning}
                 />
                 <Text
                   style={[
                     styles.publishText,
-                    { color: notice.is_active ? '#10b981' : '#f59e0b' },
+                    { color: notice.is_active ? colors.success : colors.warning },
                   ]}
                 >
                   {notice.is_active ? 'Active' : 'Inactive'}
@@ -396,7 +410,7 @@ export default function NoticesScreen() {
               style={[styles.addBtn, { backgroundColor: colors.primary }]}
               onPress={() => setShowModal(true)}
             >
-              <Ionicons name="add" size={22} color="#fff" />
+              <Ionicons name="add" size={22} color={colors.textInverse} />
             </TouchableOpacity>
           </Restricted>
         </Animated.View>
@@ -408,7 +422,7 @@ export default function NoticesScreen() {
               key={tab.key}
               style={[
                 styles.tab,
-                activeTab === tab.key && { backgroundColor: colors.primary + '20' },
+                activeTab === tab.key && { backgroundColor: withAlpha(colors.primary, 0.125) },
               ]}
               onPress={() => setActiveTab(tab.key)}
             >
@@ -425,11 +439,20 @@ export default function NoticesScreen() {
                   styles.tabBadge,
                   {
                     backgroundColor:
-                      activeTab === tab.key ? colors.primary : colors.textMuted + '30',
+                      activeTab === tab.key
+                        ? colors.primary
+                        : withAlpha(colors.textMuted, 0.19),
                   },
                 ]}
               >
-                <Text style={styles.tabBadgeText}>{tab.count}</Text>
+                <Text
+                  style={[
+                    styles.tabBadgeText,
+                    { color: activeTab === tab.key ? colors.textInverse : colors.textSecondary },
+                  ]}
+                >
+                  {tab.count}
+                </Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -461,14 +484,14 @@ export default function NoticesScreen() {
 
         {/* Create Notice Modal */}
         <Modal visible={showModal} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
             <View
               style={[
                 styles.modalContent,
-                { backgroundColor: isDark ? '#1a1a2e' : '#fff' },
+                { backgroundColor: colors.cardBackground },
               ]}
             >
-              <View style={styles.modalHeader}>
+              <View style={[styles.modalHeader, { borderBottomColor: withAlpha(colors.textPrimary, 0.1) }]}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   Create Notice
                 </Text>
@@ -483,9 +506,9 @@ export default function NoticesScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.03),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   placeholder="Enter notice title"
@@ -500,9 +523,9 @@ export default function NoticesScreen() {
                     styles.input,
                     styles.textArea,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.03),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   placeholder="Enter notice content"
@@ -523,8 +546,13 @@ export default function NoticesScreen() {
                         styles.typeOption,
                         {
                           backgroundColor:
-                            noticeType === key ? config.color + '20' : 'transparent',
-                          borderColor: noticeType === key ? config.color : colors.textMuted + '30',
+                            noticeType === key
+                              ? withAlpha(typeColorByKey[config.colorKey], 0.125)
+                              : 'transparent',
+                          borderColor:
+                            noticeType === key
+                              ? typeColorByKey[config.colorKey]
+                              : withAlpha(colors.textMuted, 0.19),
                         },
                       ]}
                       onPress={() => setNoticeType(key as NoticeType)}
@@ -532,12 +560,17 @@ export default function NoticesScreen() {
                       <FontAwesome5
                         name={config.icon}
                         size={14}
-                        color={noticeType === key ? config.color : colors.textMuted}
+                        color={noticeType === key ? typeColorByKey[config.colorKey] : colors.textMuted}
                       />
                       <Text
                         style={[
                           styles.typeOptionText,
-                          { color: noticeType === key ? config.color : colors.textMuted },
+                          {
+                            color:
+                              noticeType === key
+                                ? typeColorByKey[config.colorKey]
+                                : colors.textMuted,
+                          },
                         ]}
                       >
                         {config.label}
@@ -547,7 +580,7 @@ export default function NoticesScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={styles.publishRow}
+                  style={[styles.publishRow, { borderTopColor: withAlpha(colors.textPrimary, 0.1) }]}
                   onPress={() => setIsPublished(!isPublished)}
                 >
                   <View>
@@ -562,14 +595,19 @@ export default function NoticesScreen() {
                     style={[
                       styles.toggle,
                       {
-                        backgroundColor: isPublished ? colors.primary : colors.textMuted + '30',
+                        backgroundColor: isPublished
+                          ? colors.primary
+                          : withAlpha(colors.textMuted, 0.19),
                       },
                     ]}
                   >
                     <View
                       style={[
                         styles.toggleKnob,
-                        { transform: [{ translateX: isPublished ? 20 : 2 }] },
+                        {
+                          backgroundColor: colors.textInverse,
+                          transform: [{ translateX: isPublished ? 20 : 2 }],
+                        },
                       ]}
                     />
                   </View>
@@ -640,7 +678,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabBadgeText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -720,7 +758,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: 'transparent',
   },
   footerLeft: {
     flexDirection: 'row',
@@ -757,7 +795,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -771,7 +809,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: 'transparent',
   },
   modalTitle: {
     fontSize: 20,
@@ -822,7 +860,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: 'transparent',
   },
   publishLabel: {
     fontSize: 14,
@@ -842,7 +880,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   modalFooter: {
     padding: 20,
