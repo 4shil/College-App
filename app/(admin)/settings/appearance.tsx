@@ -14,18 +14,28 @@ import { BlurView } from 'expo-blur';
 
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
+import { themeRegistry } from '../../../theme/registry';
 
 
 export default function AppearanceSettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, animationsEnabled, toggleAnimations, mode, setMode } = useThemeStore();
+  const { colors, animationsEnabled, toggleAnimations, mode, setMode, supportsAnimatedBackground, capabilities, activeThemeId, setActiveThemeId } = useThemeStore();
+  const canUseBlur = capabilities.supportsBlur && animationsEnabled;
+
+  const themePresets = React.useMemo(() => {
+    const byId = new Map<string, { id: string; name: string }>();
+    for (const preset of Object.values(themeRegistry)) {
+      if (!byId.has(preset.id)) byId.set(preset.id, { id: preset.id, name: preset.name });
+    }
+    return Array.from(byId.values());
+  }, []);
 
   return (
     <AnimatedBackground>
       <View style={styles2.container}>
         {/* Fixed Header */}
-        <BlurView intensity={animationsEnabled ? 80 : 0} tint="dark" style={[styles2.headerBlur, { paddingTop: insets.top + 10 }]}>
+        <BlurView intensity={canUseBlur ? 80 : 0} tint="dark" style={[styles2.headerBlur, { paddingTop: insets.top + 10 }]}>
           <View style={styles2.header}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -56,7 +66,7 @@ export default function AppearanceSettingsScreen() {
           {/* Theme Mode Section */}
           <Animated.View entering={FadeInDown.delay(100).duration(400)}>
             <BlurView
-              intensity={animationsEnabled ? 60 : 0}
+              intensity={canUseBlur ? 60 : 0}
               tint="dark"
               style={[styles2.section, { borderColor: colors.glassBorder }]}
             >
@@ -116,74 +126,133 @@ export default function AppearanceSettingsScreen() {
             </BlurView>
           </Animated.View>
 
-          {/* Animations Section */}
-          <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+          {/* Theme Preset Section */}
+          <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             <BlurView
-              intensity={animationsEnabled ? 60 : 0}
+              intensity={canUseBlur ? 60 : 0}
               tint="dark"
               style={[styles2.section, { borderColor: colors.glassBorder }]}
             >
               <View style={styles2.sectionHeader}>
-                <Ionicons name="sparkles" size={24} color={colors.primary} />
+                <Ionicons name="layers" size={24} color={colors.primary} />
                 <Text style={[styles2.sectionTitle, { color: colors.textPrimary }]}>
-                  Animations
+                  Theme Preset
                 </Text>
               </View>
               <Text style={[styles2.sectionDesc, { color: colors.textSecondary }]}>
-                Enable or disable UI animations and effects
+                Choose between available theme presets
               </Text>
 
-              <TouchableOpacity
-                onPress={toggleAnimations}
-                style={[
-                  styles2.toggleRow,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderColor: colors.glassBorder,
-                  },
-                ]}
-                activeOpacity={0.7}
-              >
-                <View style={styles2.toggleLeft}>
-                  <Ionicons
-                    name={animationsEnabled ? 'play-circle' : 'pause-circle'}
-                    size={28}
-                    color={animationsEnabled ? colors.primary : colors.textSecondary}
-                  />
-                  <View style={styles2.toggleTextContainer}>
-                    <Text style={[styles2.toggleTitle, { color: colors.textPrimary }]}>
-                      {animationsEnabled ? 'Enabled' : 'Disabled'}
-                    </Text>
-                    <Text style={[styles2.toggleDesc, { color: colors.textSecondary }]}>
-                      Smooth transitions and effects
-                    </Text>
-                  </View>
-                </View>
-                <View
-                  style={[
-                    styles2.toggle,
-                    {
-                      backgroundColor: animationsEnabled ? colors.primary : colors.glassBorder,
-                    },
-                  ]}
-                >
-                  <View
+              <View style={styles2.modeButtons}>
+                {themePresets.map((preset) => (
+                  <TouchableOpacity
+                    key={preset.id}
+                    onPress={() => setActiveThemeId(preset.id)}
                     style={[
-                      styles2.toggleKnob,
+                      styles2.modeButton,
                       {
-                        transform: [{ translateX: animationsEnabled ? 22 : 2 }],
+                        backgroundColor: activeThemeId === preset.id ? colors.primary : 'rgba(255, 255, 255, 0.05)',
+                        borderColor: activeThemeId === preset.id ? colors.primary : colors.glassBorder,
                       },
                     ]}
-                  />
-                </View>
-              </TouchableOpacity>
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={activeThemeId === preset.id ? 'radio-button-on' : 'radio-button-off'}
+                      size={24}
+                      color={activeThemeId === preset.id ? '#FFFFFF' : colors.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles2.modeText,
+                        {
+                          color: activeThemeId === preset.id ? '#FFFFFF' : colors.textPrimary,
+                        },
+                      ]}
+                    >
+                      {preset.name}
+                    </Text>
+                    {activeThemeId === preset.id && (
+                      <View style={styles2.checkmark}>
+                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
             </BlurView>
           </Animated.View>
+
+          {/* Animations Section */}
+          {supportsAnimatedBackground && (
+            <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+              <BlurView
+                intensity={canUseBlur ? 60 : 0}
+                tint="dark"
+                style={[styles2.section, { borderColor: colors.glassBorder }]}
+              >
+                <View style={styles2.sectionHeader}>
+                  <Ionicons name="sparkles" size={24} color={colors.primary} />
+                  <Text style={[styles2.sectionTitle, { color: colors.textPrimary }]}>
+                    Animations
+                  </Text>
+                </View>
+                <Text style={[styles2.sectionDesc, { color: colors.textSecondary }]}>
+                  Enable or disable UI animations and effects
+                </Text>
+
+                <TouchableOpacity
+                  onPress={toggleAnimations}
+                  style={[
+                    styles2.toggleRow,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderColor: colors.glassBorder,
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles2.toggleLeft}>
+                    <Ionicons
+                      name={animationsEnabled ? 'play-circle' : 'pause-circle'}
+                      size={28}
+                      color={animationsEnabled ? colors.primary : colors.textSecondary}
+                    />
+                    <View style={styles2.toggleTextContainer}>
+                      <Text style={[styles2.toggleTitle, { color: colors.textPrimary }]}>
+                        {animationsEnabled ? 'Enabled' : 'Disabled'}
+                      </Text>
+                      <Text style={[styles2.toggleDesc, { color: colors.textSecondary }]}>
+                        Smooth transitions and effects
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={[
+                      styles2.toggle,
+                      {
+                        backgroundColor: animationsEnabled ? colors.primary : colors.glassBorder,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles2.toggleKnob,
+                        {
+                          transform: [{ translateX: animationsEnabled ? 22 : 2 }],
+                        },
+                      ]}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </BlurView>
+            </Animated.View>
+          )}
 
           {/* Info Card */}
           <Animated.View entering={FadeInDown.delay(300).duration(400)}>
             <BlurView
-              intensity={animationsEnabled ? 60 : 0}
+              intensity={canUseBlur ? 60 : 0}
               tint="dark"
               style={[styles2.infoCard, { borderColor: colors.glassBorder }]}
             >

@@ -60,7 +60,11 @@ export function createStore<T extends object>(createState: StateCreator<T>) {
 // Persist middleware (simplified)
 export function persist<T extends object>(
   createState: StateCreator<T>,
-  options: { name: string; storage?: any }
+  options: {
+    name: string;
+    storage?: any;
+    merge?: (persistedState: any, currentState: T) => Partial<T>;
+  }
 ) {
   return (set: SetState<T>, get: GetState<T>, api: StoreApi<T>): T => {
     const storage = options.storage || {
@@ -88,7 +92,9 @@ export function persist<T extends object>(
         const stored = await storage.getItem(options.name);
         if (stored) {
           const parsed = JSON.parse(stored);
-          set(parsed);
+          const current = get();
+          const merged = options.merge ? options.merge(parsed, current) : parsed;
+          set(merged);
         }
       } catch {}
     };

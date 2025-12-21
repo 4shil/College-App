@@ -16,6 +16,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 import { AnimatedBackground, Card, PrimaryButton } from '../../components/ui';
+import { Restricted } from '../../components/Restricted';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';

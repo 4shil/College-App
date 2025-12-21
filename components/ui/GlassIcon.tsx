@@ -22,7 +22,9 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
   style,
   withGlow = true,
 }) => {
-  const { isDark } = useThemeStore();
+  const { isDark, colors, capabilities } = useThemeStore();
+  const supportsGlass = capabilities.supportsGlassSurfaces;
+  const supportsBlur = capabilities.supportsBlur;
 
   const iconContainerSize = size * 2;
 
@@ -30,6 +32,25 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
     iconType === 'ion' ? Ionicons :
     iconType === 'mci' ? MaterialCommunityIcons :
     FontAwesome5;
+
+  if (!supportsGlass) {
+    return (
+      <View style={[styles.container, { width: iconContainerSize, height: iconContainerSize }, style]}>
+        <View
+          style={[
+            styles.glassContainer,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.cardBorder,
+              borderWidth: Math.max(colors.borderWidth, 1),
+            },
+          ]}
+        >
+          <IconComponent name={name as any} size={size} color={color} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { width: iconContainerSize, height: iconContainerSize }, style]}>
@@ -50,7 +71,7 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
       )}
 
       {/* Main Glass Container */}
-      {Platform.OS === 'ios' ? (
+      {Platform.OS === 'ios' && supportsBlur ? (
         <BlurView
           intensity={isDark ? 40 : 50}
           style={[

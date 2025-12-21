@@ -203,7 +203,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   currentPage,
   onNavigate,
 }) => {
-  const { isDark } = useThemeStore();
+  const { isDark, colors, capabilities } = useThemeStore();
+  const canUseBlur = capabilities.supportsBlur;
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(100);
 
@@ -240,7 +241,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
       {/* Main Nav Bar */}
       <View style={styles.navBarWrapper}>
-        {Platform.OS === 'ios' ? (
+        {Platform.OS === 'ios' && canUseBlur ? (
           <BlurView
             intensity={60}
             style={styles.blurView}
@@ -249,7 +250,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             <NavBarContent isDark={isDark} currentPage={currentPage} onNavigate={onNavigate} />
           </BlurView>
         ) : (
-          <View style={[styles.blurView, { backgroundColor: isDark ? 'rgba(20, 20, 35, 0.95)' : 'rgba(255, 255, 255, 0.95)' }]}>
+          <View
+            style={[
+              styles.blurView,
+              {
+                backgroundColor: canUseBlur
+                  ? isDark
+                    ? 'rgba(20, 20, 35, 0.95)'
+                    : 'rgba(255, 255, 255, 0.95)'
+                  : colors.cardBackground,
+              },
+            ]}
+          >
             <NavBarContent isDark={isDark} currentPage={currentPage} onNavigate={onNavigate} />
           </View>
         )}

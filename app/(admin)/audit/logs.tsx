@@ -349,18 +349,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
 
-  statValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-
-  statLabel: {
-    fontSize: 11,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-
   statCard: {
     width: '48%',
     padding: 14,
@@ -383,12 +371,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  statValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-
   statLabel: {
     fontSize: 12,
     fontWeight: '500',
@@ -403,31 +385,6 @@ const styles = StyleSheet.create({
 
   logsList: {
     marginBottom: 20,
-  },
-
-  logCard: {
-    padding: 14,
-    marginBottom: 10,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-
-  logHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
   },
 
   logTime: {
@@ -453,35 +410,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  logUser: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-
   logEntity: {
     fontSize: 13,
     fontWeight: '500',
   },
 
-  changes: {
-    marginTop: 4,
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-
-  changesText: {
-    fontSize: 11,
-    fontFamily: 'monospace',
-    flex: 1,
-    lineHeight: 16,
-  },
-
-  empty: {
-    paddingVertical: 6
-  },
 
   statValue: {
     fontSize: 26,

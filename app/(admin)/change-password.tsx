@@ -13,7 +13,8 @@ import { changePassword, getSession } from '../../lib/supabase';
 export default function ChangePasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, animationsEnabled } = useThemeStore();
+  const { colors, animationsEnabled, capabilities } = useThemeStore();
+  const canUseBlur = capabilities.supportsBlur && animationsEnabled;
   const { isAuthenticated, setSession } = useAuthStore();
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -94,7 +95,7 @@ export default function ChangePasswordScreen() {
       <View style={styles.container}>
         {/* Fixed Header */}
         <BlurView
-          intensity={animationsEnabled ? 80 : 0}
+          intensity={canUseBlur ? 80 : 0}
           tint="dark"
           style={[styles.headerBlur, { paddingTop: insets.top + 10 }]}
         >

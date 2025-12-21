@@ -1,0 +1,67 @@
+import { ThemeTokensNormalized } from '../../theme/types';
+
+// Default theme (DARK) — extracted 1:1 from the previous `store/themeStore.ts` darkColors.
+// IMPORTANT: Do not change any values.
+export const defaultDarkTokens: ThemeTokensNormalized = {
+  background: {
+    base: '#0F0F1A',
+    gradientStart: '#0F0F1A',
+    gradientEnd: '#1A1A2E',
+  },
+
+  surface: {
+    glass: {
+      background: 'rgba(255, 255, 255, 0.06)',
+      backgroundStrong: 'rgba(255, 255, 255, 0.1)',
+      border: 'rgba(255, 255, 255, 0.1)',
+    },
+    card: {
+      background: 'rgba(255, 255, 255, 0.06)',
+      border: 'rgba(255, 255, 255, 0.1)',
+    },
+  },
+
+  text: {
+    primary: '#FFFFFF',
+    secondary: '#A0A0B2',
+    muted: '#6B6B80',
+    inverse: '#0F0F1A',
+  },
+
+  brand: {
+    primary: {
+      base: '#8B5CF6',
+      light: '#A78BFA',
+      dark: '#7C3AED',
+    },
+    secondary: {
+      base: '#06B6D4',
+      light: '#22D3EE',
+    },
+  },
+
+  semantic: {
+    success: '#4ADE80',
+    warning: '#FACC15',
+    error: '#F87171',
+    info: '#22D3EE',
+  },
+
+  input: {
+    background: 'rgba(255, 255, 255, 0.04)',
+    border: 'rgba(139, 92, 246, 0.25)',
+    focusBorder: '#8B5CF6',
+    placeholder: '#6B6B80',
+  },
+
+  effects: {
+    shadowColor: '#8B5CF6',
+    shadowIntensity: 0.3,
+    blurIntensity: 20,
+  },
+
+  geometry: {
+    borderRadius: 16,
+    borderWidth: 0,
+  },
+};

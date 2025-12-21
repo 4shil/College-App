@@ -90,14 +90,15 @@ export default function AnalyticsScreen() {
   const setupRealtimeSubscriptions = () => {
     // Subscribe to changes in key tables for comprehensive realtime analytics
     const tables = [
-      'profiles', 
-      'courses', 
-      'departments', 
+      'profiles',
+      'courses',
+      'departments',
       'notices',
       'attendance',
+      'attendance_records',
       'exams',
       'assignments',
-      'library_books',
+      'books',
     ];
     
     tables.forEach(table => {
@@ -167,8 +168,9 @@ export default function AnalyticsScreen() {
         // Get all profiles to count students and teachers
         supabase.from('profiles').select('id, primary_role, status, department_id'),
         supabase.from('courses').select('id', { count: 'exact' }).eq('is_active', true),
-        supabase.from('departments').select('id, name', { count: 'exact' }),
-        supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'pending_approval'),
+        // Only count active departments (inactive/legacy rows should not affect analytics).
+        supabase.from('departments').select('id, name', { count: 'exact' }).eq('is_active', true),
+        supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'pending'),
         supabase.from('notices').select('id', { count: 'exact' }).eq('is_active', true),
         // Today's attendance records
         supabase.from('attendance_records').select('id, status', { count: 'exact' }).gte('marked_at', todayISO).lt('marked_at', tomorrowISO),
@@ -194,7 +196,9 @@ export default function AnalyticsScreen() {
       const teachers = allProfiles.filter((p: any) => 
         ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(p.primary_role)
       );
-      const activeStudents = students.filter((s: any) => s.status === 'approved').length;
+      // Profiles.status is a UserStatus enum (see `types/database.ts`).
+      // Treat `active` as the “approved/active student” state for analytics.
+      const activeStudents = students.filter((s: any) => s.status === 'active').length;
       
       const totalStudents = students.length;
       const totalTeachers = teachers.length;
@@ -214,7 +218,7 @@ export default function AnalyticsScreen() {
       // Get department distribution from profiles
       const deptMap = new Map<string, number>();
       students.forEach((student: any) => {
-        if (student.status === 'approved' && student.department_id) {
+        if (student.status === 'active' && student.department_id) {
           const deptId = student.department_id;
           deptMap.set(deptId, (deptMap.get(deptId) || 0) + 1);
         }

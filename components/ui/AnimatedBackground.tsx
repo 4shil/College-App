@@ -268,7 +268,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   children,
   variant = 'default',
 }) => {
-  const { isDark, animationsEnabled, colors, uiStyle } = useThemeStore();
+  const { isDark, canAnimateBackground, colors, uiStyle } = useThemeStore();
   const fadeIn = useSharedValue(0);
 
   useEffect(() => {
@@ -280,8 +280,8 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     opacity: fadeIn.value,
   }));
 
-  // Disable animations if user turned them off or variant is minimal
-  const isMinimal = variant === 'minimal' || !animationsEnabled;
+  // Disable animations if user turned them off / theme can't animate, or variant is minimal
+  const isMinimal = variant === 'minimal' || !canAnimateBackground;
   // On Android, reduce number of animated layers for better performance
   const reducedAnimations = isAndroid && !isMinimal;
 
