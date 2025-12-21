@@ -22,6 +22,7 @@ import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../co
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -350,17 +351,17 @@ export default function SubstitutionsScreen() {
               <FontAwesome5 
                 name="calendar-alt" 
                 size={14} 
-                color={isToday ? '#10b981' : colors.textMuted} 
+                color={isToday ? colors.success : colors.textMuted} 
               />
               <Text style={[
                 styles.dateText, 
-                { color: isToday ? '#10b981' : colors.textSecondary }
+                { color: isToday ? colors.success : colors.textSecondary }
               ]}>
                 {formatDate(sub.date)}
               </Text>
               {isToday && (
-                <View style={styles.todayBadge}>
-                  <Text style={styles.todayText}>TODAY</Text>
+                <View style={[styles.todayBadge, { backgroundColor: colors.success }]}>
+                  <Text style={[styles.todayText, { color: colors.textInverse }]}>TODAY</Text>
                 </View>
               )}
             </View>
@@ -369,13 +370,13 @@ export default function SubstitutionsScreen() {
                 style={styles.cancelBtn}
                 onPress={() => handleDeleteSubstitution(sub)}
               >
-                <Ionicons name="close-circle" size={22} color="#ef4444" />
+                <Ionicons name="close-circle" size={22} color={colors.error} />
               </TouchableOpacity>
             )}
           </View>
 
           <View style={styles.periodRow}>
-            <View style={[styles.periodBadge, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.periodBadge, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
               <Text style={[styles.periodText, { color: colors.primary }]}>
                 P{entry?.period}
               </Text>
@@ -383,7 +384,12 @@ export default function SubstitutionsScreen() {
             <Text style={[styles.timeText, { color: colors.textMuted }]}>
               {timing?.start} - {timing?.end}
             </Text>
-            <View style={[styles.classBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View
+              style={[
+                styles.classBadge,
+                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              ]}
+            >
               <Text style={[styles.classText, { color: colors.textSecondary }]}>
                 {entry?.year?.name} - P{entry?.period}
               </Text>
@@ -400,9 +406,9 @@ export default function SubstitutionsScreen() {
           <View style={styles.teacherSwap}>
             <View style={styles.teacherBox}>
               <Text style={[styles.teacherLabel, { color: colors.textMuted }]}>Original</Text>
-              <View style={[styles.teacherInfo, { backgroundColor: '#ef444415' }]}>
-                <FontAwesome5 name="user" size={12} color="#ef4444" />
-                <Text style={[styles.teacherName, { color: '#ef4444' }]}>
+              <View style={[styles.teacherInfo, { backgroundColor: withAlpha(colors.error, 0.08) }]}>
+                <FontAwesome5 name="user" size={12} color={colors.error} />
+                <Text style={[styles.teacherName, { color: colors.error }]}>
                   {sub.original_teacher?.profiles?.full_name || 'Unknown'}
                 </Text>
               </View>
@@ -414,9 +420,9 @@ export default function SubstitutionsScreen() {
 
             <View style={styles.teacherBox}>
               <Text style={[styles.teacherLabel, { color: colors.textMuted }]}>Substitute</Text>
-              <View style={[styles.teacherInfo, { backgroundColor: '#10b98115' }]}>
-                <FontAwesome5 name="user-check" size={12} color="#10b981" />
-                <Text style={[styles.teacherName, { color: '#10b981' }]}>
+              <View style={[styles.teacherInfo, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+                <FontAwesome5 name="user-check" size={12} color={colors.success} />
+                <Text style={[styles.teacherName, { color: colors.success }]}>
                   {sub.substitute_teacher?.profiles?.full_name || 'Unknown'}
                 </Text>
               </View>
@@ -424,7 +430,7 @@ export default function SubstitutionsScreen() {
           </View>
 
           {sub.reason && (
-            <View style={styles.reasonRow}>
+            <View style={[styles.reasonRow, { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.06) }]}>
               <FontAwesome5 name="comment-alt" size={11} color={colors.textMuted} />
               <Text style={[styles.reasonText, { color: colors.textMuted }]}>
                 {sub.reason}
@@ -438,9 +444,9 @@ export default function SubstitutionsScreen() {
 
   const renderCreateModal = () => (
     <Modal visible={showCreateModal} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
-          <View style={styles.modalHeader}>
+      <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.6) }]}>
+        <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               Create Substitution
             </Text>
@@ -453,7 +459,10 @@ export default function SubstitutionsScreen() {
             {/* Date Picker */}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Date</Text>
             <TouchableOpacity
-              style={[styles.datePickerBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+              style={[
+                styles.datePickerBtn,
+                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              ]}
               onPress={() => setShowDatePicker(true)}
             >
               <FontAwesome5 name="calendar-alt" size={16} color={colors.primary} />
@@ -480,9 +489,9 @@ export default function SubstitutionsScreen() {
 
             {/* Weekend Warning */}
             {(selectedDate.getDay() === 0 || selectedDate.getDay() === 6) && (
-              <View style={styles.warningBox}>
-                <Ionicons name="warning" size={16} color="#f59e0b" />
-                <Text style={styles.warningText}>Weekends have no classes</Text>
+              <View style={[styles.warningBox, { backgroundColor: withAlpha(colors.warning, 0.08) }]}>
+                <Ionicons name="warning" size={16} color={colors.warning} />
+                <Text style={[styles.warningText, { color: colors.warning }]}>Weekends have no classes</Text>
               </View>
             )}
 
@@ -490,7 +499,7 @@ export default function SubstitutionsScreen() {
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Select Period & Class
             </Text>
-            <View style={[styles.pickerBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View style={[styles.pickerBox, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) }]}>
               <Picker
                 selectedValue={selectedEntry}
                 onValueChange={setSelectedEntry}
@@ -510,7 +519,7 @@ export default function SubstitutionsScreen() {
 
             {/* Selected Entry Info */}
             {selectedEntry && getSelectedEntry() && (
-              <View style={[styles.selectedInfo, { backgroundColor: colors.primary + '10' }]}>
+              <View style={[styles.selectedInfo, { backgroundColor: withAlpha(colors.primary, 0.063) }]}>
                 <Text style={[styles.selectedLabel, { color: colors.primary }]}>Selected:</Text>
                 <Text style={[styles.selectedText, { color: colors.textPrimary }]}>
                   Period {getSelectedEntry()?.period} • {getSelectedEntry()?.year?.name}
@@ -518,7 +527,7 @@ export default function SubstitutionsScreen() {
                 <Text style={[styles.selectedText, { color: colors.textSecondary }]}>
                   {getSelectedEntry()?.courses?.name}
                 </Text>
-                <Text style={[styles.selectedText, { color: '#ef4444' }]}>
+                <Text style={[styles.selectedText, { color: colors.error }]}>
                   Original: {getSelectedEntry()?.teachers?.profiles?.full_name}
                 </Text>
               </View>
@@ -528,7 +537,7 @@ export default function SubstitutionsScreen() {
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Substitute Teacher
             </Text>
-            <View style={[styles.pickerBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View style={[styles.pickerBox, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) }]}>
               <Picker
                 selectedValue={selectedSubstitute}
                 onValueChange={setSelectedSubstitute}
@@ -608,22 +617,22 @@ export default function SubstitutionsScreen() {
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={() => setShowCreateModal(true)}
           >
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
         {/* Stats */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: '#10b98115' }]}>
-            <Text style={[styles.statValue, { color: '#10b981' }]}>{stats.today}</Text>
+          <View style={[styles.statCard, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+            <Text style={[styles.statValue, { color: colors.success }]}>{stats.today}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Today</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}>
+          <View style={[styles.statCard, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
             <Text style={[styles.statValue, { color: colors.primary }]}>{stats.upcoming}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Upcoming</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#f59e0b15' }]}>
-            <Text style={[styles.statValue, { color: '#f59e0b' }]}>{stats.thisMonth}</Text>
+          <View style={[styles.statCard, { backgroundColor: withAlpha(colors.warning, 0.08) }]}>
+            <Text style={[styles.statValue, { color: colors.warning }]}>{stats.thisMonth}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>This Month</Text>
           </View>
         </Animated.View>
@@ -635,7 +644,7 @@ export default function SubstitutionsScreen() {
               key={tab.key}
               style={[
                 styles.tab,
-                activeTab === tab.key && { backgroundColor: colors.primary + '20' },
+                activeTab === tab.key && { backgroundColor: withAlpha(colors.primary, 0.125) },
               ]}
               onPress={() => setActiveTab(tab.key)}
             >
@@ -647,9 +656,9 @@ export default function SubstitutionsScreen() {
               </Text>
               <View style={[
                 styles.tabBadge,
-                { backgroundColor: activeTab === tab.key ? colors.primary : colors.textMuted + '40' },
+                { backgroundColor: activeTab === tab.key ? colors.primary : withAlpha(colors.textMuted, 0.25) },
               ]}>
-                <Text style={styles.tabBadgeText}>{tab.count}</Text>
+                <Text style={[styles.tabBadgeText, { color: colors.textInverse }]}>{tab.count}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -737,7 +746,7 @@ const styles = StyleSheet.create({
     minWidth: 22,
     alignItems: 'center',
   },
-  tabBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  tabBadgeText: { color: 'transparent', fontSize: 10, fontWeight: '700' },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
   loadingContainer: { paddingTop: 60, alignItems: 'center' },
@@ -752,12 +761,12 @@ const styles = StyleSheet.create({
   dateContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dateText: { fontSize: 14, fontWeight: '600' },
   todayBadge: {
-    backgroundColor: '#10b981',
+    backgroundColor: 'transparent',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  todayText: { color: '#fff', fontSize: 9, fontWeight: '700' },
+  todayText: { color: 'transparent', fontSize: 9, fontWeight: '700' },
   cancelBtn: { padding: 4 },
   periodRow: {
     flexDirection: 'row',
@@ -810,7 +819,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: 'transparent',
   },
   reasonText: { fontSize: 12, fontStyle: 'italic' },
   emptyState: { alignItems: 'center', paddingTop: 60 },
@@ -819,7 +828,7 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -833,7 +842,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: 'transparent',
   },
   modalTitle: { fontSize: 20, fontWeight: '700' },
   modalBody: { padding: 20, maxHeight: 500 },
@@ -855,13 +864,13 @@ const styles = StyleSheet.create({
   warningBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f59e0b15',
+    backgroundColor: 'transparent',
     padding: 12,
     borderRadius: 10,
     marginTop: 12,
     gap: 8,
   },
-  warningText: { color: '#f59e0b', fontSize: 13 },
+  warningText: { color: 'transparent', fontSize: 13 },
   selectedInfo: {
     padding: 14,
     borderRadius: 12,

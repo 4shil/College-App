@@ -8,6 +8,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +42,10 @@ export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const periodButtonBackground = isDark
+    ? withAlpha(colors.textInverse, 0.05)
+    : withAlpha(colors.shadowColor, 0.05);
   
   const [loading, setLoading] = useState(true);
   const [isRealtime, setIsRealtime] = useState(true);
@@ -326,7 +331,7 @@ export default function AnalyticsScreen() {
   }) => (
     <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.statCardWrapper}>
       <Card style={styles.statCard}>
-        <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
+        <View style={[styles.iconContainer, { backgroundColor: withAlpha(color, 0.12) }]}>
           <FontAwesome5 name={icon} size={24} color={color} />
         </View>
         <View style={styles.statContent}>
@@ -345,10 +350,10 @@ export default function AnalyticsScreen() {
               <FontAwesome5 
                 name={trend.startsWith('+') ? 'arrow-up' : 'arrow-down'} 
                 size={10} 
-                color={trend.startsWith('+') ? '#10B981' : '#EF4444'} 
+                color={trend.startsWith('+') ? colors.success : colors.error}
               />
               <Text style={[styles.trendText, { 
-                color: trend.startsWith('+') ? '#10B981' : '#EF4444' 
+                color: trend.startsWith('+') ? colors.success : colors.error
               }]}>
                 {trend}
               </Text>
@@ -375,7 +380,7 @@ export default function AnalyticsScreen() {
     <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.chartCardWrapper}>
       <Card style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <View style={[styles.chartIcon, { backgroundColor: `${color}20` }]}>
+          <View style={[styles.chartIcon, { backgroundColor: withAlpha(color, 0.12) }]}>
             <FontAwesome5 name={icon} size={18} color={color} />
           </View>
           <Text style={[styles.chartTitle, { color: colors.textPrimary }]}>{title}</Text>
@@ -386,7 +391,16 @@ export default function AnalyticsScreen() {
               <Text style={[styles.chartLabel, { color: colors.textSecondary }]}>
                 {item.label}
               </Text>
-              <View style={styles.chartBarContainer}>
+              <View
+                style={[
+                  styles.chartBarContainer,
+                  {
+                    backgroundColor: isDark
+                      ? withAlpha(colors.textInverse, 0.1)
+                      : withAlpha(colors.shadowColor, 0.08),
+                  },
+                ]}
+              >
                 <View 
                   style={[
                     styles.chartBar, 
@@ -439,14 +453,27 @@ export default function AnalyticsScreen() {
           <View style={styles.headerRight}>
             <TouchableOpacity 
               onPress={() => setIsRealtime(!isRealtime)} 
-              style={[styles.realtimeToggle, { backgroundColor: isRealtime ? `${colors.primary}20` : `${colors.textMuted}20` }]}
+              style={[
+                styles.realtimeToggle,
+                {
+                  backgroundColor: isRealtime
+                    ? withAlpha(colors.primary, 0.12)
+                    : withAlpha(colors.textMuted, 0.12),
+                },
+              ]}
             >
-              <View style={[styles.realtimeDot, { backgroundColor: isRealtime ? '#10B981' : colors.textMuted }]} />
+              <View style={[styles.realtimeDot, { backgroundColor: isRealtime ? colors.success : colors.textMuted }]} />
               <Text style={[styles.realtimeText, { color: isRealtime ? colors.primary : colors.textMuted }]}>
                 {isRealtime ? 'Live' : 'Static'}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={fetchAnalytics} style={styles.refreshButton}>
+            <TouchableOpacity
+              onPress={fetchAnalytics}
+              style={[
+                styles.refreshButton,
+                { backgroundColor: isDark ? withAlpha(colors.textInverse, 0.05) : withAlpha(colors.shadowColor, 0.05) },
+              ]}
+            >
               <FontAwesome5 name="sync-alt" size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -473,15 +500,16 @@ export default function AnalyticsScreen() {
                   {
                     backgroundColor: selectedPeriod === period
                       ? colors.primary
-                      : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                    borderColor: selectedPeriod === period ? colors.primary : `${colors.primary}30`,
+                      : periodButtonBackground,
+                    borderColor:
+                      selectedPeriod === period ? colors.primary : withAlpha(colors.primary, 0.18),
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.periodText,
-                    { color: selectedPeriod === period ? '#FFFFFF' : colors.textSecondary },
+                    { color: selectedPeriod === period ? colors.textInverse : colors.textSecondary },
                   ]}
                 >
                   {period.charAt(0).toUpperCase() + period.slice(1)}
@@ -498,7 +526,7 @@ export default function AnalyticsScreen() {
             title="Total Students" 
             value={analytics.totalStudents} 
             icon="users" 
-            color="#3B82F6"
+            color={colors.info}
             subtitle={analytics.activeStudents !== null ? `${analytics.activeStudents} active` : undefined}
             delay={200}
           />
@@ -506,21 +534,21 @@ export default function AnalyticsScreen() {
             title="Total Teachers" 
             value={analytics.totalTeachers} 
             icon="chalkboard-teacher" 
-            color="#8B5CF6"
+            color={colors.secondary}
             delay={250}
           />
           <StatCard 
             title="Departments" 
             value={analytics.totalDepartments} 
             icon="building" 
-            color="#10B981"
+            color={colors.success}
             delay={300}
           />
           <StatCard 
             title="Courses" 
             value={analytics.totalCourses} 
             icon="book" 
-            color="#F59E0B"
+            color={colors.warning}
             delay={350}
           />
         </View>
@@ -532,7 +560,7 @@ export default function AnalyticsScreen() {
             title="Pending Approvals" 
             value={analytics.pendingApprovals} 
             icon="clock" 
-            color="#EF4444"
+            color={colors.error}
             subtitle={analytics.pendingApprovals !== null && analytics.pendingApprovals > 0 ? "Requires action" : undefined}
             delay={400}
           />
@@ -540,7 +568,7 @@ export default function AnalyticsScreen() {
             title="Today's Attendance" 
             value={analytics.todayAttendance !== null ? `${analytics.todayAttendance}%` : null} 
             icon="user-check" 
-            color="#14B8A6"
+            color={colors.success}
             subtitle={analytics.todayAttendance !== null ? "Current rate" : undefined}
             delay={450}
           />
@@ -548,7 +576,7 @@ export default function AnalyticsScreen() {
             title="Upcoming Exams" 
             value={analytics.upcomingExams} 
             icon="clipboard-list" 
-            color="#F59E0B"
+            color={colors.warning}
             subtitle={analytics.upcomingExams !== null && analytics.upcomingExams > 0 ? "Scheduled" : undefined}
             delay={500}
           />
@@ -556,7 +584,7 @@ export default function AnalyticsScreen() {
             title="Active Assignments" 
             value={analytics.pendingAssignments} 
             icon="tasks" 
-            color="#8B5CF6"
+            color={colors.secondary}
             subtitle={analytics.pendingAssignments !== null && analytics.pendingAssignments > 0 ? "In progress" : undefined}
             delay={550}
           />
@@ -569,7 +597,7 @@ export default function AnalyticsScreen() {
             title="Active Notices" 
             value={analytics.activeNotices} 
             icon="bell" 
-            color="#06B6D4"
+            color={colors.info}
             subtitle={analytics.activeNotices !== null && analytics.activeNotices > 0 ? "Published" : undefined}
             delay={600}
           />
@@ -577,7 +605,7 @@ export default function AnalyticsScreen() {
             title="Avg Attendance" 
             value={analytics.avgAttendance !== null ? `${analytics.avgAttendance}%` : null} 
             icon="clipboard-check" 
-            color="#10B981"
+            color={colors.success}
             subtitle={analytics.avgAttendance !== null ? `${selectedPeriod} average` : undefined}
             delay={650}
           />
@@ -585,7 +613,7 @@ export default function AnalyticsScreen() {
             title="Library Books" 
             value={analytics.libraryBooks} 
             icon="book-reader" 
-            color="#6366F1"
+            color={colors.secondary}
             subtitle={analytics.libraryBooks !== null ? "Total collection" : undefined}
             delay={700}
           />
@@ -593,7 +621,7 @@ export default function AnalyticsScreen() {
             title="Data Status" 
             value={isRealtime ? "Live" : "Static"} 
             icon="wifi" 
-            color="#10B981"
+            color={isRealtime ? colors.success : colors.textMuted}
             subtitle="Realtime updates"
             delay={750}
           />
@@ -604,7 +632,7 @@ export default function AnalyticsScreen() {
           <ChartCard
             title="Students by Department"
             icon="chart-bar"
-            color="#3B82F6"
+            color={colors.info}
             delay={600}
             data={departmentDistribution.map((dept) => {
               const maxCount = Math.max(...departmentDistribution.map(d => d.student_count));
@@ -631,7 +659,7 @@ export default function AnalyticsScreen() {
           <ChartCard
             title={`${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Attendance Trends`}
             icon="chart-line"
-            color="#10B981"
+            color={colors.success}
             delay={650}
             data={attendanceTrends.map((trend) => {
               const maxRate = Math.max(...attendanceTrends.map(t => t.rate));
@@ -716,7 +744,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   lastUpdate: {
     fontSize: 11,
@@ -839,7 +866,6 @@ const styles = StyleSheet.create({
   chartBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 4,
     overflow: 'hidden',
   },

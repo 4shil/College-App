@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
+import { withAlpha } from '../../../../theme/colorUtils';
 
 interface Student {
   id: string;
@@ -140,11 +141,11 @@ export default function StudentsListScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return '#10b981';
-      case 'inactive': return '#f59e0b';
-      case 'graduated': return '#3b82f6';
-      case 'suspended': return '#ef4444';
-      default: return '#6b7280';
+      case 'active': return colors.success;
+      case 'inactive': return colors.warning;
+      case 'graduated': return colors.info;
+      case 'suspended': return colors.error;
+      default: return colors.textMuted;
     }
   };
 
@@ -161,8 +162,8 @@ export default function StudentsListScreen() {
         <Card style={styles.studentCard}>
           <View style={styles.cardContent}>
             {/* Avatar */}
-            <View style={[styles.avatar, { backgroundColor: '#10b98120' }]}>
-              <FontAwesome5 name="user-graduate" size={18} color="#10b981" />
+            <View style={[styles.avatar, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+              <FontAwesome5 name="user-graduate" size={18} color={colors.success} />
             </View>
 
             {/* Info */}
@@ -177,13 +178,13 @@ export default function StudentsListScreen() {
                 {student.registration_number || 'No Reg No'}
               </Text>
               <View style={styles.metaRow}>
-                <View style={[styles.metaBadge, { backgroundColor: colors.primary + '15' }]}>
+                <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
                   <Text style={[styles.metaText, { color: colors.primary }]}>
                     {student.department?.code || 'N/A'}
                   </Text>
                 </View>
-                <View style={[styles.metaBadge, { backgroundColor: '#8b5cf620' }]}>
-                  <Text style={[styles.metaText, { color: '#8b5cf6' }]}>
+                <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
+                  <Text style={[styles.metaText, { color: colors.info }]}>
                     {student.year?.name || 'N/A'} - {student.section?.name || 'N/A'}
                   </Text>
                 </View>
@@ -204,7 +205,7 @@ export default function StudentsListScreen() {
       style={[
         styles.filterChip,
         {
-          backgroundColor: selectedDept === dept.id ? colors.primary : colors.primary + '15',
+          backgroundColor: selectedDept === dept.id ? colors.primary : withAlpha(colors.primary, 0.08),
         },
       ]}
       onPress={() => setSelectedDept(selectedDept === dept.id ? null : dept.id)}
@@ -212,7 +213,7 @@ export default function StudentsListScreen() {
       <Text
         style={[
           styles.filterChipText,
-          { color: selectedDept === dept.id ? '#fff' : colors.primary },
+          { color: selectedDept === dept.id ? colors.textInverse : colors.primary },
         ]}
       >
         {dept.code}
@@ -225,8 +226,8 @@ export default function StudentsListScreen() {
       entering={FadeInDown.delay(200).duration(400)}
       style={styles.emptyState}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: '#10b98115' }]}>
-        <FontAwesome5 name="user-graduate" size={40} color="#10b981" />
+      <View style={[styles.emptyIcon, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+        <FontAwesome5 name="user-graduate" size={40} color={colors.success} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
         No Students Found
@@ -262,16 +263,19 @@ export default function StudentsListScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.filterBtn, { backgroundColor: showFilters ? colors.primary : colors.primary + '15' }]}
+            style={[
+              styles.filterBtn,
+              { backgroundColor: showFilters ? colors.primary : withAlpha(colors.primary, 0.08) },
+            ]}
             onPress={() => setShowFilters(!showFilters)}
           >
-            <Ionicons name="filter" size={18} color={showFilters ? '#fff' : colors.primary} />
+            <Ionicons name="filter" size={18} color={showFilters ? colors.textInverse : colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: '#10b981' }]}
+            style={[styles.addBtn, { backgroundColor: colors.success }]}
             onPress={() => router.push('/(admin)/users/students/create' as any)}
           >
-            <Ionicons name="add" size={20} color="#fff" />
+            <Ionicons name="add" size={20} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 

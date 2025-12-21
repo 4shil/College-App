@@ -16,6 +16,7 @@ import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { exportAuditLogs } from '../../../lib/export';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface AuditLog {
   id: string;
@@ -28,20 +29,32 @@ interface AuditLog {
   created_at: string;
 }
 
-const ACTION_COLORS: Record<string, string> = {
-  CREATE: '#10B981',
-  UPDATE: '#3B82F6',
-  DELETE: '#EF4444',
-  LOGIN: '#8B5CF6',
-  LOGOUT: '#6B7280',
-  APPROVE: '#059669',
-  REJECT: '#DC2626',
-};
-
 export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const getActionColor = React.useCallback(
+    (action: string) => {
+      switch (action) {
+        case 'CREATE':
+        case 'APPROVE':
+          return colors.success;
+        case 'UPDATE':
+          return colors.info;
+        case 'DELETE':
+        case 'REJECT':
+          return colors.error;
+        case 'LOGIN':
+          return colors.secondary;
+        case 'LOGOUT':
+          return colors.textMuted;
+        default:
+          return colors.primary;
+      }
+    },
+    [colors]
+  );
 
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,13 +124,19 @@ export default function AuditLogsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, 0.06) }]}
+            onPress={() => router.back()}
+          >
             <FontAwesome5 name="arrow-left" size={18} color={colors.textPrimary} />
           </TouchableOpacity>
 
           <Text style={[styles.title, { color: colors.textPrimary }]}>Audit Logs</Text>
 
-          <TouchableOpacity style={styles.iconBtn} onPress={exportToCSV}>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, 0.06) }]}
+            onPress={exportToCSV}
+          >
             <FontAwesome5 name="file-export" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
@@ -127,8 +146,8 @@ export default function AuditLogsScreen() {
           style={[
             styles.searchBox,
             {
-              backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-              borderColor: `${colors.primary}30`,
+              backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.05),
+              borderColor: withAlpha(colors.primary, 0.19),
             },
           ]}
         >
@@ -158,12 +177,19 @@ export default function AuditLogsScreen() {
                     styles.chip,
                     {
                       backgroundColor:
-                        f.value === item ? colors.primary : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                      borderColor: f.value === item ? colors.primary : `${colors.primary}30`,
+                        f.value === item
+                          ? colors.primary
+                          : withAlpha(colors.textPrimary, isDark ? 0.06 : 0.05),
+                      borderColor: f.value === item ? colors.primary : withAlpha(colors.primary, 0.19),
                     },
                   ]}
                 >
-                  <Text style={{ color: f.value === item ? '#fff' : colors.textSecondary, fontWeight: '600' }}>
+                  <Text
+                    style={{
+                      color: f.value === item ? colors.textInverse : colors.textSecondary,
+                      fontWeight: '600',
+                    }}
+                  >
                     {item}
                   </Text>
                 </TouchableOpacity>
@@ -175,12 +201,15 @@ export default function AuditLogsScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Total Logs', value: logs.length, icon: 'list', color: '#3B82F6' },
-            { label: 'Created', value: logs.filter(l => l.action === 'CREATE').length, icon: 'plus-circle', color: '#10B981' },
-            { label: 'Updated', value: logs.filter(l => l.action === 'UPDATE').length, icon: 'edit', color: '#F59E0B' },
-            { label: 'Deleted', value: logs.filter(l => l.action === 'DELETE').length, icon: 'trash', color: '#EF4444' },
+            { label: 'Total Logs', value: logs.length, icon: 'list', color: colors.info },
+            { label: 'Created', value: logs.filter(l => l.action === 'CREATE').length, icon: 'plus-circle', color: colors.success },
+            { label: 'Updated', value: logs.filter(l => l.action === 'UPDATE').length, icon: 'edit', color: colors.warning },
+            { label: 'Deleted', value: logs.filter(l => l.action === 'DELETE').length, icon: 'trash', color: colors.error },
           ].map((stat, i) => (
-            <View key={i} style={styles.statItem}>
+            <View
+              key={i}
+              style={[styles.statItem, { backgroundColor: withAlpha(colors.textPrimary, 0.04) }]}
+            >
               <FontAwesome5 name={stat.icon} size={16} color={stat.color} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stat.value}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
@@ -203,18 +232,18 @@ export default function AuditLogsScreen() {
                 entering={FadeInDown.delay(index * 50).springify()}
               >
                 <View style={[styles.logCard, { 
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
-                  borderLeftColor: ACTION_COLORS[log.action] || colors.primary,
+                  backgroundColor: colors.cardBackground,
+                  borderLeftColor: getActionColor(log.action),
                   borderLeftWidth: 4,
                 }]}>
                   {/* Header with Action Badge and Time */}
                   <View style={styles.logHeader}>
                     <View style={[styles.badge, { 
-                      backgroundColor: `${ACTION_COLORS[log.action] || colors.primary}20`,
-                      borderColor: ACTION_COLORS[log.action] || colors.primary,
+                      backgroundColor: withAlpha(getActionColor(log.action), 0.12),
+                      borderColor: getActionColor(log.action),
                     }]}>
                       <Text style={{ 
-                        color: ACTION_COLORS[log.action] || colors.primary, 
+                        color: getActionColor(log.action),
                         fontWeight: '700', 
                         fontSize: 11,
                         letterSpacing: 0.5,
@@ -230,7 +259,7 @@ export default function AuditLogsScreen() {
                   {/* User and Entity Info */}
                   <View style={styles.logContent}>
                     <View style={styles.logRow}>
-                      <View style={[styles.iconCircle, { backgroundColor: `${colors.primary}15` }]}>
+                      <View style={[styles.iconCircle, { backgroundColor: withAlpha(colors.primary, 0.09) }]}>
                         <FontAwesome5 name="user" size={11} color={colors.primary} />
                       </View>
                       <Text style={[styles.logUser, { color: colors.textPrimary }]}>
@@ -239,7 +268,7 @@ export default function AuditLogsScreen() {
                     </View>
 
                     <View style={styles.logRow}>
-                      <View style={[styles.iconCircle, { backgroundColor: `${colors.textSecondary}15` }]}>
+                      <View style={[styles.iconCircle, { backgroundColor: withAlpha(colors.textSecondary, 0.09) }]}>
                         <FontAwesome5 name="database" size={10} color={colors.textSecondary} />
                       </View>
                       <Text style={[styles.logEntity, { color: colors.textSecondary }]}>
@@ -250,8 +279,8 @@ export default function AuditLogsScreen() {
                     {/* Changes */}
                     {log.changes && (
                       <View style={[styles.changes, { 
-                        backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)',
-                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                        backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.04),
+                        borderColor: withAlpha(colors.textPrimary, 0.08),
                       }]}>
                         <FontAwesome5 name="code" size={10} color={colors.textSecondary} style={{ marginRight: 6 }} />
                         <Text style={[styles.changesText, { color: colors.textSecondary }]} numberOfLines={2}>
@@ -298,7 +327,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
   },
 
   searchBox: {
@@ -346,7 +374,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
   },
 
   statCard: {
@@ -355,7 +382,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     borderWidth: 1,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -448,13 +474,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
   },
 
   changesText: {
     fontSize: 12,
     fontFamily: 'monospace',
-    color: '#A1A1AA',
   },
 
   empty: {

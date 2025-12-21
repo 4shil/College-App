@@ -13,6 +13,11 @@ if (Platform.OS !== 'web') {
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
 
+  // Read theme colors for the initial loading UI without hard-coded values.
+  // The store has a default theme even before full hydration.
+  const { useThemeStore } = require('../store/themeStore');
+  const { colors } = useThemeStore();
+
   useEffect(() => {
     // Small delay to let stores initialize, then show app
     const init = async () => {
@@ -30,8 +35,8 @@ export default function RootLayout() {
 
   if (!isReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a0a18' }}>
-        <ActivityIndicator size="large" color="#8B5CF6" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

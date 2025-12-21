@@ -21,6 +21,7 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
 
 interface PrimaryButtonProps {
   title: string;
@@ -110,14 +111,11 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   const getGradientColors = (): [string, string, string] => {
     if (variant === 'primary') {
-      return isDark 
-        ? ['#8B5CF6', '#7C3AED', '#6D28D9'] 
-        : ['#7C3AED', '#6D28D9', '#5B21B6'];
+      return [colors.primaryLight, colors.primary, colors.primaryDark];
     }
     if (variant === 'secondary') {
-      return isDark 
-        ? ['#06B6D4', '#0891B2', '#0E7490'] 
-        : ['#0891B2', '#0E7490', '#155E75'];
+      // No dedicated secondaryDark token in legacy surface; keep a stable 3-stop gradient.
+      return [colors.secondaryLight, colors.secondary, colors.secondary];
     }
     return ['transparent', 'transparent', 'transparent'];
   };
@@ -148,7 +146,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           ]}
         >
           {loading ? (
-            <ActivityIndicator color={isDark ? '#8B5CF6' : colors.primary} size="small" />
+            <ActivityIndicator color={colors.primary} size="small" />
           ) : (
             <>
               {icon}
@@ -156,7 +154,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 style={[
                   styles.outlineText,
                   { 
-                    color: isDark ? '#FB923C' : colors.primary, 
+                    color: colors.primary,
                     fontSize: fontSizes[size],
                     marginLeft: icon ? 8 : 0,
                   },
@@ -177,7 +175,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       style={[
         styles.wrapper,
         {
-          shadowColor: isDark ? '#8B5CF6' : '#6D28D9',
+          shadowColor: colors.primary,
         },
         glowStyle,
         animatedStyle,
@@ -202,17 +200,17 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
         >
           {/* Top inner highlight for depth */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.28)', 'rgba(255,255,255,0.08)', 'transparent']}
+            colors={[withAlpha(colors.glassBackgroundStrong, 0.28), withAlpha(colors.glassBackgroundStrong, 0.08), 'transparent']}
             style={styles.innerHighlight}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
           />
           
           {/* Bottom edge shadow */}
-          <View style={styles.bottomShadow} />
+          <View style={[styles.bottomShadow, { backgroundColor: withAlpha(colors.shadowColor, 0.15) }]} />
           
           {loading ? (
-            <ActivityIndicator color="#ffffff" size="small" />
+            <ActivityIndicator color={colors.textInverse} size="small" />
           ) : (
             <>
               {icon}
@@ -222,6 +220,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                   { 
                     fontSize: fontSizes[size],
                     marginLeft: icon ? 8 : 0,
+                    color: colors.textInverse,
                   }, 
                   textStyle
                 ]}
@@ -269,10 +268,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 4,
-    backgroundColor: 'rgba(0,0,0,0.15)',
+    // NOTE: backgroundColor is applied at runtime to use theme colors.
   },
   text: {
-    color: '#ffffff',
     fontWeight: '700',
     letterSpacing: 0.4,
   },

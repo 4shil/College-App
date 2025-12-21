@@ -18,6 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Department {
@@ -210,7 +211,12 @@ export default function CreateTeacherScreen() {
             {/* Personal Info Section */}
             <Animated.View entering={FadeInDown.delay(150).duration(400)}>
               <Card style={styles.formSection}>
-                <View style={styles.sectionHeader}>
+                <View
+                  style={[
+                    styles.sectionHeader,
+                    { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) },
+                  ]}
+                >
                   <FontAwesome5 name="user" size={14} color={colors.primary} />
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                     Personal Information
@@ -271,7 +277,12 @@ export default function CreateTeacherScreen() {
             {/* Professional Info Section */}
             <Animated.View entering={FadeInDown.delay(200).duration(400)}>
               <Card style={styles.formSection}>
-                <View style={styles.sectionHeader}>
+                <View
+                  style={[
+                    styles.sectionHeader,
+                    { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) },
+                  ]}
+                >
                   <FontAwesome5 name="briefcase" size={14} color={colors.primary} />
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                     Professional Information
@@ -282,7 +293,12 @@ export default function CreateTeacherScreen() {
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
                     Department *
                   </Text>
-                  <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                  <View
+                    style={[
+                      styles.pickerContainer,
+                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                    ]}
+                  >
                     <Picker
                       selectedValue={formData.department_id}
                       onValueChange={(value) => updateFormData('department_id', value)}
@@ -401,7 +417,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: 'transparent',
   },
   sectionTitle: {
     fontSize: 15,

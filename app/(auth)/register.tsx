@@ -32,6 +32,7 @@ import {
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, sendOTP } from '../../lib/supabase';
+import { withAlpha } from '../../theme/colorUtils';
 
 // Import DateTimePicker - works on iOS/Android, not on web
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -328,9 +329,7 @@ export default function RegisterScreen() {
                   step < currentStep
                     ? colors.primary
                     : step === currentStep
-                    ? isDark
-                      ? 'rgba(129, 140, 248, 0.2)'
-                      : 'rgba(99, 102, 241, 0.1)'
+                    ? withAlpha(colors.primary, isDark ? 0.2 : 0.1)
                     : 'transparent',
                 borderColor:
                   step <= currentStep ? colors.primary : colors.glassBorder,
@@ -338,7 +337,7 @@ export default function RegisterScreen() {
             ]}
           >
             {step < currentStep ? (
-              <Ionicons name="checkmark" size={14} color="#fff" />
+              <Ionicons name="checkmark" size={14} color={colors.textInverse} />
             ) : (
               <Text
                 style={[
@@ -406,10 +405,10 @@ export default function RegisterScreen() {
             {apaarVerified && (
               <Animated.View
                 entering={FadeInDown.duration(300)}
-                style={styles.verifiedBadge}
+                style={[styles.verifiedBadge, { backgroundColor: withAlpha(colors.success, 0.1) }]}
               >
-                <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                <Text style={styles.verifiedText}>APAAR ID Verified!</Text>
+                <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                <Text style={[styles.verifiedText, { color: colors.success }]}>APAAR ID Verified!</Text>
               </Animated.View>
             )}
 
@@ -423,18 +422,23 @@ export default function RegisterScreen() {
                 disabled={verifyingApaar}
               >
                 {verifyingApaar ? (
-                  <ActivityIndicator color="#fff" size="small" />
+                  <ActivityIndicator color={colors.textInverse} size="small" />
                 ) : (
                   <>
-                    <Ionicons name="shield-checkmark" size={18} color="#fff" />
-                    <Text style={styles.verifyButtonText}>Verify APAAR ID</Text>
+                    <Ionicons name="shield-checkmark" size={18} color={colors.textInverse} />
+                    <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify APAAR ID</Text>
                   </>
                 )}
               </TouchableOpacity>
             )}
 
-            <View style={[styles.infoBox, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)' }]}>
-              <Ionicons name="information-circle" size={20} color="#3b82f6" />
+            <View
+              style={[
+                styles.infoBox,
+                { backgroundColor: withAlpha(colors.info, isDark ? 0.1 : 0.05) },
+              ]}
+            >
+              <Ionicons name="information-circle" size={20} color={colors.info} />
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 APAAR ID is provided by the college administration. If you don't have one, please contact the college office.
               </Text>
@@ -506,8 +510,8 @@ export default function RegisterScreen() {
                     styles.dateButton,
                     {
                       backgroundColor: isDark
-                        ? 'rgba(255,255,255,0.05)'
-                        : 'rgba(0,0,0,0.03)',
+                        ? withAlpha(colors.textInverse, 0.05)
+                        : withAlpha(colors.shadowColor, 0.03),
                       borderColor: colors.glassBorder,
                     },
                   ]}
@@ -544,8 +548,8 @@ export default function RegisterScreen() {
                       styles.dateButton,
                       {
                         backgroundColor: isDark
-                          ? 'rgba(255,255,255,0.05)'
-                          : 'rgba(0,0,0,0.03)',
+                          ? withAlpha(colors.textInverse, 0.05)
+                          : withAlpha(colors.shadowColor, 0.03),
                         borderColor: colors.glassBorder,
                       },
                     ]}
@@ -598,9 +602,7 @@ export default function RegisterScreen() {
                       {
                         backgroundColor:
                           formData.gender === g
-                            ? isDark
-                              ? 'rgba(129, 140, 248, 0.2)'
-                              : 'rgba(99, 102, 241, 0.1)'
+                            ? withAlpha(colors.primary, isDark ? 0.2 : 0.1)
                             : 'transparent',
                         borderColor:
                           formData.gender === g ? colors.primary : colors.glassBorder,
@@ -655,9 +657,7 @@ export default function RegisterScreen() {
                       {
                         backgroundColor:
                           formData.program_type === type
-                            ? isDark
-                              ? 'rgba(129, 140, 248, 0.2)'
-                              : 'rgba(99, 102, 241, 0.1)'
+                            ? withAlpha(colors.primary, isDark ? 0.2 : 0.1)
                             : 'transparent',
                         borderColor:
                           formData.program_type === type
@@ -719,8 +719,8 @@ export default function RegisterScreen() {
                             formData.program_id === prog.id
                               ? colors.primary
                               : isDark
-                              ? 'rgba(255,255,255,0.05)'
-                              : 'rgba(0,0,0,0.03)',
+                              ? withAlpha(colors.textInverse, 0.05)
+                              : withAlpha(colors.shadowColor, 0.03),
                           borderColor:
                             formData.program_id === prog.id
                               ? colors.primary
@@ -735,7 +735,7 @@ export default function RegisterScreen() {
                           {
                             color:
                               formData.program_id === prog.id
-                                ? '#fff'
+                                ? colors.textInverse
                                 : colors.textPrimary,
                           },
                         ]}
@@ -790,7 +790,7 @@ export default function RegisterScreen() {
                     >
                       <Text
                         style={{
-                          color: formData.year === y ? '#fff' : colors.textMuted,
+                          color: formData.year === y ? colors.textInverse : colors.textMuted,
                           fontWeight: '600',
                         }}
                       >
@@ -829,7 +829,9 @@ export default function RegisterScreen() {
                         <Text
                           style={{
                             color:
-                              formData.semester === s ? '#fff' : colors.textMuted,
+                              formData.semester === s
+                                ? colors.textInverse
+                                : colors.textMuted,
                             fontWeight: '600',
                           }}
                         >
@@ -914,7 +916,16 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={[styles.summaryBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}>
+            <View
+              style={[
+                styles.summaryBox,
+                {
+                  backgroundColor: isDark
+                    ? withAlpha(colors.textInverse, 0.05)
+                    : withAlpha(colors.shadowColor, 0.02),
+                },
+              ]}
+            >
               <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>
                 Registration Summary
               </Text>
@@ -940,8 +951,13 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <View style={[styles.infoBox, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)' }]}>
-              <Ionicons name="mail" size={20} color="#10b981" />
+            <View
+              style={[
+                styles.infoBox,
+                { backgroundColor: withAlpha(colors.success, isDark ? 0.1 : 0.05) },
+              ]}
+            >
+              <Ionicons name="mail" size={20} color={colors.success} />
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 An OTP will be sent to {formData.email} for verification.
               </Text>
@@ -993,10 +1009,10 @@ export default function RegisterScreen() {
             {error && (
               <Animated.View
                 entering={FadeInDown.duration(200)}
-                style={styles.errorContainer}
+                style={[styles.errorContainer, { backgroundColor: withAlpha(colors.error, 0.1) }]}
               >
-                <Ionicons name="alert-circle" size={18} color="#f87171" />
-                <Text style={styles.errorText}>{error}</Text>
+                <Ionicons name="alert-circle" size={18} color={colors.error} />
+                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
               </Animated.View>
             )}
           </Animated.View>
@@ -1009,9 +1025,7 @@ export default function RegisterScreen() {
             styles.bottomNav,
             {
               paddingBottom: insets.bottom + 20,
-              backgroundColor: isDark
-                ? 'rgba(15, 23, 42, 0.9)'
-                : 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: withAlpha(colors.background, 0.9),
             },
           ]}
         >
@@ -1038,16 +1052,16 @@ export default function RegisterScreen() {
             disabled={(currentStep === 1 && !apaarVerified) || loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={colors.textInverse} size="small" />
             ) : (
               <>
-                <Text style={styles.nextButtonText}>
+                <Text style={[styles.nextButtonText, { color: colors.textInverse }]}>
                   {currentStep === TOTAL_STEPS ? 'Register' : 'Continue'}
                 </Text>
                 <Ionicons
                   name={currentStep === TOTAL_STEPS ? 'checkmark' : 'arrow-forward'}
                   size={20}
-                  color="#fff"
+                  color={colors.textInverse}
                 />
               </>
             )}
@@ -1140,12 +1154,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 12,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
     borderRadius: 12,
     marginBottom: 16,
   },
   verifiedText: {
-    color: '#10b981',
     fontWeight: '600',
   },
   verifyButton: {
@@ -1158,7 +1170,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   verifyButtonText: {
-    color: '#fff',
     fontWeight: '600',
     fontSize: 15,
   },
@@ -1295,12 +1306,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 12,
-    backgroundColor: 'rgba(248, 113, 113, 0.1)',
     borderRadius: 10,
     marginTop: 16,
   },
   errorText: {
-    color: '#f87171',
     fontSize: 13,
     flex: 1,
   },
@@ -1334,7 +1343,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   nextButtonText: {
-    color: '#fff',
     fontWeight: '600',
     fontSize: 15,
   },

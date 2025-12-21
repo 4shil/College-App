@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Dimensions,
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -26,8 +25,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { signInWithEmail } from '../../lib/supabase';
 import { getAuthUser } from '../../lib/database';
 import { useAuthStore } from '../../store/authStore';
-
-const { width } = Dimensions.get('window');
+import { withAlpha } from '../../theme/colorUtils';
 
 // Only 2 role categories: Student and Staff (Teachers + Admins)
 type UserRoleCategory = 'student' | 'staff';
@@ -35,7 +33,7 @@ type UserRoleCategory = 'student' | 'staff';
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { isDark, colors } = useThemeStore();
+  const { colors } = useThemeStore();
   const { setSession, setAuthUser, setLoading } = useAuthStore();
 
   // Form state
@@ -160,24 +158,36 @@ export default function LoginScreen() {
           {/* Content Container - No Card */}
           <View style={styles.contentContainer}>
             {/* Logo - College graduation cap */}
-            <View style={styles.logoContainer}>
+            <View
+              style={[
+                styles.logoContainer,
+                Platform.OS === 'ios'
+                  ? {
+                      shadowColor: colors.shadowColor,
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.5,
+                      shadowRadius: 16,
+                    }
+                  : { elevation: 12 },
+              ]}
+            >
               <LinearGradient
-                colors={isDark ? ['#A78BFA', '#8B5CF6', '#7C3AED'] : ['#60A5FA', '#3B82F6', '#2563EB']}
+                colors={[colors.primaryLight, colors.primary, colors.primaryDark]}
                 style={styles.logoGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <FontAwesome5 name="graduation-cap" size={32} color="#fff" />
+                <FontAwesome5 name="graduation-cap" size={32} color={colors.textInverse} />
               </LinearGradient>
             </View>
 
             {/* Title */}
-            <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1F2937' }]}>JPM College</Text>
-            <Text style={[styles.subtitle, { color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)' }]}>Sign in to continue</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>JPM College</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Sign in to continue</Text>
 
             {/* Role Selector */}
             <View style={styles.roleContainer}>
-              <Text style={[styles.roleLabel, { color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)' }]}>Login as</Text>
+              <Text style={[styles.roleLabel, { color: colors.textSecondary }]}>Login as</Text>
               <View style={styles.roleButtons}>
                 {roles.map((role) => (
                   <TouchableOpacity
@@ -186,11 +196,11 @@ export default function LoginScreen() {
                     style={[
                       styles.roleButton,
                       { 
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
                       },
                       selectedRole === role.key && {
-                        backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                        backgroundColor: withAlpha(colors.primary, 0.12),
                         borderColor: colors.primary,
                       },
                     ]}
@@ -199,13 +209,13 @@ export default function LoginScreen() {
                     <FontAwesome5
                       name={role.icon}
                       size={18}
-                      color={selectedRole === role.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
+                      color={selectedRole === role.key ? colors.primary : colors.textMuted}
                     />
                     <View style={styles.roleTextContainer}>
                       <Text
                         style={[
                           styles.roleButtonText,
-                          { color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)' },
+                          { color: colors.textMuted },
                           selectedRole === role.key && { color: colors.primary },
                         ]}
                       >
@@ -214,8 +224,8 @@ export default function LoginScreen() {
                       <Text
                         style={[
                           styles.roleDescription,
-                          { color: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.35)' },
-                          selectedRole === role.key && { color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)' },
+                          { color: colors.textMuted },
+                          selectedRole === role.key && { color: colors.textSecondary },
                         ]}
                       >
                         {role.description}
@@ -228,18 +238,18 @@ export default function LoginScreen() {
 
             {/* Input Fields */}
             <View style={styles.inputsContainer}>
-              <Text style={[styles.inputLabel, { color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)' }]}>Email / Username</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Email / Username</Text>
               <View style={[
                 styles.inputWrapper,
                 { 
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
                 }
               ]}>
                 <TextInput
-                  style={[styles.input, { color: isDark ? '#FFFFFF' : '#1F2937' }]}
+                  style={[styles.input, { color: colors.textPrimary }]}
                   placeholder="Enter your email"
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
+                  placeholderTextColor={colors.placeholder}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -248,18 +258,18 @@ export default function LoginScreen() {
                 />
               </View>
 
-              <Text style={[styles.inputLabel, { marginTop: 16, color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)' }]}>Password</Text>
+              <Text style={[styles.inputLabel, { marginTop: 16, color: colors.textSecondary }]}>Password</Text>
               <View style={[
                 styles.inputWrapper,
                 { 
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
                 }
               ]}>
                 <TextInput
-                  style={[styles.input, { color: isDark ? '#FFFFFF' : '#1F2937' }]}
+                  style={[styles.input, { color: colors.textPrimary }]}
                   placeholder="Enter your password"
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
+                  placeholderTextColor={colors.placeholder}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -272,7 +282,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off' : 'eye'}
                     size={20}
-                    color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}
+                    color={colors.textMuted}
                   />
                 </TouchableOpacity>
               </View>
@@ -281,7 +291,7 @@ export default function LoginScreen() {
               {error && (
                 <Animated.Text
                   entering={FadeInDown.duration(250).springify()}
-                  style={styles.errorText}
+                  style={[styles.errorText, { color: colors.error }]}
                 >
                   {error}
                 </Animated.Text>
@@ -293,7 +303,7 @@ export default function LoginScreen() {
                 onPress={() => router.push('/(auth)/forgot-password')}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+                <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Forgot password?</Text>
               </TouchableOpacity>
             </View>
 
@@ -302,15 +312,25 @@ export default function LoginScreen() {
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.85}
-              style={styles.signInButtonWrapper}
+              style={[
+                styles.signInButtonWrapper,
+                Platform.OS === 'ios'
+                  ? {
+                      shadowColor: colors.shadowColor,
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.4,
+                      shadowRadius: 16,
+                    }
+                  : { elevation: 8 },
+              ]}
             >
               <LinearGradient
-                colors={['#6366F1', '#4F46E5', '#7C3AED']}
+                colors={[colors.primaryLight, colors.primary, colors.primaryDark]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.signInButton}
               >
-                <Text style={styles.signInButtonText}>
+                <Text style={[styles.signInButtonText, { color: colors.textInverse }]}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Text>
               </LinearGradient>
@@ -320,16 +340,16 @@ export default function LoginScreen() {
             <View style={styles.contactContainer}>
               {selectedRole === 'student' ? (
                 <>
-                  <Text style={[styles.contactText, { color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)' }]}>Don't have an account?{' '}</Text>
+                  <Text style={[styles.contactText, { color: colors.textMuted }]}>Don't have an account?{' '}</Text>
                   <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                    <Text style={styles.contactLink}>Create an account</Text>
+                    <Text style={[styles.contactLink, { color: colors.secondary }]}>Create an account</Text>
                   </TouchableOpacity>
                 </>
               ) : (
                 <>
-                  <Text style={[styles.contactText, { color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)' }]}>Need an account?{' '}</Text>
+                  <Text style={[styles.contactText, { color: colors.textMuted }]}>Need an account?{' '}</Text>
                   <TouchableOpacity>
-                    <Text style={styles.contactLink}>Contact admin</Text>
+                    <Text style={[styles.contactLink, { color: colors.secondary }]}>Contact admin</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -364,17 +384,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignSelf: 'center',
     marginBottom: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#8B5CF6',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
   },
   logoGradient: {
     width: 72,
@@ -422,7 +431,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   errorText: {
-    color: '#F87171',
     fontSize: 13,
     marginTop: 14,
     marginLeft: 4,
@@ -435,22 +443,10 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#818CF8',
   },
   signInButtonWrapper: {
     borderRadius: 14,
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#6366F1',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
   signInButton: {
     height: 52,
@@ -461,7 +457,6 @@ const styles = StyleSheet.create({
   signInButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: 0.3,
   },
   contactContainer: {
@@ -476,7 +471,6 @@ const styles = StyleSheet.create({
   contactLink: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F472B6',
   },
   roleContainer: {
     marginBottom: 24,

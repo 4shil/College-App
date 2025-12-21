@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
 
 interface GlassIconProps {
   name: string;
@@ -60,8 +61,8 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
           <LinearGradient
             colors={
               isDark
-                ? [`${color}50`, `${color}30`, 'transparent']
-                : [`${color}35`, `${color}20`, 'transparent']
+                ? [withAlpha(color, 0.5), withAlpha(color, 0.3), 'transparent']
+                : [withAlpha(color, 0.35), withAlpha(color, 0.2), 'transparent']
             }
             style={styles.glowGradient}
             start={{ x: 0, y: 0 }}
@@ -77,12 +78,8 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
           style={[
             styles.glassContainer,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.08)'
-                : 'rgba(255, 255, 255, 0.6)',
-              borderColor: isDark
-                ? 'rgba(255, 255, 255, 0.12)'
-                : 'rgba(255, 255, 255, 0.8)',
+              backgroundColor: colors.glassBackgroundStrong,
+              borderColor: colors.glassBorder,
             },
           ]}
           tint={isDark ? 'dark' : 'light'}
@@ -91,8 +88,8 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
           <LinearGradient
             colors={
               isDark
-                ? [`${color}15`, 'transparent', `${color}10`]
-                : [`${color}10`, 'transparent', `${color}08`]
+                ? [withAlpha(color, 0.15), 'transparent', withAlpha(color, 0.1)]
+                : [withAlpha(color, 0.1), 'transparent', withAlpha(color, 0.08)]
             }
             style={styles.innerGradient}
             start={{ x: 0, y: 0 }}
@@ -107,12 +104,8 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
           style={[
             styles.glassContainer,
             {
-              backgroundColor: isDark
-                ? `${color}15`
-                : `${color}12`,
-              borderColor: isDark
-                ? 'rgba(255, 255, 255, 0.12)'
-                : 'rgba(255, 255, 255, 0.8)',
+              backgroundColor: withAlpha(color, isDark ? 0.15 : 0.12),
+              borderColor: colors.glassBorder,
             },
           ]}
         >
@@ -120,8 +113,8 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
           <LinearGradient
             colors={
               isDark
-                ? [`${color}20`, 'transparent', `${color}15`]
-                : [`${color}15`, 'transparent', `${color}10`]
+                ? [withAlpha(color, 0.2), 'transparent', withAlpha(color, 0.15)]
+                : [withAlpha(color, 0.15), 'transparent', withAlpha(color, 0.1)]
             }
             style={styles.innerGradient}
             start={{ x: 0, y: 0 }}
@@ -137,8 +130,8 @@ export const GlassIcon: React.FC<GlassIconProps> = ({
       <LinearGradient
         colors={
           isDark
-            ? ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.03)', 'transparent']
-            : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.5)', 'transparent']
+            ? [withAlpha(colors.glassBackgroundStrong, 0.15), withAlpha(colors.glassBackgroundStrong, 0.03), 'transparent']
+            : [withAlpha(colors.glassBackgroundStrong, 0.95), withAlpha(colors.glassBackgroundStrong, 0.5), 'transparent']
         }
         style={styles.topHighlight}
         start={{ x: 0, y: 0 }}

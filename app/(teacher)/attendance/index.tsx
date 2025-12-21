@@ -17,6 +17,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface TodayClass {
   id: string;
@@ -276,8 +277,14 @@ export default function TeacherAttendanceIndex() {
           style={[
             styles.classCard,
             {
-              backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-              borderColor: isCurrent ? colors.primary : classItem.isCompleted ? '#10b981' : 'transparent',
+              backgroundColor: isDark
+                ? withAlpha(colors.textInverse, 0.03)
+                : withAlpha(colors.shadowColor, 0.02),
+              borderColor: isCurrent
+                ? colors.primary
+                : classItem.isCompleted
+                  ? colors.success
+                  : withAlpha(colors.textPrimary, 0),
               borderWidth: isCurrent || classItem.isCompleted ? 1.5 : 1,
             },
           ]}
@@ -287,12 +294,18 @@ export default function TeacherAttendanceIndex() {
           {/* Period Badge */}
           <View style={[
             styles.periodBadge,
-            { backgroundColor: isCurrent ? colors.primary : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
+            {
+              backgroundColor: isCurrent
+                ? colors.primary
+                : isDark
+                  ? withAlpha(colors.textInverse, 0.08)
+                  : withAlpha(colors.shadowColor, 0.05),
+            }
           ]}>
-            <Text style={[styles.periodNum, { color: isCurrent ? '#fff' : colors.textPrimary }]}>
+            <Text style={[styles.periodNum, { color: isCurrent ? colors.textInverse : colors.textPrimary }]}>
               P{classItem.period}
             </Text>
-            <Text style={[styles.periodTime, { color: isCurrent ? 'rgba(255,255,255,0.8)' : colors.textMuted }]}>
+            <Text style={[styles.periodTime, { color: isCurrent ? withAlpha(colors.textInverse, 0.8) : colors.textMuted }]}>
               {classItem.periodTime}
             </Text>
           </View>
@@ -308,13 +321,22 @@ export default function TeacherAttendanceIndex() {
 
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]}>
+              <View
+                style={[
+                  styles.progressBar,
+                  {
+                    backgroundColor: isDark
+                      ? withAlpha(colors.textInverse, 0.1)
+                      : withAlpha(colors.shadowColor, 0.08),
+                  },
+                ]}
+              >
                 <View
                   style={[
                     styles.progressFill,
                     {
                       width: `${progress}%`,
-                      backgroundColor: classItem.isCompleted ? '#10b981' : colors.primary,
+                      backgroundColor: classItem.isCompleted ? colors.success : colors.primary,
                     },
                   ]}
                 />
@@ -328,11 +350,11 @@ export default function TeacherAttendanceIndex() {
           {/* Status Icon */}
           <View style={styles.statusIcon}>
             {classItem.isCompleted ? (
-              <View style={[styles.completedBadge, { backgroundColor: '#10b98120' }]}>
-                <FontAwesome5 name="check" size={14} color="#10b981" />
+              <View style={[styles.completedBadge, { backgroundColor: withAlpha(colors.success, 0.12) }]}>
+                <FontAwesome5 name="check" size={14} color={colors.success} />
               </View>
             ) : isCurrent ? (
-              <View style={[styles.currentBadge, { backgroundColor: colors.primary + '20' }]}>
+              <View style={[styles.currentBadge, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
                 <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
               </View>
             ) : (
@@ -359,7 +381,14 @@ export default function TeacherAttendanceIndex() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.historyBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+            style={[
+              styles.historyBtn,
+              {
+                backgroundColor: isDark
+                  ? withAlpha(colors.textInverse, 0.05)
+                  : withAlpha(colors.shadowColor, 0.03),
+              },
+            ]}
             onPress={() => router.push('/(teacher)/attendance/history')}
           >
             <FontAwesome5 name="history" size={16} color={colors.textSecondary} />
@@ -390,18 +419,18 @@ export default function TeacherAttendanceIndex() {
             <>
               {/* Stats Cards */}
               <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.statsRow}>
-                <Card style={[styles.statCard, { backgroundColor: colors.primary + '10' }]}>
+                <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.primary, 0.06) }]}>
                   <FontAwesome5 name="calendar-check" size={20} color={colors.primary} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.todayClasses}</Text>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>Today's Classes</Text>
                 </Card>
-                <Card style={[styles.statCard, { backgroundColor: '#10b98110' }]}>
-                  <FontAwesome5 name="check-double" size={20} color="#10b981" />
+                <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.success, 0.06) }]}>
+                  <FontAwesome5 name="check-double" size={20} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.completedClasses}</Text>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>Completed</Text>
                 </Card>
-                <Card style={[styles.statCard, { backgroundColor: '#8b5cf610' }]}>
-                  <FontAwesome5 name="user-check" size={20} color="#8b5cf6" />
+                <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.info, 0.06) }]}>
+                  <FontAwesome5 name="user-check" size={20} color={colors.info} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalStudentsMarked}</Text>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>Marked</Text>
                 </Card>
@@ -483,7 +512,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'transparent',
   },
   periodBadge: {
     width: 54,

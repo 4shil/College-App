@@ -18,6 +18,7 @@ import { AnimatedBackground, Card, PrimaryButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
+import { withAlpha } from '../../theme/colorUtils';
 import type { CollegeInfo } from '../../types/database';
 
 export default function CollegeInfoScreen() {
@@ -276,9 +277,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.name}
@@ -295,9 +296,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.short_name}
@@ -314,9 +315,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.established_year}
@@ -335,9 +336,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.affiliation}
@@ -354,9 +355,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.motto}
@@ -384,9 +385,9 @@ export default function CollegeInfoScreen() {
                     styles.input,
                     styles.textArea,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.address}
@@ -406,9 +407,9 @@ export default function CollegeInfoScreen() {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                        backgroundColor: withAlpha(colors.textPrimary, 0.05),
                         color: colors.textPrimary,
-                        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        borderColor: withAlpha(colors.textPrimary, 0.1),
                       },
                     ]}
                     value={formData.city}
@@ -425,9 +426,9 @@ export default function CollegeInfoScreen() {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                        backgroundColor: withAlpha(colors.textPrimary, 0.05),
                         color: colors.textPrimary,
-                        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        borderColor: withAlpha(colors.textPrimary, 0.1),
                       },
                     ]}
                     value={formData.state}
@@ -445,9 +446,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.pincode}
@@ -466,9 +467,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.phone}
@@ -486,9 +487,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.email}
@@ -507,9 +508,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.website}
@@ -538,9 +539,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.principal_name}
@@ -557,9 +558,9 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
                       color: colors.textPrimary,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: withAlpha(colors.textPrimary, 0.1),
                     },
                   ]}
                   value={formData.principal_email}
@@ -583,8 +584,8 @@ export default function CollegeInfoScreen() {
               styles.footer,
               {
                 paddingBottom: insets.bottom + 20,
-                backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
-                borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                backgroundColor: withAlpha(colors.cardBackground, 0.8),
+                borderTopColor: withAlpha(colors.textPrimary, 0.1),
               },
             ]}
           >
@@ -593,7 +594,7 @@ export default function CollegeInfoScreen() {
                 style={[
                   styles.cancelButton,
                   {
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                    backgroundColor: withAlpha(colors.textPrimary, 0.1),
                   },
                 ]}
                 onPress={handleCancel}

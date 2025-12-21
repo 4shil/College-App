@@ -22,9 +22,10 @@ import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
 import { PERMISSIONS, useRBAC } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 type UserTab = 'teachers' | 'students' | 'admins' | 'pending';
-type UserStatus = 'active' | 'suspended' | 'inactive';
+type UserStatus = 'active' | 'suspended' | 'inactive' | 'pending';
 
 interface User {
   id: string;
@@ -124,12 +125,33 @@ export default function UsersScreen() {
     pending: 0,
   });
 
-  const tabs = [
-    { key: 'teachers' as UserTab, label: 'Teachers', icon: 'chalkboard-teacher', color: '#3b82f6' },
-    { key: 'students' as UserTab, label: 'Students', icon: 'user-graduate', color: '#10b981' },
-    { key: 'admins' as UserTab, label: 'Admins', icon: 'user-shield', color: '#8b5cf6' },
-    { key: 'pending' as UserTab, label: 'Pending', icon: 'user-clock', color: '#f59e0b' },
-  ];
+  const getTabColor = React.useCallback(
+    (tab: UserTab) => {
+      switch (tab) {
+        case 'teachers':
+          return colors.info;
+        case 'students':
+          return colors.success;
+        case 'admins':
+          return colors.primary;
+        case 'pending':
+          return colors.warning;
+        default:
+          return colors.primary;
+      }
+    },
+    [colors]
+  );
+
+  const tabs = React.useMemo(
+    () => [
+      { key: 'teachers' as UserTab, label: 'Teachers', icon: 'chalkboard-teacher', color: getTabColor('teachers') },
+      { key: 'students' as UserTab, label: 'Students', icon: 'user-graduate', color: getTabColor('students') },
+      { key: 'admins' as UserTab, label: 'Admins', icon: 'user-shield', color: getTabColor('admins') },
+      { key: 'pending' as UserTab, label: 'Pending', icon: 'user-clock', color: getTabColor('pending') },
+    ],
+    [getTabColor]
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -540,10 +562,11 @@ export default function UsersScreen() {
 
   const getStatusColor = (status: UserStatus) => {
     switch (status) {
-      case 'active': return '#10b981';
-      case 'suspended': return '#ef4444';
-      case 'inactive': return '#6b7280';
-      default: return '#f59e0b';
+      case 'active': return colors.success;
+      case 'suspended': return colors.error;
+      case 'inactive': return colors.textMuted;
+      case 'pending': return colors.warning;
+      default: return colors.warning;
     }
   };
 
@@ -555,7 +578,7 @@ export default function UsersScreen() {
     >
       <Card style={styles.userCard}>
         <View style={styles.userHeader}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+          <View style={[styles.avatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
             <FontAwesome5 name="user" size={18} color={colors.primary} />
           </View>
           <View style={styles.userInfo}>
@@ -566,7 +589,7 @@ export default function UsersScreen() {
               {user.email}
             </Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(user.status) + '20' }]}>
+          <View style={[styles.statusBadge, { backgroundColor: withAlpha(getStatusColor(user.status), 0.125) }]}>
             <View style={[styles.statusDot, { backgroundColor: getStatusColor(user.status) }]} />
             <Text style={[styles.statusText, { color: getStatusColor(user.status) }]}>
               {user.status}
@@ -595,18 +618,18 @@ export default function UsersScreen() {
               {canManageTargetUser(user, 'approve') && (
                 <>
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
+                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.success, 0.125) }]}
                     onPress={() => handleApproveUser(user)}
                   >
-                    <FontAwesome5 name="check" size={14} color="#10b981" />
-                    <Text style={[styles.actionText, { color: '#10b981' }]}>Approve</Text>
+                    <FontAwesome5 name="check" size={14} color={colors.success} />
+                    <Text style={[styles.actionText, { color: colors.success }]}>Approve</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: '#ef4444' + '20' }]}
+                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.125) }]}
                     onPress={() => handleRejectUser(user)}
                   >
-                    <FontAwesome5 name="times" size={14} color="#ef4444" />
-                    <Text style={[styles.actionText, { color: '#ef4444' }]}>Reject</Text>
+                    <FontAwesome5 name="times" size={14} color={colors.error} />
+                    <Text style={[styles.actionText, { color: colors.error }]}>Reject</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -615,7 +638,7 @@ export default function UsersScreen() {
             <>
               {activeTab === 'teachers' && canManageTargetUser(user, 'role') && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: colors.primary + '20' }]}
+                  style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.125) }]}
                   onPress={() => openRoleModal(user)}
                 >
                   <FontAwesome5 name="user-tag" size={14} color={colors.primary} />
@@ -625,29 +648,29 @@ export default function UsersScreen() {
               {canManageTargetUser(user, 'block') && (
                 user.status === 'active' ? (
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: '#f59e0b' + '20' }]}
+                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.warning, 0.125) }]}
                     onPress={() => handleSuspendUser(user)}
                   >
-                    <FontAwesome5 name="ban" size={14} color="#f59e0b" />
-                    <Text style={[styles.actionText, { color: '#f59e0b' }]}>Suspend</Text>
+                    <FontAwesome5 name="ban" size={14} color={colors.warning} />
+                    <Text style={[styles.actionText, { color: colors.warning }]}>Suspend</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: '#10b981' + '20' }]}
+                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.success, 0.125) }]}
                     onPress={() => handleActivateUser(user.id)}
                   >
-                    <FontAwesome5 name="check-circle" size={14} color="#10b981" />
-                    <Text style={[styles.actionText, { color: '#10b981' }]}>Activate</Text>
+                    <FontAwesome5 name="check-circle" size={14} color={colors.success} />
+                    <Text style={[styles.actionText, { color: colors.success }]}>Activate</Text>
                   </TouchableOpacity>
                 )
               )}
               {canManageTargetUser(user, 'delete') && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#ef4444' + '20' }]}
+                  style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.125) }]}
                   onPress={() => handleDeleteUser(user)}
                 >
-                  <FontAwesome5 name="trash" size={14} color="#ef4444" />
-                  <Text style={[styles.actionText, { color: '#ef4444' }]}>Delete</Text>
+                  <FontAwesome5 name="trash" size={14} color={colors.error} />
+                  <Text style={[styles.actionText, { color: colors.error }]}>Delete</Text>
                 </TouchableOpacity>
               )}
             </>
@@ -659,13 +682,22 @@ export default function UsersScreen() {
 
   const renderRoleModal = () => (
     <Modal visible={showRoleModal} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
         <Card style={styles.modalContent}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Change Role for {selectedUser?.full_name}
           </Text>
           
-          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerContainer,
+              {
+                backgroundColor: isDark
+                  ? withAlpha(colors.textInverse, 0.05)
+                  : withAlpha(colors.shadowColor, 0.03),
+              },
+            ]}
+          >
             <Picker
               selectedValue={formRole}
               onValueChange={setFormRole}
@@ -692,9 +724,9 @@ export default function UsersScreen() {
               disabled={saving || !formRole}
             >
               {saving ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.textInverse} />
               ) : (
-                <Text style={[styles.modalBtnText, { color: '#fff' }]}>Save</Text>
+                <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Save</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -721,7 +753,7 @@ export default function UsersScreen() {
             {canCreateDeleteUsers && (
               <>
                 <TouchableOpacity
-                  style={[styles.roleBtn, { backgroundColor: colors.primary + '20', marginRight: 8 }]}
+                  style={[styles.roleBtn, { backgroundColor: withAlpha(colors.primary, 0.125), marginRight: 8 }]}
                   onPress={() => router.push('/(admin)/users/assign-roles')}
                 >
                   <FontAwesome5 name="user-shield" size={18} color={colors.primary} />
@@ -730,7 +762,7 @@ export default function UsersScreen() {
                   style={[styles.addBtn, { backgroundColor: colors.primary }]}
                   onPress={openAddUserModal}
                 >
-                  <Ionicons name="add" size={22} color="#fff" />
+                  <Ionicons name="add" size={22} color={colors.textInverse} />
                 </TouchableOpacity>
               </>
             )}
@@ -747,9 +779,11 @@ export default function UsersScreen() {
                   styles.statCard,
                   {
                     backgroundColor: activeTab === tab.key
-                      ? tab.color + '20'
-                      : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                    borderColor: activeTab === tab.key ? tab.color + '40' : 'transparent',
+                      ? withAlpha(tab.color, 0.125)
+                      : isDark
+                        ? withAlpha(colors.textInverse, 0.05)
+                        : withAlpha(colors.shadowColor, 0.03),
+                    borderColor: activeTab === tab.key ? withAlpha(tab.color, 0.25) : 'transparent',
                   },
                 ]}
                 onPress={() => setActiveTab(tab.key)}
@@ -766,7 +800,17 @@ export default function UsersScreen() {
 
         {/* Search */}
         <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.searchContainer}>
-          <View style={[styles.searchBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.searchBox,
+              {
+                backgroundColor: isDark
+                  ? withAlpha(colors.textInverse, 0.05)
+                  : withAlpha(colors.shadowColor, 0.03),
+                borderColor: withAlpha(colors.primary, 0.15),
+              },
+            ]}
+          >
             <Ionicons name="search" size={18} color={colors.textMuted} />
             <TextInput
               style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -809,7 +853,7 @@ export default function UsersScreen() {
 
         {/* Add User Modal */}
         <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
             <Card style={styles.modalContent}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create New User</Text>
               
@@ -848,7 +892,16 @@ export default function UsersScreen() {
 
                   <View>
                     <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Role *</Text>
-                    <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                    <View
+                      style={[
+                        styles.pickerContainer,
+                        {
+                          backgroundColor: isDark
+                            ? withAlpha(colors.textInverse, 0.05)
+                            : withAlpha(colors.shadowColor, 0.03),
+                        },
+                      ]}
+                    >
                       <Picker
                         selectedValue={formRole}
                         onValueChange={setFormRole}
@@ -866,7 +919,16 @@ export default function UsersScreen() {
                   {(formRole === 'student' || ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(formRole)) && (
                     <View>
                       <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Department</Text>
-                      <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                      <View
+                        style={[
+                          styles.pickerContainer,
+                          {
+                            backgroundColor: isDark
+                              ? withAlpha(colors.textInverse, 0.05)
+                              : withAlpha(colors.shadowColor, 0.03),
+                          },
+                        ]}
+                      >
                         <Picker
                           selectedValue={formDepartment}
                           onValueChange={setFormDepartment}
@@ -897,9 +959,9 @@ export default function UsersScreen() {
                   disabled={saving}
                 >
                   {saving ? (
-                    <ActivityIndicator size="small" color="#fff" />
+                    <ActivityIndicator size="small" color={colors.textInverse} />
                   ) : (
-                    <Text style={[styles.modalBtnText, { color: '#fff' }]}>Create</Text>
+                    <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Create</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -927,7 +989,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 22, fontWeight: '700', marginTop: 6 },
   statLabel: { fontSize: 11, marginTop: 2 },
   searchContainer: { paddingHorizontal: 20, marginBottom: 16 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, gap: 12, borderWidth: 1, borderColor: 'rgba(99, 102, 241, 0.15)' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, gap: 12, borderWidth: 1, borderColor: 'transparent' },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
@@ -950,7 +1012,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptySubtitle: { fontSize: 13, marginTop: 4 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
+  modalOverlay: { flex: 1, justifyContent: 'center', padding: 24 },
   modalContent: { padding: 24 },
   modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
   pickerContainer: { borderRadius: 12, marginBottom: 20, overflow: 'hidden' },

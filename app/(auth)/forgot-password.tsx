@@ -24,6 +24,7 @@ import {
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { sendOTP, verifyOTP, updateUserPassword } from '../../lib/supabase';
+import { withAlpha } from '../../theme/colorUtils';
 
 type Step = 'email' | 'otp' | 'password' | 'success';
 const OTP_LENGTH = 6;
@@ -219,7 +220,7 @@ export default function ForgotPasswordScreen() {
               <View
                 style={[
                   styles.iconBox,
-                  { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(99, 102, 241, 0.1)' },
+                  { backgroundColor: withAlpha(colors.primary, isDark ? 0.2 : 0.1) },
                 ]}
               >
                 <Ionicons name="key" size={40} color={colors.primary} />
@@ -264,7 +265,7 @@ export default function ForgotPasswordScreen() {
               <View
                 style={[
                   styles.iconBox,
-                  { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(99, 102, 241, 0.1)' },
+                  { backgroundColor: withAlpha(colors.primary, isDark ? 0.2 : 0.1) },
                 ]}
               >
                 <Ionicons name="mail-open" size={40} color={colors.primary} />
@@ -283,12 +284,12 @@ export default function ForgotPasswordScreen() {
               <Ionicons
                 name={countdown > 0 ? 'time-outline' : 'alert-circle-outline'}
                 size={18}
-                color={countdown > 0 ? colors.textMuted : '#f87171'}
+                color={countdown > 0 ? colors.textMuted : colors.error}
               />
               <Text
                 style={[
                   styles.timerText,
-                  { color: countdown > 0 ? colors.textMuted : '#f87171' },
+                  { color: countdown > 0 ? colors.textMuted : colors.error },
                 ]}
               >
                 {countdown > 0 ? `Code expires in ${formatCountdown()}` : 'Code has expired'}
@@ -303,8 +304,10 @@ export default function ForgotPasswordScreen() {
                   style={[
                     styles.otpInput,
                     {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                      borderColor: digit ? colors.primary : error ? '#f87171' : colors.glassBorder,
+                      backgroundColor: isDark
+                        ? withAlpha(colors.textInverse, 0.05)
+                        : withAlpha(colors.shadowColor, 0.03),
+                      borderColor: digit ? colors.primary : error ? colors.error : colors.glassBorder,
                       color: colors.textPrimary,
                     },
                   ]}
@@ -325,9 +328,9 @@ export default function ForgotPasswordScreen() {
               disabled={loading || otp.join('').length !== OTP_LENGTH}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={colors.textInverse} size="small" />
               ) : (
-                <Text style={styles.verifyButtonText}>Verify OTP</Text>
+                <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify OTP</Text>
               )}
             </TouchableOpacity>
 
@@ -360,7 +363,7 @@ export default function ForgotPasswordScreen() {
               <View
                 style={[
                   styles.iconBox,
-                  { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(99, 102, 241, 0.1)' },
+                  { backgroundColor: withAlpha(colors.primary, isDark ? 0.2 : 0.1) },
                 ]}
               >
                 <Ionicons name="lock-closed" size={40} color={colors.primary} />
@@ -418,10 +421,10 @@ export default function ForgotPasswordScreen() {
               <View
                 style={[
                   styles.iconBox,
-                  { backgroundColor: 'rgba(16, 185, 129, 0.1)' },
+                  { backgroundColor: withAlpha(colors.success, 0.1) },
                 ]}
               >
-                <Ionicons name="checkmark-circle" size={50} color="#10b981" />
+                <Ionicons name="checkmark-circle" size={50} color={colors.success} />
               </View>
             </View>
 
@@ -469,7 +472,11 @@ export default function ForgotPasswordScreen() {
           }}
           style={[
             styles.backButton,
-            { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' },
+            {
+              backgroundColor: isDark
+                ? withAlpha(colors.textInverse, 0.1)
+                : withAlpha(colors.shadowColor, 0.05),
+            },
           ]}
         >
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
@@ -499,10 +506,10 @@ export default function ForgotPasswordScreen() {
               {error && (
                 <Animated.View
                   entering={FadeInDown.duration(200)}
-                  style={styles.errorContainer}
+                  style={[styles.errorContainer, { backgroundColor: withAlpha(colors.error, 0.1) }]}
                 >
-                  <Ionicons name="alert-circle" size={18} color="#f87171" />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Ionicons name="alert-circle" size={18} color={colors.error} />
+                  <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
                 </Animated.View>
               )}
 
@@ -632,7 +639,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   verifyButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -653,13 +659,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 12,
-    backgroundColor: 'rgba(248, 113, 113, 0.1)',
     borderRadius: 10,
     marginTop: 16,
     width: '100%',
   },
   errorText: {
-    color: '#f87171',
     fontSize: 13,
     flex: 1,
   },

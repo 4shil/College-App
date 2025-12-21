@@ -17,6 +17,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
+import { withAlpha } from '../../../../theme/colorUtils';
 
 interface TeacherDetails {
   id: string;
@@ -159,10 +160,10 @@ export default function TeacherDetailsScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return '#10b981';
-      case 'inactive': return '#f59e0b';
-      case 'blocked': return '#ef4444';
-      default: return '#6b7280';
+      case 'active': return colors.success;
+      case 'inactive': return colors.warning;
+      case 'blocked': return colors.error;
+      default: return colors.textMuted;
     }
   };
 
@@ -209,7 +210,7 @@ export default function TeacherDetailsScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.editBtn, { backgroundColor: colors.primary + '15' }]}
+            style={[styles.editBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
             onPress={() => Alert.alert('Edit', 'Edit feature coming soon')}
           >
             <Ionicons name="create-outline" size={20} color={colors.primary} />
@@ -234,7 +235,7 @@ export default function TeacherDetailsScreen() {
                     style={styles.profilePhoto}
                   />
                 ) : (
-                  <View style={[styles.profilePhotoPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+                  <View style={[styles.profilePhotoPlaceholder, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                     <FontAwesome5 name="chalkboard-teacher" size={40} color={colors.primary} />
                   </View>
                 )}
@@ -245,7 +246,17 @@ export default function TeacherDetailsScreen() {
                   <Text style={[styles.profileDesignation, { color: colors.textSecondary }]}>
                     {teacher.designation || 'Teacher'}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(teacher.profile?.status || 'inactive') + '20' }]}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor: withAlpha(
+                          getStatusColor(teacher.profile?.status || 'inactive'),
+                          0.125
+                        ),
+                      },
+                    ]}
+                  >
                     <View style={[styles.statusDot, { backgroundColor: getStatusColor(teacher.profile?.status || 'inactive') }]} />
                     <Text style={[styles.statusText, { color: getStatusColor(teacher.profile?.status || 'inactive') }]}>
                       {teacher.profile?.status || 'Unknown'}
@@ -334,7 +345,7 @@ export default function TeacherDetailsScreen() {
                   Assigned Courses ({courses.length})
                 </Text>
                 <TouchableOpacity
-                  style={[styles.assignBtn, { backgroundColor: colors.primary + '15' }]}
+                  style={[styles.assignBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
                   onPress={() => Alert.alert('Assign', 'Assign course feature coming soon')}
                 >
                   <Ionicons name="add" size={16} color={colors.primary} />
@@ -346,7 +357,15 @@ export default function TeacherDetailsScreen() {
                   <Animated.View
                     key={course.id}
                     entering={FadeInRight.delay(350 + index * 50).duration(300)}
-                    style={[styles.courseItem, { borderLeftColor: colors.primary }]}
+                    style={[
+                      styles.courseItem,
+                      {
+                        borderLeftColor: colors.primary,
+                        backgroundColor: isDark
+                          ? withAlpha(colors.textInverse, 0.03)
+                          : withAlpha(colors.shadowColor, 0.03),
+                      },
+                    ]}
                   >
                     <Text style={[styles.courseName, { color: colors.textPrimary }]}>
                       {course.subject?.name || 'Unknown Subject'}
@@ -374,9 +393,9 @@ export default function TeacherDetailsScreen() {
                 style={[
                   styles.actionBtn,
                   { 
-                    backgroundColor: teacher.profile?.status === 'active' 
-                      ? '#f59e0b20' 
-                      : '#10b98120' 
+                    backgroundColor: teacher.profile?.status === 'active'
+                      ? withAlpha(colors.warning, 0.125)
+                      : withAlpha(colors.success, 0.125)
                   }
                 ]}
                 onPress={handleToggleStatus}
@@ -384,21 +403,21 @@ export default function TeacherDetailsScreen() {
                 <FontAwesome5 
                   name={teacher.profile?.status === 'active' ? 'user-slash' : 'user-check'}
                   size={16} 
-                  color={teacher.profile?.status === 'active' ? '#f59e0b' : '#10b981'}
+                  color={teacher.profile?.status === 'active' ? colors.warning : colors.success}
                 />
                 <Text style={[
                   styles.actionBtnText,
-                  { color: teacher.profile?.status === 'active' ? '#f59e0b' : '#10b981' }
+                  { color: teacher.profile?.status === 'active' ? colors.warning : colors.success }
                 ]}>
                   {teacher.profile?.status === 'active' ? 'Deactivate' : 'Activate'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#ef444420' }]}
+                style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.125) }]}
                 onPress={() => Alert.alert('Delete', 'Delete feature coming soon')}
               >
-                <FontAwesome5 name="trash" size={16} color="#ef4444" />
-                <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>
+                <FontAwesome5 name="trash" size={16} color={colors.error} />
+                <Text style={[styles.actionBtnText, { color: colors.error }]}>
                   Delete
                 </Text>
               </TouchableOpacity>
@@ -559,7 +578,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 8,
     borderLeftWidth: 3,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderRadius: 8,
   },
   courseName: {

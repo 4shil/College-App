@@ -26,7 +26,7 @@ export const neutralSolidDarkTokens: ThemeTokensNormalized = {
   text: {
     primary: '#fafafa',
     secondary: '#a1a1a1',
-    muted: '#737373',
+    muted: '#867a7aff',
     inverse: '#0a0a0a',
   },
 
@@ -46,7 +46,7 @@ export const neutralSolidDarkTokens: ThemeTokensNormalized = {
     // CSS only provides a destructive color; other semantic hues are sourced from chart colors.
     success: '#3a81f6',
     warning: '#2563ef',
-    error: '#ff6467',
+    error: '#ffffffff',
     info: '#91c5ff',
   },
 

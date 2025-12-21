@@ -21,6 +21,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS, ADMIN_ROLES } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface User {
   id: string;
@@ -225,18 +226,28 @@ export default function AssignRolesScreen() {
   });
 
   const getRoleColor = (roleName: string): string => {
-    const roleColors: Record<string, string> = {
-      'super_admin': '#DC2626',
-      'principal': '#7C3AED',
-      'department_admin': '#06B6D4',
-      'hod': '#10B981',
-      'exam_cell_admin': '#F59E0B',
-      'library_admin': '#6366F1',
-      'finance_admin': '#16A34A',
-      'bus_admin': '#EF4444',
-      'canteen_admin': '#EC4899',
-    };
-    return roleColors[roleName] || '#64748B';
+    switch (roleName) {
+      case 'super_admin':
+        return colors.error;
+      case 'principal':
+        return colors.primary;
+      case 'department_admin':
+        return colors.info;
+      case 'hod':
+        return colors.success;
+      case 'exam_cell_admin':
+        return colors.warning;
+      case 'library_admin':
+        return colors.primary;
+      case 'finance_admin':
+        return colors.success;
+      case 'bus_admin':
+        return colors.error;
+      case 'canteen_admin':
+        return colors.warning;
+      default:
+        return colors.textMuted;
+    }
   };
 
   if (loading) {
@@ -296,18 +307,18 @@ export default function AssignRolesScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { backgroundColor: colors.primary + '20' }]}>
+          <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
             <Text style={[styles.statValue, { color: colors.primary }]}>{users.length}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Users</Text>
           </Card>
-          <Card style={[styles.statCard, { backgroundColor: '#10B981' + '20' }]}>
-            <Text style={[styles.statValue, { color: '#10B981' }]}>
+          <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+            <Text style={[styles.statValue, { color: colors.success }]}>
               {users.filter(u => u.user_roles.length > 0).length}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>With Roles</Text>
           </Card>
-          <Card style={[styles.statCard, { backgroundColor: '#F59E0B' + '20' }]}>
-            <Text style={[styles.statValue, { color: '#F59E0B' }]}>
+          <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
+            <Text style={[styles.statValue, { color: colors.warning }]}>
               {users.filter(u => u.user_roles.length === 0).length}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>No Roles</Text>
@@ -350,30 +361,33 @@ export default function AssignRolesScreen() {
                     }}
                     style={[styles.assignButton, { backgroundColor: colors.primary }]}
                   >
-                    <FontAwesome5 name="plus" size={14} color="#fff" />
-                    <Text style={styles.assignButtonText}>Assign</Text>
+                    <FontAwesome5 name="plus" size={14} color={colors.textInverse} />
+                    <Text style={[styles.assignButtonText, { color: colors.textInverse }]}>Assign</Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Assigned Roles */}
                 {user.user_roles.length > 0 && (
-                  <View style={styles.rolesSection}>
+                  <View style={[styles.rolesSection, { borderColor: withAlpha(colors.textPrimary, 0.12) }]}>
                     <Text style={[styles.rolesSectionTitle, { color: colors.textSecondary }]}>
                       Admin Roles:
                     </Text>
                     <View style={styles.rolesContainer}>
                       {user.user_roles.map(userRole => (
+                        (() => {
+                          const roleColor = getRoleColor(userRole.roles.name);
+                          return (
                         <View
                           key={userRole.id}
                           style={[
                             styles.roleBadge,
-                            { backgroundColor: getRoleColor(userRole.roles.name) + '20' }
+                            { backgroundColor: withAlpha(roleColor, 0.125) }
                           ]}
                         >
                           <Text
                             style={[
                               styles.roleBadgeText,
-                              { color: getRoleColor(userRole.roles.name) }
+                              { color: roleColor }
                             ]}
                           >
                             {userRole.roles.display_name}
@@ -385,10 +399,12 @@ export default function AssignRolesScreen() {
                             <Ionicons
                               name="close-circle"
                               size={16}
-                              color={getRoleColor(userRole.roles.name)}
+                              color={roleColor}
                             />
                           </TouchableOpacity>
                         </View>
+                          );
+                        })()
                       ))}
                     </View>
                   </View>
@@ -406,7 +422,7 @@ export default function AssignRolesScreen() {
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -458,7 +474,7 @@ export default function AssignRolesScreen() {
                   ]}
                   disabled={saving || !selectedRoleId}
                 >
-                  <Text style={styles.saveButtonText}>
+                  <Text style={[styles.saveButtonText, { color: colors.textInverse }]}>
                     {saving ? 'Assigning...' : 'Assign Role'}
                   </Text>
                 </TouchableOpacity>
@@ -496,8 +512,8 @@ const styles = StyleSheet.create({
   primaryRoleBadge: { marginTop: 4 },
   primaryRoleText: { fontSize: 12, fontStyle: 'italic' },
   assignButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
-  assignButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  rolesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderColor: 'rgba(150, 150, 150, 0.2)' },
+  assignButtonText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
+  rolesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderColor: 'transparent' },
   rolesSectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   rolesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   roleBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12 },
@@ -505,7 +521,7 @@ const styles = StyleSheet.create({
   revokeButton: { marginLeft: 4 },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 16, marginTop: 12 },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },
@@ -514,5 +530,5 @@ const styles = StyleSheet.create({
   modalUserEmail: { fontSize: 14, marginBottom: 20 },
   inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   saveButton: { marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: 'transparent', fontSize: 16, fontWeight: '600' },
 });

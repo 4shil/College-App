@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
+import { withAlpha } from '../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
@@ -15,7 +16,6 @@ interface ModuleCard {
   id: string;
   title: string;
   icon: string;
-  color: string;
   route: string;
   permission?: string;
   module: string;
@@ -27,13 +27,46 @@ export default function RoleBasedDashboard() {
   const { colors, isDark } = useThemeStore();
   const { roleDisplayName, accessibleModules, loading } = useRBAC();
 
+  const getModuleColor = React.useCallback(
+    (moduleKey: string) => {
+      switch (moduleKey) {
+        case 'users':
+          return colors.info;
+        case 'academic':
+          return colors.primary;
+        case 'exams':
+          return colors.warning;
+        case 'assignments':
+          return colors.success;
+        case 'fees':
+          return colors.success;
+        case 'library':
+          return colors.primary;
+        case 'bus':
+          return colors.error;
+        case 'canteen':
+          return colors.warning;
+        case 'notices':
+          return colors.info;
+        case 'attendance':
+          return colors.primary;
+        case 'analytics':
+          return colors.info;
+        case 'audit':
+          return colors.textMuted;
+        default:
+          return colors.primary;
+      }
+    },
+    [colors]
+  );
+
   // All possible modules with their configurations
   const allModules: ModuleCard[] = [
     {
       id: 'users',
       title: 'User Management',
       icon: 'users',
-      color: '#8B5CF6',
       route: '/(admin)/users',
       permission: PERMISSIONS.VIEW_ALL_USERS,
       module: 'users',
@@ -42,7 +75,6 @@ export default function RoleBasedDashboard() {
       id: 'academic',
       title: 'Academic Structure',
       icon: 'graduation-cap',
-      color: '#06B6D4',
       route: '/(admin)/academic',
       permission: PERMISSIONS.MANAGE_ACADEMIC_STRUCTURE,
       module: 'academic',
@@ -51,7 +83,6 @@ export default function RoleBasedDashboard() {
       id: 'exams',
       title: 'Exams & Results',
       icon: 'file-alt',
-      color: '#F59E0B',
       route: '/(admin)/exams',
       module: 'exams',
     },
@@ -59,7 +90,6 @@ export default function RoleBasedDashboard() {
       id: 'assignments',
       title: 'Assignments',
       icon: 'tasks',
-      color: '#10B981',
       route: '/(admin)/assignments',
       module: 'assignments',
     },
@@ -67,7 +97,6 @@ export default function RoleBasedDashboard() {
       id: 'fees',
       title: 'Fee Management',
       icon: 'money-bill-wave',
-      color: '#16A34A',
       route: '/(admin)/fees',
       module: 'fees',
     },
@@ -75,7 +104,6 @@ export default function RoleBasedDashboard() {
       id: 'library',
       title: 'Library',
       icon: 'book',
-      color: '#6366F1',
       route: '/(admin)/library',
       module: 'library',
     },
@@ -83,7 +111,6 @@ export default function RoleBasedDashboard() {
       id: 'bus',
       title: 'Transportation',
       icon: 'bus',
-      color: '#EF4444',
       route: '/(admin)/bus',
       module: 'bus',
     },
@@ -91,7 +118,6 @@ export default function RoleBasedDashboard() {
       id: 'canteen',
       title: 'Canteen',
       icon: 'utensils',
-      color: '#EC4899',
       route: '/(admin)/canteen',
       module: 'canteen',
     },
@@ -99,7 +125,6 @@ export default function RoleBasedDashboard() {
       id: 'notices',
       title: 'Notices',
       icon: 'bullhorn',
-      color: '#14B8A6',
       route: '/(admin)/notices',
       module: 'notices',
     },
@@ -107,7 +132,6 @@ export default function RoleBasedDashboard() {
       id: 'attendance',
       title: 'Attendance',
       icon: 'clipboard-check',
-      color: '#8B5CF6',
       route: '/(admin)/attendance',
       module: 'attendance',
     },
@@ -115,7 +139,6 @@ export default function RoleBasedDashboard() {
       id: 'analytics',
       title: 'Analytics',
       icon: 'chart-line',
-      color: '#0EA5E9',
       route: '/(admin)/analytics',
       module: 'analytics',
     },
@@ -123,7 +146,6 @@ export default function RoleBasedDashboard() {
       id: 'audit',
       title: 'Audit Logs',
       icon: 'clipboard-list',
-      color: '#64748B',
       route: '/(admin)/audit/logs',
       module: 'audit',
     },
@@ -163,10 +185,10 @@ export default function RoleBasedDashboard() {
         {/* Role Badge - Redesigned without Card background */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
           <View style={[styles.roleBadge, { 
-            backgroundColor: isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(124, 58, 237, 0.08)',
-            borderColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(124, 58, 237, 0.2)',
+            backgroundColor: withAlpha(colors.primary, isDark ? 0.12 : 0.08),
+            borderColor: withAlpha(colors.primary, isDark ? 0.25 : 0.2),
           }]}>
-            <View style={[styles.roleIconContainer, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.roleIconContainer, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
               <FontAwesome5 name="shield-alt" size={20} color={colors.primary} />
             </View>
             <View style={styles.roleInfo}>
@@ -180,6 +202,10 @@ export default function RoleBasedDashboard() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Your Modules</Text>
         <View style={styles.modulesGrid}>
           {userModules.map((module, index) => (
+            (() => {
+              const moduleColor = getModuleColor(module.module);
+
+              return (
             <Animated.View 
               key={module.id}
               entering={FadeInDown.delay(150 + index * 50).springify()}
@@ -190,11 +216,11 @@ export default function RoleBasedDashboard() {
                 activeOpacity={0.7}
               >
                 <View style={[styles.moduleCard, { 
-                  backgroundColor: isDark ? `${module.color}15` : `${module.color}10`,
-                  borderColor: isDark ? `${module.color}30` : `${module.color}25`,
+                  backgroundColor: withAlpha(moduleColor, isDark ? 0.09 : 0.06),
+                  borderColor: withAlpha(moduleColor, isDark ? 0.2 : 0.16),
                 }]}>
-                  <View style={[styles.iconContainer, { backgroundColor: module.color }]}>
-                    <FontAwesome5 name={module.icon} size={24} color="#fff" />
+                  <View style={[styles.iconContainer, { backgroundColor: moduleColor, shadowColor: colors.shadowColor }]}>
+                    <FontAwesome5 name={module.icon} size={24} color={colors.textInverse} />
                   </View>
                   <Text style={[styles.moduleTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                     {module.title}
@@ -202,6 +228,8 @@ export default function RoleBasedDashboard() {
                 </View>
               </TouchableOpacity>
             </Animated.View>
+              );
+            })()
           ))}
         </View>
 
@@ -273,7 +301,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
+    shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

@@ -13,6 +13,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
 
 const { width, height } = Dimensions.get('window');
 
@@ -75,7 +76,7 @@ const AuroraWave: React.FC<{
 // ============================================================
 // SHIMMER OVERLAY - Diagonal light sweep effect (optimized)
 // ============================================================
-const ShimmerOverlay: React.FC<{ isDark: boolean }> = React.memo(({ isDark }) => {
+const ShimmerOverlay: React.FC<{ isDark: boolean; highlightColor: string }> = React.memo(({ isDark, highlightColor }) => {
   const translateX = useSharedValue(-width * 1.5);
 
   useEffect(() => {
@@ -104,8 +105,8 @@ const ShimmerOverlay: React.FC<{ isDark: boolean }> = React.memo(({ isDark }) =>
       <LinearGradient
         colors={
           isDark
-            ? ['transparent', 'rgba(255, 255, 255, 0.03)', 'rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.03)', 'transparent']
-            : ['transparent', 'rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.7)', 'rgba(255, 255, 255, 0.4)', 'transparent']
+            ? ['transparent', withAlpha(highlightColor, 0.03), withAlpha(highlightColor, 0.08), withAlpha(highlightColor, 0.03), 'transparent']
+            : ['transparent', withAlpha(highlightColor, 0.4), withAlpha(highlightColor, 0.7), withAlpha(highlightColor, 0.4), 'transparent']
         }
         style={styles.shimmerGradient}
         start={{ x: 0, y: 0.5 }}
@@ -174,7 +175,16 @@ const BreathingGlow: React.FC<{
 // ============================================================
 // COLOR SHIFT BACKGROUND - Animating gradient colors (optimized)
 // ============================================================
-const ColorShiftBackground: React.FC<{ isDark: boolean }> = React.memo(({ isDark }) => {
+const ColorShiftBackground: React.FC<{
+  isDark: boolean;
+  bgStart: string;
+  bgEnd: string;
+  primary: string;
+  primaryLight: string;
+  primaryDark: string;
+  secondary: string;
+  secondaryLight: string;
+}> = React.memo(({ isDark, bgStart, bgEnd, primary, primaryLight, primaryDark, secondary, secondaryLight }) => {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -202,8 +212,20 @@ const ColorShiftBackground: React.FC<{ isDark: boolean }> = React.memo(({ isDark
       <LinearGradient
         colors={
           isDark
-            ? ['#0a0a18', '#12122a', '#1a1040', '#12122a', '#0a0a18']
-            : ['#FFFFFF', '#F0F9FF', '#E0F2FE', '#F0F9FF', '#FFFFFF']
+            ? [
+                bgStart,
+                withAlpha(primary, 0.08),
+                withAlpha(secondary, 0.06),
+                withAlpha(primaryDark, 0.08),
+                bgEnd,
+              ]
+            : [
+                bgStart,
+                withAlpha(primaryLight, 0.06),
+                withAlpha(secondaryLight, 0.05),
+                withAlpha(primary, 0.06),
+                bgEnd,
+              ]
         }
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0, y: 0 }}
@@ -217,7 +239,7 @@ const ColorShiftBackground: React.FC<{ isDark: boolean }> = React.memo(({ isDark
 // ============================================================
 // MOVING GRADIENT MESH (optimized)
 // ============================================================
-const GradientMesh: React.FC<{ isDark: boolean; primaryColor?: string; secondaryColor?: string }> = React.memo(({ isDark, primaryColor = 'rgba(139, 92, 246, 0.12)', secondaryColor = 'rgba(59, 130, 246, 0.08)' }) => {
+const GradientMesh: React.FC<{ primaryColor: string; secondaryColor: string }> = React.memo(({ primaryColor, secondaryColor }) => {
   const offset1 = useSharedValue(0);
 
   useEffect(() => {
@@ -293,13 +315,13 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
 
   // Aurora wave colors based on primary/secondary
   const auroraColors1: readonly [string, string, ...string[]] = 
-    ['transparent', `${colors.primary}33`, `${colors.secondary}26`, 'transparent'];
+    ['transparent', withAlpha(colors.primary, 0.2), withAlpha(colors.secondary, 0.15), 'transparent'];
   
   const auroraColors2: readonly [string, string, ...string[]] = 
-    ['transparent', `${colors.secondary}2E`, `${colors.primaryLight}1F`, 'transparent'];
+    ['transparent', withAlpha(colors.secondary, 0.18), withAlpha(colors.primaryLight, 0.12), 'transparent'];
 
   const auroraColors3: readonly [string, string, ...string[]] = 
-    ['transparent', `${colors.primaryDark}26`, `${colors.primary}1A`, 'transparent'];
+    ['transparent', withAlpha(colors.primaryDark, 0.15), withAlpha(colors.primary, 0.1), 'transparent'];
 
   const bgColors = getBackgroundColors();
 
@@ -317,7 +339,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
       {!isMinimal && colors.blurIntensity > 0 && (
         <Animated.View style={[StyleSheet.absoluteFillObject, containerStyle]}>
           {/* Moving gradient mesh */}
-          <GradientMesh isDark={isDark} primaryColor={`${colors.primary}1F`} secondaryColor={`${colors.secondary}14`} />
+          <GradientMesh primaryColor={withAlpha(colors.primary, 0.12)} secondaryColor={withAlpha(colors.secondary, 0.08)} />
 
           {/* Aurora waves - reduced on Android for performance */}
           <>
@@ -336,27 +358,27 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
               <BreathingGlow 
                 isDark={isDark} 
                 position="top" 
-                color={`${colors.primary}40`} 
+                color={withAlpha(colors.primary, 0.25)}
                 delay={0}
               />
               <BreathingGlow 
                 isDark={isDark} 
                 position="bottom" 
-                color={`${colors.secondary}33`} 
+                color={withAlpha(colors.secondary, 0.2)}
                 delay={2000}
               />
             </>
           )}
 
           {/* Shimmer effect - skip on Android for performance */}
-          {!isAndroid && <ShimmerOverlay isDark={isDark} />}
+          {!isAndroid && <ShimmerOverlay isDark={isDark} highlightColor={colors.glassBackgroundStrong} />}
         </Animated.View>
       )}
 
       {/* Top static glow using theme colors */}
       <View style={styles.topGlow} pointerEvents="none">
         <LinearGradient
-          colors={[`${colors.primary}1F`, `${colors.secondary}10`, 'transparent']}
+          colors={[withAlpha(colors.primary, 0.12), withAlpha(colors.secondary, 0.06), 'transparent']}
           style={StyleSheet.absoluteFillObject}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
@@ -366,7 +388,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
       {/* Bottom static glow using theme colors */}
       <View style={styles.bottomGlow} pointerEvents="none">
         <LinearGradient
-          colors={['transparent', `${colors.secondary}14`, `${colors.primary}1F`]}
+          colors={['transparent', withAlpha(colors.secondary, 0.08), withAlpha(colors.primary, 0.12)]}
           style={StyleSheet.absoluteFillObject}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
@@ -377,7 +399,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
       {colors.shadowIntensity > 0 && (
         <View style={styles.vignette} pointerEvents="none">
           <LinearGradient
-            colors={[`${colors.shadowColor}40`, 'transparent', 'transparent', `${colors.shadowColor}33`]}
+            colors={[withAlpha(colors.shadowColor, 0.25), 'transparent', 'transparent', withAlpha(colors.shadowColor, 0.2)]}
             style={StyleSheet.absoluteFillObject}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}

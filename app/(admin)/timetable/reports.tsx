@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface SubstitutionStats {
   totalThisMonth: number;
@@ -240,16 +241,16 @@ export default function ReportsScreen() {
             <>
               {/* Summary Cards */}
               <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.summaryRow}>
-                <View style={[styles.summaryCard, { backgroundColor: '#f5920015', borderColor: '#f5920030' }]}>
-                  <Text style={[styles.summaryValue, { color: '#f59200' }]}>{stats.totalToday}</Text>
+                <View style={[styles.summaryCard, { backgroundColor: withAlpha(colors.warning, 0.08), borderColor: withAlpha(colors.warning, 0.19) }]}>
+                  <Text style={[styles.summaryValue, { color: colors.warning }]}>{stats.totalToday}</Text>
                   <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Today</Text>
                 </View>
-                <View style={[styles.summaryCard, { backgroundColor: '#3b82f615', borderColor: '#3b82f630' }]}>
-                  <Text style={[styles.summaryValue, { color: '#3b82f6' }]}>{stats.totalThisWeek}</Text>
+                <View style={[styles.summaryCard, { backgroundColor: withAlpha(colors.info, 0.08), borderColor: withAlpha(colors.info, 0.19) }]}>
+                  <Text style={[styles.summaryValue, { color: colors.info }]}>{stats.totalThisWeek}</Text>
                   <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>This Week</Text>
                 </View>
-                <View style={[styles.summaryCard, { backgroundColor: '#10b98115', borderColor: '#10b98130' }]}>
-                  <Text style={[styles.summaryValue, { color: '#10b981' }]}>{stats.totalThisMonth}</Text>
+                <View style={[styles.summaryCard, { backgroundColor: withAlpha(colors.success, 0.08), borderColor: withAlpha(colors.success, 0.19) }]}>
+                  <Text style={[styles.summaryValue, { color: colors.success }]}>{stats.totalThisMonth}</Text>
                   <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>This Month</Text>
                 </View>
               </Animated.View>
@@ -261,17 +262,17 @@ export default function ReportsScreen() {
                 <View style={styles.insightRow}>
                   <View style={[
                     styles.insightCard, 
-                    { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.08)' }
+                    { backgroundColor: withAlpha(colors.error, isDark ? 0.1 : 0.08) }
                   ]}>
                     <View style={styles.insightIcon}>
-                      <FontAwesome5 name="user-minus" size={18} color="#ef4444" />
+                      <FontAwesome5 name="user-minus" size={18} color={colors.error} />
                     </View>
                     <Text style={[styles.insightLabel, { color: colors.textMuted }]}>Most Substituted</Text>
                     <Text style={[styles.insightValue, { color: colors.textPrimary }]} numberOfLines={1}>
                       {stats.mostSubstituted?.teacher_name || '-'}
                     </Text>
                     {stats.mostSubstituted && (
-                      <Text style={[styles.insightCount, { color: '#ef4444' }]}>
+                      <Text style={[styles.insightCount, { color: colors.error }]}>
                         {stats.mostSubstituted.count} times
                       </Text>
                     )}
@@ -279,17 +280,17 @@ export default function ReportsScreen() {
 
                   <View style={[
                     styles.insightCard, 
-                    { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.08)' }
+                    { backgroundColor: withAlpha(colors.success, isDark ? 0.1 : 0.08) }
                   ]}>
                     <View style={styles.insightIcon}>
-                      <FontAwesome5 name="user-plus" size={18} color="#10b981" />
+                      <FontAwesome5 name="user-plus" size={18} color={colors.success} />
                     </View>
                     <Text style={[styles.insightLabel, { color: colors.textMuted }]}>Top Substitute</Text>
                     <Text style={[styles.insightValue, { color: colors.textPrimary }]} numberOfLines={1}>
                       {stats.topSubstitute?.teacher_name || '-'}
                     </Text>
                     {stats.topSubstitute && (
-                      <Text style={[styles.insightCount, { color: '#10b981' }]}>
+                      <Text style={[styles.insightCount, { color: colors.success }]}>
                         {stats.topSubstitute.count} times
                       </Text>
                     )}
@@ -304,7 +305,7 @@ export default function ReportsScreen() {
                   
                   <View style={[
                     styles.chartCard, 
-                    { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }
+                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02) }
                   ]}>
                     {stats.byDepartment.map((dept, index) => {
                       const maxCount = stats.byDepartment[0]?.count || 1;
@@ -320,13 +321,13 @@ export default function ReportsScreen() {
                               {dept.count}
                             </Text>
                           </View>
-                          <View style={[styles.barTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+                          <View style={[styles.barTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.05) }]}>
                             <View 
                               style={[
                                 styles.barFill, 
                                 { 
                                   width: `${percentage}%`,
-                                  backgroundColor: index === 0 ? '#f59200' : '#3b82f6',
+                                  backgroundColor: index === 0 ? colors.warning : colors.info,
                                 }
                               ]} 
                             />
@@ -357,13 +358,13 @@ export default function ReportsScreen() {
                       style={[
                         styles.activityCard,
                         { 
-                          backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                          borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                          backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02),
+                          borderColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.05),
                         }
                       ]}
                     >
                       <View style={styles.activityHeader}>
-                        <View style={[styles.dateBadge, { backgroundColor: colors.primary + '15' }]}>
+                        <View style={[styles.dateBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
                           <Text style={[styles.dateBadgeText, { color: colors.primary }]}>
                             {formatDate(sub.date)}
                           </Text>
@@ -372,16 +373,16 @@ export default function ReportsScreen() {
                           Period {sub.period}
                         </Text>
                         {sub.course_name && (
-                          <Text style={[styles.courseBadge, { color: '#8b5cf6' }]}>
+                          <Text style={[styles.courseBadge, { color: colors.primary }]}>
                             {sub.course_name}
                           </Text>
                         )}
                       </View>
                       <View style={styles.activityBody}>
                         <Text style={[styles.teacherSwap, { color: colors.textPrimary }]}>
-                          <Text style={{ color: '#ef4444' }}>{sub.original_teacher}</Text>
+                          <Text style={{ color: colors.error }}>{sub.original_teacher}</Text>
                           {'  →  '}
-                          <Text style={{ color: '#10b981' }}>{sub.substitute_teacher}</Text>
+                          <Text style={{ color: colors.success }}>{sub.substitute_teacher}</Text>
                         </Text>
                         {sub.reason && (
                           <Text style={[styles.reasonText, { color: colors.textMuted }]} numberOfLines={1}>

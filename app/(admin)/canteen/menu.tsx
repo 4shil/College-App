@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface MenuItem {
   id: string;
@@ -218,7 +219,7 @@ export default function CanteenMenuScreen() {
                 key={cat}
                 style={[
                   styles.filterTab,
-                  filter === cat && { backgroundColor: `${colors.primary}20` },
+                  filter === cat && { backgroundColor: withAlpha(colors.primary, 0.125) },
                 ]}
                 onPress={() => setFilter(cat)}
               >
@@ -271,7 +272,11 @@ export default function CanteenMenuScreen() {
                           <View
                             style={[
                               styles.vegBadge,
-                              { backgroundColor: item.is_veg ? `${colors.success}20` : `${colors.error}20` },
+                              {
+                                backgroundColor: item.is_veg
+                                  ? withAlpha(colors.success, 0.125)
+                                  : withAlpha(colors.error, 0.125),
+                              },
                             ]}
                           >
                             <View
@@ -284,7 +289,7 @@ export default function CanteenMenuScreen() {
                           <View
                             style={[
                               styles.categoryBadge,
-                              { backgroundColor: `${getCategoryColor(item.category)}20` },
+                              { backgroundColor: withAlpha(getCategoryColor(item.category), 0.125) },
                             ]}
                           >
                             <Text
@@ -313,7 +318,11 @@ export default function CanteenMenuScreen() {
                     <TouchableOpacity
                       style={[
                         styles.actionButton,
-                        { backgroundColor: item.is_available ? `${colors.success}15` : `${colors.error}15` },
+                        {
+                          backgroundColor: item.is_available
+                            ? withAlpha(colors.success, 0.082)
+                            : withAlpha(colors.error, 0.082),
+                        },
                       ]}
                       onPress={() => toggleAvailability(item)}
                     >
@@ -332,13 +341,13 @@ export default function CanteenMenuScreen() {
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.iconButton, { backgroundColor: `${colors.primary}15` }]}
+                      style={[styles.iconButton, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
                       onPress={() => openEditModal(item)}
                     >
                       <FontAwesome5 name="edit" size={14} color={colors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.iconButton, { backgroundColor: `${colors.error}15` }]}
+                      style={[styles.iconButton, { backgroundColor: withAlpha(colors.error, 0.082) }]}
                       onPress={() => handleDelete(item)}
                     >
                       <FontAwesome5 name="trash" size={14} color={colors.error} />
@@ -357,7 +366,7 @@ export default function CanteenMenuScreen() {
           animationType="slide"
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
             <GlassCard style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -401,9 +410,9 @@ export default function CanteenMenuScreen() {
                         key={cat}
                         style={[
                           styles.categoryButton,
-                          { borderColor: `${colors.primary}30` },
+                          { borderColor: withAlpha(colors.primary, 0.188) },
                           formData.category === cat && {
-                            backgroundColor: `${getCategoryColor(cat)}20`,
+                            backgroundColor: withAlpha(getCategoryColor(cat), 0.125),
                           },
                         ]}
                         onPress={() => setFormData({ ...formData, category: cat })}
@@ -432,8 +441,8 @@ export default function CanteenMenuScreen() {
                     <TouchableOpacity
                       style={[
                         styles.vegButton,
-                        { borderColor: `${colors.primary}30` },
-                        formData.is_veg && { backgroundColor: `${colors.success}20` },
+                        { borderColor: withAlpha(colors.primary, 0.188) },
+                        formData.is_veg && { backgroundColor: withAlpha(colors.success, 0.125) },
                       ]}
                       onPress={() => setFormData({ ...formData, is_veg: true })}
                     >
@@ -462,8 +471,8 @@ export default function CanteenMenuScreen() {
                     <TouchableOpacity
                       style={[
                         styles.vegButton,
-                        { borderColor: `${colors.primary}30` },
-                        !formData.is_veg && { backgroundColor: `${colors.error}20` },
+                        { borderColor: withAlpha(colors.primary, 0.188) },
+                        !formData.is_veg && { backgroundColor: withAlpha(colors.error, 0.125) },
                       ]}
                       onPress={() => setFormData({ ...formData, is_veg: false })}
                     >
@@ -643,7 +652,6 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     padding: 20,
   },

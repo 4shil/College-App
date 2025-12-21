@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
+import { withAlpha } from '../../../../theme/colorUtils';
 
 interface Teacher {
   id: string;
@@ -109,10 +110,10 @@ export default function TeachersListScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return '#10b981';
-      case 'inactive': return '#f59e0b';
-      case 'blocked': return '#ef4444';
-      default: return '#6b7280';
+      case 'active': return colors.success;
+      case 'inactive': return colors.warning;
+      case 'blocked': return colors.error;
+      default: return colors.textMuted;
     }
   };
 
@@ -129,7 +130,7 @@ export default function TeachersListScreen() {
         <Card style={styles.teacherCard}>
           <View style={styles.cardContent}>
             {/* Avatar */}
-            <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.avatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
               <FontAwesome5 name="chalkboard-teacher" size={20} color={colors.primary} />
             </View>
 
@@ -146,7 +147,7 @@ export default function TeachersListScreen() {
               </Text>
               <View style={styles.metaRow}>
                 {teacher.department && (
-                  <View style={[styles.metaBadge, { backgroundColor: colors.primary + '15' }]}>
+                  <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
                     <FontAwesome5 name="building" size={10} color={colors.primary} />
                     <Text style={[styles.metaText, { color: colors.primary }]}>
                       {teacher.department.code}
@@ -154,9 +155,9 @@ export default function TeachersListScreen() {
                   </View>
                 )}
                 {teacher.designation && (
-                  <View style={[styles.metaBadge, { backgroundColor: '#8b5cf620' }]}>
-                    <FontAwesome5 name="id-badge" size={10} color="#8b5cf6" />
-                    <Text style={[styles.metaText, { color: '#8b5cf6' }]}>
+                  <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
+                    <FontAwesome5 name="id-badge" size={10} color={colors.info} />
+                    <Text style={[styles.metaText, { color: colors.info }]}>
                       {teacher.designation}
                     </Text>
                   </View>
@@ -177,7 +178,7 @@ export default function TeachersListScreen() {
       entering={FadeInDown.delay(200).duration(400)}
       style={styles.emptyState}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: colors.primary + '15' }]}>
+      <View style={[styles.emptyIcon, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
         <FontAwesome5 name="chalkboard-teacher" size={40} color={colors.primary} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
@@ -217,7 +218,7 @@ export default function TeachersListScreen() {
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/(admin)/users/teachers/create' as any)}
           >
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 

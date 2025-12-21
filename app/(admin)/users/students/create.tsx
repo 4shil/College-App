@@ -19,6 +19,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Department {
@@ -509,7 +510,12 @@ export default function CreateStudentScreen() {
 
         <View style={styles.formGroup}>
           <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
-          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerContainer,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+            ]}
+          >
             <Picker
               selectedValue={formData.department_id}
               onValueChange={(v) => updateFormData('department_id', v)}
@@ -525,7 +531,12 @@ export default function CreateStudentScreen() {
 
         <View style={styles.formGroup}>
           <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
-          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerContainer,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+            ]}
+          >
             <Picker
               selectedValue={formData.course_id}
               onValueChange={(v) => updateFormData('course_id', v)}
@@ -542,7 +553,12 @@ export default function CreateStudentScreen() {
 
         <View style={styles.formGroup}>
           <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Year *</Text>
-          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerContainer,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+            ]}
+          >
             <Picker
               selectedValue={formData.year_id}
               onValueChange={(v) => updateFormData('year_id', v)}
@@ -598,7 +614,7 @@ export default function CreateStudentScreen() {
           Upload a CSV file with student data
         </Text>
 
-        <View style={styles.csvInfo}>
+        <View style={[styles.csvInfo, { backgroundColor: withAlpha(colors.textPrimary, 0.05) }]}>
           <Text style={[styles.csvInfoTitle, { color: colors.textPrimary }]}>Required CSV columns:</Text>
           <Text style={[styles.csvInfoText, { color: colors.textMuted }]}>
             • full_name (required){'\n'}
@@ -615,7 +631,12 @@ export default function CreateStudentScreen() {
           
           <View style={styles.formGroup}>
             <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
-            <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View
+              style={[
+                styles.pickerContainer,
+                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              ]}
+            >
               <Picker
                 selectedValue={formData.department_id}
                 onValueChange={(v) => updateFormData('department_id', v)}
@@ -631,7 +652,12 @@ export default function CreateStudentScreen() {
 
           <View style={styles.formGroup}>
             <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
-            <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View
+              style={[
+                styles.pickerContainer,
+                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              ]}
+            >
               <Picker
                 selectedValue={formData.course_id}
                 onValueChange={(v) => updateFormData('course_id', v)}
@@ -648,7 +674,12 @@ export default function CreateStudentScreen() {
 
           <View style={styles.formGroup}>
             <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Year *</Text>
-            <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View
+              style={[
+                styles.pickerContainer,
+                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              ]}
+            >
               <Picker
                 selectedValue={formData.year_id}
                 onValueChange={(v) => updateFormData('year_id', v)}
@@ -701,7 +732,10 @@ export default function CreateStudentScreen() {
           </Animated.View>
 
           {/* Tabs */}
-          <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.tabContainer}>
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(400)}
+            style={[styles.tabContainer, { backgroundColor: withAlpha(colors.textPrimary, 0.1) }]}
+          >
             <TouchableOpacity
               style={[
                 styles.tab,
@@ -712,12 +746,12 @@ export default function CreateStudentScreen() {
               <FontAwesome5
                 name="user-plus"
                 size={14}
-                color={activeTab === 'manual' ? '#fff' : colors.textSecondary}
+                color={activeTab === 'manual' ? colors.textInverse : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.tabText,
-                  { color: activeTab === 'manual' ? '#fff' : colors.textSecondary },
+                  { color: activeTab === 'manual' ? colors.textInverse : colors.textSecondary },
                 ]}
               >
                 Manual Entry
@@ -733,12 +767,12 @@ export default function CreateStudentScreen() {
               <FontAwesome5
                 name="file-upload"
                 size={14}
-                color={activeTab === 'bulk' ? '#fff' : colors.textSecondary}
+                color={activeTab === 'bulk' ? colors.textInverse : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.tabText,
-                  { color: activeTab === 'bulk' ? '#fff' : colors.textSecondary },
+                  { color: activeTab === 'bulk' ? colors.textInverse : colors.textSecondary },
                 ]}
               >
                 Bulk Import
@@ -767,7 +801,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 4,
   },
@@ -795,7 +829,7 @@ const styles = StyleSheet.create({
   bulkIcon: { marginBottom: 16 },
   bulkTitle: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
   bulkSubtitle: { fontSize: 14, textAlign: 'center', marginBottom: 24 },
-  csvInfo: { width: '100%', padding: 16, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 12, marginBottom: 24 },
+  csvInfo: { width: '100%', padding: 16, backgroundColor: 'transparent', borderRadius: 12, marginBottom: 24 },
   csvInfoTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   csvInfoText: { fontSize: 13, lineHeight: 22 },
   uploadBtn: { width: '100%' },

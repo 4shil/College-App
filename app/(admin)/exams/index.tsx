@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface ExamStats {
   upcoming: number;
@@ -79,28 +80,28 @@ export default function ExamsIndexScreen() {
       title: 'Manage Exams',
       subtitle: 'Create and schedule exams',
       icon: 'file-alt',
-      color: '#6366f1',
+      color: colors.primary,
       route: '/(admin)/exams/manage',
     },
     {
       title: 'Enter Marks',
       subtitle: 'Record student marks',
       icon: 'edit',
-      color: '#10b981',
+      color: colors.success,
       route: '/(admin)/exams/marks',
     },
     {
       title: 'External Marks',
       subtitle: 'Upload university results',
       icon: 'upload',
-      color: '#f59e0b',
+      color: colors.warning,
       route: '/(admin)/exams/external',
     },
     {
       title: 'Reports',
       subtitle: 'View results and analytics',
       icon: 'chart-bar',
-      color: '#8b5cf6',
+      color: colors.info,
       route: '/(admin)/exams/reports',
     },
   ];
@@ -133,44 +134,44 @@ export default function ExamsIndexScreen() {
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.primary}15` : `${colors.primary}10`,
-            borderColor: isDark ? `${colors.primary}30` : `${colors.primary}25`,
+            backgroundColor: isDark ? withAlpha(colors.primary, 0.082) : withAlpha(colors.primary, 0.063),
+            borderColor: isDark ? withAlpha(colors.primary, 0.188) : withAlpha(colors.primary, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.primary }]}>
-              <FontAwesome5 name="clock" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.primary, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="clock" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.upcoming}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Upcoming</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
-            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
+            backgroundColor: isDark ? withAlpha(colors.success, 0.082) : withAlpha(colors.success, 0.063),
+            borderColor: isDark ? withAlpha(colors.success, 0.188) : withAlpha(colors.success, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
-              <FontAwesome5 name="play-circle" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.success, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="play-circle" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.ongoing}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ongoing</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.info}15` : `${colors.info}10`,
-            borderColor: isDark ? `${colors.info}30` : `${colors.info}25`,
+            backgroundColor: isDark ? withAlpha(colors.info, 0.082) : withAlpha(colors.info, 0.063),
+            borderColor: isDark ? withAlpha(colors.info, 0.188) : withAlpha(colors.info, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.info }]}>
-              <FontAwesome5 name="check-circle" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.info, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="check-circle" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.completed}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completed</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.warning}15` : `${colors.warning}10`,
-            borderColor: isDark ? `${colors.warning}30` : `${colors.warning}25`,
+            backgroundColor: isDark ? withAlpha(colors.warning, 0.082) : withAlpha(colors.warning, 0.063),
+            borderColor: isDark ? withAlpha(colors.warning, 0.188) : withAlpha(colors.warning, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.warning }]}>
-              <FontAwesome5 name="edit" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.warning, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="edit" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pendingMarks}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
@@ -187,10 +188,10 @@ export default function ExamsIndexScreen() {
             >
               <Animated.View entering={FadeInDown.delay(350 + index * 50).springify()}>
                 <View style={[styles.menuCard, {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                  backgroundColor: isDark ? withAlpha(colors.textInverse, 0.05) : withAlpha(colors.shadowColor, 0.02),
+                  borderColor: isDark ? withAlpha(colors.textInverse, 0.1) : withAlpha(colors.shadowColor, 0.06),
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: `${option.color}20` }]}>
+                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
                     <FontAwesome5 name={option.icon} size={24} color={option.color} />
                   </View>
                   <View style={styles.menuContent}>
@@ -249,7 +250,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

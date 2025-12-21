@@ -17,6 +17,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface SettingItem {
   id: string;
@@ -75,7 +76,7 @@ export default function SettingsScreen() {
           subtitle: 'Update your login credentials',
           icon: 'lock',
           iconType: 'fa5',
-          color: '#10b981',
+          color: colors.success,
           type: 'navigation',
           route: '/(admin)/change-password',
         },
@@ -90,7 +91,7 @@ export default function SettingsScreen() {
           subtitle: 'Name, address, contact details',
           icon: 'building',
           iconType: 'fa5',
-          color: '#8b5cf6',
+          color: colors.primary,
           type: 'navigation',
           route: '/(admin)/college-info',
         },
@@ -100,7 +101,7 @@ export default function SettingsScreen() {
           subtitle: 'Current: 2024-2025',
           icon: 'calendar-alt',
           iconType: 'fa5',
-          color: '#f59e0b',
+          color: colors.warning,
           type: 'navigation',
           route: '/(admin)/settings/academic-year',
         },
@@ -115,7 +116,7 @@ export default function SettingsScreen() {
           subtitle: 'Customize app colors and style',
           icon: 'color-palette',
           iconType: 'ion',
-          color: '#a855f7',
+          color: colors.primary,
           type: 'navigation',
           route: '/(admin)/settings/appearance',
         },
@@ -125,7 +126,7 @@ export default function SettingsScreen() {
           subtitle: 'Switch between light and dark themes',
           icon: 'moon',
           iconType: 'ion',
-          color: '#6366f1',
+          color: colors.info,
           type: 'toggle',
           value: isDark,
           action: toggleTheme,
@@ -136,7 +137,7 @@ export default function SettingsScreen() {
           subtitle: 'Receive alerts and updates',
           icon: 'notifications',
           iconType: 'ion',
-          color: '#ef4444',
+          color: colors.error,
           type: 'toggle',
           value: notifications,
           action: () => setNotifications(!notifications),
@@ -152,7 +153,7 @@ export default function SettingsScreen() {
           subtitle: 'Automatically approve new registrations',
           icon: 'check-circle',
           iconType: 'fa5',
-          color: '#10b981',
+          color: colors.success,
           type: 'toggle',
           value: autoApproval,
           action: () => setAutoApproval(!autoApproval),
@@ -163,7 +164,7 @@ export default function SettingsScreen() {
           subtitle: 'Temporarily disable user access',
           icon: 'tools',
           iconType: 'fa5',
-          color: '#f97316',
+          color: colors.warning,
           type: 'toggle',
           value: maintenanceMode,
           action: () => {
@@ -187,7 +188,7 @@ export default function SettingsScreen() {
           subtitle: 'View system activity logs',
           icon: 'clipboard-list',
           iconType: 'fa5',
-          color: '#64748b',
+          color: colors.textMuted,
           type: 'navigation',
           route: '/(admin)/audit/logs',
         },
@@ -197,7 +198,7 @@ export default function SettingsScreen() {
           subtitle: 'Manage data backups',
           icon: 'database',
           iconType: 'fa5',
-          color: '#0ea5e9',
+          color: colors.info,
           type: 'navigation',
           route: '/(admin)/backup',
         },
@@ -212,7 +213,7 @@ export default function SettingsScreen() {
           subtitle: 'FAQs and contact support',
           icon: 'help-circle',
           iconType: 'ion',
-          color: '#6366f1',
+          color: colors.info,
           type: 'navigation',
           route: '/(admin)/help',
         },
@@ -222,7 +223,7 @@ export default function SettingsScreen() {
           subtitle: 'Version 1.0.0',
           icon: 'information-circle',
           iconType: 'ion',
-          color: '#64748b',
+          color: colors.textMuted,
           type: 'navigation',
           route: '/(admin)/about',
         },
@@ -247,7 +248,8 @@ export default function SettingsScreen() {
           style={[
             styles.settingItem,
             {
-              backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+              backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02),
+              borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
             },
           ]}
           onPress={() => {
@@ -262,7 +264,7 @@ export default function SettingsScreen() {
           activeOpacity={item.type === 'toggle' ? 1 : 0.7}
           disabled={item.type === 'toggle'}
         >
-          <View style={[styles.itemIcon, { backgroundColor: item.color + '15' }]}>
+          <View style={[styles.itemIcon, { backgroundColor: withAlpha(item.color, 0.08) }]}>
             <IconComponent name={item.icon as any} size={18} color={item.color} />
           </View>
           <View style={styles.itemContent}>
@@ -277,8 +279,8 @@ export default function SettingsScreen() {
             <Switch
               value={item.value}
               onValueChange={item.action}
-              trackColor={{ false: colors.textMuted + '30', true: colors.primary + '50' }}
-              thumbColor={item.value ? colors.primary : '#f4f3f4'}
+              trackColor={{ false: withAlpha(colors.textMuted, 0.19), true: withAlpha(colors.primary, 0.31) }}
+              thumbColor={item.value ? colors.primary : colors.cardBackground}
             />
           ) : (
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -307,7 +309,7 @@ export default function SettingsScreen() {
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>
           <Card style={styles.adminCard}>
             <View style={styles.adminInfo}>
-              <View style={[styles.adminAvatar, { backgroundColor: colors.primary + '20' }]}>
+              <View style={[styles.adminAvatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                 <FontAwesome5 name="user-shield" size={24} color={colors.primary} />
               </View>
               <View style={styles.adminDetails}>
@@ -317,7 +319,7 @@ export default function SettingsScreen() {
                 <Text style={[styles.adminEmail, { color: colors.textSecondary }]}>
                   {user?.email || 'admin@college.edu'}
                 </Text>
-                <View style={[styles.roleBadge, { backgroundColor: colors.primary + '15' }]}>
+                <View style={[styles.roleBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
                   <Text style={[styles.roleText, { color: colors.primary }]}>
                     {primaryRole?.replace('_', ' ').toUpperCase() || 'SUPER ADMIN'}
                   </Text>
@@ -341,8 +343,8 @@ export default function SettingsScreen() {
               style={[
                 styles.sectionCard,
                 {
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)',
-                  borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                  backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.01),
+                  borderColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
                 },
               ]}
             >
@@ -354,11 +356,11 @@ export default function SettingsScreen() {
         {/* Logout Button */}
         <Animated.View entering={FadeInDown.delay(500).duration(400)} style={styles.logoutSection}>
           <TouchableOpacity
-            style={[styles.logoutBtn, { borderColor: '#ef4444' + '30' }]}
+            style={[styles.logoutBtn, { borderColor: withAlpha(colors.error, 0.19) }]}
             onPress={handleLogout}
           >
-            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-            <Text style={styles.logoutText}>Sign Out</Text>
+            <Ionicons name="log-out-outline" size={20} color={colors.error} />
+            <Text style={[styles.logoutText, { color: colors.error }]}>Sign Out</Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -450,7 +452,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.03)',
+    borderBottomColor: 'transparent',
   },
   itemIcon: {
     width: 40,
@@ -485,7 +487,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoutText: {
-    color: '#ef4444',
+    color: 'transparent',
     fontSize: 16,
     fontWeight: '600',
   },

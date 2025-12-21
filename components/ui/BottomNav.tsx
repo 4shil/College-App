@@ -19,6 +19,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../store/themeStore';
+import type { ThemeColors } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -49,7 +51,11 @@ const NavButton: React.FC<{
   isActive: boolean;
   onPress: () => void;
   isDark: boolean;
-}> = ({ item, isActive, onPress, isDark }) => {
+  activeColor: string;
+  inactiveColor: string;
+  glowColors: readonly [string, string, ...string[]];
+  activeBackgroundColor: string;
+}> = ({ item, isActive, onPress, isDark, activeColor, inactiveColor, glowColors, activeBackgroundColor }) => {
   const scale = useSharedValue(1);
   const glowOpacity = useSharedValue(isActive ? 1 : 0);
   const iconScale = useSharedValue(isActive ? 1.1 : 1);
@@ -86,10 +92,6 @@ const NavButton: React.FC<{
     scale.value = withSpring(1, { damping: 15, stiffness: 400 });
   };
 
-  // Colors
-  const activeColor = isDark ? '#60A5FA' : '#3B82F6';
-  const inactiveColor = isDark ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)';
-
   return (
     <Pressable
       onPress={onPress}
@@ -101,11 +103,7 @@ const NavButton: React.FC<{
         {/* Active Glow Effect */}
         <Animated.View style={[styles.glowContainer, animatedGlowStyle]}>
           <LinearGradient
-            colors={
-              isDark
-                ? ['rgba(59, 130, 246, 0.5)', 'rgba(139, 92, 246, 0.4)', 'transparent']
-                : ['rgba(59, 130, 246, 0.35)', 'rgba(139, 92, 246, 0.25)', 'transparent']
-            }
+            colors={glowColors}
             style={styles.glowGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -118,9 +116,7 @@ const NavButton: React.FC<{
             style={[
               styles.activeBackground,
               {
-                backgroundColor: isDark
-                  ? 'rgba(255, 255, 255, 0.15)'
-                  : 'rgba(255, 255, 255, 0.6)',
+                backgroundColor: activeBackgroundColor,
               },
             ]}
           />
@@ -142,21 +138,28 @@ const NavButton: React.FC<{
 // NavBar content component - extracted for reuse
 const NavBarContent: React.FC<{
   isDark: boolean;
+  colors: ThemeColors;
   currentPage: NavPage;
   onNavigate: (page: NavPage) => void;
-}> = ({ isDark, currentPage, onNavigate }) => (
+}> = ({ isDark, colors, currentPage, onNavigate }) => {
+  const activeColor = colors.primary;
+  const inactiveColor = withAlpha(colors.textMuted, isDark ? 0.85 : 0.8);
+  const activeBackgroundColor = withAlpha(colors.glassBackgroundStrong, isDark ? 0.15 : 0.6);
+  const glowColors: readonly [string, string, ...string[]] = isDark
+    ? [withAlpha(colors.primary, 0.5), withAlpha(colors.secondary, 0.35), 'transparent']
+    : [withAlpha(colors.primary, 0.35), withAlpha(colors.secondary, 0.25), 'transparent'];
+
+  const overlayColors: readonly [string, string, ...string[]] = isDark
+    ? [withAlpha(colors.secondary, 0.06), 'transparent', withAlpha(colors.primary, 0.04)]
+    : [withAlpha(colors.secondary, 0.04), 'transparent', withAlpha(colors.primary, 0.03)];
+
+  return (
   <View
     style={[
       styles.navBar,
       {
-        backgroundColor: Platform.OS === 'android'
-          ? 'transparent'
-          : isDark
-            ? 'rgba(255, 255, 255, 0.08)'
-            : 'rgba(255, 255, 255, 0.75)',
-        borderColor: isDark
-          ? 'rgba(255, 255, 255, 0.12)'
-          : 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: Platform.OS === 'android' ? 'transparent' : colors.glassBackground,
+        borderColor: colors.glassBorder,
       },
     ]}
   >
@@ -164,8 +167,8 @@ const NavBarContent: React.FC<{
     <LinearGradient
       colors={
         isDark
-          ? ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.03)', 'transparent']
-          : ['rgba(255, 255, 255, 0.98)', 'rgba(255, 255, 255, 0.6)', 'transparent']
+          ? [withAlpha(colors.glassBackgroundStrong, 0.15), withAlpha(colors.glassBackgroundStrong, 0.03), 'transparent']
+          : [withAlpha(colors.glassBackgroundStrong, 0.98), withAlpha(colors.glassBackgroundStrong, 0.6), 'transparent']
       }
       style={styles.topHighlight}
       start={{ x: 0, y: 0 }}
@@ -174,11 +177,7 @@ const NavBarContent: React.FC<{
 
     {/* Subtle Gradient Overlay */}
     <LinearGradient
-      colors={
-        isDark
-          ? ['rgba(139, 92, 246, 0.05)', 'transparent', 'rgba(59, 130, 246, 0.03)']
-          : ['rgba(139, 92, 246, 0.03)', 'transparent', 'rgba(59, 130, 246, 0.02)']
-      }
+      colors={overlayColors}
       style={styles.gradientOverlay}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -193,11 +192,16 @@ const NavBarContent: React.FC<{
           isActive={currentPage === item.id}
           onPress={() => onNavigate(item.id)}
           isDark={isDark}
+          activeColor={activeColor}
+          inactiveColor={inactiveColor}
+          glowColors={glowColors}
+          activeBackgroundColor={activeBackgroundColor}
         />
       ))}
     </View>
   </View>
-);
+  );
+};
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   currentPage,
@@ -233,36 +237,44 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         style={[
           styles.outerShadow,
           {
-            shadowColor: isDark ? '#8B5CF6' : '#7C3AED',
+            shadowColor: colors.primary,
             backgroundColor: 'transparent',
           },
         ]}
       />
 
       {/* Main Nav Bar */}
-      <View style={styles.navBarWrapper}>
+      <View
+        style={[
+          styles.navBarWrapper,
+          Platform.OS === 'ios'
+            ? {
+                shadowColor: colors.shadowColor,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+              }
+            : null,
+        ]}
+      >
         {Platform.OS === 'ios' && canUseBlur ? (
           <BlurView
             intensity={60}
             style={styles.blurView}
             tint={isDark ? 'dark' : 'light'}
           >
-            <NavBarContent isDark={isDark} currentPage={currentPage} onNavigate={onNavigate} />
+            <NavBarContent isDark={isDark} colors={colors} currentPage={currentPage} onNavigate={onNavigate} />
           </BlurView>
         ) : (
           <View
             style={[
               styles.blurView,
               {
-                backgroundColor: canUseBlur
-                  ? isDark
-                    ? 'rgba(20, 20, 35, 0.95)'
-                    : 'rgba(255, 255, 255, 0.95)'
-                  : colors.cardBackground,
+                backgroundColor: canUseBlur ? colors.glassBackgroundStrong : colors.cardBackground,
               },
             ]}
           >
-            <NavBarContent isDark={isDark} currentPage={currentPage} onNavigate={onNavigate} />
+            <NavBarContent isDark={isDark} colors={colors} currentPage={currentPage} onNavigate={onNavigate} />
           </View>
         )}
       </View>
@@ -300,10 +312,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        // iOS shadow is applied at runtime to use theme.shadowColor.
       },
       android: {
         elevation: 8,

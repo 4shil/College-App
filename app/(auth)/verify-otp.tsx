@@ -25,6 +25,7 @@ import {
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, verifyOTP as verifySupabaseOTP, updateUserPassword, sendOTP } from '../../lib/supabase';
+import { withAlpha } from '../../theme/colorUtils';
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_MINUTES = 10;
@@ -211,8 +212,8 @@ export default function VerifyOTPScreen() {
             entering={FadeInUp.delay(100).duration(500)}
             style={styles.successContent}
           >
-            <View style={[styles.successIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-              <Ionicons name="checkmark-circle" size={80} color="#10b981" />
+            <View style={[styles.successIcon, { backgroundColor: withAlpha(colors.success, 0.1) }]}>
+              <Ionicons name="checkmark-circle" size={80} color={colors.success} />
             </View>
             <Text style={[styles.successTitle, { color: colors.textPrimary }]}>
               Registration Successful!
@@ -262,7 +263,7 @@ export default function VerifyOTPScreen() {
               <View
                 style={[
                   styles.iconContainer,
-                  { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.1)' : 'rgba(99, 102, 241, 0.1)' },
+                  { backgroundColor: withAlpha(colors.primaryLight, 0.1) },
                 ]}
               >
                 <Ionicons name="mail-open" size={40} color={colors.primary} />
@@ -284,12 +285,12 @@ export default function VerifyOTPScreen() {
                 <Ionicons
                   name={countdown > 0 ? 'time-outline' : 'alert-circle-outline'}
                   size={18}
-                  color={countdown > 0 ? colors.textMuted : '#f87171'}
+                  color={countdown > 0 ? colors.textMuted : colors.error}
                 />
                 <Text
                   style={[
                     styles.timerText,
-                    { color: countdown > 0 ? colors.textMuted : '#f87171' },
+                    { color: countdown > 0 ? colors.textMuted : colors.error },
                   ]}
                 >
                   {countdown > 0
@@ -308,12 +309,12 @@ export default function VerifyOTPScreen() {
                       styles.otpInput,
                       {
                         backgroundColor: isDark
-                          ? 'rgba(255,255,255,0.05)'
-                          : 'rgba(0,0,0,0.03)',
+                          ? withAlpha(colors.textInverse, 0.05)
+                          : withAlpha(colors.shadowColor, 0.03),
                         borderColor: digit
                           ? colors.primary
                           : error
-                          ? '#f87171'
+                          ? colors.error
                           : colors.glassBorder,
                         color: colors.textPrimary,
                       },
@@ -333,10 +334,10 @@ export default function VerifyOTPScreen() {
               {error && (
                 <Animated.View
                   entering={FadeInDown.duration(200)}
-                  style={styles.errorContainer}
+                  style={[styles.errorContainer, { backgroundColor: withAlpha(colors.error, 0.1) }]}
                 >
-                  <Ionicons name="alert-circle" size={18} color="#f87171" />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Ionicons name="alert-circle" size={18} color={colors.error} />
+                  <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
                 </Animated.View>
               )}
 
@@ -351,11 +352,11 @@ export default function VerifyOTPScreen() {
                 disabled={loading || otp.join('').length !== OTP_LENGTH}
               >
                 {loading ? (
-                  <ActivityIndicator color="#fff" size="small" />
+                  <ActivityIndicator color={colors.textInverse} size="small" />
                 ) : (
                   <>
-                    <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                    <Text style={styles.verifyButtonText}>Verify & Create Account</Text>
+                    <Ionicons name="checkmark-circle" size={20} color={colors.textInverse} />
+                    <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify & Create Account</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -388,10 +389,10 @@ export default function VerifyOTPScreen() {
               <View
                 style={[
                   styles.infoBox,
-                  { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)' },
+                  { backgroundColor: isDark ? withAlpha(colors.info, 0.12) : withAlpha(colors.info, 0.08) },
                 ]}
               >
-                <Ionicons name="information-circle" size={20} color="#3b82f6" />
+                <Ionicons name="information-circle" size={20} color={colors.info} />
                 <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                   Please check your spam folder if you don't see the email in your inbox.
                 </Text>
@@ -488,13 +489,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 12,
-    backgroundColor: 'rgba(248, 113, 113, 0.1)',
     borderRadius: 10,
     marginBottom: 16,
     width: '100%',
   },
   errorText: {
-    color: '#f87171',
     fontSize: 13,
     flex: 1,
   },
@@ -509,7 +508,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   verifyButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

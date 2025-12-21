@@ -18,6 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Batch {
@@ -288,7 +289,7 @@ export default function BatchesScreen() {
             style={[styles.addButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
 
@@ -306,7 +307,7 @@ export default function BatchesScreen() {
             <Animated.View key={batch.id} entering={FadeInDown.delay(index * 50).springify()}>
               <Card style={styles.batchCard}>
                 <View style={styles.batchHeader}>
-                  <View style={[styles.batchIcon, { backgroundColor: `${colors.primary}20` }]}>
+                  <View style={[styles.batchIcon, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                     <FontAwesome5 name="users-cog" size={20} color={colors.primary} />
                   </View>
                   <View style={styles.batchInfo}>
@@ -318,7 +319,7 @@ export default function BatchesScreen() {
                   </View>
                 </View>
 
-                <View style={styles.batchDetails}>
+                <View style={[styles.batchDetails, { borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.1) }]}>
                   <View style={styles.detailRow}>
                     <FontAwesome5 name="calendar" size={14} color={colors.textSecondary} />
                     <Text style={[styles.detailText, { color: colors.textSecondary }]}>
@@ -361,7 +362,7 @@ export default function BatchesScreen() {
 
       {/* Add/Edit Modal */}
       <Modal visible={showAddModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(150, 150, 150, 0.2)',
+    borderColor: 'transparent',
     marginBottom: 12,
   },
   detailRow: {
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   modalContent: {

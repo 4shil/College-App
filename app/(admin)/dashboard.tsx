@@ -21,6 +21,7 @@ import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
 import { supabase } from '../../lib/supabase';
 import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
+import { withAlpha } from '../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
@@ -43,20 +44,11 @@ interface RecentActivity {
   user_name?: string;
 }
 
-interface StatCardConfig {
-  title: string;
-  value: number;
-  icon: string;
-  color: string;
-  route: string;
-}
-
 interface QuickAction {
   id: string;
   title: string;
   icon: string;
   iconType: 'fa5' | 'ion' | 'mci';
-  color: string;
   route: string;
   badge?: number;
   module?: string;
@@ -83,37 +75,43 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
 
-  // Stat cards configuration with navigation routes
-  const statCards: StatCardConfig[] = [
-    { 
-      title: 'Students', 
-      value: stats.totalStudents, 
-      icon: 'user-graduate', 
-      color: '#8B5CF6',
-      route: '/(admin)/users?tab=students'
+  const getQuickActionColor = React.useCallback(
+    (action: QuickAction) => {
+      switch (action.id) {
+        case 'students':
+          return colors.info;
+        case 'teachers':
+          return colors.success;
+        case 'pending':
+          return colors.warning;
+        case 'attendance':
+          return colors.primary;
+        case 'exams':
+          return colors.warning;
+        case 'assignments':
+          return colors.success;
+        case 'fees':
+          return colors.success;
+        case 'library':
+          return colors.primary;
+        case 'timetable':
+          return colors.info;
+        case 'departments':
+          return colors.primary;
+        case 'courses':
+          return colors.primary;
+        case 'notices':
+          return colors.info;
+        case 'role-management':
+          return colors.error;
+        case 'settings':
+          return colors.textMuted;
+        default:
+          return colors.primary;
+      }
     },
-    { 
-      title: 'Teachers', 
-      value: stats.totalTeachers, 
-      icon: 'chalkboard-teacher', 
-      color: '#16A34A',
-      route: '/(admin)/users?tab=teachers'
-    },
-    { 
-      title: 'Departments', 
-      value: stats.totalDepartments, 
-      icon: 'building', 
-      color: '#06B6D4',
-      route: '/(admin)/academic'
-    },
-    { 
-      title: 'Courses', 
-      value: stats.totalCourses, 
-      icon: 'book', 
-      color: '#6366F1',
-      route: '/(admin)/academic'
-    },
-  ];
+    [colors]
+  );
 
   const quickActions: QuickAction[] = [
     {
@@ -121,7 +119,6 @@ export default function AdminDashboard() {
       title: 'Manage Students',
       icon: 'user-graduate',
       iconType: 'fa5',
-      color: '#8B5CF6',
       route: '/(admin)/users?tab=students',
       module: 'users',
       permission: PERMISSIONS.VIEW_ALL_USERS,
@@ -131,7 +128,6 @@ export default function AdminDashboard() {
       title: 'Manage Teachers',
       icon: 'chalkboard-teacher',
       iconType: 'fa5',
-      color: '#16A34A',
       route: '/(admin)/users?tab=teachers',
       module: 'users',
       permission: PERMISSIONS.VIEW_ALL_USERS,
@@ -141,7 +137,6 @@ export default function AdminDashboard() {
       title: 'Pending Approvals',
       icon: 'user-clock',
       iconType: 'fa5',
-      color: '#F59E0B',
       route: '/(admin)/users?tab=pending',
       badge: stats.pendingApprovals,
       module: 'users',
@@ -151,7 +146,6 @@ export default function AdminDashboard() {
       title: 'Attendance',
       icon: 'clipboard-check',
       iconType: 'fa5',
-      color: '#10B981',
       route: '/(admin)/attendance',
       module: 'attendance',
     },
@@ -160,7 +154,6 @@ export default function AdminDashboard() {
       title: 'Exams',
       icon: 'file-alt',
       iconType: 'fa5',
-      color: '#F59E0B',
       route: '/(admin)/exams',
       module: 'exams',
     },
@@ -169,7 +162,6 @@ export default function AdminDashboard() {
       title: 'Assignments',
       icon: 'tasks',
       iconType: 'fa5',
-      color: '#10B981',
       route: '/(admin)/assignments',
       module: 'assignments',
     },
@@ -178,7 +170,6 @@ export default function AdminDashboard() {
       title: 'Fee Management',
       icon: 'money-bill-wave',
       iconType: 'fa5',
-      color: '#16A34A',
       route: '/(admin)/fees',
       module: 'fees',
     },
@@ -187,7 +178,6 @@ export default function AdminDashboard() {
       title: 'Library',
       icon: 'book',
       iconType: 'fa5',
-      color: '#6366F1',
       route: '/(admin)/library',
       module: 'library',
     },
@@ -196,7 +186,6 @@ export default function AdminDashboard() {
       title: 'Timetable',
       icon: 'calendar-alt',
       iconType: 'fa5',
-      color: '#EC4899',
       route: '/(admin)/timetable',
       module: 'academic',
     },
@@ -205,7 +194,6 @@ export default function AdminDashboard() {
       title: 'Departments',
       icon: 'building',
       iconType: 'fa5',
-      color: '#06B6D4',
       route: '/(admin)/academic',
       module: 'academic',
       permission: PERMISSIONS.MANAGE_ACADEMIC_STRUCTURE,
@@ -215,7 +203,6 @@ export default function AdminDashboard() {
       title: 'Courses/Degrees',
       icon: 'book-open',
       iconType: 'fa5',
-      color: '#6366F1',
       route: '/(admin)/academic',
       module: 'academic',
       permission: PERMISSIONS.MANAGE_ACADEMIC_STRUCTURE,
@@ -225,7 +212,6 @@ export default function AdminDashboard() {
       title: 'Notices',
       icon: 'bullhorn',
       iconType: 'fa5',
-      color: '#F97316',
       route: '/(admin)/notices',
       module: 'notices',
     },
@@ -234,7 +220,6 @@ export default function AdminDashboard() {
       title: 'Role Management',
       icon: 'user-shield',
       iconType: 'fa5',
-      color: '#DC2626',
       route: '/(admin)/users/assign-roles',
       module: 'users',
       permission: PERMISSIONS.CREATE_DELETE_ADMINS,
@@ -244,7 +229,6 @@ export default function AdminDashboard() {
       title: 'Settings',
       icon: 'cog',
       iconType: 'fa5',
-      color: '#64748B',
       route: '/(admin)/settings',
       module: 'dashboard',
     },
@@ -316,9 +300,9 @@ export default function AdminDashboard() {
 
       const activities: RecentActivity[] = (data || []).map((log: any) => {
         const actionColors: { [key: string]: string } = {
-          INSERT: '#16A34A',
-          UPDATE: '#8B5CF6',
-          DELETE: '#DC2626',
+          INSERT: colors.success,
+          UPDATE: colors.info,
+          DELETE: colors.error,
         };
 
         const actionLabels: { [key: string]: string } = {
@@ -335,7 +319,7 @@ export default function AdminDashboard() {
           action: log.action,
           description: `${userName} ${actionLabels[log.action] || log.action} ${tableName}`,
           timestamp: log.created_at,
-          color: actionColors[log.action] || '#F59E0B',
+          color: actionColors[log.action] || colors.warning,
           user_name: userName,
         };
       });
@@ -434,12 +418,12 @@ export default function AdminDashboard() {
         disabled={!route}
       >
         <LinearGradient
-          colors={isDark ? [`${color}20`, `${color}08`] : [`${color}12`, `${color}05`]}
-          style={styles.statCardGradient}
+          colors={[withAlpha(color, isDark ? 0.125 : 0.08), withAlpha(color, isDark ? 0.05 : 0.03)]}
+          style={[styles.statCardGradient, { borderColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.06) }]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <View style={[styles.statIconContainer, { backgroundColor: `${color}18` }]}>
+          <View style={[styles.statIconContainer, { backgroundColor: withAlpha(color, 0.1) }]}>
             <FontAwesome5 name={icon} size={20} color={color} />
           </View>
           {loading ? (
@@ -454,6 +438,7 @@ export default function AdminDashboard() {
   );
 
   const renderQuickAction = (action: QuickAction, index: number) => {
+    const actionColor = getQuickActionColor(action);
     const IconComponent =
       action.iconType === 'fa5'
         ? FontAwesome5
@@ -470,22 +455,22 @@ export default function AdminDashboard() {
           style={[
             styles.actionButton,
             {
-              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+              backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03),
+              borderColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.06),
             },
           ]}
           onPress={() => router.push(action.route as any)}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconContainer, { backgroundColor: `${action.color}12` }]}>
-            <IconComponent name={action.icon as any} size={22} color={action.color} />
+          <View style={[styles.actionIconContainer, { backgroundColor: withAlpha(actionColor, 0.1) }]}>
+            <IconComponent name={action.icon as any} size={22} color={actionColor} />
           </View>
           <Text style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {action.title}
           </Text>
           {action.badge && action.badge > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{action.badge}</Text>
+            <View style={[styles.badge, { backgroundColor: colors.error }]}>
+              <Text style={[styles.badgeText, { color: colors.textInverse }]}>{action.badge}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -513,7 +498,7 @@ export default function AdminDashboard() {
             <Text style={[styles.userName, { color: colors.textPrimary }]}>
               {profile?.full_name || 'Admin'}
             </Text>
-            <View style={[styles.roleTag, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(124, 58, 237, 0.1)' }]}>
+            <View style={[styles.roleTag, { backgroundColor: withAlpha(colors.primary, isDark ? 0.15 : 0.1) }]}>
               <FontAwesome5 name="shield-alt" size={10} color={colors.primary} />
               <Text style={[styles.roleText, { color: colors.primary }]}>
                 {primaryRole?.replace('_', ' ').toUpperCase() || 'ADMIN'}
@@ -533,10 +518,10 @@ export default function AdminDashboard() {
           <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
             <View style={styles.statsGrid}>
-              {renderStatCard('Students', stats.totalStudents, 'user-graduate', '#8B5CF6', 200, '/(admin)/users?tab=students')}
-              {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', '#16A34A', 260, '/(admin)/users?tab=teachers')}
-              {renderStatCard('Departments', stats.totalDepartments, 'building', '#06B6D4', 320, '/(admin)/academic?tab=departments')}
-              {renderStatCard('Courses', stats.totalCourses, 'book', '#6366F1', 380, '/(admin)/academic')}
+              {renderStatCard('Students', stats.totalStudents, 'user-graduate', colors.info, 200, '/(admin)/users?tab=students')}
+              {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', colors.success, 260, '/(admin)/users?tab=teachers')}
+              {renderStatCard('Departments', stats.totalDepartments, 'building', colors.primary, 320, '/(admin)/academic?tab=departments')}
+              {renderStatCard('Courses', stats.totalCourses, 'book', colors.primary, 380, '/(admin)/academic')}
             </View>
           </Animated.View>
         )}
@@ -549,13 +534,13 @@ export default function AdminDashboard() {
               onPress={() => router.push('/(admin)/users/pending' as any)}
             >
               <LinearGradient
-                colors={isDark ? ['rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.05)'] : ['rgba(245, 158, 11, 0.12)', 'rgba(245, 158, 11, 0.04)']}
-                style={styles.alertGradient}
+                colors={[withAlpha(colors.warning, isDark ? 0.15 : 0.12), withAlpha(colors.warning, isDark ? 0.05 : 0.04)]}
+                style={[styles.alertGradient, { borderColor: withAlpha(colors.warning, isDark ? 0.18 : 0.16) }]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
-                <View style={styles.alertIcon}>
-                  <FontAwesome5 name="exclamation-circle" size={24} color="#F59E0B" />
+                <View style={[styles.alertIcon, { backgroundColor: withAlpha(colors.warning, 0.12) }]}>
+                  <FontAwesome5 name="exclamation-circle" size={24} color={colors.warning} />
                 </View>
                 <View style={styles.alertContent}>
                   <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>
@@ -609,6 +594,7 @@ export default function AdminDashboard() {
                       key={activity.id}
                       style={[
                         styles.activityItem,
+                        { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.04) },
                         index === recentActivities.length - 1 && { borderBottomWidth: 0 },
                       ]}
                     >
@@ -633,7 +619,7 @@ export default function AdminDashboard() {
         {!canAccessModule('users') && visibleActions.length > 0 && (
           <Animated.View entering={FadeInDown.delay(200).duration(500).springify()} style={styles.section}>
             <Card style={styles.welcomeCard}>
-              <View style={[styles.welcomeIcon, { backgroundColor: colors.primary + '20' }]}>
+              <View style={[styles.welcomeIcon, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                 <FontAwesome5 name="hand-sparkles" size={32} color={colors.primary} />
               </View>
               <Text style={[styles.welcomeTitle, { color: colors.textPrimary }]}>
@@ -728,7 +714,7 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'transparent',
   },
   statIconContainer: {
     width: 48,
@@ -759,13 +745,13 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.18)',
+    borderColor: 'transparent',
   },
   alertIcon: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -808,7 +794,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   badge: {
-    backgroundColor: '#DC2626',
+    backgroundColor: 'transparent',
     paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: 12,
@@ -816,7 +802,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -828,7 +814,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'transparent',
   },
   activityDot: {
     width: 11,

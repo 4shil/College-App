@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface CanteenStats {
   todayTokens: number;
@@ -82,14 +83,14 @@ export default function CanteenIndexScreen() {
       title: 'Menu Management',
       subtitle: 'Manage daily menu items',
       icon: 'utensils',
-      color: '#6366f1',
+      color: colors.primary,
       route: '/(admin)/canteen/menu',
     },
     {
       title: 'Token Dashboard',
       subtitle: 'View and manage orders',
       icon: 'ticket-alt',
-      color: '#10b981',
+      color: colors.warning,
       route: '/(admin)/canteen/tokens',
       badge: stats.pendingTokens,
     },
@@ -97,7 +98,7 @@ export default function CanteenIndexScreen() {
       title: 'Ready Orders',
       subtitle: 'Orders ready for pickup',
       icon: 'check-circle',
-      color: '#f59e0b',
+      color: colors.success,
       route: '/(admin)/canteen/ready',
       badge: stats.readyTokens,
     },
@@ -105,14 +106,14 @@ export default function CanteenIndexScreen() {
       title: 'Refund Requests',
       subtitle: 'Process refund requests',
       icon: 'undo',
-      color: '#ef4444',
+      color: colors.error,
       route: '/(admin)/canteen/refunds',
     },
     {
       title: 'Sales Reports',
       subtitle: 'Analytics and statistics',
       icon: 'chart-bar',
-      color: '#8b5cf6',
+      color: colors.info,
       route: '/(admin)/canteen/reports',
     },
   ];
@@ -145,44 +146,44 @@ export default function CanteenIndexScreen() {
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.primary}15` : `${colors.primary}10`,
-            borderColor: isDark ? `${colors.primary}30` : `${colors.primary}25`,
+            backgroundColor: isDark ? withAlpha(colors.primary, 0.082) : withAlpha(colors.primary, 0.063),
+            borderColor: isDark ? withAlpha(colors.primary, 0.188) : withAlpha(colors.primary, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.primary }]}>
-              <FontAwesome5 name="ticket-alt" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.primary, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="ticket-alt" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.todayTokens}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Today's Orders</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.warning}15` : `${colors.warning}10`,
-            borderColor: isDark ? `${colors.warning}30` : `${colors.warning}25`,
+            backgroundColor: isDark ? withAlpha(colors.warning, 0.082) : withAlpha(colors.warning, 0.063),
+            borderColor: isDark ? withAlpha(colors.warning, 0.188) : withAlpha(colors.warning, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.warning }]}>
-              <FontAwesome5 name="clock" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.warning, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="clock" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pendingTokens}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
-            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
+            backgroundColor: isDark ? withAlpha(colors.success, 0.082) : withAlpha(colors.success, 0.063),
+            borderColor: isDark ? withAlpha(colors.success, 0.188) : withAlpha(colors.success, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
-              <FontAwesome5 name="check-circle" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.success, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="check-circle" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.readyTokens}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ready</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.info}15` : `${colors.info}10`,
-            borderColor: isDark ? `${colors.info}30` : `${colors.info}25`,
+            backgroundColor: isDark ? withAlpha(colors.info, 0.082) : withAlpha(colors.info, 0.063),
+            borderColor: isDark ? withAlpha(colors.info, 0.188) : withAlpha(colors.info, 0.145),
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.info }]}>
-              <FontAwesome5 name="rupee-sign" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.info, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="rupee-sign" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.todaySales.toLocaleString()}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Today's Sales</Text>
@@ -199,10 +200,10 @@ export default function CanteenIndexScreen() {
             >
               <Animated.View entering={FadeInDown.delay(350 + index * 50).springify()}>
                 <View style={[styles.menuCard, {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                  backgroundColor: isDark ? withAlpha(colors.textInverse, 0.05) : withAlpha(colors.shadowColor, 0.02),
+                  borderColor: isDark ? withAlpha(colors.textInverse, 0.1) : withAlpha(colors.shadowColor, 0.06),
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: `${option.color}20` }]}>
+                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
                     <FontAwesome5 name={option.icon} size={24} color={option.color} />
                   </View>
                   <View style={styles.menuContent}>
@@ -212,8 +213,8 @@ export default function CanteenIndexScreen() {
                     </Text>
                   </View>
                   {option.badge && option.badge > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{option.badge}</Text>
+                    <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>{option.badge}</Text>
                     </View>
                   )}
                   <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
@@ -266,7 +267,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -310,7 +310,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   badge: {
-    backgroundColor: '#DC2626',
     paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: 12,
@@ -319,7 +318,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   badgeText: {
-    color: '#fff',
     fontSize: 11,
     fontWeight: '700',
   },

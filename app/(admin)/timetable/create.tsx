@@ -19,6 +19,7 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -365,9 +366,9 @@ export default function CreateTimetableScreen() {
 
   const renderSlotModal = () => (
     <Modal visible={showSlotModal} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <Card style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
-          <View style={styles.modalHeader}>
+      <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.6) }]}>
+        <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               {selectedSlot ? `${DAYS[selectedSlot.day - 1]} - Period ${selectedSlot.period}` : 'Edit Slot'}
             </Text>
@@ -385,7 +386,15 @@ export default function CreateTimetableScreen() {
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
             {/* Subject Picker */}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Subject</Text>
-            <View style={[styles.pickerBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View
+              style={[
+                styles.pickerBox,
+                {
+                  backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                  borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+                },
+              ]}
+            >
               <Picker
                 selectedValue={modalCourse}
                 onValueChange={(value) => {
@@ -416,7 +425,15 @@ export default function CreateTimetableScreen() {
 
             {/* Teacher Picker */}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Teacher</Text>
-            <View style={[styles.pickerBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+            <View
+              style={[
+                styles.pickerBox,
+                {
+                  backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                  borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+                },
+              ]}
+            >
               <Picker
                 selectedValue={modalTeacher}
                 onValueChange={setModalTeacher}
@@ -436,7 +453,7 @@ export default function CreateTimetableScreen() {
 
             {/* Is Lab Toggle */}
             <TouchableOpacity
-              style={styles.toggleRow}
+              style={[styles.toggleRow, { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}
               onPress={() => {
                 setModalIsLab(!modalIsLab);
                 if (!modalIsLab) {
@@ -452,15 +469,25 @@ export default function CreateTimetableScreen() {
                   Uses Computer Lab room
                 </Text>
               </View>
-              <View style={[styles.toggle, { backgroundColor: modalIsLab ? colors.primary : colors.textMuted + '30' }]}>
-                <View style={[styles.toggleKnob, { transform: [{ translateX: modalIsLab ? 20 : 2 }] }]} />
+              <View
+                style={[
+                  styles.toggle,
+                  { backgroundColor: modalIsLab ? colors.primary : withAlpha(colors.textMuted, 0.19) },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.toggleKnob,
+                    { backgroundColor: colors.textInverse, transform: [{ translateX: modalIsLab ? 20 : 2 }] },
+                  ]}
+                />
               </View>
             </TouchableOpacity>
 
             {/* 2-Hour Lab Toggle (only if lab and not last period) */}
             {modalIsLab && selectedSlot && selectedSlot.period < 5 && (
               <TouchableOpacity
-                style={styles.toggleRow}
+                style={[styles.toggleRow, { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}
                 onPress={() => setModalIs2Hour(!modalIs2Hour)}
               >
                 <View>
@@ -469,8 +496,18 @@ export default function CreateTimetableScreen() {
                     Continues to Period {selectedSlot.period + 1}
                   </Text>
                 </View>
-                <View style={[styles.toggle, { backgroundColor: modalIs2Hour ? '#8b5cf6' : colors.textMuted + '30' }]}>
-                  <View style={[styles.toggleKnob, { transform: [{ translateX: modalIs2Hour ? 20 : 2 }] }]} />
+                <View
+                  style={[
+                    styles.toggle,
+                    { backgroundColor: modalIs2Hour ? colors.primary : withAlpha(colors.textMuted, 0.19) },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.toggleKnob,
+                      { backgroundColor: colors.textInverse, transform: [{ translateX: modalIs2Hour ? 20 : 2 }] },
+                    ]}
+                  />
                 </View>
               </TouchableOpacity>
             )}
@@ -488,16 +525,16 @@ export default function CreateTimetableScreen() {
 
           <View style={styles.modalActions}>
             <TouchableOpacity
-              style={[styles.clearBtn, { borderColor: '#ef4444' }]}
+              style={[styles.clearBtn, { borderColor: colors.error }]}
               onPress={handleClearSlot}
             >
-              <Text style={[styles.clearBtnText, { color: '#ef4444' }]}>Clear</Text>
+              <Text style={[styles.clearBtnText, { color: colors.error }]}>Clear</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.saveBtn, { backgroundColor: colors.primary }]}
               onPress={handleSaveSlot}
             >
-              <Text style={styles.saveBtnText}>Save Slot</Text>
+              <Text style={[styles.saveBtnText, { color: colors.textInverse }]}>Save Slot</Text>
             </TouchableOpacity>
           </View>
         </Card>
@@ -509,13 +546,13 @@ export default function CreateTimetableScreen() {
     <View style={styles.gridContainer}>
       {/* Header Row - Days */}
       <View style={styles.gridRow}>
-        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: colors.primary + '15' }]}>
+        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
           <Text style={[styles.gridHeaderText, { color: colors.primary }]}>Time</Text>
         </View>
         {DAYS.map((day, index) => (
           <View
             key={day}
-            style={[styles.gridHeaderCell, { backgroundColor: colors.primary + '15' }]}
+            style={[styles.gridHeaderCell, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
           >
             <Text style={[styles.gridHeaderText, { color: colors.primary }]}>{DAY_SHORT[index]}</Text>
           </View>
@@ -526,7 +563,13 @@ export default function CreateTimetableScreen() {
       {PERIOD_TIMINGS.map((timing) => (
         <View key={timing.period} style={styles.gridRow}>
           {/* Time Cell */}
-          <View style={[styles.gridCell, styles.timeCell, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
+          <View
+            style={[
+              styles.gridCell,
+              styles.timeCell,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02) },
+            ]}
+          >
             <Text style={[styles.periodNumber, { color: colors.primary }]}>P{timing.period}</Text>
             <Text style={[styles.timeText, { color: colors.textMuted }]}>{timing.start}</Text>
             <Text style={[styles.timeText, { color: colors.textMuted }]}>{timing.end}</Text>
@@ -548,13 +591,13 @@ export default function CreateTimetableScreen() {
                   styles.editableCell,
                   {
                     backgroundColor: isEmpty
-                      ? isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'
+                      ? withAlpha(colors.textPrimary, isDark ? 0.02 : 0.01)
                       : isLab
-                        ? '#8b5cf620'
-                        : '#10b98115',
+                        ? withAlpha(colors.primary, 0.125)
+                        : withAlpha(colors.success, 0.08),
                     borderColor: isEmpty
-                      ? colors.textMuted + '20'
-                      : isLab ? '#8b5cf640' : '#10b98130',
+                      ? withAlpha(colors.textMuted, 0.125)
+                      : isLab ? withAlpha(colors.primary, 0.25) : withAlpha(colors.success, 0.19),
                   },
                 ]}
                 onPress={() => openSlotModal(dayIndex + 1, timing.period)}
@@ -563,7 +606,7 @@ export default function CreateTimetableScreen() {
                 {!isEmpty ? (
                   <>
                     <Text
-                      style={[styles.subjectCode, { color: isLab ? '#8b5cf6' : '#10b981' }]}
+                      style={[styles.subjectCode, { color: isLab ? colors.primary : colors.success }]}
                       numberOfLines={1}
                     >
                       {course?.short_name || course?.code}
@@ -573,7 +616,7 @@ export default function CreateTimetableScreen() {
                     </Text>
                     {isLab && (
                       <View style={styles.labBadge}>
-                        <FontAwesome5 name="flask" size={8} color="#8b5cf6" />
+                        <FontAwesome5 name="flask" size={8} color={colors.primary} />
                       </View>
                     )}
                   </>
@@ -640,11 +683,11 @@ export default function CreateTimetableScreen() {
           {/* Legend */}
           <View style={styles.legend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
               <Text style={[styles.legendText, { color: colors.textMuted }]}>Theory</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#8b5cf6' }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
               <Text style={[styles.legendText, { color: colors.textMuted }]}>Lab</Text>
             </View>
           </View>
@@ -658,13 +701,13 @@ export default function CreateTimetableScreen() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Filled:</Text>
-              <Text style={[styles.summaryValue, { color: '#10b981' }]}>
+              <Text style={[styles.summaryValue, { color: colors.success }]}>
                 {slots.filter(s => s.courseId).length}
               </Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Labs:</Text>
-              <Text style={[styles.summaryValue, { color: '#8b5cf6' }]}>
+              <Text style={[styles.summaryValue, { color: colors.primary }]}>
                 {slots.filter(s => s.isLab).length}
               </Text>
             </View>
@@ -827,7 +870,7 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 20,
   },
@@ -841,7 +884,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: 'transparent',
   },
   modalTitle: {
     fontSize: 18,
@@ -867,7 +910,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: 'transparent',
   },
   toggleRow: {
     flexDirection: 'row',
@@ -876,7 +919,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: 'transparent',
   },
   toggleLabel: {
     fontSize: 15,
@@ -896,7 +939,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   roomInfo: {
     flexDirection: 'row',
@@ -930,7 +973,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 15,
     fontWeight: '600',
   },

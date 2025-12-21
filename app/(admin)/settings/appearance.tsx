@@ -15,6 +15,80 @@ import { BlurView } from 'expo-blur';
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { themeRegistry } from '../../../theme/registry';
+import { withAlpha } from '../../../theme/colorUtils';
+
+function parseColorToRgb(color: string): { r: number; g: number; b: number } | null {
+  const c = color.trim();
+
+  // #RGB, #RRGGBB, #RRGGBBAA
+  if (c[0] === '#') {
+    const hex = c.slice(1);
+    const isShort = hex.length === 3;
+    const isLong = hex.length === 6 || hex.length === 8;
+    if (!isShort && !isLong) return null;
+
+    const full = isShort
+      ? hex.split('').map((ch) => ch + ch).join('')
+      : hex.slice(0, 6);
+
+    const r = Number.parseInt(full.slice(0, 2), 16);
+    const g = Number.parseInt(full.slice(2, 4), 16);
+    const b = Number.parseInt(full.slice(4, 6), 16);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b };
+  }
+
+  // rgb()/rgba()
+  const rgbMatch = c.match(/^rgba?\(([^)]+)\)$/i);
+  if (rgbMatch) {
+    const parts = rgbMatch[1].split(',').map((p) => p.trim());
+    if (parts.length < 3) return null;
+    const r = Number(parts[0]);
+    const g = Number(parts[1]);
+    const b = Number(parts[2]);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b };
+  }
+
+  return null;
+}
+
+function relativeLuminance(rgb: { r: number; g: number; b: number }): number {
+  // sRGB → linear
+  const toLinear = (v: number) => {
+    const s = v / 255;
+    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  const r = toLinear(rgb.r);
+  const g = toLinear(rgb.g);
+  const b = toLinear(rgb.b);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(bg: string, fg: string): number | null {
+  const bgRgb = parseColorToRgb(bg);
+  const fgRgb = parseColorToRgb(fg);
+  if (!bgRgb || !fgRgb) return null;
+  const L1 = relativeLuminance(bgRgb);
+  const L2 = relativeLuminance(fgRgb);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getBestContrastOnColor(
+  backgroundColor: string,
+  candidateA: string,
+  candidateB: string,
+  fallback: string
+): string {
+  const a = contrastRatio(backgroundColor, candidateA);
+  const b = contrastRatio(backgroundColor, candidateB);
+  if (a == null && b == null) return fallback;
+  if (a == null) return candidateB;
+  if (b == null) return candidateA;
+  return a >= b ? candidateA : candidateB;
+}
 
 
 export default function AppearanceSettingsScreen() {
@@ -22,6 +96,17 @@ export default function AppearanceSettingsScreen() {
   const router = useRouter();
   const { colors, animationsEnabled, toggleAnimations, mode, setMode, supportsAnimatedBackground, capabilities, activeThemeId, setActiveThemeId } = useThemeStore();
   const canUseBlur = capabilities.supportsBlur && animationsEnabled;
+
+  const onSelectedColor = React.useMemo(
+    () =>
+      getBestContrastOnColor(
+        colors.primary,
+        colors.textPrimary,
+        colors.textInverse,
+        colors.textInverse
+      ),
+    [colors.primary, colors.textPrimary, colors.textInverse]
+  );
 
   const themePresets = React.useMemo(() => {
     const byId = new Map<string, { id: string; name: string }>();
@@ -88,7 +173,7 @@ export default function AppearanceSettingsScreen() {
                     style={[
                       styles2.modeButton,
                       {
-                        backgroundColor: mode === themeMode ? colors.primary : 'rgba(255, 255, 255, 0.05)',
+                        backgroundColor: mode === themeMode ? colors.primary : withAlpha(colors.textInverse, 0.05),
                         borderColor: mode === themeMode ? colors.primary : colors.glassBorder,
                       },
                     ]}
@@ -103,21 +188,21 @@ export default function AppearanceSettingsScreen() {
                           : 'phone-portrait'
                       }
                       size={24}
-                      color={mode === themeMode ? '#FFFFFF' : colors.textSecondary}
+                      color={mode === themeMode ? onSelectedColor : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles2.modeText,
                         {
-                          color: mode === themeMode ? '#FFFFFF' : colors.textPrimary,
+                          color: mode === themeMode ? onSelectedColor : colors.textPrimary,
                         },
                       ]}
                     >
                       {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
                     </Text>
                     {mode === themeMode && (
-                      <View style={styles2.checkmark}>
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      <View style={[styles2.checkmark, { backgroundColor: withAlpha(onSelectedColor, 0.2) }]}>
+                        <Ionicons name="checkmark" size={16} color={onSelectedColor} />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -151,7 +236,7 @@ export default function AppearanceSettingsScreen() {
                     style={[
                       styles2.modeButton,
                       {
-                        backgroundColor: activeThemeId === preset.id ? colors.primary : 'rgba(255, 255, 255, 0.05)',
+                        backgroundColor: activeThemeId === preset.id ? colors.primary : withAlpha(colors.textInverse, 0.05),
                         borderColor: activeThemeId === preset.id ? colors.primary : colors.glassBorder,
                       },
                     ]}
@@ -160,21 +245,21 @@ export default function AppearanceSettingsScreen() {
                     <Ionicons
                       name={activeThemeId === preset.id ? 'radio-button-on' : 'radio-button-off'}
                       size={24}
-                      color={activeThemeId === preset.id ? '#FFFFFF' : colors.textSecondary}
+                      color={activeThemeId === preset.id ? onSelectedColor : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles2.modeText,
                         {
-                          color: activeThemeId === preset.id ? '#FFFFFF' : colors.textPrimary,
+                          color: activeThemeId === preset.id ? onSelectedColor : colors.textPrimary,
                         },
                       ]}
                     >
                       {preset.name}
                     </Text>
                     {activeThemeId === preset.id && (
-                      <View style={styles2.checkmark}>
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      <View style={[styles2.checkmark, { backgroundColor: withAlpha(onSelectedColor, 0.2) }]}>
+                        <Ionicons name="checkmark" size={16} color={onSelectedColor} />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -206,7 +291,7 @@ export default function AppearanceSettingsScreen() {
                   style={[
                     styles2.toggleRow,
                     {
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      backgroundColor: withAlpha(colors.textInverse, 0.05),
                       borderColor: colors.glassBorder,
                     },
                   ]}
@@ -239,6 +324,7 @@ export default function AppearanceSettingsScreen() {
                       style={[
                         styles2.toggleKnob,
                         {
+                            backgroundColor: colors.textInverse,
                           transform: [{ translateX: animationsEnabled ? 22 : 2 }],
                         },
                       ]}
@@ -259,10 +345,10 @@ export default function AppearanceSettingsScreen() {
               <Ionicons name="information-circle" size={24} color={colors.primary} />
               <View style={styles2.infoText}>
                 <Text style={[styles2.infoTitle, { color: colors.textPrimary }]}>
-                  Glassmorphism Theme
+                  Note:
                 </Text>
                 <Text style={[styles2.infoDesc, { color: colors.textSecondary }]}>
-                  Modern translucent blur effects with elegant colors
+                  Animation available for Dark Mode Of Glassmorphism Theme only. 
                 </Text>
               </View>
             </BlurView>
@@ -349,7 +435,6 @@ const styles2 = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -389,7 +474,6 @@ const styles2 = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
   },
 
   infoCard: {

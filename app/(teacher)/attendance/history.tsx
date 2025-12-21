@@ -18,6 +18,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface AttendanceRecord {
   id: string;
@@ -177,9 +178,18 @@ export default function TeacherAttendanceHistory() {
         key={record.id}
         entering={FadeInRight.delay(100 + index * 60).duration(400)}
       >
-        <Card style={[styles.recordCard, { borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+        <Card
+          style={[
+            styles.recordCard,
+            {
+              borderColor: isDark
+                ? withAlpha(colors.textInverse, 0.05)
+                : withAlpha(colors.shadowColor, 0.05),
+            },
+          ]}
+        >
           <View style={styles.recordHeader}>
-            <View style={[styles.periodBadge, { backgroundColor: colors.primary + '15' }]}>
+            <View style={[styles.periodBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
               <Text style={[styles.periodText, { color: colors.primary }]}>P{record.period}</Text>
             </View>
             <View style={styles.recordInfo}>
@@ -192,11 +202,16 @@ export default function TeacherAttendanceHistory() {
             </View>
             <View style={[
               styles.percentBadge,
-              { backgroundColor: attendancePercent >= 75 ? '#10b98115' : '#ef444415' }
+              {
+                backgroundColor:
+                  attendancePercent >= 75
+                    ? withAlpha(colors.success, 0.08)
+                    : withAlpha(colors.error, 0.08),
+              }
             ]}>
               <Text style={[
                 styles.percentText,
-                { color: attendancePercent >= 75 ? '#10b981' : '#ef4444' }
+                { color: attendancePercent >= 75 ? colors.success : colors.error }
               ]}>
                 {attendancePercent}%
               </Text>
@@ -205,19 +220,19 @@ export default function TeacherAttendanceHistory() {
 
           <View style={styles.countsRow}>
             <View style={styles.countItem}>
-              <View style={[styles.countDot, { backgroundColor: '#10b981' }]} />
+              <View style={[styles.countDot, { backgroundColor: colors.success }]} />
               <Text style={[styles.countText, { color: colors.textSecondary }]}>
                 Present: {record.presentCount}
               </Text>
             </View>
             <View style={styles.countItem}>
-              <View style={[styles.countDot, { backgroundColor: '#f59e0b' }]} />
+              <View style={[styles.countDot, { backgroundColor: colors.warning }]} />
               <Text style={[styles.countText, { color: colors.textSecondary }]}>
                 Late: {record.lateCount}
               </Text>
             </View>
             <View style={styles.countItem}>
-              <View style={[styles.countDot, { backgroundColor: '#ef4444' }]} />
+              <View style={[styles.countDot, { backgroundColor: colors.error }]} />
               <Text style={[styles.countText, { color: colors.textSecondary }]}>
                 Absent: {record.absentCount}
               </Text>
@@ -255,7 +270,14 @@ export default function TeacherAttendanceHistory() {
           {/* Date Picker */}
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             <TouchableOpacity
-              style={[styles.datePickerBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+              style={[
+                styles.datePickerBtn,
+                {
+                  backgroundColor: isDark
+                    ? withAlpha(colors.textInverse, 0.05)
+                    : withAlpha(colors.shadowColor, 0.03),
+                },
+              ]}
               onPress={() => setShowDatePicker(true)}
             >
               <FontAwesome5 name="calendar-alt" size={18} color={colors.primary} />

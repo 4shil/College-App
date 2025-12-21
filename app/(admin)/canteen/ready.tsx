@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface ReadyToken {
   id: string;
@@ -132,7 +133,7 @@ export default function ReadyOrdersScreen() {
         <GlassCard style={styles.tokenCard}>
           <View style={styles.tokenContent}>
             <View style={styles.tokenLeft}>
-              <View style={[styles.tokenBadge, { backgroundColor: `${colors.success}20` }]}>
+              <View style={[styles.tokenBadge, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
                 <Text style={[styles.tokenNumber, { color: colors.success }]}>
                   #{item.token_number}
                 </Text>
@@ -156,7 +157,7 @@ export default function ReadyOrdersScreen() {
               <Text style={[styles.amount, { color: colors.textSecondary }]}>
                 ₹{item.total_amount}
               </Text>
-              <View style={[styles.checkButton, { backgroundColor: `${colors.success}15` }]}>
+              <View style={[styles.checkButton, { backgroundColor: withAlpha(colors.success, 0.082) }]}>
                 <FontAwesome5 name="check" size={18} color={colors.success} />
               </View>
             </View>
@@ -225,7 +226,7 @@ export default function ReadyOrdersScreen() {
 
         {/* Instructions */}
         {readyTokens.length > 0 && (
-          <View style={[styles.instructions, { backgroundColor: `${colors.info}10` }]}>
+          <View style={[styles.instructions, { backgroundColor: withAlpha(colors.info, 0.063) }]}>
             <FontAwesome5 name="info-circle" size={14} color={colors.info} />
             <Text style={[styles.instructionText, { color: colors.info }]}>
               Tap on a token to mark it as collected

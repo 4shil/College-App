@@ -17,6 +17,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { AnimatedBackground, Card } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
+import { withAlpha } from '../../../../theme/colorUtils';
 
 interface StudentDetails {
   id: string;
@@ -171,12 +172,12 @@ export default function StudentDetailsScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return '#10b981';
-      case 'inactive': return '#f59e0b';
-      case 'graduated': return '#3b82f6';
-      case 'suspended': return '#ef4444';
-      case 'dropped': return '#6b7280';
-      default: return '#6b7280';
+      case 'active': return colors.success;
+      case 'inactive': return colors.warning;
+      case 'graduated': return colors.info;
+      case 'suspended': return colors.error;
+      case 'dropped': return colors.textMuted;
+      default: return colors.textMuted;
     }
   };
 
@@ -238,7 +239,7 @@ export default function StudentDetailsScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.editBtn, { backgroundColor: colors.primary + '15' }]}
+            style={[styles.editBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
             onPress={() => Alert.alert('Edit', 'Edit feature coming soon')}
           >
             <Ionicons name="create-outline" size={20} color={colors.primary} />
@@ -263,8 +264,8 @@ export default function StudentDetailsScreen() {
                     style={styles.profilePhoto}
                   />
                 ) : (
-                  <View style={[styles.profilePhotoPlaceholder, { backgroundColor: '#10b98120' }]}>
-                    <FontAwesome5 name="user-graduate" size={36} color="#10b981" />
+                  <View style={[styles.profilePhotoPlaceholder, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+                    <FontAwesome5 name="user-graduate" size={36} color={colors.success} />
                   </View>
                 )}
                 <View style={styles.profileInfo}>
@@ -274,7 +275,14 @@ export default function StudentDetailsScreen() {
                   <Text style={[styles.profileRegNo, { color: colors.primary }]}>
                     {student.registration_number || 'No Reg. No.'}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(student.current_status) + '20' }]}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor: withAlpha(getStatusColor(student.current_status), 0.125),
+                      },
+                    ]}
+                  >
                     <View style={[styles.statusDot, { backgroundColor: getStatusColor(student.current_status) }]} />
                     <Text style={[styles.statusText, { color: getStatusColor(student.current_status) }]}>
                       {student.current_status}
@@ -389,8 +397,8 @@ export default function StudentDetailsScreen() {
                     ]}
                   >
                     <View style={styles.parentHeader}>
-                      <View style={[styles.parentIcon, { backgroundColor: '#8b5cf620' }]}>
-                        <FontAwesome5 name="user" size={12} color="#8b5cf6" />
+                      <View style={[styles.parentIcon, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
+                        <FontAwesome5 name="user" size={12} color={colors.info} />
                       </View>
                       <View>
                         <Text style={[styles.parentName, { color: colors.textPrimary }]}>
@@ -403,9 +411,9 @@ export default function StudentDetailsScreen() {
                     </View>
                     <View style={styles.parentContact}>
                       {parent.phone && (
-                        <TouchableOpacity style={[styles.contactBtn, { backgroundColor: '#10b98115' }]}>
-                          <FontAwesome5 name="phone" size={12} color="#10b981" />
-                          <Text style={[styles.contactBtnText, { color: '#10b981' }]}>
+                        <TouchableOpacity style={[styles.contactBtn, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+                          <FontAwesome5 name="phone" size={12} color={colors.success} />
+                          <Text style={[styles.contactBtnText, { color: colors.success }]}>
                             {parent.phone}
                           </Text>
                         </TouchableOpacity>
@@ -432,29 +440,29 @@ export default function StudentDetailsScreen() {
               </Text>
               <View style={styles.quickActions}>
                 <TouchableOpacity
-                  style={[styles.quickActionBtn, { backgroundColor: '#3b82f620' }]}
+                  style={[styles.quickActionBtn, { backgroundColor: withAlpha(colors.info, 0.125) }]}
                   onPress={() => Alert.alert('View', 'Attendance feature coming soon')}
                 >
-                  <FontAwesome5 name="calendar-check" size={16} color="#3b82f6" />
-                  <Text style={[styles.quickActionText, { color: '#3b82f6' }]}>
+                  <FontAwesome5 name="calendar-check" size={16} color={colors.info} />
+                  <Text style={[styles.quickActionText, { color: colors.info }]}>
                     Attendance
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.quickActionBtn, { backgroundColor: '#f59e0b20' }]}
+                  style={[styles.quickActionBtn, { backgroundColor: withAlpha(colors.warning, 0.125) }]}
                   onPress={() => Alert.alert('View', 'Results feature coming soon')}
                 >
-                  <FontAwesome5 name="chart-bar" size={16} color="#f59e0b" />
-                  <Text style={[styles.quickActionText, { color: '#f59e0b' }]}>
+                  <FontAwesome5 name="chart-bar" size={16} color={colors.warning} />
+                  <Text style={[styles.quickActionText, { color: colors.warning }]}>
                     Results
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.quickActionBtn, { backgroundColor: '#10b98120' }]}
+                  style={[styles.quickActionBtn, { backgroundColor: withAlpha(colors.success, 0.125) }]}
                   onPress={() => Alert.alert('View', 'Fees feature coming soon')}
                 >
-                  <FontAwesome5 name="money-bill" size={16} color="#10b981" />
-                  <Text style={[styles.quickActionText, { color: '#10b981' }]}>
+                  <FontAwesome5 name="money-bill" size={16} color={colors.success} />
+                  <Text style={[styles.quickActionText, { color: colors.success }]}>
                     Fees
                   </Text>
                 </TouchableOpacity>
@@ -467,11 +475,11 @@ export default function StudentDetailsScreen() {
             <View style={styles.statusActions}>
               {student.current_status !== 'active' && (
                 <TouchableOpacity
-                  style={[styles.statusBtn, { backgroundColor: '#10b98120' }]}
+                  style={[styles.statusBtn, { backgroundColor: withAlpha(colors.success, 0.125) }]}
                   onPress={() => handleStatusChange('active')}
                 >
-                  <FontAwesome5 name="check" size={14} color="#10b981" />
-                  <Text style={[styles.statusBtnText, { color: '#10b981' }]}>
+                  <FontAwesome5 name="check" size={14} color={colors.success} />
+                  <Text style={[styles.statusBtnText, { color: colors.success }]}>
                     Activate
                   </Text>
                 </TouchableOpacity>
@@ -479,20 +487,20 @@ export default function StudentDetailsScreen() {
               {student.current_status === 'active' && (
                 <>
                   <TouchableOpacity
-                    style={[styles.statusBtn, { backgroundColor: '#f59e0b20' }]}
+                    style={[styles.statusBtn, { backgroundColor: withAlpha(colors.warning, 0.125) }]}
                     onPress={() => handleStatusChange('inactive')}
                   >
-                    <FontAwesome5 name="pause" size={14} color="#f59e0b" />
-                    <Text style={[styles.statusBtnText, { color: '#f59e0b' }]}>
+                    <FontAwesome5 name="pause" size={14} color={colors.warning} />
+                    <Text style={[styles.statusBtnText, { color: colors.warning }]}>
                       Deactivate
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.statusBtn, { backgroundColor: '#3b82f620' }]}
+                    style={[styles.statusBtn, { backgroundColor: withAlpha(colors.info, 0.125) }]}
                     onPress={() => handleStatusChange('graduated')}
                   >
-                    <FontAwesome5 name="graduation-cap" size={14} color="#3b82f6" />
-                    <Text style={[styles.statusBtnText, { color: '#3b82f6' }]}>
+                    <FontAwesome5 name="graduation-cap" size={14} color={colors.info} />
+                    <Text style={[styles.statusBtnText, { color: colors.info }]}>
                       Graduate
                     </Text>
                   </TouchableOpacity>

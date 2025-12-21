@@ -19,6 +19,7 @@ import { AnimatedBackground, Card, PrimaryButton } from '../../../components/ui'
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 // Period timings
 const PERIOD_TIMINGS = [
@@ -467,20 +468,20 @@ export default function TeacherMarkAttendanceScreen() {
         style={[
           styles.studentCard,
           {
-            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+            backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02),
             borderColor: student.status === 'present'
-              ? '#10b98130'
+              ? withAlpha(colors.success, 0.19)
               : student.status === 'absent'
-                ? '#ef444430'
+                ? withAlpha(colors.error, 0.19)
                 : student.status === 'late'
-                  ? '#f59e0b30'
+                  ? withAlpha(colors.warning, 0.19)
                   : 'transparent',
             opacity: isLocked ? 0.6 : 1,
           },
         ]}
       >
         <View style={styles.studentInfo}>
-          <View style={[styles.rollBadge, { backgroundColor: colors.primary + '15' }]}>
+          <View style={[styles.rollBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
             <Text style={[styles.rollNumber, { color: colors.primary }]}>
               {student.roll_number || '—'}
             </Text>
@@ -490,7 +491,7 @@ export default function TeacherMarkAttendanceScreen() {
               {student.profiles?.full_name || 'Unknown'}
             </Text>
             {student.status === 'late' && (student.late_minutes || 0) > 0 && (
-              <Text style={[styles.lateInfo, { color: '#f59e0b' }]}>
+              <Text style={[styles.lateInfo, { color: colors.warning }]}>
                 Late by {student.late_minutes} min
               </Text>
             )}
@@ -504,12 +505,22 @@ export default function TeacherMarkAttendanceScreen() {
           <TouchableOpacity
             style={[
               styles.statusBtn,
-              { backgroundColor: student.status === 'present' ? '#10b981' : '#10b98115' },
+              {
+                backgroundColor:
+                  student.status === 'present'
+                    ? colors.success
+                    : withAlpha(colors.success, 0.08),
+              },
             ]}
             onPress={() => handleMarkStatus(student, 'present')}
             disabled={isLocked}
           >
-            <Text style={[styles.statusBtnText, { color: student.status === 'present' ? '#fff' : '#10b981' }]}>
+            <Text
+              style={[
+                styles.statusBtnText,
+                { color: student.status === 'present' ? colors.textInverse : colors.success },
+              ]}
+            >
               P
             </Text>
           </TouchableOpacity>
@@ -517,12 +528,22 @@ export default function TeacherMarkAttendanceScreen() {
           <TouchableOpacity
             style={[
               styles.statusBtn,
-              { backgroundColor: student.status === 'late' ? '#f59e0b' : '#f59e0b15' },
+              {
+                backgroundColor:
+                  student.status === 'late'
+                    ? colors.warning
+                    : withAlpha(colors.warning, 0.08),
+              },
             ]}
             onPress={() => handleMarkStatus(student, 'late')}
             disabled={isLocked}
           >
-            <Text style={[styles.statusBtnText, { color: student.status === 'late' ? '#fff' : '#f59e0b' }]}>
+            <Text
+              style={[
+                styles.statusBtnText,
+                { color: student.status === 'late' ? colors.textInverse : colors.warning },
+              ]}
+            >
               L
             </Text>
           </TouchableOpacity>
@@ -530,12 +551,22 @@ export default function TeacherMarkAttendanceScreen() {
           <TouchableOpacity
             style={[
               styles.statusBtn,
-              { backgroundColor: student.status === 'absent' ? '#ef4444' : '#ef444415' },
+              {
+                backgroundColor:
+                  student.status === 'absent'
+                    ? colors.error
+                    : withAlpha(colors.error, 0.08),
+              },
             ]}
             onPress={() => handleMarkStatus(student, 'absent')}
             disabled={isLocked}
           >
-            <Text style={[styles.statusBtnText, { color: student.status === 'absent' ? '#fff' : '#ef4444' }]}>
+            <Text
+              style={[
+                styles.statusBtnText,
+                { color: student.status === 'absent' ? colors.textInverse : colors.error },
+              ]}
+            >
               A
             </Text>
           </TouchableOpacity>
@@ -546,8 +577,13 @@ export default function TeacherMarkAttendanceScreen() {
 
   const renderLateModal = () => (
     <Modal visible={showLateModal} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <Card style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+      <View
+        style={[
+          styles.modalOverlay,
+          { backgroundColor: isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.shadowColor, 0.5) },
+        ]}
+      >
+        <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Late Entry
           </Text>
@@ -558,12 +594,17 @@ export default function TeacherMarkAttendanceScreen() {
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
             Late by (minutes)
           </Text>
-          <View style={[styles.minutesInput, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.minutesInput,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+            ]}
+          >
             <TouchableOpacity
-              style={[styles.minusBtn, { backgroundColor: '#ef444415' }]}
+              style={[styles.minusBtn, { backgroundColor: withAlpha(colors.error, 0.08) }]}
               onPress={() => setLateMinutes(prev => Math.max(1, parseInt(prev) - 5).toString())}
             >
-              <FontAwesome5 name="minus" size={12} color="#ef4444" />
+              <FontAwesome5 name="minus" size={12} color={colors.error} />
             </TouchableOpacity>
             <TextInput
               style={[styles.minutesValue, { color: colors.textPrimary }]}
@@ -573,14 +614,14 @@ export default function TeacherMarkAttendanceScreen() {
               textAlign="center"
             />
             <TouchableOpacity
-              style={[styles.plusBtn, { backgroundColor: '#10b98115' }]}
+              style={[styles.plusBtn, { backgroundColor: withAlpha(colors.success, 0.08) }]}
               onPress={() => setLateMinutes(prev => (parseInt(prev) + 5).toString())}
             >
-              <FontAwesome5 name="plus" size={12} color="#10b981" />
+              <FontAwesome5 name="plus" size={12} color={colors.success} />
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.lateWarning, { color: '#f59e0b' }]}>
+          <Text style={[styles.lateWarning, { color: colors.warning }]}>
             <FontAwesome5 name="info-circle" size={12} /> 4 late entries = 1 half-day leave
           </Text>
 
@@ -595,10 +636,10 @@ export default function TeacherMarkAttendanceScreen() {
               <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modalBtn, { backgroundColor: '#f59e0b' }]}
+              style={[styles.modalBtn, { backgroundColor: colors.warning }]}
               onPress={handleConfirmLate}
             >
-              <Text style={[styles.modalBtnText, { color: '#fff' }]}>Mark Late</Text>
+              <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Mark Late</Text>
             </TouchableOpacity>
           </View>
         </Card>
@@ -635,21 +676,26 @@ export default function TeacherMarkAttendanceScreen() {
             <>
               {/* Stats Card */}
               <Animated.View entering={FadeIn.delay(150).duration(400)}>
-                <Card style={[styles.statsCard, { borderColor: colors.primary + '30' }]}>
+                <Card style={[styles.statsCard, { borderColor: withAlpha(colors.primary, 0.19) }]}>
                   <View style={styles.statsRow}>
-                    <View style={[styles.statItem, { backgroundColor: '#10b98115' }]}>
-                      <Text style={[styles.statValue, { color: '#10b981' }]}>{presentCount}</Text>
+                    <View style={[styles.statItem, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+                      <Text style={[styles.statValue, { color: colors.success }]}>{presentCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textMuted }]}>Present</Text>
                     </View>
-                    <View style={[styles.statItem, { backgroundColor: '#f59e0b15' }]}>
-                      <Text style={[styles.statValue, { color: '#f59e0b' }]}>{lateCount}</Text>
+                    <View style={[styles.statItem, { backgroundColor: withAlpha(colors.warning, 0.08) }]}>
+                      <Text style={[styles.statValue, { color: colors.warning }]}>{lateCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textMuted }]}>Late</Text>
                     </View>
-                    <View style={[styles.statItem, { backgroundColor: '#ef444415' }]}>
-                      <Text style={[styles.statValue, { color: '#ef4444' }]}>{absentCount}</Text>
+                    <View style={[styles.statItem, { backgroundColor: withAlpha(colors.error, 0.08) }]}>
+                      <Text style={[styles.statValue, { color: colors.error }]}>{absentCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textMuted }]}>Absent</Text>
                     </View>
-                    <View style={[styles.statItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                    <View
+                      style={[
+                        styles.statItem,
+                        { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                      ]}
+                    >
                       <Text style={[styles.statValue, { color: colors.textSecondary }]}>
                         {students.length - presentCount - lateCount - absentCount}
                       </Text>
@@ -663,7 +709,12 @@ export default function TeacherMarkAttendanceScreen() {
               {students.length > 0 && (
                 <Animated.View entering={FadeInDown.delay(200).duration(400)}>
                   {/* Search */}
-                  <View style={[styles.searchBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                  <View
+                    style={[
+                      styles.searchBox,
+                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                    ]}
+                  >
                     <Ionicons name="search" size={18} color={colors.textMuted} />
                     <TextInput
                       style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -685,18 +736,18 @@ export default function TeacherMarkAttendanceScreen() {
                       Bulk Mark:
                     </Text>
                     <TouchableOpacity
-                      style={[styles.bulkBtn, { backgroundColor: '#10b98115' }]}
+                      style={[styles.bulkBtn, { backgroundColor: withAlpha(colors.success, 0.08) }]}
                       onPress={() => handleBulkMark('present')}
                       disabled={saving}
                     >
-                      <Text style={[styles.bulkBtnText, { color: '#10b981' }]}>All Present</Text>
+                      <Text style={[styles.bulkBtnText, { color: colors.success }]}>All Present</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.bulkBtn, { backgroundColor: '#ef444415' }]}
+                      style={[styles.bulkBtn, { backgroundColor: withAlpha(colors.error, 0.08) }]}
                       onPress={() => handleBulkMark('absent')}
                       disabled={saving}
                     >
-                      <Text style={[styles.bulkBtnText, { color: '#ef4444' }]}>All Absent</Text>
+                      <Text style={[styles.bulkBtnText, { color: colors.error }]}>All Absent</Text>
                     </TouchableOpacity>
                   </View>
                 </Animated.View>
@@ -834,7 +885,6 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     padding: 24,
   },

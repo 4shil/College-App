@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useRBAC } from '../../hooks/useRBAC';
 import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
 
 // Configuration
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -18,11 +19,14 @@ const GAP = 10;
 const DOCK_PADDING = 10;
 
 // Dock Item Component
-const DockItem: React.FC<{ icon: string; isActive: boolean; onPress: () => void }> = ({ 
-  icon, 
-  isActive, 
-  onPress 
-}) => {
+const DockItem: React.FC<{
+  icon: string;
+  isActive: boolean;
+  onPress: () => void;
+  activeColor: string;
+  inactiveColor: string;
+  dotColor: string;
+}> = ({ icon, isActive, onPress, activeColor, inactiveColor, dotColor }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -49,9 +53,9 @@ const DockItem: React.FC<{ icon: string; isActive: boolean; onPress: () => void 
         <Ionicons
           name={icon as any}
           size={24}
-          color={isActive ? '#fff' : 'rgba(255,255,255,0.4)'}
+          color={isActive ? activeColor : inactiveColor}
         />
-        {isActive && <View style={styles.activeDot} />}
+        {isActive && <View style={[styles.activeDot, { backgroundColor: dotColor }]} />}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -64,6 +68,9 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
 }) => {
   const [expanded, setExpanded] = useState(false);
   const { colors, animationsEnabled } = useThemeStore();
+
+  const activeIconColor = colors.textPrimary;
+  const inactiveIconColor = withAlpha(colors.textPrimary, 0.4);
 
   const navItems = [
     { id: 'dashboard', icon: 'home-outline', route: '/(admin)/dashboard' },
@@ -151,6 +158,9 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
                       setExpanded(false);
                     }
                   }}
+                  activeColor={activeIconColor}
+                  inactiveColor={inactiveIconColor}
+                  dotColor={colors.textPrimary}
                 />
               );
             })}
@@ -249,7 +259,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#fff',
   },
 });
 

@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
+import { withAlpha } from '../../../theme/colorUtils';
 import { supabase } from '../../../lib/supabase';
 
 interface PendingStudent {
@@ -205,7 +206,7 @@ export default function PendingApprovalsScreen() {
                   style={styles.photo}
                 />
               ) : (
-                <View style={[styles.photoPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+                <View style={[styles.photoPlaceholder, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                   <FontAwesome5 name="user-graduate" size={24} color={colors.primary} />
                 </View>
               )}
@@ -217,37 +218,37 @@ export default function PendingApprovalsScreen() {
               <Text style={[styles.studentEmail, { color: colors.textSecondary }]}>
                 {student.profile?.email || 'No email'}
               </Text>
-              <View style={[styles.pendingBadge, { backgroundColor: '#f59e0b20' }]}>
-                <FontAwesome5 name="clock" size={10} color="#f59e0b" />
-                <Text style={[styles.pendingText, { color: '#f59e0b' }]}>Pending Approval</Text>
+              <View style={[styles.pendingBadge, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
+                <FontAwesome5 name="clock" size={10} color={colors.warning} />
+                <Text style={[styles.pendingText, { color: colors.warning }]}>Pending Approval</Text>
               </View>
             </View>
           </View>
 
           {/* Details Grid */}
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
+            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
               <FontAwesome5 name="building" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Department</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
                 {student.department?.name || 'N/A'}
               </Text>
             </View>
-            <View style={styles.detailItem}>
+            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
               <FontAwesome5 name="layer-group" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Year</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
                 {student.year?.name || 'N/A'}
               </Text>
             </View>
-            <View style={styles.detailItem}>
+            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
               <FontAwesome5 name="phone" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Phone</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
                 {student.profile?.phone || 'N/A'}
               </Text>
             </View>
-            <View style={styles.detailItem}>
+            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
               <FontAwesome5 name="calendar" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Applied</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
@@ -259,30 +260,30 @@ export default function PendingApprovalsScreen() {
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={[styles.actionBtn, styles.rejectBtn, { opacity: isProcessing ? 0.5 : 1 }]}
+              style={[styles.actionBtn, { backgroundColor: colors.error }, { opacity: isProcessing ? 0.5 : 1 }]}
               onPress={() => handleReject(student)}
               disabled={isProcessing}
             >
               {isProcessing && processingId === student.id ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.textInverse} />
               ) : (
                 <>
-                  <Ionicons name="close" size={18} color="#fff" />
-                  <Text style={styles.actionBtnText}>Reject</Text>
+                  <Ionicons name="close" size={18} color={colors.textInverse} />
+                  <Text style={[styles.actionBtnText, { color: colors.textInverse }]}>Reject</Text>
                 </>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionBtn, styles.approveBtn, { opacity: isProcessing ? 0.5 : 1 }]}
+              style={[styles.actionBtn, { backgroundColor: colors.success }, { opacity: isProcessing ? 0.5 : 1 }]}
               onPress={() => handleApprove(student)}
               disabled={isProcessing}
             >
               {isProcessing && processingId === student.id ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.textInverse} />
               ) : (
                 <>
-                  <Ionicons name="checkmark" size={18} color="#fff" />
-                  <Text style={styles.actionBtnText}>Approve</Text>
+                  <Ionicons name="checkmark" size={18} color={colors.textInverse} />
+                  <Text style={[styles.actionBtnText, { color: colors.textInverse }]}>Approve</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -297,8 +298,8 @@ export default function PendingApprovalsScreen() {
       entering={FadeInDown.delay(200).duration(400)}
       style={styles.emptyState}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: '#10b98120' }]}>
-        <FontAwesome5 name="check-circle" size={48} color="#10b981" />
+      <View style={[styles.emptyIcon, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+        <FontAwesome5 name="check-circle" size={48} color={colors.success} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
         All Caught Up!
@@ -332,7 +333,7 @@ export default function PendingApprovalsScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.refreshBtn, { backgroundColor: colors.primary + '15' }]}
+            style={[styles.refreshBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
             onPress={onRefresh}
           >
             <Ionicons name="refresh" size={20} color={colors.primary} />
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     width: '47%',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderRadius: 10,
     padding: 12,
     gap: 4,
@@ -506,13 +507,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   approveBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: 'transparent',
   },
   rejectBtn: {
-    backgroundColor: '#ef4444',
+    backgroundColor: 'transparent',
   },
   actionBtnText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 14,
     fontWeight: '600',
   },

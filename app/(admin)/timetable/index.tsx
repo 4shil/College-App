@@ -19,6 +19,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -222,7 +223,7 @@ export default function TimetableScreen() {
     <View style={styles.gridContainer}>
       {/* Header Row - Days */}
       <View style={styles.gridRow}>
-        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: colors.primary + '15' }]}>
+        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
           <Text style={[styles.gridHeaderText, { color: colors.primary }]}>Time</Text>
         </View>
         {DAYS.map((day, index) => (
@@ -230,7 +231,7 @@ export default function TimetableScreen() {
             key={day} 
             style={[
               styles.gridHeaderCell, 
-              { backgroundColor: colors.primary + '15' }
+              { backgroundColor: withAlpha(colors.primary, 0.08) }
             ]}
           >
             <Text style={[styles.gridHeaderText, { color: colors.primary }]}>{DAY_SHORT[index]}</Text>
@@ -242,7 +243,13 @@ export default function TimetableScreen() {
       {PERIOD_TIMINGS.map((timing) => (
         <View key={timing.period} style={styles.gridRow}>
           {/* Time Cell */}
-          <View style={[styles.gridCell, styles.timeCell, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
+          <View
+            style={[
+              styles.gridCell,
+              styles.timeCell,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02) },
+            ]}
+          >
             <Text style={[styles.periodNumber, { color: colors.primary }]}>P{timing.period}</Text>
             <Text style={[styles.timeText, { color: colors.textMuted }]}>{timing.start}</Text>
             <Text style={[styles.timeText, { color: colors.textMuted }]}>{timing.end}</Text>
@@ -262,17 +269,19 @@ export default function TimetableScreen() {
                   styles.gridCell,
                   {
                     backgroundColor: isEmpty
-                      ? isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'
+                      ? withAlpha(colors.textPrimary, isDark ? 0.02 : 0.01)
                       : hasSub
-                        ? '#f5920020'
+                        ? withAlpha(colors.warning, 0.125)
                         : isLab
-                          ? '#8b5cf620'
-                          : '#10b98115',
+                          ? withAlpha(colors.primary, 0.125)
+                          : withAlpha(colors.success, 0.08),
                     borderColor: isEmpty
                       ? 'transparent'
                       : hasSub
-                        ? '#f5920050'
-                        : isLab ? '#8b5cf640' : '#10b98130',
+                        ? withAlpha(colors.warning, 0.31)
+                        : isLab
+                          ? withAlpha(colors.primary, 0.25)
+                          : withAlpha(colors.success, 0.19),
                     borderWidth: isEmpty ? 0 : 1,
                   },
                 ]}
@@ -284,7 +293,7 @@ export default function TimetableScreen() {
                     <Text 
                       style={[
                         styles.subjectCode, 
-                        { color: hasSub ? '#f59200' : isLab ? '#8b5cf6' : '#10b981' }
+                        { color: hasSub ? colors.warning : isLab ? colors.primary : colors.success }
                       ]} 
                       numberOfLines={1}
                     >
@@ -302,13 +311,13 @@ export default function TimetableScreen() {
                       </Text>
                     )}
                     {hasSub && (
-                      <View style={[styles.labBadge, styles.subBadge]}>
-                        <FontAwesome5 name="exchange-alt" size={8} color="#f59200" />
+                      <View style={[styles.labBadge, { backgroundColor: withAlpha(colors.warning, 0.19), borderRadius: 8, padding: 3 }]}>
+                        <FontAwesome5 name="exchange-alt" size={8} color={colors.warning} />
                       </View>
                     )}
                     {isLab && !hasSub && (
                       <View style={styles.labBadge}>
-                        <FontAwesome5 name="flask" size={8} color="#8b5cf6" />
+                        <FontAwesome5 name="flask" size={8} color={colors.primary} />
                       </View>
                     )}
                   </>
@@ -337,8 +346,8 @@ export default function TimetableScreen() {
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={handleEditTimetable}
         >
-          <Ionicons name="add" size={20} color="#fff" />
-          <Text style={styles.createBtnText}>Create Timetable</Text>
+          <Ionicons name="add" size={20} color={colors.textInverse} />
+          <Text style={[styles.createBtnText, { color: colors.textInverse }]}>Create Timetable</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -366,7 +375,7 @@ export default function TimetableScreen() {
               style={[styles.editBtn, { backgroundColor: colors.primary }]}
               onPress={handleEditTimetable}
             >
-              <FontAwesome5 name="edit" size={14} color="#fff" />
+              <FontAwesome5 name="edit" size={14} color={colors.textInverse} />
             </TouchableOpacity>
           )}
         </Animated.View>
@@ -374,7 +383,15 @@ export default function TimetableScreen() {
         {/* Filters */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.filtersContainer}>
           {/* Course Picker */}
-          <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerWrapper,
+              {
+                backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+              },
+            ]}
+          >
             <FontAwesome5 name="graduation-cap" size={14} color={colors.textMuted} style={styles.pickerIcon} />
             <Picker
               selectedValue={selectedCourse}
@@ -394,7 +411,16 @@ export default function TimetableScreen() {
           </View>
 
           {/* Year Picker */}
-          <View style={[styles.pickerWrapper, styles.yearPicker, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerWrapper,
+              styles.yearPicker,
+              {
+                backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+              },
+            ]}
+          >
             <Picker
               selectedValue={selectedYear}
               onValueChange={setSelectedYear}
@@ -412,7 +438,7 @@ export default function TimetableScreen() {
         {/* Selected Info */}
         {selectedCourseData && selectedYearData && (
           <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.selectedInfo}>
-            <View style={[styles.infoBadge, { backgroundColor: colors.primary + '15' }]}>
+            <View style={[styles.infoBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
               <FontAwesome5 name="book" size={12} color={colors.primary} />
               <Text style={[styles.infoText, { color: colors.primary }]}>
                 {selectedYearData.name} {selectedCourseData.code}
@@ -448,15 +474,15 @@ export default function TimetableScreen() {
               {/* Legend */}
               <View style={styles.legend}>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+                  <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
                   <Text style={[styles.legendText, { color: colors.textMuted }]}>Theory</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#8b5cf6' }]} />
+                  <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
                   <Text style={[styles.legendText, { color: colors.textMuted }]}>Lab</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#f59200' }]} />
+                  <View style={[styles.legendDot, { backgroundColor: colors.warning }]} />
                   <Text style={[styles.legendText, { color: colors.textMuted }]}>Substitution</Text>
                 </View>
               </View>
@@ -464,19 +490,31 @@ export default function TimetableScreen() {
               {/* Quick Actions */}
               <View style={styles.quickActions}>
                 <TouchableOpacity
-                  style={[styles.quickActionBtn, { backgroundColor: '#f5920015', borderColor: '#f5920040' }]}
+                  style={[
+                    styles.quickActionBtn,
+                    {
+                      backgroundColor: withAlpha(colors.warning, 0.08),
+                      borderColor: withAlpha(colors.warning, 0.25),
+                    },
+                  ]}
                   onPress={() => router.push('/(admin)/timetable/substitutions' as any)}
                 >
-                  <FontAwesome5 name="exchange-alt" size={16} color="#f59200" />
-                  <Text style={[styles.quickActionText, { color: '#f59200' }]}>Substitutions</Text>
+                  <FontAwesome5 name="exchange-alt" size={16} color={colors.warning} />
+                  <Text style={[styles.quickActionText, { color: colors.warning }]}>Substitutions</Text>
                   {todaySubstitutions.length > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{todaySubstitutions.length}</Text>
+                    <View style={[styles.badge, { backgroundColor: colors.warning }]}>
+                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>{todaySubstitutions.length}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.quickActionBtn, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}
+                  style={[
+                    styles.quickActionBtn,
+                    {
+                      backgroundColor: withAlpha(colors.primary, 0.063),
+                      borderColor: withAlpha(colors.primary, 0.19),
+                    },
+                  ]}
                   onPress={() => router.push('/(admin)/timetable/reports' as any)}
                 >
                   <FontAwesome5 name="chart-bar" size={16} color={colors.primary} />
@@ -525,7 +563,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: 'transparent',
   },
   yearPicker: {
     flex: 0.35,
@@ -662,7 +700,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   createBtnText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -711,7 +749,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   badge: {
-    backgroundColor: '#f59200',
+    backgroundColor: 'transparent',
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -719,11 +757,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 11,
     fontWeight: '700',
   },
-  subBadge: {
-    backgroundColor: '#f5920030',
-  },
+  subBadge: { backgroundColor: 'transparent' },
 });
