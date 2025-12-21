@@ -8,6 +8,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface OverdueBook {
   id: string; book_id: string; user_id: string; due_date: string; days_overdue: number; fine_amount: number;
@@ -77,18 +78,18 @@ export default function LibraryOverdueScreen() {
           <Animated.View key={book.id} entering={FadeInDown.delay(i * 30).springify()}>
             <Card style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.icon, { backgroundColor: `${colors.error}20` }]}>
+                <View style={[styles.icon, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
                   <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
                 </View>
                 <View style={styles.info}>
                   <Text style={[styles.bookTitle, { color: colors.textPrimary }]}>{book.book?.title}</Text>
                   <Text style={[styles.meta, { color: colors.textSecondary }]}>{book.users?.full_name}</Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: `${colors.error}20` }]}>
+                <View style={[styles.badge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
                   <Text style={[styles.badgeText, { color: colors.error }]}>{book.days_overdue}d</Text>
                 </View>
               </View>
-              <View style={styles.details}>
+              <View style={[styles.details, { borderBottomColor: withAlpha(colors.textPrimary, 0.1) }]}>
                 <View style={styles.row}><Text style={[styles.label, { color: colors.textSecondary }]}>Due Date:</Text>
                   <Text style={[styles.value, { color: colors.error }]}>{new Date(book.due_date).toLocaleDateString()}</Text></View>
                 <View style={styles.row}><Text style={[styles.label, { color: colors.textSecondary }]}>Fine:</Text>
@@ -109,8 +110,8 @@ export default function LibraryOverdueScreen() {
                 )}
               </View>
               <TouchableOpacity onPress={() => sendReminder(book)} style={[styles.reminderButton, { backgroundColor: colors.warning }]}>
-                <FontAwesome5 name="bell" size={16} color="#fff" />
-                <Text style={styles.reminderText}>Send Reminder</Text>
+                <FontAwesome5 name="bell" size={16} color={colors.textInverse} />
+                <Text style={[styles.reminderText, { color: colors.textInverse }]}>Send Reminder</Text>
               </TouchableOpacity>
             </Card>
           </Animated.View>
@@ -142,14 +143,14 @@ const styles = StyleSheet.create({
   meta: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
   badgeText: { fontSize: 16, fontWeight: 'bold' },
-  details: { marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(150,150,150,0.2)' },
+  details: { marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'transparent' },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   label: { fontSize: 14 }, value: { fontSize: 14, fontWeight: '600' },
   contact: { marginBottom: 12 },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   contactText: { fontSize: 14 },
   reminderButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12 },
-  reminderText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  reminderText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 20, fontWeight: 'bold', marginTop: 16 },
 });

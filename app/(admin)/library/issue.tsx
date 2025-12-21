@@ -9,6 +9,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Book { id: string; title: string; isbn: string; available_copies: number; }
 interface User { id: string; full_name: string; }
@@ -103,14 +104,14 @@ export default function LibraryIssueScreen() {
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Issue Books</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{issues.length} active issues</Text></View>
           <TouchableOpacity onPress={openModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
         {issues.map((issue, i) => (
           <Animated.View key={issue.id} entering={FadeInDown.delay(i * 30).springify()}>
             <Card style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.bookIcon, { backgroundColor: `${colors.primary}20` }]}>
+                <View style={[styles.bookIcon, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                   <FontAwesome5 name="book-open" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.info}>
@@ -129,7 +130,7 @@ export default function LibraryIssueScreen() {
         ))}
       </ScrollView>
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Issue Book</Text>
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
   meta: { fontSize: 14 }, details: { marginBottom: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   label: { fontSize: 14 }, value: { fontSize: 14, fontWeight: '600' },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },
