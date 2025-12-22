@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
-import { Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { GlassSurface } from './GlassSurface';
 
 interface CardProps {
   children: React.ReactNode;
@@ -28,7 +28,7 @@ export const Card: React.FC<CardProps> = ({
   noPadding = false,
   animated = true,
 }) => {
-  const { colors, isDark, animationsEnabled, capabilities, canAnimateBackground } = useThemeStore();
+  const { colors, isDark, animationsEnabled, capabilities } = useThemeStore();
   const shouldAnimate = animationsEnabled && animated;
   const progress = useSharedValue(shouldAnimate ? 0 : 1);
 
@@ -60,64 +60,39 @@ export const Card: React.FC<CardProps> = ({
     };
   });
 
-  const blurAmount = intensity ?? colors.blurIntensity;
-  const shouldBlur =
-    Platform.OS === 'ios' &&
-    !!capabilities?.supportsBlur &&
-    blurAmount > 0;
+  const blurAmount = intensity ?? 60;
 
-  // If the background is animated, make cards feel "glass-like" even on non-blur themes
-  // by using a subtle translucent tint.
-  const shouldTintForAnimatedBg = !!canAnimateBackground;
-  const tintedCardBackground = withAlpha(
-    colors.cardBackground,
-    isDark ? 0.72 : 0.86
-  );
+  // Glassmorphic surface (blur on iOS when available; tinted fallback otherwise)
+  const baseSurfaceBackground = capabilities?.supportsGlassSurfaces ? colors.glassBackgroundStrong : colors.cardBackground;
+  const baseSurfaceBorder = capabilities?.supportsGlassSurfaces ? colors.glassBorder : colors.cardBorder;
 
-  const content = (
-    <View
-      style={[
-        styles.content,
-        {
-          backgroundColor: shouldBlur
-            ? 'transparent'
-            : (shouldTintForAnimatedBg ? tintedCardBackground : colors.cardBackground),
-          borderColor: colors.cardBorder,
-          borderWidth: colors.borderWidth,
-          borderRadius: colors.borderRadius,
-          padding: noPadding ? 0 : 18,
-        },
-      ]}
-    >
-      {children}
-    </View>
-  );
+  const resolvedCardBackground = withAlpha(baseSurfaceBackground, isDark ? 0.72 : 0.86);
 
   return (
     <Animated.View
       style={[
         styles.wrapper,
         animatedStyle,
+        {
+          // Critical: ensure overflow clipping uses rounded corners.
+          borderRadius: colors.borderRadius,
+          // Important: keep wrapper transparent so iOS BlurView can blur content behind.
+          backgroundColor: 'transparent',
+        },
         style,
       ]}
     >
-      {shouldBlur ? (
-        <BlurView
-          intensity={blurAmount}
-          tint={isDark ? 'dark' : 'light'}
-          style={[
-            styles.blur,
-            {
-              backgroundColor: colors.cardBackground,
-              borderRadius: colors.borderRadius,
-            },
-          ]}
-        >
-          {content}
-        </BlurView>
-      ) : (
-        content
-      )}
+      <GlassSurface
+        variant="card"
+        blurIntensity={blurAmount}
+        borderRadius={colors.borderRadius}
+        borderWidth={colors.borderWidth}
+        borderColor={baseSurfaceBorder}
+        backgroundColor={resolvedCardBackground}
+        style={[styles.content, { padding: noPadding ? 0 : 18 }]}
+      >
+        {children}
+      </GlassSurface>
     </Animated.View>
   );
 };
@@ -126,11 +101,8 @@ const styles = StyleSheet.create({
   wrapper: {
     overflow: 'hidden',
   },
-  blur: {
-    overflow: 'hidden',
-  },
   content: {
-    overflow: 'hidden',
+    // Padding is applied dynamically.
   },
 });
 

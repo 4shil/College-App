@@ -210,6 +210,13 @@ export default function AcademicIndexScreen() {
               Manage academic structure
             </Text>
           </View>
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: colors.primary }]}
+            onPress={() => router.push('/(admin)/academic/departments?create=1' as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="add" size={22} color={colors.textInverse} />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Quick Stats */}
@@ -279,6 +286,13 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
+  },
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,

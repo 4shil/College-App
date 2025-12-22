@@ -44,7 +44,6 @@ export default function SettingsScreen() {
 
   const [notifications, setNotifications] = useState(true);
   const [autoApproval, setAutoApproval] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -158,30 +157,6 @@ export default function SettingsScreen() {
           action: () => setAutoApproval(!autoApproval),
         },
         {
-          id: 'maintenance',
-          title: 'Maintenance Mode',
-          subtitle: 'Temporarily disable user access',
-          icon: 'tools',
-          iconType: 'fa5',
-          color: colors.warning,
-          type: 'toggle',
-          value: maintenanceMode,
-          action: () => {
-            if (!maintenanceMode) {
-              Alert.alert(
-                'Enable Maintenance Mode',
-                'This will prevent all users from accessing the app. Continue?',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Enable', onPress: () => setMaintenanceMode(true) },
-                ]
-              );
-            } else {
-              setMaintenanceMode(false);
-            }
-          },
-        },
-        {
           id: 'audit-logs',
           title: 'Audit Logs',
           subtitle: 'View system activity logs',
@@ -232,8 +207,6 @@ export default function SettingsScreen() {
 
   const getItemTone = (item: SettingItem) => {
     switch (item.id) {
-      case 'maintenance':
-        return 'warning' as const;
       case 'audit-logs':
       case 'about':
         return 'neutral' as const;

@@ -90,17 +90,23 @@ export default function AuditLogsScreen() {
     }
   };
 
+  const asLower = (value: unknown) => String(value ?? '').toLowerCase();
+  const asUpper = (value: unknown) => String(value ?? '').toUpperCase();
+
   const filteredLogs = logs.filter(log => {
-    const q = searchQuery.toLowerCase();
+    const q = asLower(searchQuery);
     const matchesSearch =
-      log.user_name.toLowerCase().includes(q) ||
-      log.action.toLowerCase().includes(q) ||
-      log.entity_type.toLowerCase().includes(q);
+      asLower(log.user_name).includes(q) ||
+      asLower(log.action).includes(q) ||
+      asLower(log.entity_type).includes(q);
+
+    const action = asUpper(log.action);
+    const entityType = asUpper(log.entity_type);
 
     return (
       matchesSearch &&
-      (selectedAction === 'ALL' || log.action === selectedAction) &&
-      (selectedEntity === 'ALL' || log.entity_type === selectedEntity)
+      (selectedAction === 'ALL' || action === selectedAction) &&
+      (selectedEntity === 'ALL' || entityType === selectedEntity)
     );
   });
 

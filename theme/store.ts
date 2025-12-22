@@ -55,18 +55,40 @@ const initialResolved = resolveTheme({
 // - false: animated backgrounds are gated by theme capabilities
 const ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES = true;
 
+// Rollback-safe switch:
+// - true: glass surfaces are enabled for every theme
+// - false: glass surfaces are gated by theme capabilities
+const ALLOW_GLASS_SURFACES_FOR_ALL_THEMES = true;
+
+// Rollback-safe switch:
+// - true: blur effects are allowed for every theme
+// - false: blur effects are gated by theme capabilities
+const ALLOW_BLUR_FOR_ALL_THEMES = true;
+
+// Rollback-safe switch:
+// - true: ensure blur intensity is non-zero so BlurView-based UI actually blurs on iOS
+// - false: keep theme-provided blurIntensity as-is
+const FORCE_BLUR_INTENSITY_FOR_ALL_THEMES = true;
+const FORCED_BLUR_INTENSITY = 20;
+
 const initialSupportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
   ? true
   : !!initialResolved.capabilities.supportsAnimatedBackground;
 const INITIAL_ANIMATIONS_ENABLED = true;
 const initialCanAnimateBackground = INITIAL_ANIMATIONS_ENABLED && initialSupportsAnimatedBackground;
 
+const initialCapabilities = {
+  ...initialResolved.capabilities,
+  supportsGlassSurfaces: ALLOW_GLASS_SURFACES_FOR_ALL_THEMES ? true : initialResolved.capabilities.supportsGlassSurfaces,
+  supportsBlur: ALLOW_BLUR_FOR_ALL_THEMES ? true : initialResolved.capabilities.supportsBlur,
+};
+
 export const useGlobalThemeStore = createStore<GlobalThemeState>(
   persist(
     (set, get) => ({
       activeThemeId: 'default',
       activeThemeName: initialResolved.presetName,
-      capabilities: initialResolved.capabilities,
+      capabilities: initialCapabilities,
       supportsAnimatedBackground: initialSupportsAnimatedBackground,
       canAnimateBackground: initialCanAnimateBackground,
       effectsEnabled: true,
@@ -93,15 +115,35 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           ? true
           : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
+
+        const capabilities = {
+          ...nextResolved.capabilities,
+          supportsGlassSurfaces: ALLOW_GLASS_SURFACES_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsGlassSurfaces,
+          supportsBlur: ALLOW_BLUR_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsBlur,
+        };
+
+        const resolvedColors: ThemeColorsLegacy = (() => {
+          const next: ThemeColorsLegacy = { ...nextResolved.colorsLegacy };
+          if (ALLOW_GLASS_SURFACES_FOR_ALL_THEMES) {
+            next.cardBackground = next.glassBackgroundStrong;
+            next.cardBorder = next.glassBorder;
+            next.inputBackground = next.glassBackground;
+            next.inputBorder = next.glassBorder;
+          }
+          if (FORCE_BLUR_INTENSITY_FOR_ALL_THEMES) {
+            next.blurIntensity = Math.max(next.blurIntensity, FORCED_BLUR_INTENSITY);
+          }
+          return next;
+        })();
         set({
           mode,
           isDark: nextResolved.isDark,
           activeThemeName: nextResolved.presetName,
-          capabilities: nextResolved.capabilities,
+          capabilities,
           supportsAnimatedBackground,
           canAnimateBackground,
-          colors: nextResolved.colorsLegacy,
-          resolvedColors: nextResolved.colorsLegacy,
+          colors: resolvedColors,
+          resolvedColors,
           resolvedTokens: nextResolved.tokens,
         });
       },
@@ -123,15 +165,35 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           ? true
           : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
+
+        const capabilities = {
+          ...nextResolved.capabilities,
+          supportsGlassSurfaces: ALLOW_GLASS_SURFACES_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsGlassSurfaces,
+          supportsBlur: ALLOW_BLUR_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsBlur,
+        };
+
+        const resolvedColors: ThemeColorsLegacy = (() => {
+          const next: ThemeColorsLegacy = { ...nextResolved.colorsLegacy };
+          if (ALLOW_GLASS_SURFACES_FOR_ALL_THEMES) {
+            next.cardBackground = next.glassBackgroundStrong;
+            next.cardBorder = next.glassBorder;
+            next.inputBackground = next.glassBackground;
+            next.inputBorder = next.glassBorder;
+          }
+          if (FORCE_BLUR_INTENSITY_FOR_ALL_THEMES) {
+            next.blurIntensity = Math.max(next.blurIntensity, FORCED_BLUR_INTENSITY);
+          }
+          return next;
+        })();
         set({
           activeThemeId: id,
           activeThemeName: nextResolved.presetName,
-          capabilities: nextResolved.capabilities,
+          capabilities,
           supportsAnimatedBackground,
           canAnimateBackground,
           isDark: nextResolved.isDark,
-          colors: nextResolved.colorsLegacy,
-          resolvedColors: nextResolved.colorsLegacy,
+          colors: resolvedColors,
+          resolvedColors,
           resolvedTokens: nextResolved.tokens,
         });
       },
@@ -151,15 +213,35 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           ? true
           : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
+
+        const capabilities = {
+          ...nextResolved.capabilities,
+          supportsGlassSurfaces: ALLOW_GLASS_SURFACES_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsGlassSurfaces,
+          supportsBlur: ALLOW_BLUR_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsBlur,
+        };
+
+        const resolvedColors: ThemeColorsLegacy = (() => {
+          const next: ThemeColorsLegacy = { ...nextResolved.colorsLegacy };
+          if (ALLOW_GLASS_SURFACES_FOR_ALL_THEMES) {
+            next.cardBackground = next.glassBackgroundStrong;
+            next.cardBorder = next.glassBorder;
+            next.inputBackground = next.glassBackground;
+            next.inputBorder = next.glassBorder;
+          }
+          if (FORCE_BLUR_INTENSITY_FOR_ALL_THEMES) {
+            next.blurIntensity = Math.max(next.blurIntensity, FORCED_BLUR_INTENSITY);
+          }
+          return next;
+        })();
         set({
           mode: newMode,
           isDark: nextResolved.isDark,
           activeThemeName: nextResolved.presetName,
-          capabilities: nextResolved.capabilities,
+          capabilities,
           supportsAnimatedBackground,
           canAnimateBackground,
-          colors: nextResolved.colorsLegacy,
-          resolvedColors: nextResolved.colorsLegacy,
+          colors: resolvedColors,
+          resolvedColors,
           resolvedTokens: nextResolved.tokens,
         });
       },
@@ -189,14 +271,34 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
 
+        const capabilities = {
+          ...nextResolved.capabilities,
+          supportsGlassSurfaces: ALLOW_GLASS_SURFACES_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsGlassSurfaces,
+          supportsBlur: ALLOW_BLUR_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsBlur,
+        };
+
+        const resolvedColors: ThemeColorsLegacy = (() => {
+          const next: ThemeColorsLegacy = { ...nextResolved.colorsLegacy };
+          if (ALLOW_GLASS_SURFACES_FOR_ALL_THEMES) {
+            next.cardBackground = next.glassBackgroundStrong;
+            next.cardBorder = next.glassBorder;
+            next.inputBackground = next.glassBackground;
+            next.inputBorder = next.glassBorder;
+          }
+          if (FORCE_BLUR_INTENSITY_FOR_ALL_THEMES) {
+            next.blurIntensity = Math.max(next.blurIntensity, FORCED_BLUR_INTENSITY);
+          }
+          return next;
+        })();
+
         set({
           isDark: nextResolved.isDark,
           activeThemeName: nextResolved.presetName,
-          capabilities: nextResolved.capabilities,
+          capabilities,
           supportsAnimatedBackground,
           canAnimateBackground,
-          colors: nextResolved.colorsLegacy,
-          resolvedColors: nextResolved.colorsLegacy,
+          colors: resolvedColors,
+          resolvedColors,
           resolvedTokens: nextResolved.tokens,
         });
       },
@@ -232,8 +334,30 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           systemIsDark,
         });
 
-        const supportsAnimatedBackground = !!nextResolved.capabilities.supportsAnimatedBackground;
+        const capabilities = {
+          ...nextResolved.capabilities,
+          supportsGlassSurfaces: ALLOW_GLASS_SURFACES_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsGlassSurfaces,
+          supportsBlur: ALLOW_BLUR_FOR_ALL_THEMES ? true : nextResolved.capabilities.supportsBlur,
+        };
+
+        const supportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
+          ? true
+          : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = animationsEnabled && supportsAnimatedBackground;
+
+        const resolvedColors: ThemeColorsLegacy = (() => {
+          const next: ThemeColorsLegacy = { ...nextResolved.colorsLegacy };
+          if (ALLOW_GLASS_SURFACES_FOR_ALL_THEMES) {
+            next.cardBackground = next.glassBackgroundStrong;
+            next.cardBorder = next.glassBorder;
+            next.inputBackground = next.glassBackground;
+            next.inputBorder = next.glassBorder;
+          }
+          if (FORCE_BLUR_INTENSITY_FOR_ALL_THEMES) {
+            next.blurIntensity = Math.max(next.blurIntensity, FORCED_BLUR_INTENSITY);
+          }
+          return next;
+        })();
 
         return {
           ...persistedObj,
@@ -243,12 +367,12 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           animationsEnabled,
           effectsEnabled,
           activeThemeName: nextResolved.presetName,
-          capabilities: nextResolved.capabilities,
+          capabilities,
           supportsAnimatedBackground,
           canAnimateBackground,
           isDark: nextResolved.isDark,
-          colors: nextResolved.colorsLegacy,
-          resolvedColors: nextResolved.colorsLegacy,
+          colors: resolvedColors,
+          resolvedColors,
           resolvedTokens: nextResolved.tokens,
         } as Partial<GlobalThemeState>;
       },

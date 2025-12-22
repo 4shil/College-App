@@ -4,6 +4,7 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { GlassSurface } from './GlassSurface';
 
 export type IconBadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 export type IconBadgeFamily = 'fa5' | 'ion' | 'mci';
@@ -45,21 +46,19 @@ export const IconBadge: React.FC<IconBadgeProps> = ({
 
   const IconComponent = family === 'fa5' ? FontAwesome5 : family === 'ion' ? Ionicons : MaterialCommunityIcons;
 
+  const radius = Math.max(12, Math.round(colors.borderRadius * 0.75));
+
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor,
-          borderColor: colors.cardBorder,
-          borderWidth: colors.borderWidth,
-          borderRadius: Math.max(12, Math.round(colors.borderRadius * 0.75)),
-        },
-        style,
-      ]}
+    <GlassSurface
+      variant="pill"
+      borderRadius={radius}
+      borderWidth={colors.borderWidth}
+      borderColor={colors.glassBorder}
+      backgroundColor={backgroundColor}
+      style={[styles.container, style]}
     >
       <IconComponent name={name as any} size={size} color={tone === 'neutral' ? colors.textPrimary : toneColor} />
-    </View>
+    </GlassSurface>
   );
 };
 

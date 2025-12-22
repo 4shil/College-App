@@ -48,7 +48,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   glowing = true,
   icon,
 }) => {
-  const { colors, animationsEnabled, isDark } = useThemeStore();
+  const { colors, animationsEnabled, isDark, capabilities } = useThemeStore();
   const scale = useSharedValue(1);
   const glowOpacity = useSharedValue(0.25);
   const pressProgress = useSharedValue(0);
@@ -111,10 +111,24 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   const getGradientColors = (): [string, string, string] => {
     if (variant === 'primary') {
+      if (capabilities.supportsGlassSurfaces) {
+        return [
+          withAlpha(colors.primaryLight, isDark ? 0.72 : 0.86),
+          withAlpha(colors.primary, isDark ? 0.72 : 0.86),
+          withAlpha(colors.primaryDark, isDark ? 0.72 : 0.86),
+        ];
+      }
       return [colors.primaryLight, colors.primary, colors.primaryDark];
     }
     if (variant === 'secondary') {
       // No dedicated secondaryDark token in legacy surface; keep a stable 3-stop gradient.
+      if (capabilities.supportsGlassSurfaces) {
+        return [
+          withAlpha(colors.secondaryLight, isDark ? 0.72 : 0.86),
+          withAlpha(colors.secondary, isDark ? 0.72 : 0.86),
+          withAlpha(colors.secondary, isDark ? 0.72 : 0.86),
+        ];
+      }
       return [colors.secondaryLight, colors.secondary, colors.secondary];
     }
     return ['transparent', 'transparent', 'transparent'];
@@ -139,7 +153,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 ? colors.primary
                 : 'transparent',
               backgroundColor: variant === 'ghost' 
-                ? colors.cardBackground
+                ? withAlpha(colors.cardBackground, isDark ? 0.72 : 0.86)
                 : 'transparent',
               opacity: disabled ? 0.5 : 1,
             },
@@ -193,7 +207,15 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           colors={getGradientColors()}
           style={[
             styles.gradient,
-            { height: heights[size], borderRadius: colors.borderRadius, opacity: disabled ? 0.5 : 1 },
+            {
+              height: heights[size],
+              borderRadius: colors.borderRadius,
+              opacity: disabled ? 0.5 : 1,
+              borderWidth: capabilities.supportsGlassSurfaces ? colors.borderWidth : 0,
+              borderColor: capabilities.supportsGlassSurfaces
+                ? withAlpha(colors.glassBorder, isDark ? 0.45 : 0.55)
+                : 'transparent',
+            },
             style,
           ]}
           start={{ x: 0, y: 0 }}

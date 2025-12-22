@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
@@ -35,6 +35,7 @@ interface Department {
 export default function DepartmentsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ create?: string }>();
   const { colors, isDark } = useThemeStore();
 
   const modalBackdropColor = isDark
@@ -95,6 +96,15 @@ export default function DepartmentsScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    // Open create flow when navigated from Academic Management (+) button.
+    if (params?.create === '1' && !loading && !showAddModal) {
+      openAddModal();
+      // Clear query param to avoid re-opening on re-render.
+      router.replace('/(admin)/academic/departments' as any);
+    }
+  }, [params?.create, loading, showAddModal]);
 
   useEffect(() => {
     // Live refresh when departments change server-side

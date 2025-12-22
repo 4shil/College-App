@@ -17,6 +17,8 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
+import { GlassSurface } from './GlassSurface';
 
 interface GlassInputProps extends TextInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -32,7 +34,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   error = false,
   ...props
 }) => {
-  const { colors } = useThemeStore();
+  const { colors, isDark, capabilities } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -67,19 +69,22 @@ export const GlassInput: React.FC<GlassInputProps> = ({
     };
   });
 
+  const resolvedBackground = withAlpha(
+    capabilities.supportsGlassSurfaces ? colors.glassBackgroundStrong : colors.inputBackground,
+    isDark ? 0.72 : 0.86
+  );
+
   return (
     <Animated.View style={[styles.wrapper, animatedContainerStyle, containerStyle]}>
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            backgroundColor: colors.inputBackground,
-            borderRadius: colors.borderRadius,
-          },
-          animatedBorderStyle,
-        ]}
-      >
-        <View style={styles.innerContent}>
+      <Animated.View style={[styles.container, { borderRadius: colors.borderRadius }, animatedBorderStyle]}>
+        <GlassSurface
+          variant="input"
+          borderRadius={colors.borderRadius}
+          borderWidth={0}
+          borderColor={'transparent'}
+          backgroundColor={resolvedBackground}
+        >
+          <View style={styles.innerContent}>
           {icon && (
             <Ionicons
               name={icon}
@@ -116,7 +121,8 @@ export const GlassInput: React.FC<GlassInputProps> = ({
               />
             </TouchableOpacity>
           )}
-        </View>
+          </View>
+        </GlassSurface>
       </Animated.View>
     </Animated.View>
   );
@@ -129,6 +135,7 @@ const styles = StyleSheet.create({
   container: {
     height: 52,
     overflow: 'hidden',
+    position: 'relative',
   },
   innerContent: {
     flex: 1,

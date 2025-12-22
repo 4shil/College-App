@@ -2,6 +2,7 @@ export { AnimatedBackground } from './AnimatedBackground';
 export { BottomNav } from './BottomNav';
 export { Card } from './Card';
 export { GlassCard } from './GlassCard'; // Alias for backward compatibility
+export { GlassSurface } from './GlassSurface';
 export { GlassInput } from './GlassInput';
 export { IconBadge } from './IconBadge';
 export { PrimaryButton } from './PrimaryButton';
