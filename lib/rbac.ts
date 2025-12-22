@@ -304,6 +304,7 @@ export function getUserPermissions(userRoles: string[]): string[] {
   userRoles.forEach(role => {
     const rolePermissions = ROLE_PERMISSIONS[role] || [];
     rolePermissions.forEach(permission => permissions.add(permission));
+    
   });
   
   return Array.from(permissions);

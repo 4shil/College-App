@@ -15,9 +15,8 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
-import { withAlpha } from '../../../theme/colorUtils';
 import { supabase } from '../../../lib/supabase';
 
 interface PendingStudent {
@@ -51,7 +50,7 @@ interface PendingStudent {
 export default function PendingApprovalsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -206,9 +205,13 @@ export default function PendingApprovalsScreen() {
                   style={styles.photo}
                 />
               ) : (
-                <View style={[styles.photoPlaceholder, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
-                  <FontAwesome5 name="user-graduate" size={24} color={colors.primary} />
-                </View>
+                <IconBadge
+                  family="fa5"
+                  name="user-graduate"
+                  tone="primary"
+                  size={24}
+                  style={styles.photoPlaceholder}
+                />
               )}
             </View>
             <View style={styles.headerInfo}>
@@ -218,7 +221,16 @@ export default function PendingApprovalsScreen() {
               <Text style={[styles.studentEmail, { color: colors.textSecondary }]}>
                 {student.profile?.email || 'No email'}
               </Text>
-              <View style={[styles.pendingBadge, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
+              <View
+                style={[
+                  styles.pendingBadge,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
                 <FontAwesome5 name="clock" size={10} color={colors.warning} />
                 <Text style={[styles.pendingText, { color: colors.warning }]}>Pending Approval</Text>
               </View>
@@ -227,28 +239,64 @@ export default function PendingApprovalsScreen() {
 
           {/* Details Grid */}
           <View style={styles.detailsGrid}>
-            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
+            <View
+              style={[
+                styles.detailItem,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <FontAwesome5 name="building" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Department</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
                 {student.department?.name || 'N/A'}
               </Text>
             </View>
-            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
+            <View
+              style={[
+                styles.detailItem,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <FontAwesome5 name="layer-group" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Year</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
                 {student.year?.name || 'N/A'}
               </Text>
             </View>
-            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
+            <View
+              style={[
+                styles.detailItem,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <FontAwesome5 name="phone" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Phone</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
                 {student.profile?.phone || 'N/A'}
               </Text>
             </View>
-            <View style={[styles.detailItem, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03) }]}>
+            <View
+              style={[
+                styles.detailItem,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <FontAwesome5 name="calendar" size={12} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Applied</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
@@ -298,9 +346,7 @@ export default function PendingApprovalsScreen() {
       entering={FadeInDown.delay(200).duration(400)}
       style={styles.emptyState}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
-        <FontAwesome5 name="check-circle" size={48} color={colors.success} />
-      </View>
+      <IconBadge family="fa5" name="check-circle" tone="primary" size={40} style={styles.emptyIcon} />
       <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
         All Caught Up!
       </Text>
@@ -333,7 +379,14 @@ export default function PendingApprovalsScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.refreshBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
+            style={[
+              styles.refreshBtn,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
             onPress={onRefresh}
           >
             <Ionicons name="refresh" size={20} color={colors.primary} />
@@ -444,8 +497,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   headerInfo: {
     flex: 1,
@@ -513,7 +564,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   actionBtnText: {
-    color: 'transparent',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -526,8 +576,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 20,
   },
   emptyTitle: {

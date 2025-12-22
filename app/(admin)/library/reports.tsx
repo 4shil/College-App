@@ -94,28 +94,28 @@ export default function LibraryReportsScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 12 }]}>Overview</Text>
             <View style={styles.statsGrid}>
               <Animated.View entering={FadeInDown.delay(0).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="book" size={24} color={colors.primary} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalBooks}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Books</Text>
                 </Card>
               </Animated.View>
               <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="book-open" size={24} color={colors.warning} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalIssued}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Issued</Text>
                 </Card>
               </Animated.View>
               <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="check-circle" size={24} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalReturned}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Returned</Text>
                 </Card>
               </Animated.View>
               <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalOverdue}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Overdue</Text>
@@ -139,18 +139,13 @@ export default function LibraryReportsScreen() {
                         style={[
                           styles.rank,
                           {
-                            backgroundColor:
-                              i === 0
-                                ? colors.warning
-                                : i === 1
-                                  ? colors.info
-                                  : i === 2
-                                    ? colors.primary
-                                    : colors.secondary,
+                            backgroundColor: colors.inputBackground,
+                            borderColor: colors.cardBorder,
+                            borderWidth: 1,
                           },
                         ]}
                       >
-                        <Text style={[styles.rankText, { color: colors.textInverse }]}>{i + 1}</Text>
+                        <Text style={[styles.rankText, { color: colors.textPrimary }]}>{i + 1}</Text>
                       </View>
                       <View style={styles.bookInfo}>
                         <Text style={[styles.bookTitle, { color: colors.textPrimary }]}>{book.title}</Text>
@@ -184,7 +179,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12 },
   bookCard: { flexDirection: 'row', alignItems: 'center', padding: 16, marginBottom: 8 },
   rank: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  rankText: { color: 'transparent', fontSize: 18, fontWeight: 'bold' },
+  rankText: { fontSize: 18, fontWeight: 'bold' },
   bookInfo: { flex: 1 },
   bookTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   bookMeta: { fontSize: 14 },

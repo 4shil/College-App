@@ -14,9 +14,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { AnimatedBackground } from '../../../components/ui';
+import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface FeeStats {
   totalDue: number;
@@ -28,7 +28,7 @@ interface FeeStats {
 export default function FeesIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,40 +77,48 @@ export default function FeesIndexScreen() {
     setRefreshing(false);
   };
 
+  const getOptionTone = (title: string): IconBadgeTone => {
+    switch (title) {
+      case 'Defaulters':
+        return 'error';
+      case 'Record Payment':
+        return 'success';
+      case 'Reports':
+        return 'info';
+      default:
+        return 'primary';
+    }
+  };
+
   const menuOptions = [
     {
       title: 'Fee Structures',
       subtitle: 'Manage fee categories',
       icon: 'list-alt',
-      color: colors.info,
       route: '/(admin)/fees/structures',
     },
     {
       title: 'Student Fees',
       subtitle: 'View and track payments',
       icon: 'users',
-      color: colors.success,
       route: '/(admin)/fees/students',
     },
     {
       title: 'Record Payment',
       subtitle: 'Add new payment',
       icon: 'rupee-sign',
-      color: colors.warning,
       route: '/(admin)/fees/payment',
     },
     {
       title: 'Reports',
       subtitle: 'Fee collection reports',
       icon: 'chart-line',
-      color: colors.primary,
       route: '/(admin)/fees/reports',
     },
     {
       title: 'Defaulters',
       subtitle: 'Overdue payments',
       icon: 'exclamation-triangle',
-      color: colors.error,
       route: '/(admin)/fees/defaulters',
     },
   ];
@@ -205,9 +213,13 @@ export default function FeesIndexScreen() {
                   borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                    <FontAwesome5 name={option.icon} size={24} color={option.color} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name={option.icon}
+                    tone={getOptionTone(option.title)}
+                    size={24}
+                    style={styles.menuIcon}
+                  />
                   <View style={styles.menuContent}>
                     <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{option.title}</Text>
                     <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>

@@ -19,7 +19,6 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
-import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Department {
@@ -513,7 +512,11 @@ export default function CreateStudentScreen() {
           <View
             style={[
               styles.pickerContainer,
-              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              {
+                backgroundColor: colors.inputBackground,
+                borderWidth: colors.borderWidth,
+                borderColor: colors.inputBorder,
+              },
             ]}
           >
             <Picker
@@ -534,7 +537,11 @@ export default function CreateStudentScreen() {
           <View
             style={[
               styles.pickerContainer,
-              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              {
+                backgroundColor: colors.inputBackground,
+                borderWidth: colors.borderWidth,
+                borderColor: colors.inputBorder,
+              },
             ]}
           >
             <Picker
@@ -556,7 +563,11 @@ export default function CreateStudentScreen() {
           <View
             style={[
               styles.pickerContainer,
-              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              {
+                backgroundColor: colors.inputBackground,
+                borderWidth: colors.borderWidth,
+                borderColor: colors.inputBorder,
+              },
             ]}
           >
             <Picker
@@ -614,7 +625,16 @@ export default function CreateStudentScreen() {
           Upload a CSV file with student data
         </Text>
 
-        <View style={[styles.csvInfo, { backgroundColor: withAlpha(colors.textPrimary, 0.05) }]}>
+        <View
+          style={[
+            styles.csvInfo,
+            {
+              backgroundColor: colors.inputBackground,
+              borderWidth: colors.borderWidth,
+              borderColor: colors.inputBorder,
+            },
+          ]}
+        >
           <Text style={[styles.csvInfoTitle, { color: colors.textPrimary }]}>Required CSV columns:</Text>
           <Text style={[styles.csvInfoText, { color: colors.textMuted }]}>
             • full_name (required){'\n'}
@@ -634,7 +654,11 @@ export default function CreateStudentScreen() {
             <View
               style={[
                 styles.pickerContainer,
-                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderWidth: colors.borderWidth,
+                  borderColor: colors.inputBorder,
+                },
               ]}
             >
               <Picker
@@ -655,7 +679,11 @@ export default function CreateStudentScreen() {
             <View
               style={[
                 styles.pickerContainer,
-                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderWidth: colors.borderWidth,
+                  borderColor: colors.inputBorder,
+                },
               ]}
             >
               <Picker
@@ -677,7 +705,11 @@ export default function CreateStudentScreen() {
             <View
               style={[
                 styles.pickerContainer,
-                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderWidth: colors.borderWidth,
+                  borderColor: colors.inputBorder,
+                },
               ]}
             >
               <Picker
@@ -734,7 +766,14 @@ export default function CreateStudentScreen() {
           {/* Tabs */}
           <Animated.View
             entering={FadeInDown.delay(200).duration(400)}
-            style={[styles.tabContainer, { backgroundColor: withAlpha(colors.textPrimary, 0.1) }]}
+            style={[
+              styles.tabContainer,
+              {
+                backgroundColor: colors.inputBackground,
+                borderWidth: colors.borderWidth,
+                borderColor: colors.inputBorder,
+              },
+            ]}
           >
             <TouchableOpacity
               style={[

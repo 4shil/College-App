@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
   },
-  actionBadgeText: { color: 'transparent', fontSize: 10, fontWeight: '700' },
+  actionBadgeText: { fontSize: 10, fontWeight: '700' },
   // Alert Card
   alertCard: {
     flexDirection: 'row',
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  alertBtnText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  alertBtnText: { fontSize: 12, fontWeight: '600' },
   // Activity
   emptyActivity: { alignItems: 'center', paddingVertical: 30 },
   emptyText: { marginTop: 10, fontSize: 13 },

@@ -368,7 +368,7 @@ export default function CreateTimetableScreen() {
     <Modal visible={showSlotModal} transparent animationType="fade">
       <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.6) }]}>
         <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               {selectedSlot ? `${DAYS[selectedSlot.day - 1]} - Period ${selectedSlot.period}` : 'Edit Slot'}
             </Text>
@@ -390,8 +390,8 @@ export default function CreateTimetableScreen() {
               style={[
                 styles.pickerBox,
                 {
-                  backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
-                  borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
                 },
               ]}
             >
@@ -429,8 +429,8 @@ export default function CreateTimetableScreen() {
               style={[
                 styles.pickerBox,
                 {
-                  backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
-                  borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
                 },
               ]}
             >
@@ -453,7 +453,7 @@ export default function CreateTimetableScreen() {
 
             {/* Is Lab Toggle */}
             <TouchableOpacity
-              style={[styles.toggleRow, { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}
+              style={[styles.toggleRow, { borderTopColor: colors.cardBorder }]}
               onPress={() => {
                 setModalIsLab(!modalIsLab);
                 if (!modalIsLab) {
@@ -472,7 +472,11 @@ export default function CreateTimetableScreen() {
               <View
                 style={[
                   styles.toggle,
-                  { backgroundColor: modalIsLab ? colors.primary : withAlpha(colors.textMuted, 0.19) },
+                  {
+                    backgroundColor: modalIsLab ? colors.primary : colors.inputBackground,
+                    borderColor: modalIsLab ? colors.primary : colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
                 ]}
               >
                 <View
@@ -487,7 +491,7 @@ export default function CreateTimetableScreen() {
             {/* 2-Hour Lab Toggle (only if lab and not last period) */}
             {modalIsLab && selectedSlot && selectedSlot.period < 5 && (
               <TouchableOpacity
-                style={[styles.toggleRow, { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}
+                style={[styles.toggleRow, { borderTopColor: colors.cardBorder }]}
                 onPress={() => setModalIs2Hour(!modalIs2Hour)}
               >
                 <View>
@@ -499,7 +503,11 @@ export default function CreateTimetableScreen() {
                 <View
                   style={[
                     styles.toggle,
-                    { backgroundColor: modalIs2Hour ? colors.primary : withAlpha(colors.textMuted, 0.19) },
+                    {
+                      backgroundColor: modalIs2Hour ? colors.primary : colors.inputBackground,
+                      borderColor: modalIs2Hour ? colors.primary : colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
                   ]}
                 >
                   <View
@@ -546,13 +554,13 @@ export default function CreateTimetableScreen() {
     <View style={styles.gridContainer}>
       {/* Header Row - Days */}
       <View style={styles.gridRow}>
-        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: colors.inputBackground }]}>
           <Text style={[styles.gridHeaderText, { color: colors.primary }]}>Time</Text>
         </View>
         {DAYS.map((day, index) => (
           <View
             key={day}
-            style={[styles.gridHeaderCell, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
+            style={[styles.gridHeaderCell, { backgroundColor: colors.inputBackground }]}
           >
             <Text style={[styles.gridHeaderText, { color: colors.primary }]}>{DAY_SHORT[index]}</Text>
           </View>
@@ -590,15 +598,9 @@ export default function CreateTimetableScreen() {
                   styles.gridCell,
                   styles.editableCell,
                   {
-                    backgroundColor: isEmpty
-                      ? withAlpha(colors.textPrimary, isDark ? 0.02 : 0.01)
-                      : isLab
-                        ? withAlpha(colors.primary, 0.125)
-                        : withAlpha(colors.success, 0.08),
+                    backgroundColor: colors.inputBackground,
                     borderWidth: colors.borderWidth,
-                    borderColor: isEmpty
-                      ? withAlpha(colors.textMuted, 0.125)
-                      : isLab ? withAlpha(colors.primary, 0.25) : withAlpha(colors.success, 0.19),
+                    borderColor: isEmpty ? colors.inputBorder : isLab ? colors.primary : colors.success,
                   },
                 ]}
                 onPress={() => openSlotModal(dayIndex + 1, timing.period)}
@@ -974,7 +976,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: {
-    color: 'transparent',
     fontSize: 15,
     fontWeight: '600',
   },

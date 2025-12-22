@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
-import { withAlpha } from '../../../theme/colorUtils';
+import { IconBadge } from '../../../components/ui/IconBadge';
 import { supabase } from '../../../lib/supabase';
 
 interface MenuOption {
@@ -23,7 +23,6 @@ interface MenuOption {
   title: string;
   subtitle: string;
   icon: string;
-  color: string;
   route: string;
   count?: number;
 }
@@ -31,7 +30,7 @@ interface MenuOption {
 export default function AcademicIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,7 +100,6 @@ export default function AcademicIndexScreen() {
       title: 'Departments',
       subtitle: 'Manage academic departments',
       icon: 'building',
-      color: colors.primary,
       route: '/(admin)/academic/departments',
       count: counts.departments,
     },
@@ -110,7 +108,6 @@ export default function AcademicIndexScreen() {
       title: 'Courses',
       subtitle: 'Degree programs and specializations',
       icon: 'graduation-cap',
-      color: colors.success,
       route: '/(admin)/academic/courses',
       count: counts.courses,
     },
@@ -119,7 +116,6 @@ export default function AcademicIndexScreen() {
       title: 'Subjects',
       subtitle: 'Course subjects and curriculum',
       icon: 'book',
-      color: colors.warning,
       route: '/(admin)/academic/subjects',
       count: counts.subjects,
     },
@@ -128,7 +124,6 @@ export default function AcademicIndexScreen() {
       title: 'Years & Sections',
       subtitle: 'Academic years and class sections',
       icon: 'layer-group',
-      color: colors.info,
       route: '/(admin)/academic/years',
       count: counts.years,
     },
@@ -137,7 +132,6 @@ export default function AcademicIndexScreen() {
       title: 'Batches',
       subtitle: 'Student batch management',
       icon: 'users-cog',
-      color: colors.primary,
       route: '/(admin)/academic/batches',
     },
     {
@@ -145,7 +139,6 @@ export default function AcademicIndexScreen() {
       title: 'Semesters',
       subtitle: 'Academic terms and schedules',
       icon: 'calendar-alt',
-      color: colors.primary,
       route: '/(admin)/academic/semesters',
       count: counts.semesters,
     },
@@ -163,9 +156,7 @@ export default function AcademicIndexScreen() {
       >
         <Card style={styles.menuCard}>
           <View style={styles.menuCardContent}>
-            <View style={[styles.iconContainer, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-              <FontAwesome5 name={option.icon} size={22} color={option.color} />
-            </View>
+            <IconBadge family="fa5" name={option.icon} tone="primary" size={22} style={styles.iconContainer} />
             <View style={styles.menuTextContainer}>
               <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>
                 {option.title}
@@ -176,8 +167,17 @@ export default function AcademicIndexScreen() {
             </View>
             <View style={styles.menuArrow}>
               {option.count !== undefined && (
-                <View style={[styles.countBadge, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                  <Text style={[styles.countText, { color: option.color }]}>{option.count}</Text>
+                <View
+                  style={[
+                    styles.countBadge,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.countText, { color: colors.textSecondary }]}>{option.count}</Text>
                 </View>
               )}
               <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />

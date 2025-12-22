@@ -15,11 +15,10 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface AttendanceLog {
   id: string;
@@ -52,13 +51,27 @@ export default function AttendanceLogsScreen() {
   const { colors, isDark } = useThemeStore();
   const { profile } = useAuthStore();
 
-  const ACTION_ICONS: { [key: string]: { icon: string; color: string } } = {
-    marked: { icon: 'check-circle', color: colors.success },
-    edited: { icon: 'edit', color: colors.warning },
-    bulk_marked: { icon: 'check-double', color: colors.primary },
-    proxy_detected: { icon: 'exclamation-triangle', color: colors.error },
-    deleted: { icon: 'trash', color: colors.error },
+  type ActionTone = 'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  const ACTION_ICONS: { [key: string]: { icon: string; tone: ActionTone } } = {
+    marked: { icon: 'check-circle', tone: 'success' },
+    edited: { icon: 'edit', tone: 'warning' },
+    bulk_marked: { icon: 'check-double', tone: 'primary' },
+    proxy_detected: { icon: 'exclamation-triangle', tone: 'error' },
+    deleted: { icon: 'trash', tone: 'error' },
   };
+
+  const getToneColor = (tone: ActionTone) =>
+    tone === 'primary'
+      ? colors.primary
+      : tone === 'success'
+      ? colors.success
+      : tone === 'warning'
+      ? colors.warning
+      : tone === 'error'
+      ? colors.error
+      : tone === 'info'
+      ? colors.info
+      : colors.textMuted;
 
   // Data states
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
@@ -171,18 +184,17 @@ export default function AttendanceLogsScreen() {
   };
 
   const renderLogCard = (log: AttendanceLog, index: number) => {
-    const actionInfo = ACTION_ICONS[log.action_type] || { icon: 'info-circle', color: colors.textMuted };
+    const actionInfo = ACTION_ICONS[log.action_type] || { icon: 'info-circle', tone: 'neutral' as const };
+    const actionColor = getToneColor(actionInfo.tone);
 
     return (
       <Animated.View
         key={log.id}
         entering={FadeInRight.delay(100 + index * 20).duration(300)}
       >
-        <Card style={[styles.logCard, { borderLeftColor: actionInfo.color }]}>
+        <Card style={styles.logCard}>
           <View style={styles.logHeader}>
-            <View style={[styles.iconWrapper, { backgroundColor: withAlpha(actionInfo.color, 0.082) }]}>
-              <FontAwesome5 name={actionInfo.icon} size={14} color={actionInfo.color} />
-            </View>
+            <IconBadge family="fa5" name={actionInfo.icon} tone={actionInfo.tone} size={14} style={styles.iconBadge} />
 
             <View style={styles.logInfo}>
               <Text style={[styles.logAction, { color: colors.textPrimary }]}>
@@ -389,7 +401,7 @@ export default function AttendanceLogsScreen() {
                       color={
                         filterType === type
                           ? colors.textInverse
-                          : ACTION_ICONS[type]?.color || colors.textMuted
+                            : getToneColor(ACTION_ICONS[type]?.tone || 'neutral')
                       }
                     />
                   )}
@@ -471,20 +483,16 @@ const styles = StyleSheet.create({
   logsList: { marginTop: 8 },
   logCard: {
     marginBottom: 12,
-    borderLeftWidth: 3,
-    paddingLeft: 12,
   },
   logHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 10,
   },
-  iconWrapper: {
+  iconBadge: {
     width: 32,
     height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 10,
     marginRight: 12,
   },
   logInfo: { flex: 1 },
@@ -535,7 +543,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   backButtonText: {
-    color: 'transparent',
     fontSize: 14,
     fontWeight: '600',
   },

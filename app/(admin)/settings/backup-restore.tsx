@@ -28,7 +28,6 @@ import {
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
 import { useAuthStore } from '../../../store/authStore';
-import { withAlpha } from '../../../theme/colorUtils';
 
 export default function BackupRestoreScreen() {
   const insets = useSafeAreaInsets();
@@ -153,7 +152,11 @@ export default function BackupRestoreScreen() {
               onPress={handleRefresh} 
               style={[
                 styles.refreshButton,
-                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
               ]}
               disabled={refreshing}
             >
@@ -170,7 +173,11 @@ export default function BackupRestoreScreen() {
           <Animated.View entering={FadeInDown.delay(100).springify()}>
             <GlassCard style={styles.statsCard}>
               <View style={styles.statsHeader}>
-                <View style={[styles.statsIcon, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+                <View style={[styles.statsIcon, { 
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.primary,
+                  borderWidth: colors.borderWidth,
+                }]}>
                   <FontAwesome5 name="database" size={24} color={colors.primary} />
                 </View>
                 <View style={styles.statsContent}>
@@ -231,7 +238,11 @@ export default function BackupRestoreScreen() {
             </Text>
             <GlassCard style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIcon, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
+                <View style={[styles.cardIcon, { 
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.info,
+                  borderWidth: colors.borderWidth,
+                }]}>
                   <FontAwesome5 name="cloud-download-alt" size={20} color={colors.info} />
                 </View>
                 <View style={styles.cardContent}>
@@ -264,8 +275,12 @@ export default function BackupRestoreScreen() {
                 </View>
               </View>
 
-              <View style={[styles.infoBox, { backgroundColor: withAlpha(colors.primary, 0.1) }]}>
-                <FontAwesome5 name="info-circle" size={14} color={colors.textMuted} />
+              <View style={[styles.infoBox, { 
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.info,
+                borderWidth: colors.borderWidth,
+              }]}>
+                <FontAwesome5 name="info-circle" size={14} color={colors.info} />
                 <Text style={[styles.infoText, { color: colors.textMuted }]}>
                   Backup includes all tables: students, teachers, courses, departments, attendance,
                   exams, fees, and more. Quick Backup saves to device, Export allows sharing.
@@ -288,7 +303,7 @@ export default function BackupRestoreScreen() {
                       styles.fileRow,
                       index < backupFiles.length - 1 && {
                         borderBottomWidth: 1,
-                        borderBottomColor: withAlpha(colors.textPrimary, 0.05),
+                        borderBottomColor: colors.cardBorder,
                       },
                     ]}
                   >
@@ -317,7 +332,11 @@ export default function BackupRestoreScreen() {
             </Text>
             <GlassCard style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIcon, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                <View style={[styles.cardIcon, { 
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.error,
+                  borderWidth: colors.borderWidth,
+                }]}>
                   <FontAwesome5 name="cloud-upload-alt" size={20} color={colors.error} />
                 </View>
                 <View style={styles.cardContent}>
@@ -359,8 +378,9 @@ export default function BackupRestoreScreen() {
                       styles.jsonInput,
                       {
                         color: colors.textPrimary,
-                        backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                        borderColor: withAlpha(colors.primary, 0.19),
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       },
                     ]}
                     placeholder="Paste backup JSON here..."
@@ -377,7 +397,7 @@ export default function BackupRestoreScreen() {
                         setShowRestoreInput(false);
                         setRestoreJson('');
                       }}
-                      style={[styles.cancelButton, { borderColor: withAlpha(colors.textMuted, 0.25), borderWidth: colors.borderWidth }]}
+                      style={[styles.cancelButton, { borderColor: colors.inputBorder, borderWidth: colors.borderWidth }]}
                       disabled={processing}
                     >
                       <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
@@ -400,7 +420,11 @@ export default function BackupRestoreScreen() {
                 </View>
               )}
 
-              <View style={[styles.warningBox, { backgroundColor: withAlpha(colors.error, 0.08) }]}>
+              <View style={[styles.warningBox, { 
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.error,
+                borderWidth: colors.borderWidth,
+              }]}>
                 <FontAwesome5 name="exclamation-triangle" size={14} color={colors.error} />
                 <Text style={[styles.warningText, { color: colors.error }]}>
                   Warning: Restoring a backup may overwrite existing data. Please ensure you have a
@@ -417,7 +441,11 @@ export default function BackupRestoreScreen() {
             </Text>
             <GlassCard style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIcon, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+                <View style={[styles.cardIcon, { 
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.primary,
+                  borderWidth: colors.borderWidth,
+                }]}>
                   <FontAwesome5 name="clock" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.cardContent}>
@@ -433,7 +461,11 @@ export default function BackupRestoreScreen() {
               <View style={styles.scheduleButtons}>
                 <TouchableOpacity
                   onPress={() => scheduleBackup('daily')}
-                  style={[styles.scheduleButton, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
+                  style={[styles.scheduleButton, { 
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  }]}
                 >
                   <FontAwesome5 name="calendar-day" size={16} color={colors.primary} />
                   <Text style={[styles.scheduleButtonText, { color: colors.textPrimary }]}>
@@ -443,9 +475,13 @@ export default function BackupRestoreScreen() {
 
                 <TouchableOpacity
                   onPress={() => scheduleBackup('weekly')}
-                  style={[styles.scheduleButton, { backgroundColor: withAlpha(colors.success, 0.08) }]}
+                  style={[styles.scheduleButton, { 
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  }]}
                 >
-                  <FontAwesome5 name="calendar-week" size={16} color={colors.success} />
+                  <FontAwesome5 name="calendar-week" size={16} color={colors.primary} />
                   <Text style={[styles.scheduleButtonText, { color: colors.textPrimary }]}>
                     Weekly
                   </Text>
@@ -453,9 +489,13 @@ export default function BackupRestoreScreen() {
 
                 <TouchableOpacity
                   onPress={() => scheduleBackup('monthly')}
-                  style={[styles.scheduleButton, { backgroundColor: withAlpha(colors.warning, 0.08) }]}
+                  style={[styles.scheduleButton, { 
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  }]}
                 >
-                  <FontAwesome5 name="calendar-alt" size={16} color={colors.warning} />
+                  <FontAwesome5 name="calendar-alt" size={16} color={colors.primary} />
                   <Text style={[styles.scheduleButtonText, { color: colors.textPrimary }]}>
                     Monthly
                   </Text>
@@ -478,7 +518,7 @@ export default function BackupRestoreScreen() {
                       styles.tableRow,
                       index < Object.keys(stats).length - 1 && {
                         borderBottomWidth: 1,
-                        borderBottomColor: withAlpha(colors.textPrimary, 0.05),
+                        borderBottomColor: colors.cardBorder,
                       },
                     ]}
                   >
@@ -694,7 +734,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   restoreButtonText: {
-    color: 'transparent',
     fontSize: 15,
     fontWeight: '600',
   },

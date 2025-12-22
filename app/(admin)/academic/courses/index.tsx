@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   courseName: { fontSize: 16, fontWeight: '600' },
   inactiveBadge: { backgroundColor: 'transparent', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
+  inactiveText: { fontSize: 10, fontWeight: '600' },
   courseCode: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   detailsRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
   detailBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, gap: 6 },

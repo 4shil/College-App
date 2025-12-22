@@ -19,7 +19,6 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
-import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -277,7 +276,7 @@ export default function ExamReportsScreen() {
             </Text>
             <View style={styles.statsGrid}>
               <Animated.View entering={FadeInDown.delay(0).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="users" size={24} color={colors.primary} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{reportData.totalStudents}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Students</Text>
@@ -285,7 +284,7 @@ export default function ExamReportsScreen() {
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="check-circle" size={24} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{reportData.present}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Present</Text>
@@ -293,7 +292,7 @@ export default function ExamReportsScreen() {
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="times-circle" size={24} color={colors.error} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{reportData.absent}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Absent</Text>
@@ -301,7 +300,7 @@ export default function ExamReportsScreen() {
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="percentage" size={24} color={colors.warning} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{passPercentage}%</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pass Rate</Text>
@@ -315,14 +314,14 @@ export default function ExamReportsScreen() {
             </Text>
             <View style={styles.statsRow}>
               <Animated.View entering={FadeInDown.delay(200).springify()} style={{ flex: 1 }}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="trophy" size={24} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{reportData.passed}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Passed</Text>
                 </Card>
               </Animated.View>
               <Animated.View entering={FadeInDown.delay(250).springify()} style={{ flex: 1 }}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="times" size={24} color={colors.error} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{reportData.failed}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Failed</Text>
@@ -375,18 +374,13 @@ export default function ExamReportsScreen() {
                         style={[
                           styles.rank,
                           {
-                            backgroundColor:
-                              index === 0
-                                ? colors.warning
-                                : index === 1
-                                  ? colors.info
-                                  : index === 2
-                                    ? colors.success
-                                    : colors.primary,
+                            backgroundColor: colors.inputBackground,
+                            borderColor: colors.cardBorder,
+                            borderWidth: 1,
                           },
                         ]}
                       >
-                        <Text style={[styles.rankText, { color: colors.textInverse }]}>{index + 1}</Text>
+                        <Text style={[styles.rankText, { color: colors.textPrimary }]}>{index + 1}</Text>
                       </View>
                       <View style={styles.topperInfo}>
                         <Text style={[styles.topperName, { color: colors.textPrimary }]}>{topper.name}</Text>
@@ -394,7 +388,16 @@ export default function ExamReportsScreen() {
                           {topper.marks} / {selectedSchedule?.max_marks}
                         </Text>
                       </View>
-                      <View style={[styles.topperBadge, { backgroundColor: withAlpha(colors.success, 0.2) }]}>
+                      <View
+                        style={[
+                          styles.topperBadge,
+                          {
+                            backgroundColor: colors.inputBackground,
+                            borderColor: colors.inputBorder,
+                            borderWidth: 1,
+                          },
+                        ]}
+                      >
                         <FontAwesome5 name="trophy" size={16} color={colors.success} />
                       </View>
                     </Card>
@@ -445,7 +448,7 @@ const styles = StyleSheet.create({
   analysisValue: { fontSize: 24, fontWeight: 'bold' },
   topperCard: { flexDirection: 'row', alignItems: 'center', padding: 16, marginBottom: 12 },
   rank: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  rankText: { color: 'transparent', fontSize: 18, fontWeight: 'bold' },
+  rankText: { fontSize: 18, fontWeight: 'bold' },
   topperInfo: { flex: 1 },
   topperName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   topperMarks: { fontSize: 14 },

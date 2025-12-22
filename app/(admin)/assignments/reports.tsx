@@ -126,12 +126,12 @@ export default function AssignmentReportsScreen() {
 
         <Animated.View entering={FadeInDown.delay(50).springify()}>
           <View style={styles.statsGrid}>
-            <Card style={[styles.statCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
+            <Card style={styles.statCard}>
               <FontAwesome5 name="file-alt" size={24} color={colors.primary} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalAssignments}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Assignments</Text>
             </Card>
-            <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+            <Card style={styles.statCard}>
               <FontAwesome5 name="clock" size={24} color={colors.warning} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{pendingCount}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
@@ -141,12 +141,12 @@ export default function AssignmentReportsScreen() {
 
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <View style={styles.statsGrid}>
-            <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+            <Card style={styles.statCard}>
               <FontAwesome5 name="check-circle" size={24} color={colors.success} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{gradedCount}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Graded</Text>
             </Card>
-            <Card style={[styles.statCard, { borderLeftColor: colors.info, borderLeftWidth: 4 }]}>
+            <Card style={styles.statCard}>
               <FontAwesome5 name="chart-line" size={24} color={colors.info} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{avgMarks}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg Marks</Text>
@@ -156,12 +156,12 @@ export default function AssignmentReportsScreen() {
 
         <Animated.View entering={FadeInDown.delay(150).springify()}>
           <View style={styles.statsGrid}>
-            <Card style={[styles.statCard, { borderLeftColor: colors.info, borderLeftWidth: 4 }]}>
+            <Card style={styles.statCard}>
               <FontAwesome5 name="percentage" size={24} color={colors.info} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{submissionRate}%</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Submission Rate</Text>
             </Card>
-            <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+            <Card style={styles.statCard}>
               <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{lateSubmissions}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Late Submissions</Text>
@@ -197,8 +197,8 @@ export default function AssignmentReportsScreen() {
             ) : (
               topPerformers.map((performer, i) => (
                 <View key={i} style={[styles.performerItem, { borderBottomColor: colors.cardBorder }]}>
-                  <View style={[styles.rank, { backgroundColor: i === 0 ? colors.warning : i === 1 ? colors.info : i === 2 ? colors.success : colors.cardBorder }]}>
-                    <Text style={[styles.rankText, { color: i < 3 ? colors.textInverse : colors.textPrimary }]}>{i + 1}</Text>
+                  <View style={[styles.rank, { backgroundColor: colors.inputBackground, borderColor: colors.cardBorder, borderWidth: 1 }]}>
+                    <Text style={[styles.rankText, { color: colors.textPrimary }]}>{i + 1}</Text>
                   </View>
                   <View style={styles.performerInfo}>
                     <Text style={[styles.performerName, { color: colors.textPrimary }]}>{performer.full_name}</Text>

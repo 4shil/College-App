@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -21,11 +22,12 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({
   children,
   style,
+  intensity,
   delay = 0,
   noPadding = false,
   animated = true,
 }) => {
-  const { colors, animationsEnabled } = useThemeStore();
+  const { colors, isDark, animationsEnabled, capabilities } = useThemeStore();
   const shouldAnimate = animationsEnabled && animated;
   const progress = useSharedValue(shouldAnimate ? 0 : 1);
 
@@ -57,28 +59,66 @@ export const Card: React.FC<CardProps> = ({
     };
   });
 
-  return (
-    <Animated.View
+  const blurAmount = intensity ?? colors.blurIntensity;
+  const shouldBlur =
+    Platform.OS === 'ios' &&
+    !!capabilities?.supportsBlur &&
+    blurAmount > 0;
+
+  const content = (
+    <View
       style={[
-        styles.wrapper,
+        styles.content,
         {
-          backgroundColor: colors.cardBackground,
+          backgroundColor: shouldBlur ? 'transparent' : colors.cardBackground,
           borderColor: colors.cardBorder,
           borderWidth: colors.borderWidth,
           borderRadius: colors.borderRadius,
           padding: noPadding ? 0 : 18,
         },
+      ]}
+    >
+      {children}
+    </View>
+  );
+
+  return (
+    <Animated.View
+      style={[
+        styles.wrapper,
         animatedStyle,
         style,
       ]}
     >
-      {children}
+      {shouldBlur ? (
+        <BlurView
+          intensity={blurAmount}
+          tint={isDark ? 'dark' : 'light'}
+          style={[
+            styles.blur,
+            {
+              backgroundColor: colors.cardBackground,
+              borderRadius: colors.borderRadius,
+            },
+          ]}
+        >
+          {content}
+        </BlurView>
+      ) : (
+        content
+      )}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
+    overflow: 'hidden',
+  },
+  blur: {
+    overflow: 'hidden',
+  },
+  content: {
     overflow: 'hidden',
   },
 });

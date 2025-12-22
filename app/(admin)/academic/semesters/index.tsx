@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   semName: { fontSize: 18, fontWeight: '600' },
   inactiveBadge: { backgroundColor: 'transparent', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
+  inactiveText: { fontSize: 10, fontWeight: '600' },
   semSubtitle: { fontSize: 13, marginTop: 2 },
   statsRow: { flexDirection: 'row', marginTop: 14, gap: 10 },
   statBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, gap: 8 },

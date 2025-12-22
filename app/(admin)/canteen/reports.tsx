@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 export default function CanteenReportsScreen() {
   const insets = useSafeAreaInsets();
@@ -164,7 +163,7 @@ export default function CanteenReportsScreen() {
                 <View
                   style={[
                     styles.summaryDivider,
-                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) },
+                    { backgroundColor: colors.cardBorder },
                   ]}
                 />
                 <View style={styles.summaryItem}>
@@ -188,7 +187,16 @@ export default function CanteenReportsScreen() {
             >
               <GlassCard style={styles.reportCard}>
                 <View style={styles.reportHeader}>
-                  <View style={[styles.reportIcon, { backgroundColor: withAlpha(section.color, 0.2) }]}>
+                  <View
+                    style={[
+                      styles.reportIcon,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderWidth: colors.borderWidth,
+                        borderColor: section.color,
+                      },
+                    ]}
+                  >
                     <FontAwesome5 name={section.icon} size={20} color={section.color} />
                   </View>
                   <Text style={[styles.reportTitle, { color: colors.textPrimary }]}>
@@ -222,7 +230,16 @@ export default function CanteenReportsScreen() {
             >
               <TouchableOpacity>
                 <GlassCard style={styles.exportCard}>
-                  <View style={[styles.exportIcon, { backgroundColor: withAlpha(option.color, 0.15) }]}>
+                  <View
+                    style={[
+                      styles.exportIcon,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderWidth: colors.borderWidth,
+                        borderColor: option.color,
+                      },
+                    ]}
+                  >
                     <FontAwesome5 name={option.icon} size={22} color={option.color} />
                   </View>
                   <Text style={[styles.exportLabel, { color: colors.textPrimary }]}>

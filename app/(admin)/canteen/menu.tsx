@@ -188,15 +188,8 @@ export default function CanteenMenuScreen() {
     );
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Breakfast': return colors.warning;
-      case 'Lunch': return colors.success;
-      case 'Snacks': return colors.info;
-      case 'Beverages': return colors.primary;
-      default: return colors.textSecondary;
-    }
-  };
+  const getCategoryBorderColor = (category: string) =>
+    filter === category ? colors.primary : colors.inputBorder;
 
   return (
     <AnimatedBackground>
@@ -220,7 +213,11 @@ export default function CanteenMenuScreen() {
                 key={cat}
                 style={[
                   styles.filterTab,
-                  filter === cat && { backgroundColor: withAlpha(colors.primary, 0.125) },
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderWidth: colors.borderWidth,
+                    borderColor: getCategoryBorderColor(cat),
+                  },
                 ]}
                 onPress={() => setFilter(cat)}
               >
@@ -274,9 +271,9 @@ export default function CanteenMenuScreen() {
                             style={[
                               styles.vegBadge,
                               {
-                                backgroundColor: item.is_veg
-                                  ? withAlpha(colors.success, 0.125)
-                                  : withAlpha(colors.error, 0.125),
+                                backgroundColor: colors.inputBackground,
+                                borderWidth: colors.borderWidth,
+                                borderColor: item.is_veg ? colors.success : colors.error,
                               },
                             ]}
                           >
@@ -290,13 +287,17 @@ export default function CanteenMenuScreen() {
                           <View
                             style={[
                               styles.categoryBadge,
-                              { backgroundColor: withAlpha(getCategoryColor(item.category), 0.125) },
+                              {
+                                backgroundColor: colors.inputBackground,
+                                borderWidth: colors.borderWidth,
+                                borderColor: colors.inputBorder,
+                              },
                             ]}
                           >
                             <Text
                               style={[
                                 styles.categoryText,
-                                { color: getCategoryColor(item.category) },
+                                { color: colors.textSecondary },
                               ]}
                             >
                               {item.category}
@@ -320,9 +321,9 @@ export default function CanteenMenuScreen() {
                       style={[
                         styles.actionButton,
                         {
-                          backgroundColor: item.is_available
-                            ? withAlpha(colors.success, 0.082)
-                            : withAlpha(colors.error, 0.082),
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: item.is_available ? colors.success : colors.error,
                         },
                       ]}
                       onPress={() => toggleAvailability(item)}
@@ -342,13 +343,27 @@ export default function CanteenMenuScreen() {
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.iconButton, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
+                      style={[
+                        styles.iconButton,
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: colors.inputBorder,
+                        },
+                      ]}
                       onPress={() => openEditModal(item)}
                     >
                       <FontAwesome5 name="edit" size={14} color={colors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.iconButton, { backgroundColor: withAlpha(colors.error, 0.082) }]}
+                      style={[
+                        styles.iconButton,
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: colors.inputBorder,
+                        },
+                      ]}
                       onPress={() => handleDelete(item)}
                     >
                       <FontAwesome5 name="trash" size={14} color={colors.error} />
@@ -411,9 +426,10 @@ export default function CanteenMenuScreen() {
                         key={cat}
                         style={[
                           styles.categoryButton,
-                          { borderColor: withAlpha(colors.primary, 0.188) },
-                          formData.category === cat && {
-                            backgroundColor: withAlpha(getCategoryColor(cat), 0.125),
+                          {
+                            backgroundColor: colors.inputBackground,
+                            borderWidth: colors.borderWidth,
+                            borderColor: formData.category === cat ? colors.primary : colors.inputBorder,
                           },
                         ]}
                         onPress={() => setFormData({ ...formData, category: cat })}
@@ -422,10 +438,7 @@ export default function CanteenMenuScreen() {
                           style={[
                             styles.categoryButtonText,
                             {
-                              color:
-                                formData.category === cat
-                                  ? getCategoryColor(cat)
-                                  : colors.textSecondary,
+                              color: formData.category === cat ? colors.primary : colors.textSecondary,
                             },
                           ]}
                         >
@@ -442,8 +455,11 @@ export default function CanteenMenuScreen() {
                     <TouchableOpacity
                       style={[
                         styles.vegButton,
-                        { borderColor: withAlpha(colors.primary, 0.188) },
-                        formData.is_veg && { backgroundColor: withAlpha(colors.success, 0.125) },
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: formData.is_veg ? colors.success : colors.inputBorder,
+                        },
                       ]}
                       onPress={() => setFormData({ ...formData, is_veg: true })}
                     >
@@ -472,8 +488,11 @@ export default function CanteenMenuScreen() {
                     <TouchableOpacity
                       style={[
                         styles.vegButton,
-                        { borderColor: withAlpha(colors.primary, 0.188) },
-                        !formData.is_veg && { backgroundColor: withAlpha(colors.error, 0.125) },
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: !formData.is_veg ? colors.error : colors.inputBorder,
+                        },
                       ]}
                       onPress={() => setFormData({ ...formData, is_veg: false })}
                     >

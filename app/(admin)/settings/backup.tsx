@@ -13,12 +13,11 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, GlassCard, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, GlassCard, IconBadge, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface BackupInfo {
   table: string;
@@ -200,7 +199,14 @@ export default function BackupRestoreScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: withAlpha(colors.primary, 0.125) }]}
+          style={[
+            styles.backButton,
+            {
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.inputBorder,
+              borderWidth: colors.borderWidth,
+            },
+          ]}
         >
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
@@ -224,9 +230,7 @@ export default function BackupRestoreScreen() {
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <GlassCard style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={[styles.iconContainer, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
-                <FontAwesome5 name="database" size={20} color={colors.primary} />
-              </View>
+              <IconBadge family="fa5" name="database" tone="primary" size={20} style={styles.iconContainer} />
               <View style={styles.cardHeaderText}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
                   Quick Actions
@@ -241,7 +245,14 @@ export default function BackupRestoreScreen() {
 
             <View style={styles.quickActions}>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: withAlpha(colors.success, 0.125) }]}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
                 onPress={() => createBackup()}
                 disabled={loading}
               >
@@ -252,7 +263,14 @@ export default function BackupRestoreScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: withAlpha(colors.warning, 0.125) }]}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
                 onPress={() => restoreBackup()}
                 disabled={loading || !lastFullBackup}
               >
@@ -263,7 +281,14 @@ export default function BackupRestoreScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: withAlpha(colors.primary, 0.125) }]}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
                 onPress={exportBackup}
                 disabled={loading || !lastFullBackup}
               >
@@ -300,9 +325,7 @@ export default function BackupRestoreScreen() {
               >
                 <GlassCard style={styles.tableCard}>
                   <View style={styles.tableHeader}>
-                    <View style={[styles.tableIcon, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
-                      <FontAwesome5 name={table.icon} size={18} color={colors.primary} />
-                    </View>
+                    <IconBadge family="fa5" name={table.icon} tone="primary" size={18} style={styles.tableIcon} />
                     <View style={styles.tableInfo}>
                       <Text style={[styles.tableName, { color: colors.textPrimary }]}>
                         {table.label}
@@ -316,7 +339,14 @@ export default function BackupRestoreScreen() {
 
                   <View style={styles.tableActions}>
                     <TouchableOpacity
-                      style={[styles.tableActionBtn, { backgroundColor: withAlpha(colors.success, 0.08) }]}
+                      style={[
+                        styles.tableActionBtn,
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderColor: colors.inputBorder,
+                          borderWidth: colors.borderWidth,
+                        },
+                      ]}
                       onPress={() => createBackup(table.name)}
                       disabled={loading}
                     >
@@ -327,7 +357,14 @@ export default function BackupRestoreScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.tableActionBtn, { backgroundColor: withAlpha(colors.warning, 0.08) }]}
+                      style={[
+                        styles.tableActionBtn,
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderColor: colors.inputBorder,
+                          borderWidth: colors.borderWidth,
+                        },
+                      ]}
                       onPress={() => restoreBackup(table.name)}
                       disabled={loading || !info?.lastBackup}
                     >
@@ -345,7 +382,16 @@ export default function BackupRestoreScreen() {
 
         {/* Warning Note */}
         <Animated.View entering={FadeInDown.delay(1000).springify()}>
-          <GlassCard style={[styles.warningCard, { backgroundColor: withAlpha(colors.warning, 0.063) }]}>
+          <GlassCard
+            style={[
+              styles.warningCard,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.warning,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <View style={styles.warningHeader}>
               <Ionicons name="warning" size={20} color={colors.warning} />
               <Text style={[styles.warningTitle, { color: colors.warning }]}>

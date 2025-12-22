@@ -17,7 +17,7 @@ import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-re
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, IconBadge, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -115,6 +115,7 @@ export default function UsersScreen() {
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
+  const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState('');
   const [formDepartment, setFormDepartment] = useState('');
 
@@ -126,32 +127,14 @@ export default function UsersScreen() {
     pending: 0,
   });
 
-  const getTabColor = React.useCallback(
-    (tab: UserTab) => {
-      switch (tab) {
-        case 'teachers':
-          return colors.info;
-        case 'students':
-          return colors.success;
-        case 'admins':
-          return colors.primary;
-        case 'pending':
-          return colors.warning;
-        default:
-          return colors.primary;
-      }
-    },
-    [colors]
-  );
-
   const tabs = React.useMemo(
     () => [
-      { key: 'teachers' as UserTab, label: 'Teachers', icon: 'chalkboard-teacher', color: getTabColor('teachers') },
-      { key: 'students' as UserTab, label: 'Students', icon: 'user-graduate', color: getTabColor('students') },
-      { key: 'admins' as UserTab, label: 'Admins', icon: 'user-shield', color: getTabColor('admins') },
-      { key: 'pending' as UserTab, label: 'Pending', icon: 'user-clock', color: getTabColor('pending') },
+      { key: 'teachers' as UserTab, label: 'Teachers', icon: 'chalkboard-teacher' },
+      { key: 'students' as UserTab, label: 'Students', icon: 'user-graduate' },
+      { key: 'admins' as UserTab, label: 'Admins', icon: 'user-shield' },
+      { key: 'pending' as UserTab, label: 'Pending', icon: 'user-clock' },
     ],
-    [getTabColor]
+    []
   );
 
   const fetchData = useCallback(async () => {
@@ -310,11 +293,15 @@ export default function UsersScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase
-                .from('profiles')
-                .update({ status: 'suspended' })
-                .eq('id', user.id);
+              const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+                body: {
+                  action: 'set_status',
+                  target_user_id: user.id,
+                  status: 'suspended',
+                },
+              });
               if (error) throw error;
+              if (!data?.ok) throw new Error('Failed to suspend user');
               Alert.alert('Success', 'User suspended successfully');
               fetchData();
             } catch (error) {
@@ -334,11 +321,15 @@ export default function UsersScreen() {
         Alert.alert('Access denied', 'You do not have permission to activate this user.');
         return;
       }
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'active' })
-        .eq('id', userId);
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'set_status',
+          target_user_id: userId,
+          status: 'active',
+        },
+      });
       if (error) throw error;
+      if (!data?.ok) throw new Error('Failed to activate user');
       Alert.alert('Success', 'User activated successfully');
       fetchData();
     } catch (error) {
@@ -362,12 +353,15 @@ export default function UsersScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Delete from profiles (cascades to auth.users via trigger)
-              const { error } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', user.id);
+              // Delete via privileged function (deletes auth user; profile cascades)
+              const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+                body: {
+                  action: 'delete_user',
+                  target_user_id: user.id,
+                },
+              });
               if (error) throw error;
+              if (!data?.ok) throw new Error('Failed to delete user');
               Alert.alert('Success', 'User deleted successfully');
               fetchData();
             } catch (error) {
@@ -386,11 +380,15 @@ export default function UsersScreen() {
         Alert.alert('Access denied', 'You do not have permission to approve this user.');
         return;
       }
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'active' })
-        .eq('id', user.id);
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'set_status',
+          target_user_id: user.id,
+          status: 'active',
+        },
+      });
       if (error) throw error;
+      if (!data?.ok) throw new Error('Failed to approve user');
       Alert.alert('Success', 'User approved successfully');
       fetchData();
     } catch (error) {
@@ -414,11 +412,15 @@ export default function UsersScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase
-                .from('profiles')
-                .update({ status: 'inactive' })
-                .eq('id', user.id);
+              const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+                body: {
+                  action: 'set_status',
+                  target_user_id: user.id,
+                  status: 'inactive',
+                },
+              });
               if (error) throw error;
+              if (!data?.ok) throw new Error('Failed to reject user');
               Alert.alert('Success', 'Registration rejected');
               fetchData();
             } catch (error) {
@@ -439,19 +441,16 @@ export default function UsersScreen() {
         return;
       }
       setSaving(true);
-      const { error } = await supabase
-        .from('profiles')
-        .update({ primary_role: newRole })
-        .eq('id', userId);
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'set_role',
+          target_user_id: userId,
+          primary_role: newRole,
+        },
+      });
+
       if (error) throw error;
-      
-      // Also update user_roles table
-      const role = roles.find(r => r.name === newRole);
-      if (role) {
-        await supabase
-          .from('user_roles')
-          .upsert({ user_id: userId, role_id: role.id }, { onConflict: 'user_id,role_id' });
-      }
+      if (!data?.ok) throw new Error('Failed to update role');
 
       Alert.alert('Success', 'Role updated successfully');
       setShowRoleModal(false);
@@ -483,6 +482,7 @@ export default function UsersScreen() {
     setFormName('');
     setFormEmail('');
     setFormPhone('');
+    setFormPassword('');
     setFormRole('');
     setFormDepartment('');
     setShowAddModal(true);
@@ -493,18 +493,21 @@ export default function UsersScreen() {
       Alert.alert('Access denied', 'You do not have permission to create users.');
       return;
     }
-    if (!formName.trim() || !formEmail.trim() || !formRole) {
-      Alert.alert('Validation Error', 'Name, email, and role are required');
+    if (!formName.trim() || !formEmail.trim() || !formRole || !formPassword) {
+      Alert.alert('Validation Error', 'Name, email, password, and role are required');
+      return;
+    }
+    if (formPassword.length < 8) {
+      Alert.alert('Validation Error', 'Password must be at least 8 characters');
       return;
     }
 
     setSaving(true);
     try {
-      const tempPassword = `Temp${Math.random().toString(36).slice(2, 10)}!`;
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
         body: {
           email: formEmail.trim(),
-          password: tempPassword,
+          password: formPassword,
           full_name: formName.trim(),
           phone: formPhone.trim() || null,
           primary_role: formRole,
@@ -515,7 +518,7 @@ export default function UsersScreen() {
       if (error) throw error;
       if (!data?.user_id) throw new Error('User creation failed');
 
-      Alert.alert('Success', `User created with temporary password: ${tempPassword}\nPlease share this with the user.`);
+      Alert.alert('Success', 'User created successfully');
       setShowAddModal(false);
       await fetchData();
     } catch (error: any) {
@@ -544,9 +547,7 @@ export default function UsersScreen() {
     >
       <Card style={styles.userCard}>
         <View style={styles.userHeader}>
-          <View style={[styles.avatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
-            <FontAwesome5 name="user" size={18} color={colors.primary} />
-          </View>
+          <IconBadge family="fa5" name="user" tone="primary" size={18} style={styles.avatar} />
           <View style={styles.userInfo}>
             <Text style={[styles.userName, { color: colors.textPrimary }]} numberOfLines={1}>
               {user.full_name || 'No Name'}
@@ -555,7 +556,16 @@ export default function UsersScreen() {
               {user.email}
             </Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: withAlpha(getStatusColor(user.status), 0.125) }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <View style={[styles.statusDot, { backgroundColor: getStatusColor(user.status) }]} />
             <Text style={[styles.statusText, { color: getStatusColor(user.status) }]}>
               {user.status}
@@ -584,14 +594,28 @@ export default function UsersScreen() {
               {canManageTargetUser(user, 'approve') && (
                 <>
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.success, 0.125) }]}
+                    style={[
+                      styles.actionBtn,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
                     onPress={() => handleApproveUser(user)}
                   >
                     <FontAwesome5 name="check" size={14} color={colors.success} />
                     <Text style={[styles.actionText, { color: colors.success }]}>Approve</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.125) }]}
+                    style={[
+                      styles.actionBtn,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
                     onPress={() => handleRejectUser(user)}
                   >
                     <FontAwesome5 name="times" size={14} color={colors.error} />
@@ -604,7 +628,14 @@ export default function UsersScreen() {
             <>
               {activeTab === 'teachers' && canManageTargetUser(user, 'role') && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.125) }]}
+                  style={[
+                    styles.actionBtn,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
                   onPress={() => openRoleModal(user)}
                 >
                   <FontAwesome5 name="user-tag" size={14} color={colors.primary} />
@@ -614,7 +645,14 @@ export default function UsersScreen() {
               {canManageTargetUser(user, 'block') && (
                 user.status === 'active' ? (
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.warning, 0.125) }]}
+                    style={[
+                      styles.actionBtn,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
                     onPress={() => handleSuspendUser(user)}
                   >
                     <FontAwesome5 name="ban" size={14} color={colors.warning} />
@@ -622,7 +660,14 @@ export default function UsersScreen() {
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: withAlpha(colors.success, 0.125) }]}
+                    style={[
+                      styles.actionBtn,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
                     onPress={() => handleActivateUser(user.id)}
                   >
                     <FontAwesome5 name="check-circle" size={14} color={colors.success} />
@@ -632,7 +677,14 @@ export default function UsersScreen() {
               )}
               {canManageTargetUser(user, 'delete') && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.125) }]}
+                  style={[
+                    styles.actionBtn,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
                   onPress={() => handleDeleteUser(user)}
                 >
                   <FontAwesome5 name="trash" size={14} color={colors.error} />
@@ -658,9 +710,9 @@ export default function UsersScreen() {
             style={[
               styles.pickerContainer,
               {
-                backgroundColor: isDark
-                  ? withAlpha(colors.textInverse, 0.05)
-                  : withAlpha(colors.shadowColor, 0.03),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
               },
             ]}
           >
@@ -719,7 +771,15 @@ export default function UsersScreen() {
             {canCreateDeleteUsers && (
               <>
                 <TouchableOpacity
-                  style={[styles.roleBtn, { backgroundColor: withAlpha(colors.primary, 0.125), marginRight: 8 }]}
+                  style={[
+                    styles.roleBtn,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                      marginRight: 8,
+                    },
+                  ]}
                   onPress={() => router.push('/(admin)/users/assign-roles')}
                 >
                   <FontAwesome5 name="user-shield" size={18} color={colors.primary} />
@@ -738,30 +798,29 @@ export default function UsersScreen() {
         {/* Stats */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.statsContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsScroll}>
-            {tabs.map((tab) => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[
-                  styles.statCard,
-                  {
-                    backgroundColor: activeTab === tab.key
-                      ? withAlpha(tab.color, 0.125)
-                      : isDark
-                        ? withAlpha(colors.textInverse, 0.05)
-                        : withAlpha(colors.shadowColor, 0.03),
-                    borderColor: activeTab === tab.key ? withAlpha(tab.color, 0.25) : 'transparent',
-                    borderWidth: colors.borderWidth,
-                  },
-                ]}
-                onPress={() => setActiveTab(tab.key)}
-              >
-                <FontAwesome5 name={tab.icon} size={18} color={tab.color} />
-                <Text style={[styles.statValue, { color: tab.color }]}>
-                  {stats[tab.key]}
-                </Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{tab.label}</Text>
-              </TouchableOpacity>
-            ))}
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.key;
+              const accentColor = isActive ? colors.primary : colors.textMuted;
+
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: isActive ? colors.primary : colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                  onPress={() => setActiveTab(tab.key)}
+                >
+                  <FontAwesome5 name={tab.icon} size={18} color={accentColor} />
+                  <Text style={[styles.statValue, { color: accentColor }]}>{stats[tab.key]}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{tab.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </Animated.View>
 
@@ -771,10 +830,9 @@ export default function UsersScreen() {
             style={[
               styles.searchBox,
               {
-                backgroundColor: isDark
-                  ? withAlpha(colors.textInverse, 0.05)
-                  : withAlpha(colors.shadowColor, 0.03),
-                borderColor: withAlpha(colors.primary, 0.15),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
               },
             ]}
           >
@@ -805,7 +863,7 @@ export default function UsersScreen() {
             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : users.length === 0 ? (
             <View style={styles.emptyState}>
-              <FontAwesome5 name="users-slash" size={48} color={colors.textMuted} />
+              <IconBadge family="fa5" name="users-slash" tone="primary" size={34} style={styles.emptyIcon} />
               <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No Users Found</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
                 {searchQuery ? 'Try a different search term' : 'No users in this category yet'}
@@ -848,6 +906,17 @@ export default function UsersScreen() {
                   </View>
 
                   <View>
+                    <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Password *</Text>
+                    <GlassInput
+                      placeholder="Enter password"
+                      value={formPassword}
+                      onChangeText={setFormPassword}
+                      secureTextEntry
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View>
                     <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Phone</Text>
                     <GlassInput
                       placeholder="1234567890"
@@ -863,9 +932,9 @@ export default function UsersScreen() {
                       style={[
                         styles.pickerContainer,
                         {
-                          backgroundColor: isDark
-                            ? withAlpha(colors.textInverse, 0.05)
-                            : withAlpha(colors.shadowColor, 0.03),
+                          backgroundColor: colors.inputBackground,
+                          borderColor: colors.inputBorder,
+                          borderWidth: colors.borderWidth,
                         },
                       ]}
                     >
@@ -890,9 +959,9 @@ export default function UsersScreen() {
                         style={[
                           styles.pickerContainer,
                           {
-                            backgroundColor: isDark
-                              ? withAlpha(colors.textInverse, 0.05)
-                              : withAlpha(colors.shadowColor, 0.03),
+                            backgroundColor: colors.inputBackground,
+                            borderColor: colors.inputBorder,
+                            borderWidth: colors.borderWidth,
                           },
                         ]}
                       >
@@ -977,6 +1046,7 @@ const styles = StyleSheet.create({
   actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 12, borderRadius: 10, gap: 6 },
   actionText: { fontSize: 11, fontWeight: '600' },
   emptyState: { alignItems: 'center', paddingTop: 60 },
+  emptyIcon: { width: 72, height: 72, borderRadius: 18 },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptySubtitle: { fontSize: 13, marginTop: 4 },
   modalOverlay: { flex: 1, justifyContent: 'center', padding: 24 },

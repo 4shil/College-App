@@ -325,11 +325,11 @@ export default function ExternalMarksScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>{approved}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Approved</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>{pendingApproval}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
           </Card>
@@ -357,9 +357,9 @@ export default function ExternalMarksScreen() {
                         </Text>
                       </View>
                       {mark?.is_approved && (
-                        <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                          <FontAwesome5 name="check-circle" size={12} color={colors.textInverse} />
-                          <Text style={[styles.badgeText, { color: colors.textInverse }]}>Approved</Text>
+                        <View style={[styles.badge, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: 1 }]}>
+                          <FontAwesome5 name="check-circle" size={12} color={colors.success} />
+                          <Text style={[styles.badgeText, { color: colors.success }]}>Approved</Text>
                         </View>
                       )}
                     </View>
@@ -382,7 +382,7 @@ export default function ExternalMarksScreen() {
                           </View>
                           <View style={styles.markItem}>
                             <Text style={[styles.markLabel, { color: colors.textSecondary }]}>Status</Text>
-                            <View style={[styles.statusBadge, { backgroundColor: withAlpha(getStatusColor(mark.result_status), 0.2) }]}>
+                            <View style={[styles.statusBadge, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                               <Text style={[styles.statusText, { color: getStatusColor(mark.result_status) }]}>
                                 {mark.result_status.toUpperCase()}
                               </Text>
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   studentAdmNo: { fontSize: 14 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: 12, fontWeight: '600' },
   marksRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'transparent', marginBottom: 12 },
   markItem: { alignItems: 'center' },
   markLabel: { fontSize: 12, marginBottom: 4 },

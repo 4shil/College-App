@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   rollNumber: { fontSize: 14 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: 12, fontWeight: '600' },
   gradeForm: { marginTop: 8 },
   formActions: { flexDirection: 'row', gap: 12, marginTop: 12 },
   cancelButton: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
@@ -224,5 +224,5 @@ const styles = StyleSheet.create({
   marksText: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   feedbackText: { fontSize: 14 },
   gradeButton: { paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  gradeButtonText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
+  gradeButtonText: { fontSize: 14, fontWeight: '600' },
 });

@@ -14,9 +14,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { AnimatedBackground } from '../../../components/ui';
+import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface AssignmentStats {
   active: number;
@@ -28,7 +28,7 @@ interface AssignmentStats {
 export default function AssignmentsIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,33 +77,42 @@ export default function AssignmentsIndexScreen() {
     setRefreshing(false);
   };
 
+  const getOptionTone = (title: string): IconBadgeTone => {
+    switch (title) {
+      case 'Submissions':
+        return 'success';
+      case 'Grade Submissions':
+        return 'warning';
+      case 'Reports':
+        return 'info';
+      default:
+        return 'primary';
+    }
+  };
+
   const menuOptions = [
     {
       title: 'Manage Assignments',
       subtitle: 'Create and edit assignments',
       icon: 'tasks',
-      color: colors.primary,
       route: '/(admin)/assignments/manage',
     },
     {
       title: 'Submissions',
       subtitle: 'View student submissions',
       icon: 'file-alt',
-      color: colors.success,
       route: '/(admin)/assignments/submissions',
     },
     {
       title: 'Grade Submissions',
       subtitle: 'Review and grade work',
       icon: 'check-square',
-      color: colors.warning,
       route: '/(admin)/assignments/grade',
     },
     {
       title: 'Reports',
       subtitle: 'Assignment analytics',
       icon: 'chart-bar',
-      color: colors.info,
       route: '/(admin)/assignments/reports',
     },
   ];
@@ -198,9 +207,13 @@ export default function AssignmentsIndexScreen() {
                   borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                    <FontAwesome5 name={option.icon} size={24} color={option.color} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name={option.icon}
+                    tone={getOptionTone(option.title)}
+                    size={24}
+                    style={styles.menuIcon}
+                  />
                   <View style={styles.menuContent}>
                     <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{option.title}</Text>
                     <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>

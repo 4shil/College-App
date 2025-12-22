@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   examName: { fontSize: 18, fontWeight: '600', marginBottom: 4 },
   examMeta: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: 12, fontWeight: '600' },
   examDetails: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'transparent', marginBottom: 12 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   detailText: { fontSize: 14 },

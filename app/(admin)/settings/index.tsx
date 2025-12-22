@@ -13,11 +13,10 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface SettingItem {
   id: string;
@@ -231,14 +230,19 @@ export default function SettingsScreen() {
     },
   ];
 
-  const renderSettingItem = (item: SettingItem, index: number) => {
-    const IconComponent =
-      item.iconType === 'fa5'
-        ? FontAwesome5
-        : item.iconType === 'ion'
-        ? Ionicons
-        : MaterialCommunityIcons;
+  const getItemTone = (item: SettingItem) => {
+    switch (item.id) {
+      case 'maintenance':
+        return 'warning' as const;
+      case 'audit-logs':
+      case 'about':
+        return 'neutral' as const;
+      default:
+        return 'primary' as const;
+    }
+  };
 
+  const renderSettingItem = (item: SettingItem, index: number) => {
     return (
       <Animated.View
         key={item.id}
@@ -265,9 +269,7 @@ export default function SettingsScreen() {
           activeOpacity={item.type === 'toggle' ? 1 : 0.7}
           disabled={item.type === 'toggle'}
         >
-          <View style={[styles.itemIcon, { backgroundColor: withAlpha(item.color, 0.08) }]}>
-            <IconComponent name={item.icon as any} size={18} color={item.color} />
-          </View>
+          <IconBadge family={item.iconType} name={item.icon} tone={getItemTone(item)} size={18} style={styles.itemIcon} />
           <View style={styles.itemContent}>
             <Text style={[styles.itemTitle, { color: colors.textPrimary }]}>{item.title}</Text>
             {item.subtitle && (
@@ -280,7 +282,7 @@ export default function SettingsScreen() {
             <Switch
               value={item.value}
               onValueChange={item.action}
-              trackColor={{ false: withAlpha(colors.textMuted, 0.19), true: withAlpha(colors.primary, 0.31) }}
+              trackColor={{ false: colors.inputBorder, true: colors.primary }}
               thumbColor={item.value ? colors.primary : colors.cardBackground}
             />
           ) : (
@@ -310,9 +312,7 @@ export default function SettingsScreen() {
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>
           <Card style={styles.adminCard}>
             <View style={styles.adminInfo}>
-              <View style={[styles.adminAvatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
-                <FontAwesome5 name="user-shield" size={24} color={colors.primary} />
-              </View>
+              <IconBadge family="fa5" name="user-shield" tone="primary" size={24} style={styles.adminAvatar} />
               <View style={styles.adminDetails}>
                 <Text style={[styles.adminName, { color: colors.textPrimary }]}>
                   {profile?.full_name || 'Admin'}
@@ -320,7 +320,16 @@ export default function SettingsScreen() {
                 <Text style={[styles.adminEmail, { color: colors.textSecondary }]}>
                   {user?.email || 'admin@college.edu'}
                 </Text>
-                <View style={[styles.roleBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+                <View
+                  style={[
+                    styles.roleBadge,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
                   <Text style={[styles.roleText, { color: colors.primary }]}>
                     {primaryRole?.replace('_', ' ').toUpperCase() || 'SUPER ADMIN'}
                   </Text>
@@ -358,7 +367,14 @@ export default function SettingsScreen() {
         {/* Logout Button */}
         <Animated.View entering={FadeInDown.delay(500).duration(400)} style={styles.logoutSection}>
           <TouchableOpacity
-            style={[styles.logoutBtn, { borderColor: withAlpha(colors.error, 0.19) }]}
+            style={[
+              styles.logoutBtn,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
             onPress={handleLogout}
           >
             <Ionicons name="log-out-outline" size={20} color={colors.error} />
@@ -489,7 +505,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoutText: {
-    color: 'transparent',
     fontSize: 16,
     fontWeight: '600',
   },

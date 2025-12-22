@@ -12,10 +12,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, StatCard, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, IconBadge, StatCard, ThemeToggle } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -74,46 +73,6 @@ export default function AdminDashboard() {
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
-
-  const getQuickActionColor = React.useCallback(
-    (action: QuickAction) => {
-      switch (action.id) {
-        case 'students':
-          return colors.info;
-        case 'teachers':
-          return colors.success;
-        case 'pending':
-          return colors.warning;
-        case 'attendance':
-          return colors.primary;
-        case 'exams':
-          return colors.warning;
-        case 'assignments':
-          return colors.success;
-        case 'fees':
-          return colors.success;
-        case 'library':
-          return colors.primary;
-        case 'timetable':
-          return colors.info;
-        case 'departments':
-          return colors.primary;
-        case 'courses':
-          return colors.primary;
-        case 'notices':
-          return colors.info;
-        case 'reception':
-          return colors.primary;
-        case 'role-management':
-          return colors.error;
-        case 'settings':
-          return colors.textMuted;
-        default:
-          return colors.primary;
-      }
-    },
-    [colors]
-  );
 
   const quickActions: QuickAction[] = [
     {
@@ -414,7 +373,6 @@ export default function AdminDashboard() {
     title: string,
     value: number,
     icon: string,
-    color: string,
     delay: number,
     route?: string
   ) => (
@@ -425,23 +383,15 @@ export default function AdminDashboard() {
       <StatCard
         title={title}
         value={value}
-        accentColor={color}
         loading={loading}
         onPress={route ? () => router.push(route as any) : undefined}
-        icon={<FontAwesome5 name={icon} size={20} color={color} />}
+        tone="primary"
+        icon={{ family: 'fa5', name: icon }}
       />
     </Animated.View>
   );
 
   const renderQuickAction = (action: QuickAction, index: number) => {
-    const actionColor = getQuickActionColor(action);
-    const IconComponent =
-      action.iconType === 'fa5'
-        ? FontAwesome5
-        : action.iconType === 'ion'
-        ? Ionicons
-        : MaterialCommunityIcons;
-
     return (
       <Animated.View
         key={action.id}
@@ -459,9 +409,12 @@ export default function AdminDashboard() {
           onPress={() => router.push(action.route as any)}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconContainer, { backgroundColor: withAlpha(actionColor, 0.1) }]}>
-            <IconComponent name={action.icon as any} size={22} color={actionColor} />
-          </View>
+          <IconBadge
+            family={action.iconType}
+            name={action.icon}
+            tone="primary"
+            style={styles.actionIconContainer}
+          />
           <Text style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {action.title}
           </Text>
@@ -515,10 +468,10 @@ export default function AdminDashboard() {
           <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
             <View style={styles.statsGrid}>
-              {renderStatCard('Students', stats.totalStudents, 'user-graduate', colors.info, 200, '/(admin)/users?tab=students')}
-              {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', colors.success, 260, '/(admin)/users?tab=teachers')}
-              {renderStatCard('Departments', stats.totalDepartments, 'building', colors.primary, 320, '/(admin)/academic?tab=departments')}
-              {renderStatCard('Courses', stats.totalCourses, 'book', colors.primary, 380, '/(admin)/academic')}
+              {renderStatCard('Students', stats.totalStudents, 'user-graduate', 200, '/(admin)/users?tab=students')}
+              {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', 260, '/(admin)/users?tab=teachers')}
+              {renderStatCard('Departments', stats.totalDepartments, 'building', 320, '/(admin)/academic?tab=departments')}
+              {renderStatCard('Courses', stats.totalCourses, 'book', 380, '/(admin)/academic')}
             </View>
           </Animated.View>
         )}
@@ -530,28 +483,25 @@ export default function AdminDashboard() {
               style={styles.alertCard}
               onPress={() => router.push('/(admin)/users/pending' as any)}
             >
-              <LinearGradient
-                colors={[withAlpha(colors.warning, isDark ? 0.15 : 0.12), withAlpha(colors.warning, isDark ? 0.05 : 0.04)]}
+              <View
                 style={[
                   styles.alertGradient,
-                  { borderColor: withAlpha(colors.warning, isDark ? 0.18 : 0.16), borderWidth: colors.borderWidth },
+                  {
+                    backgroundColor: withAlpha(colors.warning, isDark ? 0.12 : 0.08),
+                    borderColor: withAlpha(colors.warning, isDark ? 0.18 : 0.14),
+                    borderWidth: colors.borderWidth,
+                  },
                 ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
               >
-                <View style={[styles.alertIcon, { backgroundColor: withAlpha(colors.warning, 0.12) }]}>
-                  <FontAwesome5 name="exclamation-circle" size={24} color={colors.warning} />
-                </View>
+                <IconBadge family="fa5" name="exclamation-circle" tone="warning" size={22} style={styles.alertIcon} />
                 <View style={styles.alertContent}>
-                  <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>
-                    Pending Approvals
-                  </Text>
+                  <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>Pending Approvals</Text>
                   <Text style={[styles.alertSubtitle, { color: colors.textSecondary }]}>
                     {stats.pendingApprovals} student(s) waiting for approval
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -778,7 +728,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: 'transparent',
     fontSize: 11,
     fontWeight: '700',
   },

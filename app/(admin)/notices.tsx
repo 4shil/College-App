@@ -692,7 +692,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabBadgeText: {
-    color: 'transparent',
     fontSize: 10,
     fontWeight: '700',
   },

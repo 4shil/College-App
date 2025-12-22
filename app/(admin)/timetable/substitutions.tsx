@@ -376,7 +376,16 @@ export default function SubstitutionsScreen() {
           </View>
 
           <View style={styles.periodRow}>
-            <View style={[styles.periodBadge, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+            <View
+              style={[
+                styles.periodBadge,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.primary,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <Text style={[styles.periodText, { color: colors.primary }]}>
                 P{entry?.period}
               </Text>
@@ -387,7 +396,11 @@ export default function SubstitutionsScreen() {
             <View
               style={[
                 styles.classBadge,
-                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
               ]}
             >
               <Text style={[styles.classText, { color: colors.textSecondary }]}>
@@ -406,7 +419,16 @@ export default function SubstitutionsScreen() {
           <View style={styles.teacherSwap}>
             <View style={styles.teacherBox}>
               <Text style={[styles.teacherLabel, { color: colors.textMuted }]}>Original</Text>
-              <View style={[styles.teacherInfo, { backgroundColor: withAlpha(colors.error, 0.08) }]}>
+              <View
+                style={[
+                  styles.teacherInfo,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.error,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
                 <FontAwesome5 name="user" size={12} color={colors.error} />
                 <Text style={[styles.teacherName, { color: colors.error }]}>
                   {sub.original_teacher?.profiles?.full_name || 'Unknown'}
@@ -420,7 +442,16 @@ export default function SubstitutionsScreen() {
 
             <View style={styles.teacherBox}>
               <Text style={[styles.teacherLabel, { color: colors.textMuted }]}>Substitute</Text>
-              <View style={[styles.teacherInfo, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+              <View
+                style={[
+                  styles.teacherInfo,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.success,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
                 <FontAwesome5 name="user-check" size={12} color={colors.success} />
                 <Text style={[styles.teacherName, { color: colors.success }]}>
                   {sub.substitute_teacher?.profiles?.full_name || 'Unknown'}
@@ -430,7 +461,7 @@ export default function SubstitutionsScreen() {
           </View>
 
           {sub.reason && (
-            <View style={[styles.reasonRow, { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.06) }]}>
+            <View style={[styles.reasonRow, { borderTopColor: colors.cardBorder }]}>
               <FontAwesome5 name="comment-alt" size={11} color={colors.textMuted} />
               <Text style={[styles.reasonText, { color: colors.textMuted }]}>
                 {sub.reason}
@@ -446,7 +477,7 @@ export default function SubstitutionsScreen() {
     <Modal visible={showCreateModal} transparent animationType="slide">
       <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.6) }]}>
         <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               Create Substitution
             </Text>
@@ -461,7 +492,11 @@ export default function SubstitutionsScreen() {
             <TouchableOpacity
               style={[
                 styles.datePickerBtn,
-                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
               ]}
               onPress={() => setShowDatePicker(true)}
             >
@@ -489,7 +524,16 @@ export default function SubstitutionsScreen() {
 
             {/* Weekend Warning */}
             {(selectedDate.getDay() === 0 || selectedDate.getDay() === 6) && (
-              <View style={[styles.warningBox, { backgroundColor: withAlpha(colors.warning, 0.08) }]}>
+              <View
+                style={[
+                  styles.warningBox,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.warning,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
                 <Ionicons name="warning" size={16} color={colors.warning} />
                 <Text style={[styles.warningText, { color: colors.warning }]}>Weekends have no classes</Text>
               </View>
@@ -499,7 +543,16 @@ export default function SubstitutionsScreen() {
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Select Period & Class
             </Text>
-            <View style={[styles.pickerBox, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) }]}>
+            <View
+              style={[
+                styles.pickerBox,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <Picker
                 selectedValue={selectedEntry}
                 onValueChange={setSelectedEntry}
@@ -519,7 +572,16 @@ export default function SubstitutionsScreen() {
 
             {/* Selected Entry Info */}
             {selectedEntry && getSelectedEntry() && (
-              <View style={[styles.selectedInfo, { backgroundColor: withAlpha(colors.primary, 0.063) }]}>
+              <View
+                style={[
+                  styles.selectedInfo,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.primary,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
                 <Text style={[styles.selectedLabel, { color: colors.primary }]}>Selected:</Text>
                 <Text style={[styles.selectedText, { color: colors.textPrimary }]}>
                   Period {getSelectedEntry()?.period} • {getSelectedEntry()?.year?.name}
@@ -537,7 +599,16 @@ export default function SubstitutionsScreen() {
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Substitute Teacher
             </Text>
-            <View style={[styles.pickerBox, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) }]}>
+            <View
+              style={[
+                styles.pickerBox,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <Picker
                 selectedValue={selectedSubstitute}
                 onValueChange={setSelectedSubstitute}
@@ -671,7 +742,11 @@ export default function SubstitutionsScreen() {
               key={tab.key}
               style={[
                 styles.tab,
-                activeTab === tab.key && { backgroundColor: withAlpha(colors.primary, 0.125) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: activeTab === tab.key ? colors.primary : colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
               ]}
               onPress={() => setActiveTab(tab.key)}
             >
@@ -683,9 +758,20 @@ export default function SubstitutionsScreen() {
               </Text>
               <View style={[
                 styles.tabBadge,
-                { backgroundColor: activeTab === tab.key ? colors.primary : withAlpha(colors.textMuted, 0.25) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: activeTab === tab.key ? colors.primary : colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
               ]}>
-                <Text style={[styles.tabBadgeText, { color: colors.textInverse }]}>{tab.count}</Text>
+                <Text
+                  style={[
+                    styles.tabBadgeText,
+                    { color: activeTab === tab.key ? colors.primary : colors.textMuted },
+                  ]}
+                >
+                  {tab.count}
+                </Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -773,7 +859,7 @@ const styles = StyleSheet.create({
     minWidth: 22,
     alignItems: 'center',
   },
-  tabBadgeText: { color: 'transparent', fontSize: 10, fontWeight: '700' },
+  tabBadgeText: { fontSize: 10, fontWeight: '700' },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
   loadingContainer: { paddingTop: 60, alignItems: 'center' },
@@ -793,7 +879,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  todayText: { color: 'transparent', fontSize: 9, fontWeight: '700' },
+  todayText: { fontSize: 9, fontWeight: '700' },
   cancelBtn: { padding: 4 },
   periodRow: {
     flexDirection: 'row',
@@ -897,7 +983,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 8,
   },
-  warningText: { color: 'transparent', fontSize: 13 },
+  warningText: { fontSize: 13 },
   selectedInfo: {
     padding: 14,
     borderRadius: 12,

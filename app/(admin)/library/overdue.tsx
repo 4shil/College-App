@@ -4,11 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AnimatedBackground, Card } from '../../../components/ui';
+import { IconBadge } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface OverdueBook {
   id: string; book_id: string; user_id: string; due_date: string; days_overdue: number; fine_amount: number;
@@ -65,31 +65,65 @@ export default function LibraryOverdueScreen() {
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{overdueBooks.length} books</Text>
         </View>
         <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+          <Card
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <Text style={[styles.statValue, { color: colors.error }]}>₹{totalFines}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Fines</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+          <Card
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <Text style={[styles.statValue, { color: colors.warning }]}>{overdueBooks.length}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Overdue</Text>
           </Card>
         </View>
         {overdueBooks.map((book, i) => (
           <Animated.View key={book.id} entering={FadeInDown.delay(i * 30).springify()}>
-            <Card style={styles.card}>
+            <Card
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <View style={styles.cardHeader}>
-                <View style={[styles.icon, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
-                  <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
-                </View>
+                <IconBadge family="fa5" name="exclamation-triangle" tone="error" size={24} style={styles.icon} />
                 <View style={styles.info}>
                   <Text style={[styles.bookTitle, { color: colors.textPrimary }]}>{book.book?.title}</Text>
                   <Text style={[styles.meta, { color: colors.textSecondary }]}>{book.users?.full_name}</Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
                   <Text style={[styles.badgeText, { color: colors.error }]}>{book.days_overdue}d</Text>
                 </View>
               </View>
-              <View style={[styles.details, { borderBottomColor: withAlpha(colors.textPrimary, 0.1) }]}>
+              <View style={[styles.details, { borderBottomColor: colors.cardBorder }]}>
                 <View style={styles.row}><Text style={[styles.label, { color: colors.textSecondary }]}>Due Date:</Text>
                   <Text style={[styles.value, { color: colors.error }]}>{new Date(book.due_date).toLocaleDateString()}</Text></View>
                 <View style={styles.row}><Text style={[styles.label, { color: colors.textSecondary }]}>Fine:</Text>
@@ -109,15 +143,34 @@ export default function LibraryOverdueScreen() {
                   </View>
                 )}
               </View>
-              <TouchableOpacity onPress={() => sendReminder(book)} style={[styles.reminderButton, { backgroundColor: colors.warning }]}>
-                <FontAwesome5 name="bell" size={16} color={colors.textInverse} />
-                <Text style={[styles.reminderText, { color: colors.textInverse }]}>Send Reminder</Text>
+              <TouchableOpacity
+                onPress={() => sendReminder(book)}
+                style={[
+                  styles.reminderButton,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
+                <FontAwesome5 name="bell" size={16} color={colors.warning} />
+                <Text style={[styles.reminderText, { color: colors.warning }]}>Send Reminder</Text>
               </TouchableOpacity>
             </Card>
           </Animated.View>
         ))}
         {overdueBooks.length === 0 && (
-          <Card style={styles.emptyCard}>
+          <Card
+            style={[
+              styles.emptyCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <FontAwesome5 name="check-circle" size={48} color={colors.success} />
             <Text style={[styles.emptyText, { color: colors.success }]}>No overdue books!</Text>
           </Card>
@@ -150,7 +203,7 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   contactText: { fontSize: 14 },
   reminderButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12 },
-  reminderText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
+  reminderText: { fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 20, fontWeight: 'bold', marginTop: 16 },
 });

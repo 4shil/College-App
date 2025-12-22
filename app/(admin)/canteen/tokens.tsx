@@ -16,7 +16,6 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface Token {
   id: string;
@@ -166,7 +165,11 @@ export default function CanteenTokensScreen() {
                 key={tab.id}
                 style={[
                   styles.filterTab,
-                  filter === tab.id && { backgroundColor: withAlpha(colors.primary, 0.2) },
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderWidth: colors.borderWidth,
+                    borderColor: filter === tab.id ? colors.primary : colors.inputBorder,
+                  },
                 ]}
                 onPress={() => setFilter(tab.id)}
               >
@@ -219,7 +222,11 @@ export default function CanteenTokensScreen() {
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: withAlpha(getStatusColor(token.status), 0.2) },
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: getStatusColor(token.status),
+                        },
                       ]}
                     >
                       <FontAwesome5
@@ -238,7 +245,7 @@ export default function CanteenTokensScreen() {
                   <View
                     style={[
                       styles.studentInfo,
-                      { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) },
+                      { borderBottomColor: colors.cardBorder },
                     ]}
                   >
                     <FontAwesome5 name="user" size={14} color={colors.textSecondary} />
@@ -263,7 +270,7 @@ export default function CanteenTokensScreen() {
                   <View
                     style={[
                       styles.totalRow,
-                      { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) },
+                      { borderTopColor: colors.cardBorder },
                     ]}
                   >
                     <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total</Text>
@@ -286,7 +293,11 @@ export default function CanteenTokensScreen() {
                     <TouchableOpacity
                       style={[
                         styles.actionButton,
-                        { backgroundColor: withAlpha(getStatusColor(getNextStatus(token.status)!), 0.15) },
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: getStatusColor(getNextStatus(token.status)!),
+                        },
                       ]}
                       onPress={() => updateTokenStatus(token.id, getNextStatus(token.status)!)}
                     >

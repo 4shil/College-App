@@ -1166,7 +1166,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 14,
   },
-  addDelegationText: { color: 'transparent', fontSize: 15, fontWeight: '600' },
+  addDelegationText: { fontSize: 15, fontWeight: '600' },
   
   delegationsList: { marginTop: 8 },
   delegationCard: {

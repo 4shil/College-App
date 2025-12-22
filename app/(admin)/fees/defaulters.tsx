@@ -18,7 +18,6 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface Defaulter {
   id: string;
@@ -35,7 +34,7 @@ interface Defaulter {
 
 export default function FeeDefaultersScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -137,11 +136,11 @@ export default function FeeDefaultersScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.error }]}>₹{totalOverdue}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Overdue</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>{avgDaysOverdue}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg Days</Text>
           </Card>
@@ -151,7 +150,7 @@ export default function FeeDefaultersScreen() {
           <Animated.View key={defaulter.id} entering={FadeInDown.delay(index * 30).springify()}>
             <Card style={styles.defaulterCard}>
               <View style={styles.cardHeader}>
-                <View style={[styles.warningIcon, { backgroundColor: withAlpha(colors.error, 0.2) }]}>
+                <View style={[styles.warningIcon, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                   <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
                 </View>
                 <View style={styles.defaulterInfo}>
@@ -162,7 +161,7 @@ export default function FeeDefaultersScreen() {
                     {defaulter.student?.admission_number}
                   </Text>
                 </View>
-                <View style={[styles.daysOverdue, { backgroundColor: withAlpha(colors.error, 0.2) }]}>
+                <View style={[styles.daysOverdue, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                   <Text style={[styles.daysText, { color: colors.error }]}>
                     {defaulter.days_overdue}d
                   </Text>
@@ -172,7 +171,7 @@ export default function FeeDefaultersScreen() {
               <View
                 style={[
                   styles.feeDetails,
-                  { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.18 : 0.12) },
+                  { borderBottomColor: colors.cardBorder },
                 ]}
               >
                 <View style={styles.detailRow}>
@@ -212,10 +211,10 @@ export default function FeeDefaultersScreen() {
 
               <TouchableOpacity
                 onPress={() => sendReminder(defaulter)}
-                style={[styles.reminderButton, { backgroundColor: colors.warning }]}
+                style={[styles.reminderButton, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: 1 }]}
               >
-                <FontAwesome5 name="bell" size={16} color={colors.textInverse} />
-                <Text style={[styles.reminderText, { color: colors.textInverse }]}>Send Reminder</Text>
+                <FontAwesome5 name="bell" size={16} color={colors.warning} />
+                <Text style={[styles.reminderText, { color: colors.warning }]}>Send Reminder</Text>
               </TouchableOpacity>
             </Card>
           </Animated.View>
@@ -262,7 +261,7 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   contactText: { fontSize: 14 },
   reminderButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12 },
-  reminderText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
+  reminderText: { fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 20, fontWeight: 'bold', marginTop: 16, marginBottom: 8 },
   emptySubtext: { fontSize: 14, textAlign: 'center' },

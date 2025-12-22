@@ -372,7 +372,7 @@ export default function AssignRolesScreen() {
 
                 {/* Assigned Roles */}
                 {user.user_roles.length > 0 && (
-                  <View style={[styles.rolesSection, { borderColor: withAlpha(colors.textPrimary, 0.12) }]}>
+                  <View style={[styles.rolesSection, { borderColor: colors.cardBorder }]}>
                     <Text style={[styles.rolesSectionTitle, { color: colors.textSecondary }]}>
                       Admin Roles:
                     </Text>
@@ -385,7 +385,11 @@ export default function AssignRolesScreen() {
                           key={userRole.id}
                           style={[
                             styles.roleBadge,
-                            { backgroundColor: withAlpha(roleColor, 0.125) }
+                            {
+                              backgroundColor: colors.inputBackground,
+                              borderWidth: colors.borderWidth,
+                              borderColor: roleColor,
+                            }
                           ]}
                         >
                           <Text
@@ -516,7 +520,7 @@ const styles = StyleSheet.create({
   primaryRoleBadge: { marginTop: 4 },
   primaryRoleText: { fontSize: 12, fontStyle: 'italic' },
   assignButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
-  assignButtonText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
+  assignButtonText: { fontSize: 14, fontWeight: '600' },
   rolesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderColor: 'transparent' },
   rolesSectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   rolesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -534,5 +538,5 @@ const styles = StyleSheet.create({
   modalUserEmail: { fontSize: 14, marginBottom: 20 },
   inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   saveButton: { marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
-  saveButtonText: { color: 'transparent', fontSize: 16, fontWeight: '600' },
+  saveButtonText: { fontSize: 16, fontWeight: '600' },
 });

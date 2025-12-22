@@ -15,10 +15,9 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
-import { withAlpha } from '../../../../theme/colorUtils';
 
 interface Teacher {
   id: string;
@@ -44,7 +43,7 @@ interface Teacher {
 export default function TeachersListScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -130,9 +129,7 @@ export default function TeachersListScreen() {
         <Card style={styles.teacherCard}>
           <View style={styles.cardContent}>
             {/* Avatar */}
-            <View style={[styles.avatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
-              <FontAwesome5 name="chalkboard-teacher" size={20} color={colors.primary} />
-            </View>
+            <IconBadge family="fa5" name="chalkboard-teacher" tone="primary" size={20} style={styles.avatar} />
 
             {/* Info */}
             <View style={styles.infoContainer}>
@@ -147,7 +144,16 @@ export default function TeachersListScreen() {
               </Text>
               <View style={styles.metaRow}>
                 {teacher.department && (
-                  <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+                  <View
+                    style={[
+                      styles.metaBadge,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
+                  >
                     <FontAwesome5 name="building" size={10} color={colors.primary} />
                     <Text style={[styles.metaText, { color: colors.primary }]}>
                       {teacher.department.code}
@@ -155,9 +161,18 @@ export default function TeachersListScreen() {
                   </View>
                 )}
                 {teacher.designation && (
-                  <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
-                    <FontAwesome5 name="id-badge" size={10} color={colors.info} />
-                    <Text style={[styles.metaText, { color: colors.info }]}>
+                  <View
+                    style={[
+                      styles.metaBadge,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
+                  >
+                    <FontAwesome5 name="id-badge" size={10} color={colors.primary} />
+                    <Text style={[styles.metaText, { color: colors.primary }]}>
                       {teacher.designation}
                     </Text>
                   </View>
@@ -178,9 +193,7 @@ export default function TeachersListScreen() {
       entering={FadeInDown.delay(200).duration(400)}
       style={styles.emptyState}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
-        <FontAwesome5 name="chalkboard-teacher" size={40} color={colors.primary} />
-      </View>
+      <IconBadge family="fa5" name="chalkboard-teacher" tone="primary" size={40} style={styles.emptyIcon} />
       <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
         No Teachers Found
       </Text>

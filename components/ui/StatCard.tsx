@@ -2,14 +2,17 @@ import React from 'react';
 import { ActivityIndicator, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 import { useThemeStore } from '../../store/themeStore';
-import { withAlpha } from '../../theme/colorUtils';
 import { Card } from './Card';
+import { IconBadge, IconBadgeFamily, IconBadgeTone } from './IconBadge';
 
 interface StatCardProps {
   title: string;
   value: number | string;
-  accentColor: string;
-  icon: React.ReactNode;
+  icon: {
+    family: IconBadgeFamily;
+    name: string;
+  };
+  tone?: IconBadgeTone;
   loading?: boolean;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -18,8 +21,8 @@ interface StatCardProps {
 export const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
-  accentColor,
   icon,
+  tone = 'primary',
   loading = false,
   onPress,
   style,
@@ -28,9 +31,14 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   const content = (
     <Card animated={false} style={[styles.card, style]}>
-      <View style={[styles.iconContainer, { backgroundColor: withAlpha(accentColor, 0.1) }]}>{icon}</View>
+      <IconBadge
+        family={icon.family}
+        name={icon.name}
+        tone={tone}
+        style={styles.iconContainer}
+      />
       {loading ? (
-        <ActivityIndicator size="small" color={accentColor} style={{ marginVertical: 10 }} />
+        <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 10 }} />
       ) : (
         <Text style={[styles.value, { color: colors.textPrimary }]}>{value}</Text>
       )}
@@ -49,14 +57,9 @@ export const StatCard: React.FC<StatCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    // Card already applies theme radius; keep StatCard itself neutral.
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 14,
   },
   value: {

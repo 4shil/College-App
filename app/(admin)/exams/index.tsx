@@ -14,9 +14,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { AnimatedBackground } from '../../../components/ui';
+import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface ExamStats {
   upcoming: number;
@@ -28,7 +28,7 @@ interface ExamStats {
 export default function ExamsIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -75,33 +75,42 @@ export default function ExamsIndexScreen() {
     setRefreshing(false);
   };
 
+  const getOptionTone = (title: string): IconBadgeTone => {
+    switch (title) {
+      case 'Enter Marks':
+        return 'success';
+      case 'External Marks':
+        return 'warning';
+      case 'Reports':
+        return 'info';
+      default:
+        return 'primary';
+    }
+  };
+
   const menuOptions = [
     {
       title: 'Manage Exams',
       subtitle: 'Create and schedule exams',
       icon: 'file-alt',
-      color: colors.primary,
       route: '/(admin)/exams/manage',
     },
     {
       title: 'Enter Marks',
       subtitle: 'Record student marks',
       icon: 'edit',
-      color: colors.success,
       route: '/(admin)/exams/marks',
     },
     {
       title: 'External Marks',
       subtitle: 'Upload university results',
       icon: 'upload',
-      color: colors.warning,
       route: '/(admin)/exams/external',
     },
     {
       title: 'Reports',
       subtitle: 'View results and analytics',
       icon: 'chart-bar',
-      color: colors.info,
       route: '/(admin)/exams/reports',
     },
   ];
@@ -196,9 +205,13 @@ export default function ExamsIndexScreen() {
                   borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                    <FontAwesome5 name={option.icon} size={24} color={option.color} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name={option.icon}
+                    tone={getOptionTone(option.title)}
+                    size={24}
+                    style={styles.menuIcon}
+                  />
                   <View style={styles.menuContent}>
                     <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{option.title}</Text>
                     <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>

@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
+  inactiveText: { fontSize: 10, fontWeight: '600' },
   deptCode: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   deptDesc: { fontSize: 12, marginTop: 6 },
   statsRow: { flexDirection: 'row', marginTop: 14, gap: 10 },

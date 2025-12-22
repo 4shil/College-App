@@ -8,7 +8,6 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -43,9 +42,8 @@ export default function AnalyticsScreen() {
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
 
-  const periodButtonBackground = isDark
-    ? withAlpha(colors.textInverse, 0.05)
-    : withAlpha(colors.shadowColor, 0.05);
+  // Use theme token surfaces for consistent UI (avoid decorative alpha fills).
+  const periodButtonBackground = colors.inputBackground;
   
   const [loading, setLoading] = useState(true);
   const [isRealtime, setIsRealtime] = useState(true);
@@ -331,7 +329,16 @@ export default function AnalyticsScreen() {
   }) => (
     <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.statCardWrapper}>
       <Card style={styles.statCard}>
-        <View style={[styles.iconContainer, { backgroundColor: withAlpha(color, 0.12) }]}>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: colors.inputBackground,
+              borderColor: color,
+              borderWidth: colors.borderWidth,
+            },
+          ]}
+        >
           <FontAwesome5 name={icon} size={24} color={color} />
         </View>
         <View style={styles.statContent}>
@@ -380,7 +387,16 @@ export default function AnalyticsScreen() {
     <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.chartCardWrapper}>
       <Card style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <View style={[styles.chartIcon, { backgroundColor: withAlpha(color, 0.12) }]}>
+          <View
+            style={[
+              styles.chartIcon,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: color,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <FontAwesome5 name={icon} size={18} color={color} />
           </View>
           <Text style={[styles.chartTitle, { color: colors.textPrimary }]}>{title}</Text>
@@ -395,9 +411,9 @@ export default function AnalyticsScreen() {
                 style={[
                   styles.chartBarContainer,
                   {
-                    backgroundColor: isDark
-                      ? withAlpha(colors.textInverse, 0.1)
-                      : withAlpha(colors.shadowColor, 0.08),
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
               >
@@ -456,14 +472,14 @@ export default function AnalyticsScreen() {
               style={[
                 styles.realtimeToggle,
                 {
-                  backgroundColor: isRealtime
-                    ? withAlpha(colors.primary, 0.12)
-                    : withAlpha(colors.textMuted, 0.12),
+                  backgroundColor: colors.inputBackground,
+                  borderColor: isRealtime ? colors.success : colors.inputBorder,
+                  borderWidth: colors.borderWidth,
                 },
               ]}
             >
               <View style={[styles.realtimeDot, { backgroundColor: isRealtime ? colors.success : colors.textMuted }]} />
-              <Text style={[styles.realtimeText, { color: isRealtime ? colors.primary : colors.textMuted }]}>
+              <Text style={[styles.realtimeText, { color: isRealtime ? colors.success : colors.textMuted }]}>
                 {isRealtime ? 'Live' : 'Static'}
               </Text>
             </TouchableOpacity>
@@ -471,7 +487,11 @@ export default function AnalyticsScreen() {
               onPress={fetchAnalytics}
               style={[
                 styles.refreshButton,
-                { backgroundColor: isDark ? withAlpha(colors.textInverse, 0.05) : withAlpha(colors.shadowColor, 0.05) },
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
               ]}
             >
               <FontAwesome5 name="sync-alt" size={16} color={colors.textSecondary} />
@@ -498,11 +518,8 @@ export default function AnalyticsScreen() {
                 style={[
                   styles.periodButton,
                   {
-                    backgroundColor: selectedPeriod === period
-                      ? colors.primary
-                      : periodButtonBackground,
-                    borderColor:
-                      selectedPeriod === period ? colors.primary : withAlpha(colors.primary, 0.18),
+                    backgroundColor: periodButtonBackground,
+                    borderColor: selectedPeriod === period ? colors.primary : colors.inputBorder,
                     borderWidth: colors.borderWidth,
                   },
                 ]}
@@ -510,7 +527,7 @@ export default function AnalyticsScreen() {
                 <Text
                   style={[
                     styles.periodText,
-                    { color: selectedPeriod === period ? colors.textInverse : colors.textSecondary },
+                    { color: selectedPeriod === period ? colors.primary : colors.textSecondary },
                   ]}
                 >
                   {period.charAt(0).toUpperCase() + period.slice(1)}

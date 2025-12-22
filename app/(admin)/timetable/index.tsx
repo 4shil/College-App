@@ -19,7 +19,6 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -223,7 +222,7 @@ export default function TimetableScreen() {
     <View style={styles.gridContainer}>
       {/* Header Row - Days */}
       <View style={styles.gridRow}>
-        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+        <View style={[styles.gridHeaderCell, styles.timeCell, { backgroundColor: colors.inputBackground }]}>
           <Text style={[styles.gridHeaderText, { color: colors.primary }]}>Time</Text>
         </View>
         {DAYS.map((day, index) => (
@@ -231,7 +230,7 @@ export default function TimetableScreen() {
             key={day} 
             style={[
               styles.gridHeaderCell, 
-              { backgroundColor: withAlpha(colors.primary, 0.08) }
+              { backgroundColor: colors.inputBackground }
             ]}
           >
             <Text style={[styles.gridHeaderText, { color: colors.primary }]}>{DAY_SHORT[index]}</Text>
@@ -268,21 +267,15 @@ export default function TimetableScreen() {
                 style={[
                   styles.gridCell,
                   {
-                    backgroundColor: isEmpty
-                      ? withAlpha(colors.textPrimary, isDark ? 0.02 : 0.01)
-                      : hasSub
-                        ? withAlpha(colors.warning, 0.125)
-                        : isLab
-                          ? withAlpha(colors.primary, 0.125)
-                          : withAlpha(colors.success, 0.08),
+                    backgroundColor: colors.inputBackground,
                     borderColor: isEmpty
-                      ? 'transparent'
+                      ? colors.inputBorder
                       : hasSub
-                        ? withAlpha(colors.warning, 0.31)
+                        ? colors.warning
                         : isLab
-                          ? withAlpha(colors.primary, 0.25)
-                          : withAlpha(colors.success, 0.19),
-                    borderWidth: isEmpty ? 0 : 1,
+                          ? colors.primary
+                          : colors.success,
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
                 onPress={handleEditTimetable}
@@ -311,7 +304,18 @@ export default function TimetableScreen() {
                       </Text>
                     )}
                     {hasSub && (
-                      <View style={[styles.labBadge, { backgroundColor: withAlpha(colors.warning, 0.19), borderRadius: 8, padding: 3 }]}>
+                      <View
+                        style={[
+                          styles.labBadge,
+                          {
+                            backgroundColor: colors.inputBackground,
+                            borderColor: colors.warning,
+                            borderWidth: colors.borderWidth,
+                            borderRadius: 8,
+                            padding: 3,
+                          },
+                        ]}
+                      >
                         <FontAwesome5 name="exchange-alt" size={8} color={colors.warning} />
                       </View>
                     )}
@@ -387,8 +391,8 @@ export default function TimetableScreen() {
             style={[
               styles.pickerWrapper,
               {
-                backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
-                borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
               },
             ]}
           >
@@ -416,8 +420,8 @@ export default function TimetableScreen() {
               styles.pickerWrapper,
               styles.yearPicker,
               {
-                backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
-                borderColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
               },
             ]}
           >
@@ -438,7 +442,16 @@ export default function TimetableScreen() {
         {/* Selected Info */}
         {selectedCourseData && selectedYearData && (
           <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.selectedInfo}>
-            <View style={[styles.infoBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+            <View
+              style={[
+                styles.infoBadge,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
+            >
               <FontAwesome5 name="book" size={12} color={colors.primary} />
               <Text style={[styles.infoText, { color: colors.primary }]}>
                 {selectedYearData.name} {selectedCourseData.code}
@@ -493,8 +506,8 @@ export default function TimetableScreen() {
                   style={[
                     styles.quickActionBtn,
                     {
-                      backgroundColor: withAlpha(colors.warning, 0.08),
-                      borderColor: withAlpha(colors.warning, 0.25),
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.warning,
                     },
                   ]}
                   onPress={() => router.push('/(admin)/timetable/substitutions' as any)}
@@ -511,8 +524,8 @@ export default function TimetableScreen() {
                   style={[
                     styles.quickActionBtn,
                     {
-                      backgroundColor: withAlpha(colors.primary, 0.063),
-                      borderColor: withAlpha(colors.primary, 0.19),
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.primary,
                     },
                   ]}
                   onPress={() => router.push('/(admin)/timetable/reports' as any)}
@@ -700,7 +713,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   createBtnText: {
-    color: 'transparent',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -757,7 +769,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: 'transparent',
     fontSize: 11,
     fontWeight: '700',
   },

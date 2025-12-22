@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
-import { withAlpha } from '../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
@@ -26,42 +25,6 @@ export default function RoleBasedDashboard() {
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
   const { roleDisplayName, accessibleModules, loading } = useRBAC();
-
-  const getModuleColor = React.useCallback(
-    (moduleKey: string) => {
-      switch (moduleKey) {
-        case 'reception':
-          return colors.primary;
-        case 'users':
-          return colors.info;
-        case 'academic':
-          return colors.primary;
-        case 'exams':
-          return colors.warning;
-        case 'assignments':
-          return colors.success;
-        case 'fees':
-          return colors.success;
-        case 'library':
-          return colors.primary;
-        case 'bus':
-          return colors.error;
-        case 'canteen':
-          return colors.warning;
-        case 'notices':
-          return colors.info;
-        case 'attendance':
-          return colors.primary;
-        case 'analytics':
-          return colors.info;
-        case 'audit':
-          return colors.textMuted;
-        default:
-          return colors.primary;
-      }
-    },
-    [colors]
-  );
 
   // All possible modules with their configurations
   const allModules: ModuleCard[] = [
@@ -194,11 +157,15 @@ export default function RoleBasedDashboard() {
         {/* Role Badge - Redesigned without Card background */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
           <View style={[styles.roleBadge, { 
-            backgroundColor: withAlpha(colors.primary, isDark ? 0.12 : 0.08),
-            borderColor: withAlpha(colors.primary, isDark ? 0.25 : 0.2),
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
             borderWidth: colors.borderWidth,
           }]}>
-            <View style={[styles.roleIconContainer, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+            <View style={[styles.roleIconContainer, { 
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.primary,
+              borderWidth: colors.borderWidth,
+            }]}>
               <FontAwesome5 name="shield-alt" size={20} color={colors.primary} />
             </View>
             <View style={styles.roleInfo}>
@@ -212,10 +179,6 @@ export default function RoleBasedDashboard() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Your Modules</Text>
         <View style={styles.modulesGrid}>
           {userModules.map((module, index) => (
-            (() => {
-              const moduleColor = getModuleColor(module.module);
-
-              return (
             <Animated.View 
               key={module.id}
               entering={FadeInDown.delay(150 + index * 50).springify()}
@@ -226,12 +189,17 @@ export default function RoleBasedDashboard() {
                 activeOpacity={0.7}
               >
                 <View style={[styles.moduleCard, { 
-                  backgroundColor: withAlpha(moduleColor, isDark ? 0.09 : 0.06),
-                  borderColor: withAlpha(moduleColor, isDark ? 0.2 : 0.16),
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.iconContainer, { backgroundColor: moduleColor, shadowColor: colors.shadowColor }]}>
-                    <FontAwesome5 name={module.icon} size={24} color={colors.textInverse} />
+                  <View style={[styles.iconContainer, { 
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.primary,
+                    borderWidth: colors.borderWidth,
+                    shadowColor: colors.shadowColor,
+                  }]}>
+                    <FontAwesome5 name={module.icon} size={24} color={colors.primary} />
                   </View>
                   <Text style={[styles.moduleTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                     {module.title}
@@ -239,8 +207,6 @@ export default function RoleBasedDashboard() {
                 </View>
               </TouchableOpacity>
             </Animated.View>
-              );
-            })()
           ))}
         </View>
 

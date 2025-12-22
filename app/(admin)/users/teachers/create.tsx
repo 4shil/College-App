@@ -18,7 +18,6 @@ import { Picker } from '@react-native-picker/picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
-import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Department {
@@ -214,7 +213,7 @@ export default function CreateTeacherScreen() {
                 <View
                   style={[
                     styles.sectionHeader,
-                    { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) },
+                    { borderBottomColor: colors.cardBorder },
                   ]}
                 >
                   <FontAwesome5 name="user" size={14} color={colors.primary} />
@@ -280,7 +279,7 @@ export default function CreateTeacherScreen() {
                 <View
                   style={[
                     styles.sectionHeader,
-                    { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) },
+                    { borderBottomColor: colors.cardBorder },
                   ]}
                 >
                   <FontAwesome5 name="briefcase" size={14} color={colors.primary} />
@@ -296,7 +295,11 @@ export default function CreateTeacherScreen() {
                   <View
                     style={[
                       styles.pickerContainer,
-                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderWidth: colors.borderWidth,
+                        borderColor: colors.inputBorder,
+                      },
                     ]}
                   >
                     <Picker

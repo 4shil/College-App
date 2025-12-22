@@ -15,7 +15,6 @@ import { BlurView } from 'expo-blur';
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { themeRegistry } from '../../../theme/registry';
-import { withAlpha } from '../../../theme/colorUtils';
 
 function parseColorToRgb(color: string): { r: number; g: number; b: number } | null {
   const c = color.trim();
@@ -173,7 +172,7 @@ export default function AppearanceSettingsScreen() {
                     style={[
                       styles2.modeButton,
                       {
-                        backgroundColor: mode === themeMode ? colors.primary : withAlpha(colors.textInverse, 0.05),
+                        backgroundColor: mode === themeMode ? colors.primary : colors.cardBackground,
                         borderColor: mode === themeMode ? colors.primary : colors.glassBorder,
                       },
                     ]}
@@ -201,7 +200,16 @@ export default function AppearanceSettingsScreen() {
                       {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
                     </Text>
                     {mode === themeMode && (
-                      <View style={[styles2.checkmark, { backgroundColor: withAlpha(onSelectedColor, 0.2) }]}>
+                      <View
+                        style={[
+                          styles2.checkmark,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: onSelectedColor,
+                            borderWidth: 1,
+                          },
+                        ]}
+                      >
                         <Ionicons name="checkmark" size={16} color={onSelectedColor} />
                       </View>
                     )}
@@ -236,7 +244,7 @@ export default function AppearanceSettingsScreen() {
                     style={[
                       styles2.modeButton,
                       {
-                        backgroundColor: activeThemeId === preset.id ? colors.primary : withAlpha(colors.textInverse, 0.05),
+                        backgroundColor: activeThemeId === preset.id ? colors.primary : colors.cardBackground,
                         borderColor: activeThemeId === preset.id ? colors.primary : colors.glassBorder,
                       },
                     ]}
@@ -258,7 +266,16 @@ export default function AppearanceSettingsScreen() {
                       {preset.name}
                     </Text>
                     {activeThemeId === preset.id && (
-                      <View style={[styles2.checkmark, { backgroundColor: withAlpha(onSelectedColor, 0.2) }]}>
+                      <View
+                        style={[
+                          styles2.checkmark,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: onSelectedColor,
+                            borderWidth: 1,
+                          },
+                        ]}
+                      >
                         <Ionicons name="checkmark" size={16} color={onSelectedColor} />
                       </View>
                     )}
@@ -291,7 +308,7 @@ export default function AppearanceSettingsScreen() {
                   style={[
                     styles2.toggleRow,
                     {
-                      backgroundColor: withAlpha(colors.textInverse, 0.05),
+                      backgroundColor: colors.cardBackground,
                       borderColor: colors.glassBorder,
                     },
                   ]}

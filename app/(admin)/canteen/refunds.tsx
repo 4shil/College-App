@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -53,20 +53,23 @@ export default function RefundsScreen() {
 
   useEffect(() => {
     fetchRefunds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchRefunds = async () => {
     try {
       let query = supabase
         .from('canteen_refund_requests')
-        .select(`
+        .select(
+          `
           *,
           canteen_tokens(
             token_number,
             total_amount,
             profiles:user_id(full_name, email)
           )
-        `)
+        `
+        )
         .order('created_at', { ascending: false });
 
       if (filter !== 'all') {
@@ -74,9 +77,9 @@ export default function RefundsScreen() {
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
-      setRefunds(data || []);
+
+      setRefunds((data || []) as RefundRequest[]);
     } catch (error) {
       console.error('Error fetching refunds:', error);
       Alert.alert('Error', 'Failed to fetch refund requests');
@@ -97,7 +100,7 @@ export default function RefundsScreen() {
     try {
       const { error } = await supabase
         .from('canteen_refund_requests')
-        .update({ 
+        .update({
           status,
           admin_notes: notes || null,
           processed_at: new Date().toISOString(),
@@ -106,12 +109,10 @@ export default function RefundsScreen() {
 
       if (error) throw error;
 
-      Alert.alert(
-        'Success',
-        `Refund request ${status}`,
-        [{ text: 'OK', onPress: () => setModalVisible(false) }]
-      );
-      
+      Alert.alert('Success', `Refund request ${status}`, [
+        { text: 'OK', onPress: () => setModalVisible(false) },
+      ]);
+
       fetchRefunds();
     } catch (error: any) {
       console.error('Error processing refund:', error);
@@ -121,9 +122,12 @@ export default function RefundsScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved': return colors.success;
-      case 'rejected': return colors.error;
-      default: return colors.warning;
+      case 'approved':
+        return colors.success;
+      case 'rejected':
+        return colors.error;
+      default:
+        return colors.warning;
     }
   };
 
@@ -154,7 +158,11 @@ export default function RefundsScreen() {
                 key={tab.id}
                 style={[
                   styles.filterTab,
-                  filter === tab.id && { backgroundColor: withAlpha(colors.primary, 0.2) },
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderWidth: colors.borderWidth,
+                    borderColor: filter === tab.id ? colors.primary : colors.inputBorder,
+                  },
                 ]}
                 onPress={() => setFilter(tab.id)}
               >
@@ -183,33 +191,26 @@ export default function RefundsScreen() {
           ) : refunds.length === 0 ? (
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="hand-holding-usd" size={48} color={colors.textMuted} />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No {filter !== 'all' ? filter : ''} refund requests
-              </Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No {filter !== 'all' ? filter : ''} refund requests</Text>
             </View>
           ) : (
             refunds.map((refund, index) => (
-              <Animated.View
-                key={refund.id}
-                entering={FadeInDown.delay(index * 50).springify()}
-              >
+              <Animated.View key={refund.id} entering={FadeInDown.delay(index * 50).springify()}>
                 <GlassCard style={styles.refundCard}>
                   <View style={styles.cardHeader}>
                     <View style={styles.tokenInfo}>
-                      <Text style={[styles.tokenLabel, { color: colors.textMuted }]}>
-                        Token #{refund.canteen_tokens.token_number}
-                      </Text>
-                      <Text style={[styles.studentName, { color: colors.textPrimary }]}>
-                        {refund.canteen_tokens.profiles.full_name}
-                      </Text>
-                      <Text style={[styles.studentEmail, { color: colors.textSecondary }]}>
-                        {refund.canteen_tokens.profiles.email}
-                      </Text>
+                      <Text style={[styles.tokenLabel, { color: colors.textMuted }]}>Token #{refund.canteen_tokens.token_number}</Text>
+                      <Text style={[styles.studentName, { color: colors.textPrimary }]}>{refund.canteen_tokens.profiles.full_name}</Text>
+                      <Text style={[styles.studentEmail, { color: colors.textSecondary }]}>{refund.canteen_tokens.profiles.email}</Text>
                     </View>
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: withAlpha(getStatusColor(refund.status), 0.2) },
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderWidth: colors.borderWidth,
+                          borderColor: getStatusColor(refund.status),
+                        },
                       ]}
                     >
                       <Text style={[styles.statusText, { color: getStatusColor(refund.status) }]}>
@@ -220,68 +221,70 @@ export default function RefundsScreen() {
 
                   <View style={styles.refundDetails}>
                     <View style={styles.detailRow}>
-                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                        Original Amount
-                      </Text>
-                      <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                        ₹{refund.canteen_tokens.total_amount}
-                      </Text>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Original Amount</Text>
+                      <Text style={[styles.detailValue, { color: colors.textPrimary }]}>₹{refund.canteen_tokens.total_amount}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                        Refund Amount
-                      </Text>
-                      <Text style={[styles.detailValue, { color: colors.error }]}>
-                        ₹{refund.refund_amount}
-                      </Text>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Refund Amount</Text>
+                      <Text style={[styles.detailValue, { color: colors.error }]}>₹{refund.refund_amount}</Text>
                     </View>
                   </View>
 
                   <View
                     style={[
                       styles.reasonBox,
-                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.04) },
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderWidth: colors.borderWidth,
+                        borderColor: colors.inputBorder,
+                      },
                     ]}
                   >
                     <Text style={[styles.reasonLabel, { color: colors.textMuted }]}>Reason:</Text>
-                    <Text style={[styles.reasonText, { color: colors.textPrimary }]}>
-                      {refund.reason}
-                    </Text>
+                    <Text style={[styles.reasonText, { color: colors.textPrimary }]}>{refund.reason}</Text>
                   </View>
 
                   <View style={styles.timeRow}>
                     <FontAwesome5 name="clock" size={12} color={colors.textMuted} />
-                    <Text style={[styles.timeText, { color: colors.textMuted }]}>
-                      {new Date(refund.created_at).toLocaleString()}
-                    </Text>
+                    <Text style={[styles.timeText, { color: colors.textMuted }]}>{new Date(refund.created_at).toLocaleString()}</Text>
                   </View>
 
                   {refund.status === 'pending' && (
                     <View style={styles.actions}>
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: withAlpha(colors.success, 0.15) }]}
+                        style={[
+                          styles.actionButton,
+                          {
+                            backgroundColor: colors.inputBackground,
+                            borderWidth: colors.borderWidth,
+                            borderColor: colors.success,
+                          },
+                        ]}
                         onPress={() => openApprovalModal(refund)}
                       >
                         <FontAwesome5 name="check" size={14} color={colors.success} />
                         <Text style={[styles.actionText, { color: colors.success }]}>Approve</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: withAlpha(colors.error, 0.15) }]}
+                        style={[
+                          styles.actionButton,
+                          {
+                            backgroundColor: colors.inputBackground,
+                            borderWidth: colors.borderWidth,
+                            borderColor: colors.error,
+                          },
+                        ]}
                         onPress={() => {
                           setSelectedRefund(refund);
                           setNotes('');
-                          Alert.alert(
-                            'Reject Refund',
-                            'Are you sure you want to reject this refund request?',
-                            [
-                              { text: 'Cancel', style: 'cancel' },
-                              {
-                                text: 'Reject',
-                                style: 'destructive',
-                                onPress: () => handleRefundAction('rejected'),
-                              },
-                            ]
-                          );
+                          Alert.alert('Reject Refund', 'Are you sure you want to reject this refund request?', [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Reject',
+                              style: 'destructive',
+                              onPress: () => handleRefundAction('rejected'),
+                            },
+                          ]);
                         }}
                       >
                         <FontAwesome5 name="times" size={14} color={colors.error} />
@@ -305,9 +308,7 @@ export default function RefundsScreen() {
           <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <GlassCard style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-                  Approve Refund
-                </Text>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Approve Refund</Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                   <Ionicons name="close" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
@@ -316,12 +317,8 @@ export default function RefundsScreen() {
               {selectedRefund && (
                 <>
                   <View style={styles.modalInfo}>
-                    <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>
-                      Token #{selectedRefund.canteen_tokens.token_number}
-                    </Text>
-                    <Text style={[styles.modalAmount, { color: colors.success }]}>
-                      ₹{selectedRefund.refund_amount}
-                    </Text>
+                    <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Token #{selectedRefund.canteen_tokens.token_number}</Text>
+                    <Text style={[styles.modalAmount, { color: colors.success }]}>₹{selectedRefund.refund_amount}</Text>
                   </View>
 
                   <Text style={[styles.label, { color: colors.textPrimary }]}>Notes (Optional)</Text>
@@ -333,10 +330,7 @@ export default function RefundsScreen() {
                     numberOfLines={3}
                   />
 
-                  <PrimaryButton
-                    title="Approve Refund"
-                    onPress={() => handleRefundAction('approved')}
-                  />
+                  <PrimaryButton title="Approve Refund" onPress={() => handleRefundAction('approved')} />
                 </>
               )}
             </GlassCard>

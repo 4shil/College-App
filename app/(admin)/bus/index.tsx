@@ -14,9 +14,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { AnimatedBackground } from '../../../components/ui';
+import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface BusStats {
   totalRoutes: number;
@@ -28,7 +28,7 @@ interface BusStats {
 export default function BusIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,26 +73,36 @@ export default function BusIndexScreen() {
     setRefreshing(false);
   };
 
+  const getOptionTone = (title: string): IconBadgeTone => {
+    switch (title) {
+      case 'Approvals':
+        return 'warning';
+      case 'Reports':
+        return 'info';
+      case 'Vehicle Management':
+        return 'success';
+      default:
+        return 'primary';
+    }
+  };
+
   const menuOptions = [
     {
       title: 'Bus Routes',
       subtitle: 'Manage routes and stops',
       icon: 'route',
-      color: colors.primary,
       route: '/(admin)/bus/routes',
     },
     {
       title: 'Vehicle Management',
       subtitle: 'Manage bus fleet',
       icon: 'bus',
-      color: colors.success,
       route: '/(admin)/bus/vehicles',
     },
     {
       title: 'Approvals',
       subtitle: 'Student subscription requests',
       icon: 'user-check',
-      color: colors.warning,
       route: '/(admin)/bus/approvals',
       badge: stats.pendingApprovals,
     },
@@ -100,14 +110,12 @@ export default function BusIndexScreen() {
       title: 'Alerts & Notifications',
       subtitle: 'Send updates to students',
       icon: 'bell',
-      color: colors.primary,
       route: '/(admin)/bus/alerts',
     },
     {
       title: 'Reports',
       subtitle: 'Analytics and statistics',
       icon: 'chart-line',
-      color: colors.info,
       route: '/(admin)/bus/reports',
     },
   ];
@@ -202,9 +210,13 @@ export default function BusIndexScreen() {
                   borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                    <FontAwesome5 name={option.icon} size={24} color={option.color} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name={option.icon}
+                    tone={getOptionTone(option.title)}
+                    size={24}
+                    style={styles.menuIcon}
+                  />
                   <View style={styles.menuContent}>
                     <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{option.title}</Text>
                     <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>
@@ -319,7 +331,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   badgeText: {
-    color: 'transparent',
     fontSize: 11,
     fontWeight: '700',
   },

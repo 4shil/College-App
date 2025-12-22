@@ -7,7 +7,6 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
 
@@ -81,12 +80,12 @@ export default function SubmissionsScreen() {
         <Text style={[styles.title, { color: colors.textPrimary }]}>Assignment Submissions</Text>
         
         <View style={styles.statsGrid}>
-          <Card style={[styles.statCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <FontAwesome5 name="file-alt" size={24} color={colors.primary} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalSubmissions}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <FontAwesome5 name="check-circle" size={24} color={colors.success} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{gradedCount}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Graded</Text>
@@ -94,12 +93,12 @@ export default function SubmissionsScreen() {
         </View>
 
         <View style={styles.statsGrid}>
-          <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <FontAwesome5 name="clock" size={24} color={colors.warning} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{pendingCount}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{lateCount}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Late</Text>
@@ -130,7 +129,16 @@ export default function SubmissionsScreen() {
             <Animated.View key={submission.id} entering={FadeInDown.delay(i * 30).springify()}>
               <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <View style={[styles.icon, { backgroundColor: withAlpha(getStatusColor(submission.status), 0.125) }]}>
+                  <View
+                    style={[
+                      styles.icon,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: 1,
+                      },
+                    ]}
+                  >
                     <FontAwesome5 name="user-graduate" size={20} color={getStatusColor(submission.status)} />
                   </View>
                   <View style={styles.info}>
@@ -138,8 +146,8 @@ export default function SubmissionsScreen() {
                     <Text style={[styles.meta, { color: colors.textSecondary }]}>{submission.student?.roll_number}</Text>
                   </View>
                   {isLate && (
-                    <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>LATE</Text>
+                    <View style={[styles.badge, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: 1 }]}>
+                      <Text style={[styles.badgeText, { color: colors.error }]}>LATE</Text>
                     </View>
                   )}
                 </View>
@@ -187,7 +195,7 @@ const styles = StyleSheet.create({
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   meta: { fontSize: 14 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: 12, fontWeight: '600' },
   assignmentTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   details: {},
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },

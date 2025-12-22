@@ -254,16 +254,23 @@ export default function AuditLogsScreen() {
                 key={log.id}
                 entering={FadeInDown.delay(index * 50).springify()}
               >
-                <View style={[styles.logCard, { 
-                  backgroundColor: colors.cardBackground,
-                  borderLeftColor: getActionColor(log.action),
-                  borderLeftWidth: 4,
-                }]}>
+                <View
+                  style={[
+                    styles.logCard,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                      borderRadius: colors.borderRadius,
+                    },
+                  ]}
+                >
                   {/* Header with Action Badge and Time */}
                   <View style={styles.logHeader}>
                     <View style={[styles.badge, { 
-                      backgroundColor: withAlpha(getActionColor(log.action), 0.12),
+                      backgroundColor: colors.inputBackground,
                       borderColor: getActionColor(log.action),
+                      borderWidth: colors.borderWidth,
                     }]}>
                       <Text style={{ 
                         color: getActionColor(log.action),
@@ -282,7 +289,7 @@ export default function AuditLogsScreen() {
                   {/* User and Entity Info */}
                   <View style={styles.logContent}>
                     <View style={styles.logRow}>
-                      <View style={[styles.iconCircle, { backgroundColor: withAlpha(colors.primary, 0.09) }]}>
+                      <View style={[styles.iconCircle, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: colors.borderWidth }]}>
                         <FontAwesome5 name="user" size={11} color={colors.primary} />
                       </View>
                       <Text style={[styles.logUser, { color: colors.textPrimary }]}>
@@ -291,7 +298,7 @@ export default function AuditLogsScreen() {
                     </View>
 
                     <View style={styles.logRow}>
-                      <View style={[styles.iconCircle, { backgroundColor: withAlpha(colors.textSecondary, 0.09) }]}>
+                      <View style={[styles.iconCircle, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, borderWidth: colors.borderWidth }]}>
                         <FontAwesome5 name="database" size={10} color={colors.textSecondary} />
                       </View>
                       <Text style={[styles.logEntity, { color: colors.textSecondary }]}>

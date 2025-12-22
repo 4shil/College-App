@@ -19,7 +19,6 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface StudentFee {
   id: string;
@@ -154,15 +153,15 @@ export default function StudentFeesScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>{stats.paid}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Paid</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>{stats.partial}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Partial</Text>
           </Card>
-          <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.error }]}>{stats.overdue}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Overdue</Text>
           </Card>
@@ -213,7 +212,16 @@ export default function StudentFeesScreen() {
                     {fee.student?.admission_number} • {fee.fee_structure?.name}
                   </Text>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: withAlpha(getStatusColor(fee.status), 0.2) }]}>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: 1,
+                    },
+                  ]}
+                >
                   <FontAwesome5 name={getStatusIcon(fee.status)} size={12} color={getStatusColor(fee.status)} />
                   <Text style={[styles.statusText, { color: getStatusColor(fee.status) }]}>
                     {fee.status.toUpperCase()}
@@ -291,7 +299,7 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   dueDate: { fontSize: 14 },
   payButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  payButtonText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
+  payButtonText: { fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
 });

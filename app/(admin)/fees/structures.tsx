@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   structureName: { fontSize: 18, fontWeight: '600', marginBottom: 4 },
   structureMeta: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: 12, fontWeight: '600' },
   feeBreakdown: { marginBottom: 12 },
   feeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   feeLabel: { fontSize: 14 },

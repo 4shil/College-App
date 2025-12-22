@@ -14,9 +14,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { AnimatedBackground } from '../../../components/ui';
+import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface CanteenStats {
   todayTokens: number;
@@ -28,7 +28,7 @@ interface CanteenStats {
 export default function CanteenIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,19 +78,32 @@ export default function CanteenIndexScreen() {
     setRefreshing(false);
   };
 
+  const getOptionTone = (title: string): IconBadgeTone => {
+    switch (title) {
+      case 'Token Dashboard':
+        return 'warning';
+      case 'Ready Orders':
+        return 'success';
+      case 'Refund Requests':
+        return 'error';
+      case 'Sales Reports':
+        return 'info';
+      default:
+        return 'primary';
+    }
+  };
+
   const menuOptions = [
     {
       title: 'Menu Management',
       subtitle: 'Manage daily menu items',
       icon: 'utensils',
-      color: colors.primary,
       route: '/(admin)/canteen/menu',
     },
     {
       title: 'Token Dashboard',
       subtitle: 'View and manage orders',
       icon: 'ticket-alt',
-      color: colors.warning,
       route: '/(admin)/canteen/tokens',
       badge: stats.pendingTokens,
     },
@@ -98,7 +111,6 @@ export default function CanteenIndexScreen() {
       title: 'Ready Orders',
       subtitle: 'Orders ready for pickup',
       icon: 'check-circle',
-      color: colors.success,
       route: '/(admin)/canteen/ready',
       badge: stats.readyTokens,
     },
@@ -106,14 +118,12 @@ export default function CanteenIndexScreen() {
       title: 'Refund Requests',
       subtitle: 'Process refund requests',
       icon: 'undo',
-      color: colors.error,
       route: '/(admin)/canteen/refunds',
     },
     {
       title: 'Sales Reports',
       subtitle: 'Analytics and statistics',
       icon: 'chart-bar',
-      color: colors.info,
       route: '/(admin)/canteen/reports',
     },
   ];
@@ -208,9 +218,13 @@ export default function CanteenIndexScreen() {
                   borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                    <FontAwesome5 name={option.icon} size={24} color={option.color} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name={option.icon}
+                    tone={getOptionTone(option.title)}
+                    size={24}
+                    style={styles.menuIcon}
+                  />
                   <View style={styles.menuContent}>
                     <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{option.title}</Text>
                     <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>

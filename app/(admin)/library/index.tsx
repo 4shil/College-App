@@ -14,9 +14,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { AnimatedBackground } from '../../../components/ui';
+import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface LibraryStats {
   totalBooks: number;
@@ -28,7 +28,7 @@ interface LibraryStats {
 export default function LibraryIndexScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,47 +76,58 @@ export default function LibraryIndexScreen() {
     setRefreshing(false);
   };
 
+  const getOptionTone = (title: string): IconBadgeTone => {
+    switch (title) {
+      case 'Overdue Books':
+        return 'error';
+      case 'Reservations':
+        return 'warning';
+      case 'Return Book':
+        return 'success';
+      case 'Issue Book':
+        return 'info';
+      case 'Reports':
+        return 'info';
+      default:
+        return 'primary';
+    }
+  };
+
   const menuOptions = [
     {
       title: 'Books Catalog',
       subtitle: 'Manage book collection',
       icon: 'book',
-      color: colors.primary,
       route: '/(admin)/library/books',
     },
     {
       title: 'Issue Book',
       subtitle: 'Issue book to student/teacher',
       icon: 'hand-holding',
-      color: colors.info,
       route: '/(admin)/library/issue',
     },
     {
       title: 'Return Book',
       subtitle: 'Process book returns',
       icon: 'undo',
-      color: colors.success,
       route: '/(admin)/library/return',
     },
     {
       title: 'Reservations',
       subtitle: 'Manage book reservations',
       icon: 'bookmark',
-      color: colors.warning,
       route: '/(admin)/library/reservations',
     },
     {
       title: 'Overdue Books',
       subtitle: 'Track overdue returns',
       icon: 'exclamation-circle',
-      color: colors.error,
       route: '/(admin)/library/overdue',
     },
     {
       title: 'Reports',
       subtitle: 'Library analytics',
       icon: 'chart-bar',
-      color: colors.primary,
       route: '/(admin)/library/reports',
     },
   ];
@@ -211,9 +222,13 @@ export default function LibraryIndexScreen() {
                   borderColor: colors.cardBorder,
                   borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
-                    <FontAwesome5 name={option.icon} size={24} color={option.color} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name={option.icon}
+                    tone={getOptionTone(option.title)}
+                    size={24}
+                    style={styles.menuIcon}
+                  />
                   <View style={styles.menuContent}>
                     <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{option.title}</Text>
                     <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>

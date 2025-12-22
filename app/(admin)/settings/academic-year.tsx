@@ -8,7 +8,6 @@ import { AnimatedBackground, GlassCard, PrimaryButton } from '../../../component
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { withAlpha } from '../../../theme/colorUtils';
 
 interface AcademicYear {
   id: string;
@@ -184,8 +183,8 @@ export default function AcademicYearScreen() {
             <TextInput
               style={[styles.input, { 
                 color: colors.textPrimary,
-                backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                borderColor: withAlpha(colors.primary, 0.19),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
                 borderWidth: colors.borderWidth,
               }]}
               placeholder="e.g., 2024-2025"
@@ -197,8 +196,8 @@ export default function AcademicYearScreen() {
             <Text style={[styles.label, { color: colors.textSecondary }]}>Start Date</Text>
             <TouchableOpacity
               style={[styles.dateButton, { 
-                backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                borderColor: withAlpha(colors.primary, 0.19),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
                 borderWidth: colors.borderWidth,
               }]}
               onPress={() => setShowStartPicker(true)}
@@ -224,8 +223,8 @@ export default function AcademicYearScreen() {
             <Text style={[styles.label, { color: colors.textSecondary }]}>End Date</Text>
             <TouchableOpacity
               style={[styles.dateButton, { 
-                backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                borderColor: withAlpha(colors.primary, 0.19),
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
                 borderWidth: colors.borderWidth,
               }]}
               onPress={() => setShowEndPicker(true)}
@@ -274,7 +273,11 @@ export default function AcademicYearScreen() {
                       {year.year_name}
                     </Text>
                     {year.is_current && (
-                      <View style={[styles.currentBadge, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+                      <View style={[styles.currentBadge, { 
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.primary,
+                        borderWidth: colors.borderWidth,
+                      }]}>
                         <Text style={[styles.currentText, { color: colors.primary }]}>Current</Text>
                       </View>
                     )}

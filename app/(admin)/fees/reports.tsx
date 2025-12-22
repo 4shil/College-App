@@ -161,7 +161,7 @@ export default function FeeReportsScreen() {
             </Text>
             <View style={styles.statsGrid}>
               <Animated.View entering={FadeInDown.delay(0).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.success, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="money-bill-wave" size={24} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.totalCollection}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Collected</Text>
@@ -169,7 +169,7 @@ export default function FeeReportsScreen() {
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.error, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="hourglass-half" size={24} color={colors.error} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.totalPending}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
@@ -177,7 +177,7 @@ export default function FeeReportsScreen() {
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="percentage" size={24} color={colors.primary} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{collectionRate}%</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Collection Rate</Text>
@@ -185,7 +185,7 @@ export default function FeeReportsScreen() {
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.statCardWrapper}>
-                <Card style={[styles.statCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="users" size={24} color={colors.warning} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalStudents}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Students</Text>

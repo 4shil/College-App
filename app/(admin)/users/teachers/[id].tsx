@@ -14,10 +14,9 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
-import { withAlpha } from '../../../../theme/colorUtils';
 
 interface TeacherDetails {
   id: string;
@@ -60,7 +59,7 @@ export default function TeacherDetailsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [teacher, setTeacher] = useState<TeacherDetails | null>(null);
@@ -210,7 +209,14 @@ export default function TeacherDetailsScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.editBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
+            style={[
+              styles.editBtn,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
             onPress={() => Alert.alert('Edit', 'Edit feature coming soon')}
           >
             <Ionicons name="create-outline" size={20} color={colors.primary} />
@@ -235,9 +241,13 @@ export default function TeacherDetailsScreen() {
                     style={styles.profilePhoto}
                   />
                 ) : (
-                  <View style={[styles.profilePhotoPlaceholder, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
-                    <FontAwesome5 name="chalkboard-teacher" size={40} color={colors.primary} />
-                  </View>
+                  <IconBadge
+                    family="fa5"
+                    name="chalkboard-teacher"
+                    tone="primary"
+                    size={36}
+                    style={styles.profilePhotoPlaceholder}
+                  />
                 )}
                 <View style={styles.profileInfo}>
                   <Text style={[styles.profileName, { color: colors.textPrimary }]}>
@@ -250,10 +260,9 @@ export default function TeacherDetailsScreen() {
                     style={[
                       styles.statusBadge,
                       {
-                        backgroundColor: withAlpha(
-                          getStatusColor(teacher.profile?.status || 'inactive'),
-                          0.125
-                        ),
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       },
                     ]}
                   >
@@ -345,7 +354,14 @@ export default function TeacherDetailsScreen() {
                   Assigned Courses ({courses.length})
                 </Text>
                 <TouchableOpacity
-                  style={[styles.assignBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
+                  style={[
+                    styles.assignBtn,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
                   onPress={() => Alert.alert('Assign', 'Assign course feature coming soon')}
                 >
                   <Ionicons name="add" size={16} color={colors.primary} />
@@ -360,10 +376,9 @@ export default function TeacherDetailsScreen() {
                     style={[
                       styles.courseItem,
                       {
-                        borderLeftColor: colors.primary,
-                        backgroundColor: isDark
-                          ? withAlpha(colors.textInverse, 0.03)
-                          : withAlpha(colors.shadowColor, 0.03),
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       },
                     ]}
                   >
@@ -392,11 +407,11 @@ export default function TeacherDetailsScreen() {
               <TouchableOpacity
                 style={[
                   styles.actionBtn,
-                  { 
-                    backgroundColor: teacher.profile?.status === 'active'
-                      ? withAlpha(colors.warning, 0.125)
-                      : withAlpha(colors.success, 0.125)
-                  }
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
                 ]}
                 onPress={handleToggleStatus}
               >
@@ -413,7 +428,14 @@ export default function TeacherDetailsScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.125) }]}
+                style={[
+                  styles.actionBtn,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
                 onPress={() => Alert.alert('Delete', 'Delete feature coming soon')}
               >
                 <FontAwesome5 name="trash" size={16} color={colors.error} />
@@ -490,8 +512,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   profileInfo: {
     flex: 1,
@@ -577,7 +597,6 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingVertical: 10,
     marginBottom: 8,
-    borderLeftWidth: 3,
     backgroundColor: 'transparent',
     borderRadius: 8,
   },

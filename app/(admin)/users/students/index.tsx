@@ -15,10 +15,9 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
-import { withAlpha } from '../../../../theme/colorUtils';
 
 interface Student {
   id: string;
@@ -57,7 +56,7 @@ interface Department {
 export default function StudentsListScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -162,9 +161,7 @@ export default function StudentsListScreen() {
         <Card style={styles.studentCard}>
           <View style={styles.cardContent}>
             {/* Avatar */}
-            <View style={[styles.avatar, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
-              <FontAwesome5 name="user-graduate" size={18} color={colors.success} />
-            </View>
+            <IconBadge family="fa5" name="user-graduate" tone="primary" size={18} style={styles.avatar} />
 
             {/* Info */}
             <View style={styles.infoContainer}>
@@ -178,13 +175,31 @@ export default function StudentsListScreen() {
                 {student.registration_number || 'No Reg No'}
               </Text>
               <View style={styles.metaRow}>
-                <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+                <View
+                  style={[
+                    styles.metaBadge,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
                   <Text style={[styles.metaText, { color: colors.primary }]}>
                     {student.department?.code || 'N/A'}
                   </Text>
                 </View>
-                <View style={[styles.metaBadge, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
-                  <Text style={[styles.metaText, { color: colors.info }]}>
+                <View
+                  style={[
+                    styles.metaBadge,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.metaText, { color: colors.primary }]}>
                     {student.year?.name || 'N/A'} - {student.section?.name || 'N/A'}
                   </Text>
                 </View>
@@ -204,9 +219,13 @@ export default function StudentsListScreen() {
       key={dept.id}
       style={[
         styles.filterChip,
-        {
-          backgroundColor: selectedDept === dept.id ? colors.primary : withAlpha(colors.primary, 0.08),
-        },
+        selectedDept === dept.id
+          ? { backgroundColor: colors.primary }
+          : {
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.inputBorder,
+              borderWidth: colors.borderWidth,
+            },
       ]}
       onPress={() => setSelectedDept(selectedDept === dept.id ? null : dept.id)}
     >
@@ -226,9 +245,7 @@ export default function StudentsListScreen() {
       entering={FadeInDown.delay(200).duration(400)}
       style={styles.emptyState}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
-        <FontAwesome5 name="user-graduate" size={40} color={colors.success} />
-      </View>
+      <IconBadge family="fa5" name="user-graduate" tone="primary" size={40} style={styles.emptyIcon} />
       <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
         No Students Found
       </Text>
@@ -265,7 +282,13 @@ export default function StudentsListScreen() {
           <TouchableOpacity
             style={[
               styles.filterBtn,
-              { backgroundColor: showFilters ? colors.primary : withAlpha(colors.primary, 0.08) },
+              showFilters
+                ? { backgroundColor: colors.primary }
+                : {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
+                  },
             ]}
             onPress={() => setShowFilters(!showFilters)}
           >
