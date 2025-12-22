@@ -4,6 +4,21 @@ import { supabase, signInWithEmail, signOut as supabaseSignOut } from '../lib/su
 import { useAuthStore } from '../store/authStore';
 import type { RoleName } from '../types/database';
 
+function isInvalidRefreshTokenError(error: unknown): boolean {
+  const message =
+    typeof error === 'string'
+      ? error
+      : (error as any)?.message ?? (error as any)?.error_description ?? '';
+
+  if (typeof message !== 'string') return false;
+
+  return (
+    message.includes('Invalid Refresh Token') ||
+    message.includes('Refresh Token Not Found') ||
+    message.includes('refresh_token')
+  );
+}
+
 // Admin roles that should be redirected to admin dashboard
 const ADMIN_ROLES: RoleName[] = [
   'super_admin',
@@ -43,6 +58,22 @@ export const useAuth = () => {
     setUserRole,
     logout: storeLogout,
   } = useAuthStore();
+
+  const forceLocalSignOut = useCallback(async () => {
+    try {
+      // Prefer a local-only sign-out (clears persisted session) so we don't depend on network.
+      await (supabase.auth as any).signOut?.({ scope: 'local' });
+    } catch {
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // ignore
+      }
+    }
+
+    storeLogout();
+    router.replace('/(auth)/login');
+  }, [router, storeLogout]);
 
   // Fetch user profile and roles from the database
   const fetchUserData = useCallback(async (userId: string) => {
@@ -130,6 +161,9 @@ export const useAuth = () => {
         
         if (error) {
           console.error('Error getting session:', error);
+          if (isInvalidRefreshTokenError(error)) {
+            await forceLocalSignOut();
+          }
           if (mounted) setLoading(false);
           return;
         }
@@ -145,6 +179,9 @@ export const useAuth = () => {
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        if (isInvalidRefreshTokenError(error)) {
+          await forceLocalSignOut();
+        }
         if (mounted) setLoading(false);
       }
     };
@@ -155,6 +192,17 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+
+        const authEvent = event as unknown as string;
+
+        if (authEvent === 'TOKEN_REFRESH_FAILED') {
+          // This commonly occurs when a stale/corrupt refresh token exists in persisted storage.
+          // Clear it and send user to login instead of looping and timing out.
+          console.warn('Supabase auth token refresh failed; signing out locally.');
+          await forceLocalSignOut();
+          if (mounted) setLoading(false);
+          return;
+        }
 
         setSession(session);
         
@@ -174,7 +222,7 @@ export const useAuth = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserData, setSession, setLoading, setUserRole, setProfile, setRoles]);
+  }, [fetchUserData, forceLocalSignOut, setSession, setLoading, setUserRole, setProfile, setRoles]);
 
   // Handle protected routes
   useEffect(() => {

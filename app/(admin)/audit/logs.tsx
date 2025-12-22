@@ -125,7 +125,14 @@ export default function AuditLogsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, 0.06) }]}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
             onPress={() => router.back()}
           >
             <FontAwesome5 name="arrow-left" size={18} color={colors.textPrimary} />
@@ -134,7 +141,14 @@ export default function AuditLogsScreen() {
           <Text style={[styles.title, { color: colors.textPrimary }]}>Audit Logs</Text>
 
           <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, 0.06) }]}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
             onPress={exportToCSV}
           >
             <FontAwesome5 name="file-export" size={18} color={colors.primary} />
@@ -146,8 +160,9 @@ export default function AuditLogsScreen() {
           style={[
             styles.searchBox,
             {
-              backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.05),
-              borderColor: withAlpha(colors.primary, 0.19),
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.inputBorder,
+              borderWidth: colors.borderWidth,
             },
           ]}
         >
@@ -181,6 +196,7 @@ export default function AuditLogsScreen() {
                           ? colors.primary
                           : withAlpha(colors.textPrimary, isDark ? 0.06 : 0.05),
                       borderColor: f.value === item ? colors.primary : withAlpha(colors.primary, 0.19),
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                 >
@@ -208,7 +224,14 @@ export default function AuditLogsScreen() {
           ].map((stat, i) => (
             <View
               key={i}
-              style={[styles.statItem, { backgroundColor: withAlpha(colors.textPrimary, 0.04) }]}
+              style={[
+                styles.statItem,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
             >
               <FontAwesome5 name={stat.icon} size={16} color={stat.color} />
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stat.value}</Text>
@@ -279,8 +302,9 @@ export default function AuditLogsScreen() {
                     {/* Changes */}
                     {log.changes && (
                       <View style={[styles.changes, { 
-                        backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.04),
-                        borderColor: withAlpha(colors.textPrimary, 0.08),
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       }]}>
                         <FontAwesome5 name="code" size={10} color={colors.textSecondary} style={{ marginRight: 6 }} />
                         <Text style={[styles.changesText, { color: colors.textSecondary }]} numberOfLines={2}>
@@ -356,7 +380,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 22,
-    borderWidth: 1.5,
+    borderWidth: 0,
     marginRight: 10,
   },
 

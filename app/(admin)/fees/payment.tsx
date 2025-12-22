@@ -20,6 +20,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Student {
   id: string;
@@ -52,7 +53,8 @@ interface FeePayment {
 
 export default function FeePaymentScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+  const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -262,7 +264,7 @@ export default function FeePaymentScreen() {
             onPress={openModal}
             style={[styles.addButton, { backgroundColor: colors.primary }]}
           >
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
 
@@ -272,7 +274,7 @@ export default function FeePaymentScreen() {
           <Animated.View key={payment.id} entering={FadeInDown.delay(index * 30).springify()}>
             <Card style={styles.paymentCard}>
               <View style={styles.paymentHeader}>
-                <View style={[styles.methodIcon, { backgroundColor: `${colors.primary}20` }]}>
+                <View style={[styles.methodIcon, { backgroundColor: withAlpha(colors.primary, 0.2) }]}>
                   <FontAwesome5 name={getMethodIcon(payment.payment_method)} size={20} color={colors.primary} />
                 </View>
                 <View style={styles.paymentInfo}>
@@ -288,7 +290,12 @@ export default function FeePaymentScreen() {
                   <Text style={[styles.receiptNo, { color: colors.textSecondary }]}>{payment.receipt_number}</Text>
                 </View>
               </View>
-              <View style={styles.paymentFooter}>
+              <View
+                style={[
+                  styles.paymentFooter,
+                  { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.18 : 0.12) },
+                ]}
+              >
                 <Text style={[styles.paymentDate, { color: colors.textSecondary }]}>
                   {new Date(payment.payment_date).toLocaleString()}
                 </Text>
@@ -305,7 +312,7 @@ export default function FeePaymentScreen() {
 
       {/* Payment Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Record Payment</Text>
@@ -445,10 +452,10 @@ const styles = StyleSheet.create({
   paymentAmount: { alignItems: 'flex-end' },
   amount: { fontSize: 20, fontWeight: 'bold', marginBottom: 2 },
   receiptNo: { fontSize: 12 },
-  paymentFooter: { borderTopWidth: 1, borderTopColor: 'rgba(150,150,150,0.2)', paddingTop: 8, marginTop: 8 },
+  paymentFooter: { borderTopWidth: 1, borderTopColor: 'transparent', paddingTop: 8, marginTop: 8 },
   paymentDate: { fontSize: 14 },
   remarks: { fontSize: 14, fontStyle: 'italic', marginTop: 4 },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },

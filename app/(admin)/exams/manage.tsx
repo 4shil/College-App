@@ -21,6 +21,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Exam {
   id: string;
@@ -48,7 +49,8 @@ interface Semester {
 export default function ManageExamsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+  const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,11 +71,11 @@ export default function ManageExamsScreen() {
   const [formEndDate, setFormEndDate] = useState('');
 
   const examTypeConfig = {
-    internal: { label: 'Internal Assessment', color: '#3b82f6' },
-    model: { label: 'Model Exam', color: '#8b5cf6' },
-    university: { label: 'University Exam', color: '#ef4444' },
-    practical: { label: 'Practical Exam', color: '#10b981' },
-    viva: { label: 'Viva Voce', color: '#f59e0b' },
+    internal: { label: 'Internal Assessment', color: colors.info },
+    model: { label: 'Model Exam', color: colors.primary },
+    university: { label: 'University Exam', color: colors.error },
+    practical: { label: 'Practical Exam', color: colors.success },
+    viva: { label: 'Viva Voce', color: colors.warning },
   };
 
   const fetchData = useCallback(async () => {
@@ -263,7 +265,7 @@ export default function ManageExamsScreen() {
             style={[styles.addButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
 
@@ -280,7 +282,12 @@ export default function ManageExamsScreen() {
             <Animated.View key={exam.id} entering={FadeInDown.delay(index * 50).springify()}>
               <Card style={styles.examCard}>
                 <View style={styles.examHeader}>
-                  <View style={[styles.examIcon, { backgroundColor: `${examTypeConfig[exam.exam_type].color}20` }]}>
+                  <View
+                    style={[
+                      styles.examIcon,
+                      { backgroundColor: withAlpha(examTypeConfig[exam.exam_type].color, 0.2) },
+                    ]}
+                  >
                     <FontAwesome5 name="file-alt" size={20} color={examTypeConfig[exam.exam_type].color} />
                   </View>
                   <View style={styles.examInfo}>
@@ -291,12 +298,17 @@ export default function ManageExamsScreen() {
                   </View>
                   {exam.is_published && (
                     <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                      <Text style={styles.badgeText}>Published</Text>
+                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>Published</Text>
                     </View>
                   )}
                 </View>
 
-                <View style={styles.examDetails}>
+                <View
+                  style={[
+                    styles.examDetails,
+                    { borderColor: withAlpha(colors.textPrimary, isDark ? 0.18 : 0.12) },
+                  ]}
+                >
                   <View style={styles.detailRow}>
                     <FontAwesome5 name="calendar" size={14} color={colors.textSecondary} />
                     <Text style={[styles.detailText, { color: colors.textSecondary }]}>
@@ -351,7 +363,7 @@ export default function ManageExamsScreen() {
 
       {/* Add/Edit Modal */}
       <Modal visible={showAddModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -457,14 +469,14 @@ const styles = StyleSheet.create({
   examName: { fontSize: 18, fontWeight: '600', marginBottom: 4 },
   examMeta: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  examDetails: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(150, 150, 150, 0.2)', marginBottom: 12 },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  examDetails: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'transparent', marginBottom: 12 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   detailText: { fontSize: 14 },
   examActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
   actionButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12 },
   actionText: { fontSize: 14, fontWeight: '600' },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },

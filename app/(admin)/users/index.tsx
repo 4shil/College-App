@@ -56,6 +56,7 @@ export default function UsersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+  const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
   const profile = useAuthStore(s => s.profile);
   const { hasPermission, loading: rbacLoading } = useRBAC();
 
@@ -499,55 +500,20 @@ export default function UsersScreen() {
 
     setSaving(true);
     try {
-      // Create user with Supabase Auth (will auto-create profile via trigger)
       const tempPassword = `Temp${Math.random().toString(36).slice(2, 10)}!`;
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formEmail.trim(),
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email: formEmail.trim(),
+          password: tempPassword,
           full_name: formName.trim(),
           phone: formPhone.trim() || null,
+          primary_role: formRole,
+          department_id: formDepartment || null,
         },
       });
 
-      if (authError) throw authError;
-
-      // Update profile with role and department
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            primary_role: formRole,
-            status: 'active',
-            department_id: formDepartment || null,
-          })
-          .eq('id', authData.user.id);
-
-        if (profileError) throw profileError;
-
-        // Add to specific table based on role
-        if (formRole === 'student' && formDepartment) {
-          await supabase.from('students').insert({
-            id: authData.user.id,
-            department_id: formDepartment,
-          });
-        } else if (['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(formRole) && formDepartment) {
-          await supabase.from('teachers').insert({
-            id: authData.user.id,
-            department_id: formDepartment,
-          });
-        }
-
-        // Add to user_roles table
-        const role = roles.find(r => r.name === formRole);
-        if (role) {
-          await supabase.from('user_roles').insert({
-            user_id: authData.user.id,
-            role_id: role.id,
-          });
-        }
-      }
+      if (error) throw error;
+      if (!data?.user_id) throw new Error('User creation failed');
 
       Alert.alert('Success', `User created with temporary password: ${tempPassword}\nPlease share this with the user.`);
       setShowAddModal(false);
@@ -682,7 +648,7 @@ export default function UsersScreen() {
 
   const renderRoleModal = () => (
     <Modal visible={showRoleModal} transparent animationType="fade">
-      <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
+      <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
         <Card style={styles.modalContent}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Change Role for {selectedUser?.full_name}
@@ -784,6 +750,7 @@ export default function UsersScreen() {
                         ? withAlpha(colors.textInverse, 0.05)
                         : withAlpha(colors.shadowColor, 0.03),
                     borderColor: activeTab === tab.key ? withAlpha(tab.color, 0.25) : 'transparent',
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
                 onPress={() => setActiveTab(tab.key)}
@@ -853,7 +820,7 @@ export default function UsersScreen() {
 
         {/* Add User Modal */}
         <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <Card style={styles.modalContent}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create New User</Text>
               
@@ -985,7 +952,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 13, marginTop: 2 },
   statsContainer: { marginBottom: 16 },
   statsScroll: { paddingHorizontal: 20, gap: 10 },
-  statCard: { alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5, minWidth: 85 },
+  statCard: { alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 0, minWidth: 85 },
   statValue: { fontSize: 22, fontWeight: '700', marginTop: 6 },
   statLabel: { fontSize: 11, marginTop: 2 },
   searchContainer: { paddingHorizontal: 20, marginBottom: 16 },

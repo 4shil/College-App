@@ -241,15 +241,42 @@ export default function ReportsScreen() {
             <>
               {/* Summary Cards */}
               <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.summaryRow}>
-                <View style={[styles.summaryCard, { backgroundColor: withAlpha(colors.warning, 0.08), borderColor: withAlpha(colors.warning, 0.19) }]}>
+                <View
+                  style={[
+                    styles.summaryCard,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
                   <Text style={[styles.summaryValue, { color: colors.warning }]}>{stats.totalToday}</Text>
                   <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Today</Text>
                 </View>
-                <View style={[styles.summaryCard, { backgroundColor: withAlpha(colors.info, 0.08), borderColor: withAlpha(colors.info, 0.19) }]}>
+                <View
+                  style={[
+                    styles.summaryCard,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
                   <Text style={[styles.summaryValue, { color: colors.info }]}>{stats.totalThisWeek}</Text>
                   <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>This Week</Text>
                 </View>
-                <View style={[styles.summaryCard, { backgroundColor: withAlpha(colors.success, 0.08), borderColor: withAlpha(colors.success, 0.19) }]}>
+                <View
+                  style={[
+                    styles.summaryCard,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                    },
+                  ]}
+                >
                   <Text style={[styles.summaryValue, { color: colors.success }]}>{stats.totalThisMonth}</Text>
                   <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>This Month</Text>
                 </View>
@@ -262,7 +289,11 @@ export default function ReportsScreen() {
                 <View style={styles.insightRow}>
                   <View style={[
                     styles.insightCard, 
-                    { backgroundColor: withAlpha(colors.error, isDark ? 0.1 : 0.08) }
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                    }
                   ]}>
                     <View style={styles.insightIcon}>
                       <FontAwesome5 name="user-minus" size={18} color={colors.error} />
@@ -280,7 +311,11 @@ export default function ReportsScreen() {
 
                   <View style={[
                     styles.insightCard, 
-                    { backgroundColor: withAlpha(colors.success, isDark ? 0.1 : 0.08) }
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                    }
                   ]}>
                     <View style={styles.insightIcon}>
                       <FontAwesome5 name="user-plus" size={18} color={colors.success} />
@@ -305,7 +340,11 @@ export default function ReportsScreen() {
                   
                   <View style={[
                     styles.chartCard, 
-                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02) }
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                    }
                   ]}>
                     {stats.byDepartment.map((dept, index) => {
                       const maxCount = stats.byDepartment[0]?.count || 1;
@@ -358,8 +397,9 @@ export default function ReportsScreen() {
                       style={[
                         styles.activityCard,
                         { 
-                          backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02),
-                          borderColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.05),
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.cardBorder,
+                          borderWidth: colors.borderWidth,
                         }
                       ]}
                     >

@@ -503,6 +503,7 @@ export default function AnalyticsScreen() {
                       : periodButtonBackground,
                     borderColor:
                       selectedPeriod === period ? colors.primary : withAlpha(colors.primary, 0.18),
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
               >
@@ -771,7 +772,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 0,
     alignItems: 'center',
   },
   periodText: {

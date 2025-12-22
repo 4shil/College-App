@@ -468,14 +468,15 @@ export default function TeacherMarkAttendanceScreen() {
         style={[
           styles.studentCard,
           {
-            backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02),
+            backgroundColor: colors.cardBackground,
             borderColor: student.status === 'present'
               ? withAlpha(colors.success, 0.19)
               : student.status === 'absent'
                 ? withAlpha(colors.error, 0.19)
                 : student.status === 'late'
                   ? withAlpha(colors.warning, 0.19)
-                  : 'transparent',
+                  : colors.cardBorder,
+            borderWidth: colors.borderWidth,
             opacity: isLocked ? 0.6 : 1,
           },
         ]}
@@ -580,7 +581,7 @@ export default function TeacherMarkAttendanceScreen() {
       <View
         style={[
           styles.modalOverlay,
-          { backgroundColor: isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.shadowColor, 0.5) },
+          { backgroundColor: isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5) },
         ]}
       >
         <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
@@ -597,7 +598,11 @@ export default function TeacherMarkAttendanceScreen() {
           <View
             style={[
               styles.minutesInput,
-              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
+              },
             ]}
           >
             <TouchableOpacity
@@ -676,24 +681,55 @@ export default function TeacherMarkAttendanceScreen() {
             <>
               {/* Stats Card */}
               <Animated.View entering={FadeIn.delay(150).duration(400)}>
-                <Card style={[styles.statsCard, { borderColor: withAlpha(colors.primary, 0.19) }]}>
+                <Card style={styles.statsCard}>
                   <View style={styles.statsRow}>
-                    <View style={[styles.statItem, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+                    <View
+                      style={[
+                        styles.statItem,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.cardBorder,
+                          borderWidth: colors.borderWidth,
+                        },
+                      ]}
+                    >
                       <Text style={[styles.statValue, { color: colors.success }]}>{presentCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textMuted }]}>Present</Text>
                     </View>
-                    <View style={[styles.statItem, { backgroundColor: withAlpha(colors.warning, 0.08) }]}>
+                    <View
+                      style={[
+                        styles.statItem,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.cardBorder,
+                          borderWidth: colors.borderWidth,
+                        },
+                      ]}
+                    >
                       <Text style={[styles.statValue, { color: colors.warning }]}>{lateCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textMuted }]}>Late</Text>
                     </View>
-                    <View style={[styles.statItem, { backgroundColor: withAlpha(colors.error, 0.08) }]}>
+                    <View
+                      style={[
+                        styles.statItem,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.cardBorder,
+                          borderWidth: colors.borderWidth,
+                        },
+                      ]}
+                    >
                       <Text style={[styles.statValue, { color: colors.error }]}>{absentCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textMuted }]}>Absent</Text>
                     </View>
                     <View
                       style={[
                         styles.statItem,
-                        { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.cardBorder,
+                          borderWidth: colors.borderWidth,
+                        },
                       ]}
                     >
                       <Text style={[styles.statValue, { color: colors.textSecondary }]}>
@@ -712,7 +748,11 @@ export default function TeacherMarkAttendanceScreen() {
                   <View
                     style={[
                       styles.searchBox,
-                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                      },
                     ]}
                   >
                     <Ionicons name="search" size={18} color={colors.textMuted} />

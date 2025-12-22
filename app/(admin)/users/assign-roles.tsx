@@ -57,7 +57,11 @@ interface UserWithRoles extends User {
 
 export default function AssignRolesScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -307,17 +311,17 @@ export default function AssignRolesScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.primary }]}>{users.length}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Users</Text>
           </Card>
-          <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>
               {users.filter(u => u.user_roles.length > 0).length}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>With Roles</Text>
           </Card>
-          <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
+          <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>
               {users.filter(u => u.user_roles.length === 0).length}
             </Text>
@@ -422,7 +426,7 @@ export default function AssignRolesScreen() {
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={[styles.modalContainer, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>

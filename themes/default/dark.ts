@@ -62,6 +62,6 @@ export const defaultDarkTokens: ThemeTokensNormalized = {
 
   geometry: {
     borderRadius: 16,
-    borderWidth: 0,
+    borderWidth: 1.5,
   },
 };

@@ -623,15 +623,42 @@ export default function SubstitutionsScreen() {
 
         {/* Stats */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: withAlpha(colors.success, 0.08) }]}>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <Text style={[styles.statValue, { color: colors.success }]}>{stats.today}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Today</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <Text style={[styles.statValue, { color: colors.primary }]}>{stats.upcoming}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Upcoming</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: withAlpha(colors.warning, 0.08) }]}>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             <Text style={[styles.statValue, { color: colors.warning }]}>{stats.thisMonth}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>This Month</Text>
           </View>

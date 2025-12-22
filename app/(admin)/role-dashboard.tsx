@@ -30,6 +30,8 @@ export default function RoleBasedDashboard() {
   const getModuleColor = React.useCallback(
     (moduleKey: string) => {
       switch (moduleKey) {
+        case 'reception':
+          return colors.primary;
         case 'users':
           return colors.info;
         case 'academic':
@@ -63,6 +65,13 @@ export default function RoleBasedDashboard() {
 
   // All possible modules with their configurations
   const allModules: ModuleCard[] = [
+    {
+      id: 'reception',
+      title: 'Reception',
+      icon: 'id-card',
+      route: '/(admin)/reception',
+      module: 'reception',
+    },
     {
       id: 'users',
       title: 'User Management',
@@ -187,6 +196,7 @@ export default function RoleBasedDashboard() {
           <View style={[styles.roleBadge, { 
             backgroundColor: withAlpha(colors.primary, isDark ? 0.12 : 0.08),
             borderColor: withAlpha(colors.primary, isDark ? 0.25 : 0.2),
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.roleIconContainer, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
               <FontAwesome5 name="shield-alt" size={20} color={colors.primary} />
@@ -218,6 +228,7 @@ export default function RoleBasedDashboard() {
                 <View style={[styles.moduleCard, { 
                   backgroundColor: withAlpha(moduleColor, isDark ? 0.09 : 0.06),
                   borderColor: withAlpha(moduleColor, isDark ? 0.2 : 0.16),
+                  borderWidth: colors.borderWidth,
                 }]}>
                   <View style={[styles.iconContainer, { backgroundColor: moduleColor, shadowColor: colors.shadowColor }]}>
                     <FontAwesome5 name={module.icon} size={24} color={colors.textInverse} />
@@ -268,7 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderRadius: 20,
-    borderWidth: 1.5,
+    borderWidth: 0,
   },
   roleIconContainer: {
     width: 52,
@@ -289,7 +300,7 @@ const styles = StyleSheet.create({
   moduleCard: {
     padding: 20,
     alignItems: 'center',
-    borderWidth: 1.5,
+    borderWidth: 0,
     borderRadius: 20,
     height: 150,
     justifyContent: 'center',
@@ -297,7 +308,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 60,
     height: 60,
-    borderRadius: 18,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,

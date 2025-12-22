@@ -15,7 +15,7 @@ import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-re
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, StatCard, ThemeToggle } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -102,6 +102,8 @@ export default function AdminDashboard() {
           return colors.primary;
         case 'notices':
           return colors.info;
+        case 'reception':
+          return colors.primary;
         case 'role-management':
           return colors.error;
         case 'settings':
@@ -114,6 +116,14 @@ export default function AdminDashboard() {
   );
 
   const quickActions: QuickAction[] = [
+    {
+      id: 'reception',
+      title: 'Reception',
+      icon: 'id-card',
+      iconType: 'fa5',
+      route: '/(admin)/reception',
+      module: 'reception',
+    },
     {
       id: 'students',
       title: 'Manage Students',
@@ -412,28 +422,14 @@ export default function AdminDashboard() {
       entering={FadeInDown.delay(delay).duration(500).springify().damping(16)}
       style={[styles.statCard, { width: cardWidth }]}
     >
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => route && router.push(route as any)}
-        disabled={!route}
-      >
-        <LinearGradient
-          colors={[withAlpha(color, isDark ? 0.125 : 0.08), withAlpha(color, isDark ? 0.05 : 0.03)]}
-          style={[styles.statCardGradient, { borderColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.06) }]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View style={[styles.statIconContainer, { backgroundColor: withAlpha(color, 0.1) }]}>
-            <FontAwesome5 name={icon} size={20} color={color} />
-          </View>
-          {loading ? (
-            <ActivityIndicator size="small" color={color} style={{ marginVertical: 10 }} />
-          ) : (
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
-          )}
-          <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <StatCard
+        title={title}
+        value={value}
+        accentColor={color}
+        loading={loading}
+        onPress={route ? () => router.push(route as any) : undefined}
+        icon={<FontAwesome5 name={icon} size={20} color={color} />}
+      />
     </Animated.View>
   );
 
@@ -455,8 +451,9 @@ export default function AdminDashboard() {
           style={[
             styles.actionButton,
             {
-              backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.04 : 0.03),
-              borderColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.06),
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.cardBorder,
+              borderWidth: colors.borderWidth,
             },
           ]}
           onPress={() => router.push(action.route as any)}
@@ -535,7 +532,10 @@ export default function AdminDashboard() {
             >
               <LinearGradient
                 colors={[withAlpha(colors.warning, isDark ? 0.15 : 0.12), withAlpha(colors.warning, isDark ? 0.05 : 0.04)]}
-                style={[styles.alertGradient, { borderColor: withAlpha(colors.warning, isDark ? 0.18 : 0.16) }]}
+                style={[
+                  styles.alertGradient,
+                  { borderColor: withAlpha(colors.warning, isDark ? 0.18 : 0.16), borderWidth: colors.borderWidth },
+                ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
@@ -594,7 +594,7 @@ export default function AdminDashboard() {
                       key={activity.id}
                       style={[
                         styles.activityItem,
-                        { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.04) },
+                        { borderBottomColor: colors.cardBorder, borderBottomWidth: colors.borderWidth },
                         index === recentActivities.length - 1 && { borderBottomWidth: 0 },
                       ]}
                     >
@@ -710,30 +710,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
-  statCardGradient: {
-    padding: 18,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  statValue: {
-    fontSize: 30,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  statTitle: {
-    fontSize: 13,
-    marginTop: 5,
-    fontWeight: '500',
-  },
   alertCard: {
     marginBottom: 28,
     borderRadius: 20,
@@ -777,7 +753,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
   },
   actionIconContainer: {

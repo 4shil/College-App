@@ -134,6 +134,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
             {
               height: heights[size],
               borderRadius: colors.borderRadius,
+              borderWidth: variant === 'outline' ? colors.borderWidth : 0,
               borderColor: variant === 'outline' 
                 ? colors.primary
                 : 'transparent',
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   outlineButton: {
-    borderWidth: 1.5,
+    borderWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

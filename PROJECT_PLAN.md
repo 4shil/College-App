@@ -1560,10 +1560,54 @@ CREATE TABLE audit_logs (
 
 ---
 
-📌 **Only these 9 roles = TRUE ADMIN ROLES.**
+### 🟦 10. RECEPTION ADMIN (EXECUTION-ONLY STAFF ADMIN)
+
+*Front desk execution role. Strict scope. No approvals. Append-only logs. Admission Number only.*
+
+#### ✅ Can
+| Feature | Rules |
+|---------|-------|
+| Gate Pass Verification | View **APPROVED** passes only → verify student by **Admission Number** → mark **EXIT time** → **close** pass |
+| Issue Late Pass | Discipline log only (NO attendance linkage). **Only until end of 3rd hour**. **One per student per day**. |
+| Today's Logs | Read-only list of today’s Gate Pass exits + Late Pass logs |
+| Notices | **VIEW ONLY** |
+
+#### ❌ Cannot
+- Create/approve/edit/delete Gate Pass
+- Edit/delete Late Pass logs (append-only)
+- Access user management, academics, attendance module, exams module, fees module, analytics, settings
+- Use roll-number logic or manual name entry (Admission Number only)
+
+#### DB (Auditable)
+- Tables: `reception_gate_passes`, `reception_late_pass_logs`
+- RPCs: `reception_get_student_by_admission_no`, `reception_close_gate_pass`, `reception_issue_late_pass`
+- All actions write to `audit_logs`
+
+---
+
+📌 **Only the 9 roles above are FULL ADMIN roles.**
+📌 **Reception Admin is a STAFF admin role (limited scope; no admin creep).**
 📌 **All teaching roles (Coordinator, Class Teacher, Subject Teacher) are NOT admins.**
 
 ---
+
+## 🧾 RECEPTION MODULE — FINAL & LOCKED (Admin App Only)
+
+### Screens
+- Login (existing)
+- Reception Dashboard
+- Gate Pass Verification
+- Issue Late Pass
+- Today’s Logs (read-only)
+- Notices (view-only)
+
+### Key Rules
+- All operations are keyed by **Admission Number** (student `registration_number`) only
+- Reception is execution-only: verify + log + timestamp
+- No edits/deletes/overrides from Reception UI
+
+### Implementation Log
+- 2025-12-22: Added `reception_admin` role + Reception module access + Reception admin screens + Supabase migration for tables/RPCs.
 
 ## ⭐ SECTION 2 — ADMIN MODULE (FULL FEATURE LIST)
 

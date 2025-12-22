@@ -68,6 +68,6 @@ export const neutralSolidDarkTokens: ThemeTokensNormalized = {
     // 0.625rem * 16px/rem = 10px
     borderRadius: 10,
     // CSS variables do not specify border width; keep existing system default.
-    borderWidth: 0,
+    borderWidth: 1.5,
   },
 };

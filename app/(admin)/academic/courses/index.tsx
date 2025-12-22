@@ -18,6 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Course {
@@ -46,6 +47,10 @@ export default function CoursesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -262,15 +267,20 @@ export default function CoursesScreen() {
     >
       <Card style={styles.courseCard}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: course.is_active ? '#10b98120' : '#6b728020' }]}>
-            <FontAwesome5 name="graduation-cap" size={20} color={course.is_active ? '#10b981' : '#6b7280'} />
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: course.is_active ? withAlpha(colors.success, 0.125) : withAlpha(colors.textMuted, 0.125) },
+            ]}
+          >
+            <FontAwesome5 name="graduation-cap" size={20} color={course.is_active ? colors.success : colors.textMuted} />
           </View>
           <View style={styles.cardInfo}>
             <View style={styles.nameRow}>
               <Text style={[styles.courseName, { color: colors.textPrimary }]} numberOfLines={1}>{course.name}</Text>
               {!course.is_active && (
-                <View style={styles.inactiveBadge}>
-                  <Text style={styles.inactiveText}>Inactive</Text>
+                <View style={[styles.inactiveBadge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                  <Text style={[styles.inactiveText, { color: colors.error }]}>Inactive</Text>
                 </View>
               )}
             </View>
@@ -279,29 +289,48 @@ export default function CoursesScreen() {
         </View>
 
         <View style={styles.detailsRow}>
-          <View style={[styles.detailBadge, { backgroundColor: '#6366f120' }]}>
-            <FontAwesome5 name="building" size={10} color="#6366f1" />
-            <Text style={[styles.detailText, { color: '#6366f1' }]}>{course.department?.code || 'N/A'}</Text>
+          <View style={[styles.detailBadge, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+            <FontAwesome5 name="building" size={10} color={colors.primary} />
+            <Text style={[styles.detailText, { color: colors.primary }]}>{course.department?.code || 'N/A'}</Text>
           </View>
-          <View style={[styles.detailBadge, { backgroundColor: course.program_type === 'postgraduate' ? '#ec489920' : '#10b98120' }]}>
-            <FontAwesome5 name="award" size={10} color={course.program_type === 'postgraduate' ? '#ec4899' : '#10b981'} />
-            <Text style={[styles.detailText, { color: course.program_type === 'postgraduate' ? '#ec4899' : '#10b981' }]}>
+          <View
+            style={[
+              styles.detailBadge,
+              {
+                backgroundColor:
+                  course.program_type === 'postgraduate'
+                    ? withAlpha(colors.info, 0.125)
+                    : withAlpha(colors.success, 0.125),
+              },
+            ]}
+          >
+            <FontAwesome5
+              name="award"
+              size={10}
+              color={course.program_type === 'postgraduate' ? colors.info : colors.success}
+            />
+            <Text
+              style={[
+                styles.detailText,
+                { color: course.program_type === 'postgraduate' ? colors.info : colors.success },
+              ]}
+            >
               {course.program_type === 'postgraduate' ? 'PG' : 'UG'}
             </Text>
           </View>
-          <View style={[styles.detailBadge, { backgroundColor: '#f59e0b20' }]}>
-            <FontAwesome5 name="clock" size={10} color="#f59e0b" />
-            <Text style={[styles.detailText, { color: '#f59e0b' }]}>{course.duration_years || 3} Years</Text>
+          <View style={[styles.detailBadge, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
+            <FontAwesome5 name="clock" size={10} color={colors.warning} />
+            <Text style={[styles.detailText, { color: colors.warning }]}>{course.duration_years || 3} Years</Text>
           </View>
-          <View style={[styles.detailBadge, { backgroundColor: '#8b5cf620' }]}>
-            <FontAwesome5 name="layer-group" size={10} color="#8b5cf6" />
-            <Text style={[styles.detailText, { color: '#8b5cf6' }]}>{course.total_semesters || 6} Sems</Text>
+          <View style={[styles.detailBadge, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
+            <FontAwesome5 name="layer-group" size={10} color={colors.info} />
+            <Text style={[styles.detailText, { color: colors.info }]}>{course.total_semesters || 6} Sems</Text>
           </View>
         </View>
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary + '15', opacity: saving ? 0.5 : 1 }]}
+            style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.08), opacity: saving ? 0.5 : 1 }]}
             onPress={() => openEditModal(course)}
             disabled={saving}
           >
@@ -309,22 +338,32 @@ export default function CoursesScreen() {
             <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: course.is_active ? '#f59e0b15' : '#10b98115', opacity: saving ? 0.5 : 1 }]}
+            style={[
+              styles.actionBtn,
+              {
+                backgroundColor: course.is_active ? withAlpha(colors.warning, 0.08) : withAlpha(colors.success, 0.08),
+                opacity: saving ? 0.5 : 1,
+              },
+            ]}
             onPress={() => handleToggleActive(course)}
             disabled={saving}
           >
-            <FontAwesome5 name={course.is_active ? 'ban' : 'check'} size={12} color={course.is_active ? '#f59e0b' : '#10b981'} />
-            <Text style={[styles.actionBtnText, { color: course.is_active ? '#f59e0b' : '#10b981' }]}>
+            <FontAwesome5
+              name={course.is_active ? 'ban' : 'check'}
+              size={12}
+              color={course.is_active ? colors.warning : colors.success}
+            />
+            <Text style={[styles.actionBtnText, { color: course.is_active ? colors.warning : colors.success }]}>
               {course.is_active ? 'Disable' : 'Enable'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#ef444415', opacity: saving ? 0.5 : 1 }]}
+            style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.08), opacity: saving ? 0.5 : 1 }]}
             onPress={() => handleDelete(course)}
             disabled={saving}
           >
-            <FontAwesome5 name="trash" size={12} color="#ef4444" />
-            <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>Delete</Text>
+            <FontAwesome5 name="trash" size={12} color={colors.error} />
+            <Text style={[styles.actionBtnText, { color: colors.error }]}>Delete</Text>
           </TouchableOpacity>
         </View>
       </Card>
@@ -344,7 +383,7 @@ export default function CoursesScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{courses.length} course(s)</Text>
           </View>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -372,8 +411,8 @@ export default function CoursesScreen() {
 
         {/* Add/Edit Modal */}
         <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
-          <View style={styles.modalOverlay}>
-            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
+            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   {editingCourse ? 'Edit Course' : 'Add Course'}
@@ -402,7 +441,7 @@ export default function CoursesScreen() {
 
                 <View style={styles.formGroup}>
                   <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Department *</Text>
-                  <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                  <View style={[styles.pickerContainer, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.03) }]}>
                     <Picker selectedValue={formDeptId} onValueChange={setFormDeptId} style={{ color: colors.textPrimary }}>
                       <Picker.Item label="Select Department" value="" />
                       {departments.map((dept) => (
@@ -414,7 +453,7 @@ export default function CoursesScreen() {
 
                 <View style={styles.formGroup}>
                   <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Program Type *</Text>
-                  <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                  <View style={[styles.pickerContainer, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.03) }]}>
                     <Picker selectedValue={formProgramType} onValueChange={(v) => setFormProgramType(v as 'undergraduate' | 'postgraduate')} style={{ color: colors.textPrimary }}>
                       <Picker.Item label="Undergraduate (UG)" value="undergraduate" />
                       <Picker.Item label="Postgraduate (PG)" value="postgraduate" />
@@ -471,8 +510,8 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   courseName: { fontSize: 16, fontWeight: '600' },
-  inactiveBadge: { backgroundColor: '#ef444420', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: '#ef4444' },
+  inactiveBadge: { backgroundColor: 'transparent', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
   courseCode: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   detailsRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
   detailBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, gap: 6 },
@@ -483,7 +522,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 80 },
   emptyTitle: { fontSize: 18, fontWeight: '700', marginTop: 16 },
   emptySubtitle: { fontSize: 14, marginTop: 8 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitle: { fontSize: 20, fontWeight: '700' },

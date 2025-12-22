@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Year {
@@ -33,6 +34,10 @@ export default function YearsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -225,7 +230,7 @@ export default function YearsScreen() {
   };
 
   const renderYearCard = (year: Year, index: number) => {
-    const yearColors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'];
+    const yearColors = [colors.primary, colors.success, colors.warning, colors.error, colors.info, colors.primary];
     const color = yearColors[(year.year_number - 1) % yearColors.length];
 
     return (
@@ -236,8 +241,17 @@ export default function YearsScreen() {
       >
         <Card style={styles.yearCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: year.is_active ? color + '20' : '#6b728020' }]}>
-              <Text style={[styles.yearNumber, { color: year.is_active ? color : '#6b7280' }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  backgroundColor: year.is_active
+                    ? withAlpha(color, 0.125)
+                    : withAlpha(colors.textMuted, 0.125),
+                },
+              ]}
+            >
+              <Text style={[styles.yearNumber, { color: year.is_active ? color : colors.textMuted }]}>
                 {year.year_number}
               </Text>
             </View>
@@ -245,8 +259,8 @@ export default function YearsScreen() {
               <View style={styles.nameRow}>
                 <Text style={[styles.yearName, { color: colors.textPrimary }]}>{year.name}</Text>
                 {!year.is_active && (
-                  <View style={styles.inactiveBadge}>
-                    <Text style={styles.inactiveText}>Inactive</Text>
+                  <View style={[styles.inactiveBadge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                    <Text style={[styles.inactiveText, { color: colors.error }]}>Inactive</Text>
                   </View>
                 )}
               </View>
@@ -257,15 +271,15 @@ export default function YearsScreen() {
           </View>
 
           <View style={styles.statsRow}>
-            <View style={[styles.statBadge, { backgroundColor: '#6366f120' }]}>
-              <FontAwesome5 name="user-graduate" size={12} color="#6366f1" />
-              <Text style={[styles.statText, { color: '#6366f1' }]}>
+            <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+              <FontAwesome5 name="user-graduate" size={12} color={colors.primary} />
+              <Text style={[styles.statText, { color: colors.primary }]}>
                 {year.students_count || 0} Students
               </Text>
             </View>
-            <View style={[styles.statBadge, { backgroundColor: '#10b98120' }]}>
-              <FontAwesome5 name="calendar-alt" size={12} color="#10b981" />
-              <Text style={[styles.statText, { color: '#10b981' }]}>
+            <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+              <FontAwesome5 name="calendar-alt" size={12} color={colors.success} />
+              <Text style={[styles.statText, { color: colors.success }]}>
                 {year.semesters_count || 0} Semesters
               </Text>
             </View>
@@ -273,26 +287,33 @@ export default function YearsScreen() {
 
           <View style={styles.actionsRow}>
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
+              style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
               onPress={() => openEditModal(year)}
             >
               <FontAwesome5 name="edit" size={12} color={colors.primary} />
               <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: year.is_active ? '#f59e0b15' : '#10b98115' }]}
+              style={[
+                styles.actionBtn,
+                { backgroundColor: year.is_active ? withAlpha(colors.warning, 0.08) : withAlpha(colors.success, 0.08) },
+              ]}
               onPress={() => handleToggleActive(year)}
             >
-              <FontAwesome5 name={year.is_active ? 'ban' : 'check'} size={12} color={year.is_active ? '#f59e0b' : '#10b981'} />
-              <Text style={[styles.actionBtnText, { color: year.is_active ? '#f59e0b' : '#10b981' }]}>
+              <FontAwesome5
+                name={year.is_active ? 'ban' : 'check'}
+                size={12}
+                color={year.is_active ? colors.warning : colors.success}
+              />
+              <Text style={[styles.actionBtnText, { color: year.is_active ? colors.warning : colors.success }]}>
                 {year.is_active ? 'Disable' : 'Enable'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: '#ef444415' }]}
+              style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.08) }]}
               onPress={() => handleDelete(year)}
             >
-              <FontAwesome5 name="trash" size={12} color="#ef4444" />
+              <FontAwesome5 name="trash" size={12} color={colors.error} />
             </TouchableOpacity>
           </View>
         </Card>
@@ -313,7 +334,7 @@ export default function YearsScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{years.length} year(s)</Text>
           </View>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -341,8 +362,8 @@ export default function YearsScreen() {
 
         {/* Add/Edit Modal */}
         <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
-          <View style={styles.modalOverlay}>
-            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
+            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   {editingYear ? 'Edit Year' : 'Add Year'}
@@ -415,8 +436,8 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1, justifyContent: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   yearName: { fontSize: 18, fontWeight: '600' },
-  inactiveBadge: { backgroundColor: '#ef444420', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: '#ef4444' },
+  inactiveBadge: { backgroundColor: 'transparent', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
   yearSubtitle: { fontSize: 13, marginTop: 2 },
   statsRow: { flexDirection: 'row', marginTop: 14, gap: 10 },
   statBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, gap: 8 },
@@ -427,7 +448,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 80 },
   emptyTitle: { fontSize: 18, fontWeight: '700', marginTop: 16 },
   emptySubtitle: { fontSize: 14, marginTop: 8 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitle: { fontSize: 20, fontWeight: '700' },

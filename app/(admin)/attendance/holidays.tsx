@@ -22,6 +22,7 @@ import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../co
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Holiday {
   id: string;
@@ -258,6 +259,7 @@ export default function HolidaysScreen() {
 
   const renderHolidayCard = (holiday: Holiday, index: number, isPast: boolean = false) => {
     const canEdit = isSuperAdmin || (isHOD && holiday.department_id === profile?.department_id);
+    const typeColor = holiday.holiday_type === 'college' ? colors.success : colors.warning;
 
     return (
       <Animated.View
@@ -268,7 +270,7 @@ export default function HolidaysScreen() {
           style={[
             styles.holidayCard,
             isPast && { opacity: 0.6 },
-            { borderLeftColor: holiday.holiday_type === 'college' ? '#10b981' : '#f59e0b' },
+            { borderLeftColor: typeColor },
           ]}
         >
           <View style={styles.holidayHeader}>
@@ -292,18 +294,18 @@ export default function HolidaysScreen() {
                 <View
                   style={[
                     styles.typeBadge,
-                    { backgroundColor: holiday.holiday_type === 'college' ? '#10b98115' : '#f59e0b15' },
+                    { backgroundColor: withAlpha(typeColor, 0.082) },
                   ]}
                 >
                   <FontAwesome5
                     name={holiday.holiday_type === 'college' ? 'university' : 'building'}
                     size={10}
-                    color={holiday.holiday_type === 'college' ? '#10b981' : '#f59e0b'}
+                    color={typeColor}
                   />
                   <Text
                     style={[
                       styles.typeText,
-                      { color: holiday.holiday_type === 'college' ? '#10b981' : '#f59e0b' },
+                      { color: typeColor },
                     ]}
                   >
                     {holiday.holiday_type === 'college' ? 'College' : holiday.departments?.name}
@@ -318,16 +320,16 @@ export default function HolidaysScreen() {
             {canEdit && !isPast && (
               <View style={styles.holidayActions}>
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
+                  style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
                   onPress={() => handleOpenModal(holiday)}
                 >
                   <FontAwesome5 name="edit" size={12} color={colors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#ef444415' }]}
+                  style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.082) }]}
                   onPress={() => handleDeleteHoliday(holiday)}
                 >
-                  <FontAwesome5 name="trash" size={12} color="#ef4444" />
+                  <FontAwesome5 name="trash" size={12} color={colors.error} />
                 </TouchableOpacity>
               </View>
             )}
@@ -339,8 +341,9 @@ export default function HolidaysScreen() {
 
   const renderModal = () => (
     <Modal visible={showModal} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <Card style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+      <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.6) }]}
+      >
+        <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               {editingHoliday ? 'Edit Holiday' : 'Add Holiday'}
@@ -354,7 +357,10 @@ export default function HolidaysScreen() {
             {/* Date Picker */}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Date</Text>
             <TouchableOpacity
-              style={[styles.datePickerBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+              style={[
+                styles.datePickerBtn,
+                { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+              ]}
               onPress={() => setShowDatePicker(true)}
             >
               <FontAwesome5 name="calendar-alt" size={16} color={colors.primary} />
@@ -403,19 +409,24 @@ export default function HolidaysScreen() {
                     style={[
                       styles.typeOption,
                       holidayType === 'college' && styles.typeOptionActive,
-                      { backgroundColor: holidayType === 'college' ? '#10b981' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' },
+                      {
+                        backgroundColor:
+                          holidayType === 'college'
+                            ? colors.success
+                            : withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                      },
                     ]}
                     onPress={() => setHolidayType('college')}
                   >
                     <FontAwesome5
                       name="university"
                       size={14}
-                      color={holidayType === 'college' ? '#fff' : colors.textSecondary}
+                      color={holidayType === 'college' ? colors.textInverse : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.typeOptionText,
-                        { color: holidayType === 'college' ? '#fff' : colors.textSecondary },
+                        { color: holidayType === 'college' ? colors.textInverse : colors.textSecondary },
                       ]}
                     >
                       College-wide
@@ -426,19 +437,24 @@ export default function HolidaysScreen() {
                     style={[
                       styles.typeOption,
                       holidayType === 'department' && styles.typeOptionActive,
-                      { backgroundColor: holidayType === 'department' ? '#f59e0b' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' },
+                      {
+                        backgroundColor:
+                          holidayType === 'department'
+                            ? colors.warning
+                            : withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                      },
                     ]}
                     onPress={() => setHolidayType('department')}
                   >
                     <FontAwesome5
                       name="building"
                       size={14}
-                      color={holidayType === 'department' ? '#fff' : colors.textSecondary}
+                      color={holidayType === 'department' ? colors.textInverse : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.typeOptionText,
-                        { color: holidayType === 'department' ? '#fff' : colors.textSecondary },
+                        { color: holidayType === 'department' ? colors.textInverse : colors.textSecondary },
                       ]}
                     >
                       Department
@@ -452,7 +468,15 @@ export default function HolidaysScreen() {
             {holidayType === 'department' && isSuperAdmin && (
               <>
                 <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Department</Text>
-                <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                <View
+                  style={[
+                    styles.pickerWrapper,
+                    {
+                      backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                      borderColor: withAlpha(colors.primary, 0.2),
+                    },
+                  ]}
+                >
                   <Picker
                     selectedValue={selectedDepartment}
                     onValueChange={setSelectedDepartment}
@@ -470,9 +494,9 @@ export default function HolidaysScreen() {
 
             {/* HOD Info */}
             {isHOD && !isSuperAdmin && (
-              <View style={[styles.infoBox, { backgroundColor: '#f59e0b15' }]}>
-                <FontAwesome5 name="info-circle" size={14} color="#f59e0b" />
-                <Text style={[styles.infoText, { color: '#f59e0b' }]}>
+              <View style={[styles.infoBox, { backgroundColor: withAlpha(colors.warning, 0.082) }]}>
+                <FontAwesome5 name="info-circle" size={14} color={colors.warning} />
+                <Text style={[styles.infoText, { color: colors.warning }]}>
                   As HOD, you can only create department holidays for your department.
                 </Text>
               </View>
@@ -492,9 +516,9 @@ export default function HolidaysScreen() {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.textInverse} />
               ) : (
-                <Text style={[styles.modalBtnText, { color: '#fff' }]}>
+                <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>
                   {editingHoliday ? 'Update' : 'Create'}
                 </Text>
               )}
@@ -523,7 +547,7 @@ export default function HolidaysScreen() {
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={() => handleOpenModal()}
           >
-            <FontAwesome5 name="plus" size={14} color="#fff" />
+            <FontAwesome5 name="plus" size={14} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -548,7 +572,10 @@ export default function HolidaysScreen() {
                   onPress={() => setFilterType('all')}
                 >
                   <Text
-                    style={[styles.filterTabText, { color: filterType === 'all' ? '#fff' : colors.textSecondary }]}
+                    style={[
+                      styles.filterTabText,
+                      { color: filterType === 'all' ? colors.textInverse : colors.textSecondary },
+                    ]}
                   >
                     All ({holidays.length})
                   </Text>
@@ -558,19 +585,19 @@ export default function HolidaysScreen() {
                   style={[
                     styles.filterTab,
                     filterType === 'college' && styles.filterTabActive,
-                    { backgroundColor: filterType === 'college' ? '#10b981' : colors.glassBackground },
+                    { backgroundColor: filterType === 'college' ? colors.success : colors.glassBackground },
                   ]}
                   onPress={() => setFilterType('college')}
                 >
                   <FontAwesome5
                     name="university"
                     size={12}
-                    color={filterType === 'college' ? '#fff' : '#10b981'}
+                    color={filterType === 'college' ? colors.textInverse : colors.success}
                   />
                   <Text
                     style={[
                       styles.filterTabText,
-                      { color: filterType === 'college' ? '#fff' : colors.textSecondary },
+                      { color: filterType === 'college' ? colors.textInverse : colors.textSecondary },
                     ]}
                   >
                     College
@@ -581,19 +608,19 @@ export default function HolidaysScreen() {
                   style={[
                     styles.filterTab,
                     filterType === 'department' && styles.filterTabActive,
-                    { backgroundColor: filterType === 'department' ? '#f59e0b' : colors.glassBackground },
+                    { backgroundColor: filterType === 'department' ? colors.warning : colors.glassBackground },
                   ]}
                   onPress={() => setFilterType('department')}
                 >
                   <FontAwesome5
                     name="building"
                     size={12}
-                    color={filterType === 'department' ? '#fff' : '#f59e0b'}
+                    color={filterType === 'department' ? colors.textInverse : colors.warning}
                   />
                   <Text
                     style={[
                       styles.filterTabText,
-                      { color: filterType === 'department' ? '#fff' : colors.textSecondary },
+                      { color: filterType === 'department' ? colors.textInverse : colors.textSecondary },
                     ]}
                   >
                     Department
@@ -629,7 +656,7 @@ export default function HolidaysScreen() {
                     No holidays found
                   </Text>
                   <TouchableOpacity
-                    style={[styles.emptyBtn, { backgroundColor: colors.primary + '15' }]}
+                    style={[styles.emptyBtn, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
                     onPress={() => handleOpenModal()}
                   >
                     <FontAwesome5 name="plus" size={12} color={colors.primary} />
@@ -766,7 +793,7 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 24,
   },
@@ -815,7 +842,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: 'transparent',
   },
   infoBox: {
     flexDirection: 'row',

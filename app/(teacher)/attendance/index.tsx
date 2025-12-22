@@ -419,17 +419,17 @@ export default function TeacherAttendanceIndex() {
             <>
               {/* Stats Cards */}
               <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.statsRow}>
-                <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.primary, 0.06) }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="calendar-check" size={20} color={colors.primary} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.todayClasses}</Text>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>Today's Classes</Text>
                 </Card>
-                <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.success, 0.06) }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="check-double" size={20} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.completedClasses}</Text>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>Completed</Text>
                 </Card>
-                <Card style={[styles.statCard, { backgroundColor: withAlpha(colors.info, 0.06) }]}>
+                <Card style={styles.statCard}>
                   <FontAwesome5 name="user-check" size={20} color={colors.info} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalStudentsMarked}</Text>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>Marked</Text>

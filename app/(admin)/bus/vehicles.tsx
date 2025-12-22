@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Vehicle {
   id: string;
@@ -32,6 +33,10 @@ export default function VehiclesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,7 +211,7 @@ export default function VehiclesScreen() {
               >
                 <GlassCard style={styles.vehicleCard}>
                   <View style={styles.cardHeader}>
-                    <View style={[styles.vehicleIcon, { backgroundColor: `${colors.primary}15` }]}>
+                    <View style={[styles.vehicleIcon, { backgroundColor: withAlpha(colors.primary, 0.082) }]}>
                       <FontAwesome5 name="bus" size={24} color={colors.primary} />
                     </View>
                     <View style={styles.vehicleDetails}>
@@ -219,7 +224,7 @@ export default function VehiclesScreen() {
                     </View>
                     <View style={[
                       styles.conditionBadge,
-                      { backgroundColor: `${getConditionColor(vehicle.condition)}20` }
+                      { backgroundColor: withAlpha(getConditionColor(vehicle.condition), 0.125) }
                     ]}>
                       <Text style={[
                         styles.conditionText,
@@ -239,14 +244,14 @@ export default function VehiclesScreen() {
 
                   <View style={styles.actions}>
                     <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}
+                      style={[styles.actionButton, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
                       onPress={() => openEditModal(vehicle)}
                     >
                       <FontAwesome5 name="edit" size={14} color={colors.primary} />
                       <Text style={[styles.actionText, { color: colors.primary }]}>Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: `${colors.error}15` }]}
+                      style={[styles.actionButton, { backgroundColor: withAlpha(colors.error, 0.082) }]}
                       onPress={() => handleDelete(vehicle)}
                     >
                       <FontAwesome5 name="trash" size={14} color={colors.error} />
@@ -266,7 +271,7 @@ export default function VehiclesScreen() {
           animationType="slide"
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <GlassCard style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -293,8 +298,8 @@ export default function VehiclesScreen() {
                         key={type}
                         style={[
                           styles.typeButton,
-                          { borderColor: `${colors.primary}30` },
-                          formData.vehicle_type === type && { backgroundColor: `${colors.primary}20` },
+                          { borderColor: withAlpha(colors.primary, 0.188) },
+                          formData.vehicle_type === type && { backgroundColor: withAlpha(colors.primary, 0.125) },
                         ]}
                         onPress={() => setFormData({ ...formData, vehicle_type: type })}
                       >
@@ -327,8 +332,8 @@ export default function VehiclesScreen() {
                         key={cond}
                         style={[
                           styles.condButton,
-                          { borderColor: `${colors.primary}30` },
-                          formData.condition === cond && { backgroundColor: `${getConditionColor(cond)}20` },
+                          { borderColor: withAlpha(colors.primary, 0.188) },
+                          formData.condition === cond && { backgroundColor: withAlpha(getConditionColor(cond), 0.125) },
                         ]}
                         onPress={() => setFormData({ ...formData, condition: cond })}
                       >
@@ -464,7 +469,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 20,
   },

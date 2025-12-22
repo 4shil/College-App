@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 export default function CanteenReportsScreen() {
   const insets = useSafeAreaInsets();
@@ -160,7 +161,12 @@ export default function CanteenReportsScreen() {
                     Orders
                   </Text>
                 </View>
-                <View style={styles.summaryDivider} />
+                <View
+                  style={[
+                    styles.summaryDivider,
+                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) },
+                  ]}
+                />
                 <View style={styles.summaryItem}>
                   <FontAwesome5 name="rupee-sign" size={24} color={colors.success} />
                   <Text style={[styles.summaryValue, { color: colors.success }]}>
@@ -182,7 +188,7 @@ export default function CanteenReportsScreen() {
             >
               <GlassCard style={styles.reportCard}>
                 <View style={styles.reportHeader}>
-                  <View style={[styles.reportIcon, { backgroundColor: `${section.color}20` }]}>
+                  <View style={[styles.reportIcon, { backgroundColor: withAlpha(section.color, 0.2) }]}>
                     <FontAwesome5 name={section.icon} size={20} color={section.color} />
                   </View>
                   <Text style={[styles.reportTitle, { color: colors.textPrimary }]}>
@@ -216,7 +222,7 @@ export default function CanteenReportsScreen() {
             >
               <TouchableOpacity>
                 <GlassCard style={styles.exportCard}>
-                  <View style={[styles.exportIcon, { backgroundColor: `${option.color}15` }]}>
+                  <View style={[styles.exportIcon, { backgroundColor: withAlpha(option.color, 0.15) }]}>
                     <FontAwesome5 name={option.icon} size={22} color={option.color} />
                   </View>
                   <Text style={[styles.exportLabel, { color: colors.textPrimary }]}>
@@ -291,7 +297,7 @@ const styles = StyleSheet.create({
   summaryDivider: {
     width: 1,
     height: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'transparent',
   },
   reportCard: {
     padding: 16,

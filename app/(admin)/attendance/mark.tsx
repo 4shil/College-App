@@ -21,6 +21,7 @@ import { AnimatedBackground, Card, PrimaryButton } from '../../../components/ui'
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 // Period timings
 const PERIOD_TIMINGS = [
@@ -400,20 +401,20 @@ export default function ViewAttendanceScreen() {
       style={[
         styles.studentCard,
         {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+          backgroundColor: colors.cardBackground,
           borderColor: student.status === 'present'
-            ? '#10b98130'
+            ? withAlpha(colors.success, 0.188)
             : student.status === 'absent'
-              ? '#ef444430'
+              ? withAlpha(colors.error, 0.188)
               : student.status === 'late'
-                ? '#f59e0b30'
-                : colors.glassBorder,
-          borderWidth: 1,
+                ? withAlpha(colors.warning, 0.188)
+                : colors.cardBorder,
+          borderWidth: colors.borderWidth,
         },
       ]}
     >
       <View style={styles.studentInfo}>
-        <View style={[styles.rollBadge, { backgroundColor: colors.primary + '15' }]}>
+        <View style={[styles.rollBadge, { backgroundColor: withAlpha(colors.primary, 0.082) }]}>
           <Text style={[styles.rollNumber, { color: colors.primary }]}>
             {student.roll_number || '—'}
           </Text>
@@ -423,7 +424,7 @@ export default function ViewAttendanceScreen() {
             {student.profiles?.full_name || 'Unknown'}
           </Text>
           {student.status === 'late' && (student.late_minutes || 0) > 0 && (
-            <Text style={[styles.lateInfo, { color: '#f59e0b' }]}>
+            <Text style={[styles.lateInfo, { color: colors.warning }]}>
               Late by {student.late_minutes} min
             </Text>
           )}
@@ -434,15 +435,15 @@ export default function ViewAttendanceScreen() {
       <View style={[
         styles.statusBadge,
         {
-          backgroundColor: student.status === 'present' ? '#10b981'
-            : student.status === 'absent' ? '#ef4444'
-            : student.status === 'late' ? '#f59e0b'
+          backgroundColor: student.status === 'present' ? colors.success
+            : student.status === 'absent' ? colors.error
+            : student.status === 'late' ? colors.warning
             : colors.glassBackground,
         },
       ]}>
         <Text style={[
           styles.statusText,
-          { color: student.status ? '#fff' : colors.textMuted },
+          { color: student.status ? colors.textInverse : colors.textMuted },
         ]}>
           {student.status === 'present' ? 'P'
             : student.status === 'absent' ? 'A'
@@ -463,11 +464,11 @@ export default function ViewAttendanceScreen() {
         entering={FadeInRight.delay(100 + index * 50).duration(300)}
         style={[
           styles.delegationCard,
-          { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' },
+          { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
         ]}
       >
         <View style={styles.delegationInfo}>
-          <View style={[styles.teacherAvatar, { backgroundColor: colors.primary + '20' }]}>
+          <View style={[styles.teacherAvatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
             <FontAwesome5 name="user-tie" size={16} color={colors.primary} />
           </View>
           <View style={styles.delegationDetails}>
@@ -485,10 +486,10 @@ export default function ViewAttendanceScreen() {
           </View>
         </View>
         <TouchableOpacity
-          style={[styles.revokeBtn, { backgroundColor: '#ef444415' }]}
+          style={[styles.revokeBtn, { backgroundColor: withAlpha(colors.error, 0.082) }]}
           onPress={() => handleRevokeDelegation(delegation.id)}
         >
-          <FontAwesome5 name="times" size={14} color="#ef4444" />
+          <FontAwesome5 name="times" size={14} color={colors.error} />
         </TouchableOpacity>
       </Animated.View>
     );
@@ -496,8 +497,8 @@ export default function ViewAttendanceScreen() {
 
   const renderDelegationModal = () => (
     <Modal visible={showDelegationModal} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <Card style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+      <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.6) }]}>
+        <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Grant Delegation
           </Text>
@@ -508,7 +509,12 @@ export default function ViewAttendanceScreen() {
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
             Select Teacher
           </Text>
-          <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.pickerContainer,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+            ]}
+          >
             <Picker
               selectedValue={selectedTeacher}
               onValueChange={setSelectedTeacher}
@@ -528,7 +534,12 @@ export default function ViewAttendanceScreen() {
           <Text style={[styles.inputLabel, { color: colors.textSecondary, marginTop: 16 }]}>
             Duration (days)
           </Text>
-          <View style={[styles.daysInput, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View
+            style={[
+              styles.daysInput,
+              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+            ]}
+          >
             <TouchableOpacity
               style={styles.daysBtn}
               onPress={() => setDelegationDays(prev => Math.max(1, parseInt(prev) - 1).toString())}
@@ -558,7 +569,7 @@ export default function ViewAttendanceScreen() {
               styles.reasonInput,
               { 
                 color: colors.textPrimary,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
               },
             ]}
             value={delegationReason}
@@ -581,9 +592,9 @@ export default function ViewAttendanceScreen() {
               disabled={savingDelegation}
             >
               {savingDelegation ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.textInverse} />
               ) : (
-                <Text style={[styles.modalBtnText, { color: '#fff' }]}>Grant</Text>
+                <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Grant</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -609,7 +620,10 @@ export default function ViewAttendanceScreen() {
         </Animated.View>
 
         {/* Tab Switcher */}
-        <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.tabContainer}>
+        <Animated.View
+          entering={FadeInDown.delay(150).duration(400)}
+          style={[styles.tabContainer, { backgroundColor: withAlpha(colors.textPrimary, 0.05) }]}
+        >
           <TouchableOpacity
             style={[
               styles.tab,
@@ -620,11 +634,11 @@ export default function ViewAttendanceScreen() {
             <FontAwesome5 
               name="eye" 
               size={14} 
-              color={activeTab === 'view' ? '#fff' : colors.textMuted} 
+              color={activeTab === 'view' ? colors.textInverse : colors.textMuted} 
             />
             <Text style={[
               styles.tabText,
-              { color: activeTab === 'view' ? '#fff' : colors.textMuted },
+              { color: activeTab === 'view' ? colors.textInverse : colors.textMuted },
             ]}>
               View Records
             </Text>
@@ -639,11 +653,11 @@ export default function ViewAttendanceScreen() {
             <FontAwesome5 
               name="user-shield" 
               size={14} 
-              color={activeTab === 'delegate' ? '#fff' : colors.textMuted} 
+              color={activeTab === 'delegate' ? colors.textInverse : colors.textMuted} 
             />
             <Text style={[
               styles.tabText,
-              { color: activeTab === 'delegate' ? '#fff' : colors.textMuted },
+              { color: activeTab === 'delegate' ? colors.textInverse : colors.textMuted },
             ]}>
               Delegations
             </Text>
@@ -663,17 +677,20 @@ export default function ViewAttendanceScreen() {
               {/* Info Banner */}
               <Animated.View 
                 entering={FadeIn.delay(100).duration(300)}
-                style={[styles.infoBanner, { backgroundColor: '#3b82f615' }]}
+                style={[styles.infoBanner, { backgroundColor: withAlpha(colors.info, 0.082) }]}
               >
-                <FontAwesome5 name="info-circle" size={14} color="#3b82f6" />
-                <Text style={[styles.infoText, { color: '#3b82f6' }]}>
+                <FontAwesome5 name="info-circle" size={14} color={colors.info} />
+                <Text style={[styles.infoText, { color: colors.info }]}>
                   Attendance is marked by teachers only. You can view records and grant delegation permissions.
                 </Text>
               </Animated.View>
 
               {/* Date Picker */}
               <TouchableOpacity
-                style={[styles.datePickerBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+                style={[
+                  styles.datePickerBtn,
+                  { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                ]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <FontAwesome5 name="calendar-alt" size={18} color={colors.primary} />
@@ -702,7 +719,12 @@ export default function ViewAttendanceScreen() {
 
               {/* Filters */}
               <View style={styles.filtersRow}>
-                <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                <View
+                  style={[
+                    styles.pickerWrapper,
+                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                  ]}
+                >
                   <Picker
                     selectedValue={selectedCourse}
                     onValueChange={setSelectedCourse}
@@ -715,7 +737,13 @@ export default function ViewAttendanceScreen() {
                   </Picker>
                 </View>
 
-                <View style={[styles.pickerWrapper, styles.yearPicker, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                <View
+                  style={[
+                    styles.pickerWrapper,
+                    styles.yearPicker,
+                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                  ]}
+                >
                   <Picker
                     selectedValue={selectedYear}
                     onValueChange={setSelectedYear}
@@ -748,22 +776,47 @@ export default function ViewAttendanceScreen() {
                             styles.periodCard,
                             {
                               backgroundColor: isSelected ? colors.primary
-                                : hasEntry ? (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
-                                : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'),
+                                : hasEntry
+                                  ? withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03)
+                                  : withAlpha(colors.textPrimary, isDark ? 0.02 : 0.01),
                               opacity: hasEntry ? 1 : 0.4,
                             },
                           ]}
                           onPress={() => hasEntry && handleSelectPeriod(timing.period)}
                           disabled={!hasEntry}
                         >
-                          <Text style={[styles.periodNum, { color: isSelected ? '#fff' : colors.textPrimary }]}>
+                          <Text
+                            style={[
+                              styles.periodNum,
+                              { color: isSelected ? colors.textInverse : colors.textPrimary },
+                            ]}
+                          >
                             P{timing.period}
                           </Text>
-                          <Text style={[styles.periodTime, { color: isSelected ? 'rgba(255,255,255,0.8)' : colors.textMuted }]}>
+                          <Text
+                            style={[
+                              styles.periodTime,
+                              {
+                                color: isSelected
+                                  ? withAlpha(colors.textInverse, 0.8)
+                                  : colors.textMuted,
+                              },
+                            ]}
+                          >
                             {timing.start}
                           </Text>
                           {hasEntry && (
-                            <Text style={[styles.periodCourse, { color: isSelected ? 'rgba(255,255,255,0.9)' : colors.textSecondary }]} numberOfLines={1}>
+                            <Text
+                              style={[
+                                styles.periodCourse,
+                                {
+                                  color: isSelected
+                                    ? withAlpha(colors.textInverse, 0.9)
+                                    : colors.textSecondary,
+                                },
+                              ]}
+                              numberOfLines={1}
+                            >
                               {entry?.courses?.short_name || entry?.courses?.code}
                             </Text>
                           )}
@@ -778,7 +831,12 @@ export default function ViewAttendanceScreen() {
               {selectedEntry && (
                 <>
                   {/* Entry Info */}
-                  <Card style={[styles.entryCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}>
+                  <Card
+                    style={[
+                      styles.entryCard,
+                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.02) },
+                    ]}
+                  >
                     <View style={styles.entryHeader}>
                       <View>
                         <Text style={[styles.entryTitle, { color: colors.textPrimary }]}>
@@ -792,17 +850,17 @@ export default function ViewAttendanceScreen() {
 
                     {/* Stats */}
                     <View style={styles.statsRow}>
-                      <View style={[styles.statBadge, { backgroundColor: '#10b98115' }]}>
-                        <Text style={[styles.statNum, { color: '#10b981' }]}>{presentCount}</Text>
-                        <Text style={[styles.statLabel, { color: '#10b981' }]}>Present</Text>
+                      <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.success, 0.082) }]}>
+                        <Text style={[styles.statNum, { color: colors.success }]}>{presentCount}</Text>
+                        <Text style={[styles.statLabel, { color: colors.success }]}>Present</Text>
                       </View>
-                      <View style={[styles.statBadge, { backgroundColor: '#f59e0b15' }]}>
-                        <Text style={[styles.statNum, { color: '#f59e0b' }]}>{lateCount}</Text>
-                        <Text style={[styles.statLabel, { color: '#f59e0b' }]}>Late</Text>
+                      <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.warning, 0.082) }]}>
+                        <Text style={[styles.statNum, { color: colors.warning }]}>{lateCount}</Text>
+                        <Text style={[styles.statLabel, { color: colors.warning }]}>Late</Text>
                       </View>
-                      <View style={[styles.statBadge, { backgroundColor: '#ef444415' }]}>
-                        <Text style={[styles.statNum, { color: '#ef4444' }]}>{absentCount}</Text>
-                        <Text style={[styles.statLabel, { color: '#ef4444' }]}>Absent</Text>
+                      <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.error, 0.082) }]}>
+                        <Text style={[styles.statNum, { color: colors.error }]}>{absentCount}</Text>
+                        <Text style={[styles.statLabel, { color: colors.error }]}>Absent</Text>
                       </View>
                       <View style={[styles.statBadge, { backgroundColor: colors.glassBackground }]}>
                         <Text style={[styles.statNum, { color: colors.textMuted }]}>{students.length - presentCount - lateCount - absentCount}</Text>
@@ -818,7 +876,12 @@ export default function ViewAttendanceScreen() {
                   </Card>
 
                   {/* Search */}
-                  <View style={[styles.searchBar, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                  <View
+                    style={[
+                      styles.searchBar,
+                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03) },
+                    ]}
+                  >
                     <Ionicons name="search" size={18} color={colors.textMuted} />
                     <TextInput
                       style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -853,10 +916,10 @@ export default function ViewAttendanceScreen() {
               {/* Info Banner */}
               <Animated.View 
                 entering={FadeIn.delay(100).duration(300)}
-                style={[styles.infoBanner, { backgroundColor: '#8b5cf615' }]}
+                style={[styles.infoBanner, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
               >
-                <FontAwesome5 name="user-shield" size={14} color="#8b5cf6" />
-                <Text style={[styles.infoText, { color: '#8b5cf6' }]}>
+                <FontAwesome5 name="user-shield" size={14} color={colors.primary} />
+                <Text style={[styles.infoText, { color: colors.primary }]}>
                   Grant temporary attendance marking permissions to teachers for specific periods.
                 </Text>
               </Animated.View>
@@ -866,8 +929,8 @@ export default function ViewAttendanceScreen() {
                 style={[styles.addDelegationBtn, { backgroundColor: colors.primary }]}
                 onPress={() => setShowDelegationModal(true)}
               >
-                <FontAwesome5 name="plus" size={14} color="#fff" />
-                <Text style={styles.addDelegationText}>Grant New Delegation</Text>
+                <FontAwesome5 name="plus" size={14} color={colors.textInverse} />
+                <Text style={[styles.addDelegationText, { color: colors.textInverse }]}>Grant New Delegation</Text>
               </TouchableOpacity>
 
               {/* Active Delegations */}
@@ -926,7 +989,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 16,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: 'transparent',
     padding: 4,
   },
   tab: {
@@ -1103,7 +1166,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 14,
   },
-  addDelegationText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  addDelegationText: { color: 'transparent', fontSize: 15, fontWeight: '600' },
   
   delegationsList: { marginTop: 8 },
   delegationCard: {
@@ -1142,7 +1205,7 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 24,
   },

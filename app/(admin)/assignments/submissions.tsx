@@ -7,6 +7,7 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
 
@@ -129,7 +130,7 @@ export default function SubmissionsScreen() {
             <Animated.View key={submission.id} entering={FadeInDown.delay(i * 30).springify()}>
               <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <View style={[styles.icon, { backgroundColor: `${getStatusColor(submission.status)}20` }]}>
+                  <View style={[styles.icon, { backgroundColor: withAlpha(getStatusColor(submission.status), 0.125) }]}>
                     <FontAwesome5 name="user-graduate" size={20} color={getStatusColor(submission.status)} />
                   </View>
                   <View style={styles.info}>
@@ -138,7 +139,7 @@ export default function SubmissionsScreen() {
                   </View>
                   {isLate && (
                     <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                      <Text style={styles.badgeText}>LATE</Text>
+                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>LATE</Text>
                     </View>
                   )}
                 </View>
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   meta: { fontSize: 14 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
   assignmentTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   details: {},
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },

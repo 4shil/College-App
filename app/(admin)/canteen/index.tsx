@@ -146,8 +146,9 @@ export default function CanteenIndexScreen() {
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? withAlpha(colors.primary, 0.082) : withAlpha(colors.primary, 0.063),
-            borderColor: isDark ? withAlpha(colors.primary, 0.188) : withAlpha(colors.primary, 0.145),
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.primary, shadowColor: colors.shadowColor }]}>
               <FontAwesome5 name="ticket-alt" size={20} color={colors.textInverse} />
@@ -157,8 +158,9 @@ export default function CanteenIndexScreen() {
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? withAlpha(colors.warning, 0.082) : withAlpha(colors.warning, 0.063),
-            borderColor: isDark ? withAlpha(colors.warning, 0.188) : withAlpha(colors.warning, 0.145),
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.warning, shadowColor: colors.shadowColor }]}>
               <FontAwesome5 name="clock" size={20} color={colors.textInverse} />
@@ -168,8 +170,9 @@ export default function CanteenIndexScreen() {
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? withAlpha(colors.success, 0.082) : withAlpha(colors.success, 0.063),
-            borderColor: isDark ? withAlpha(colors.success, 0.188) : withAlpha(colors.success, 0.145),
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.success, shadowColor: colors.shadowColor }]}>
               <FontAwesome5 name="check-circle" size={20} color={colors.textInverse} />
@@ -179,8 +182,9 @@ export default function CanteenIndexScreen() {
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? withAlpha(colors.info, 0.082) : withAlpha(colors.info, 0.063),
-            borderColor: isDark ? withAlpha(colors.info, 0.188) : withAlpha(colors.info, 0.145),
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.info, shadowColor: colors.shadowColor }]}>
               <FontAwesome5 name="rupee-sign" size={20} color={colors.textInverse} />
@@ -200,8 +204,9 @@ export default function CanteenIndexScreen() {
             >
               <Animated.View entering={FadeInDown.delay(350 + index * 50).springify()}>
                 <View style={[styles.menuCard, {
-                  backgroundColor: isDark ? withAlpha(colors.textInverse, 0.05) : withAlpha(colors.shadowColor, 0.02),
-                  borderColor: isDark ? withAlpha(colors.textInverse, 0.1) : withAlpha(colors.shadowColor, 0.06),
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
                 }]}>
                   <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
                     <FontAwesome5 name={option.icon} size={24} color={option.color} />
@@ -257,8 +262,8 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 14,
     alignItems: 'center',
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
   },
   statIcon: {
     width: 52,
@@ -287,8 +292,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 18,
     marginBottom: 14,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
   },
   menuIcon: {
     width: 56,

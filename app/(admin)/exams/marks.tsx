@@ -338,8 +338,8 @@ export default function ExamMarksScreen() {
               onPress={handleBulkAbsent}
               style={[styles.bulkButton, { backgroundColor: colors.warning }]}
             >
-              <FontAwesome5 name="user-times" size={16} color="#fff" />
-              <Text style={styles.bulkButtonText}>Mark All Absent</Text>
+              <FontAwesome5 name="user-times" size={16} color={colors.textInverse} />
+              <Text style={[styles.bulkButtonText, { color: colors.textInverse }]}>Mark All Absent</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -368,7 +368,7 @@ export default function ExamMarksScreen() {
                       </View>
                       {mark?.status === 'published' && (
                         <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                          <Text style={styles.badgeText}>Published</Text>
+                          <Text style={[styles.badgeText, { color: colors.textInverse }]}>Published</Text>
                         </View>
                       )}
                     </View>
@@ -410,11 +410,11 @@ export default function ExamMarksScreen() {
                         ]}
                         disabled={mark?.status === 'published'}
                       >
-                        <FontAwesome5 name="user-times" size={16} color={isAbsent ? '#fff' : colors.textSecondary} />
+                        <FontAwesome5 name="user-times" size={16} color={isAbsent ? colors.textInverse : colors.textSecondary} />
                         <Text
                           style={[
                             styles.absentText,
-                            { color: isAbsent ? '#fff' : colors.textSecondary },
+                            { color: isAbsent ? colors.textInverse : colors.textSecondary },
                           ]}
                         >
                           {isAbsent ? 'Absent' : 'Mark Absent'}
@@ -475,14 +475,14 @@ const styles = StyleSheet.create({
   infoText: { fontSize: 16 },
   bulkActions: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   bulkButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12 },
-  bulkButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  bulkButtonText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
   studentCard: { padding: 16, marginBottom: 12 },
   studentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   studentInfo: { flex: 1 },
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   studentAdmNo: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
   marksInput: { flexDirection: 'row', gap: 12 },
   marksField: { flex: 1 },
   inputLabel: { fontSize: 14, marginBottom: 8 },

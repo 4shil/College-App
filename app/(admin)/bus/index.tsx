@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface BusStats {
   totalRoutes: number;
@@ -77,21 +78,21 @@ export default function BusIndexScreen() {
       title: 'Bus Routes',
       subtitle: 'Manage routes and stops',
       icon: 'route',
-      color: '#6366f1',
+      color: colors.primary,
       route: '/(admin)/bus/routes',
     },
     {
       title: 'Vehicle Management',
       subtitle: 'Manage bus fleet',
       icon: 'bus',
-      color: '#10b981',
+      color: colors.success,
       route: '/(admin)/bus/vehicles',
     },
     {
       title: 'Approvals',
       subtitle: 'Student subscription requests',
       icon: 'user-check',
-      color: '#f59e0b',
+      color: colors.warning,
       route: '/(admin)/bus/approvals',
       badge: stats.pendingApprovals,
     },
@@ -99,14 +100,14 @@ export default function BusIndexScreen() {
       title: 'Alerts & Notifications',
       subtitle: 'Send updates to students',
       icon: 'bell',
-      color: '#8b5cf6',
+      color: colors.primary,
       route: '/(admin)/bus/alerts',
     },
     {
       title: 'Reports',
       subtitle: 'Analytics and statistics',
       icon: 'chart-line',
-      color: '#06b6d4',
+      color: colors.info,
       route: '/(admin)/bus/reports',
     },
   ];
@@ -139,44 +140,48 @@ export default function BusIndexScreen() {
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.primary}15` : `${colors.primary}10`,
-            borderColor: isDark ? `${colors.primary}30` : `${colors.primary}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.primary }]}>
-              <FontAwesome5 name="route" size={20} color="#fff" />
+              <FontAwesome5 name="route" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalRoutes}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Active Routes</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
-            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
-              <FontAwesome5 name="bus" size={20} color="#fff" />
+              <FontAwesome5 name="bus" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.activeVehicles}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Vehicles</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.warning}15` : `${colors.warning}10`,
-            borderColor: isDark ? `${colors.warning}30` : `${colors.warning}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.warning }]}>
-              <FontAwesome5 name="clock" size={20} color="#fff" />
+              <FontAwesome5 name="clock" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pendingApprovals}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.info}15` : `${colors.info}10`,
-            borderColor: isDark ? `${colors.info}30` : `${colors.info}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
             <View style={[styles.statIcon, { backgroundColor: colors.info }]}>
-              <FontAwesome5 name="users" size={20} color="#fff" />
+              <FontAwesome5 name="users" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.totalStudents}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Students</Text>
@@ -193,10 +198,11 @@ export default function BusIndexScreen() {
             >
               <Animated.View entering={FadeInDown.delay(350 + index * 50).springify()}>
                 <View style={[styles.menuCard, {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: `${option.color}20` }]}>
+                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
                     <FontAwesome5 name={option.icon} size={24} color={option.color} />
                   </View>
                   <View style={styles.menuContent}>
@@ -206,8 +212,8 @@ export default function BusIndexScreen() {
                     </Text>
                   </View>
                   {option.badge && option.badge > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{option.badge}</Text>
+                    <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                      <Text style={[styles.badgeText, { color: colors.textInverse }]}>{option.badge}</Text>
                     </View>
                   )}
                   <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
@@ -250,8 +256,8 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 14,
     alignItems: 'center',
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
   },
   statIcon: {
     width: 52,
@@ -260,7 +266,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
+    shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -281,8 +287,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 18,
     marginBottom: 14,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
   },
   menuIcon: {
     width: 56,
@@ -304,7 +310,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   badge: {
-    backgroundColor: '#DC2626',
+    backgroundColor: 'transparent',
     paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: 12,
@@ -313,7 +319,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   badgeText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 11,
     fontWeight: '700',
   },

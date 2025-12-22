@@ -7,6 +7,7 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
 
@@ -148,7 +149,7 @@ export default function GradeScreen() {
           <Animated.View key={submission.id} entering={FadeInDown.delay(i * 30).springify()}>
             <Card style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.icon, { backgroundColor: submission.status === 'graded' ? `${colors.success}20` : `${colors.warning}20` }]}>
+                <View style={[styles.icon, { backgroundColor: submission.status === 'graded' ? withAlpha(colors.success, 0.125) : withAlpha(colors.warning, 0.125) }]}>
                   <FontAwesome5 name="user-graduate" size={20} color={submission.status === 'graded' ? colors.success : colors.warning} />
                 </View>
                 <View style={styles.studentInfo}>
@@ -157,7 +158,7 @@ export default function GradeScreen() {
                 </View>
                 {submission.status === 'graded' && (
                   <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                    <Text style={styles.badgeText}>GRADED</Text>
+                    <Text style={[styles.badgeText, { color: colors.textInverse }]}>GRADED</Text>
                   </View>
                 )}
               </View>
@@ -185,7 +186,7 @@ export default function GradeScreen() {
                     </View>
                   )}
                   <TouchableOpacity onPress={() => setEditingSubmission(submission.id)} style={[styles.gradeButton, { backgroundColor: colors.primary }]}>
-                    <Text style={styles.gradeButtonText}>{submission.status === 'graded' ? 'Edit Grade' : 'Grade Submission'}</Text>
+                    <Text style={[styles.gradeButtonText, { color: colors.textInverse }]}>{submission.status === 'graded' ? 'Edit Grade' : 'Grade Submission'}</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   rollNumber: { fontSize: 14 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
   gradeForm: { marginTop: 8 },
   formActions: { flexDirection: 'row', gap: 12, marginTop: 12 },
   cancelButton: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
@@ -223,5 +224,5 @@ const styles = StyleSheet.create({
   marksText: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   feedbackText: { fontSize: 14 },
   gradeButton: { paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  gradeButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  gradeButtonText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
 });

@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Token {
   id: string;
@@ -165,7 +166,7 @@ export default function CanteenTokensScreen() {
                 key={tab.id}
                 style={[
                   styles.filterTab,
-                  filter === tab.id && { backgroundColor: `${colors.primary}20` },
+                  filter === tab.id && { backgroundColor: withAlpha(colors.primary, 0.2) },
                 ]}
                 onPress={() => setFilter(tab.id)}
               >
@@ -218,7 +219,7 @@ export default function CanteenTokensScreen() {
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: `${getStatusColor(token.status)}20` },
+                        { backgroundColor: withAlpha(getStatusColor(token.status), 0.2) },
                       ]}
                     >
                       <FontAwesome5
@@ -234,7 +235,12 @@ export default function CanteenTokensScreen() {
                     </View>
                   </View>
 
-                  <View style={styles.studentInfo}>
+                  <View
+                    style={[
+                      styles.studentInfo,
+                      { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) },
+                    ]}
+                  >
                     <FontAwesome5 name="user" size={14} color={colors.textSecondary} />
                     <Text style={[styles.studentName, { color: colors.textPrimary }]}>
                       {token.profiles.full_name}
@@ -254,7 +260,12 @@ export default function CanteenTokensScreen() {
                     ))}
                   </View>
 
-                  <View style={styles.totalRow}>
+                  <View
+                    style={[
+                      styles.totalRow,
+                      { borderTopColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) },
+                    ]}
+                  >
                     <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total</Text>
                     <Text style={[styles.totalAmount, { color: colors.primary }]}>
                       ₹{token.total_amount}
@@ -275,7 +286,7 @@ export default function CanteenTokensScreen() {
                     <TouchableOpacity
                       style={[
                         styles.actionButton,
-                        { backgroundColor: `${getStatusColor(getNextStatus(token.status)!)}15` },
+                        { backgroundColor: withAlpha(getStatusColor(getNextStatus(token.status)!), 0.15) },
                       ]}
                       onPress={() => updateTokenStatus(token.id, getNextStatus(token.status)!)}
                     >
@@ -398,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'transparent',
   },
   studentName: {
     fontSize: 15,
@@ -426,7 +437,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     marginBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: 'transparent',
   },
   totalLabel: {
     fontSize: 16,

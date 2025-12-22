@@ -29,6 +29,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_college_info_updated_at ON public.college_info;
+
 CREATE TRIGGER update_college_info_updated_at
   BEFORE UPDATE ON public.college_info
   FOR EACH ROW
@@ -38,6 +40,7 @@ CREATE TRIGGER update_college_info_updated_at
 ALTER TABLE public.college_info ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Anyone authenticated can read college info
+DROP POLICY IF EXISTS "Anyone can read college info" ON public.college_info;
 CREATE POLICY "Anyone can read college info"
   ON public.college_info
   FOR SELECT
@@ -45,6 +48,7 @@ CREATE POLICY "Anyone can read college info"
   USING (true);
 
 -- Policy: Only super_admin can insert college info
+DROP POLICY IF EXISTS "Only super_admin can insert college info" ON public.college_info;
 CREATE POLICY "Only super_admin can insert college info"
   ON public.college_info
   FOR INSERT
@@ -58,6 +62,7 @@ CREATE POLICY "Only super_admin can insert college info"
   );
 
 -- Policy: Only super_admin and admin can update college info
+DROP POLICY IF EXISTS "Only admins can update college info" ON public.college_info;
 CREATE POLICY "Only admins can update college info"
   ON public.college_info
   FOR UPDATE
@@ -78,6 +83,7 @@ CREATE POLICY "Only admins can update college info"
   );
 
 -- Policy: Only super_admin can delete college info
+DROP POLICY IF EXISTS "Only super_admin can delete college info" ON public.college_info;
 CREATE POLICY "Only super_admin can delete college info"
   ON public.college_info
   FOR DELETE
@@ -106,7 +112,8 @@ INSERT INTO public.college_info (
   principal_name,
   principal_email,
   motto
-) VALUES (
+)
+SELECT
   'JPM College of Arts and Science',
   'JPM College',
   'Alakode, Kasaragod',
@@ -121,4 +128,4 @@ INSERT INTO public.college_info (
   'Dr. Principal Name',
   'principal@jpmcollege.edu',
   'Excellence in Education'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (SELECT 1 FROM public.college_info);

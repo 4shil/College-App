@@ -14,6 +14,7 @@ export const ADMIN_ROLES = {
   BUS_ADMIN: 'bus_admin',
   CANTEEN_ADMIN: 'canteen_admin',
   FINANCE_ADMIN: 'finance_admin',
+  RECEPTION_ADMIN: 'reception_admin',
 } as const;
 
 // Teacher roles (not admins)
@@ -91,6 +92,13 @@ export const PERMISSIONS = {
   // Attendance
   MANAGE_ATTENDANCE: 'manage_attendance',
   VIEW_ATTENDANCE_REPORTS: 'view_attendance_reports',
+
+  // Reception (execution-only)
+  RECEPTION_VIEW_APPROVED_GATE_PASSES: 'reception_view_approved_gate_passes',
+  RECEPTION_MARK_GATE_PASS_EXIT: 'reception_mark_gate_pass_exit',
+  RECEPTION_ISSUE_LATE_PASS: 'reception_issue_late_pass',
+  RECEPTION_VIEW_TODAYS_LOGS: 'reception_view_todays_logs',
+  RECEPTION_VIEW_NOTICES: 'reception_view_notices',
 } as const;
 
 // Role-Permission mapping
@@ -185,6 +193,15 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.PROCESS_PAYMENTS,
     PERMISSIONS.VIEW_FINANCIAL_REPORTS,
   ],
+
+  // Reception Admin - execution-only front desk
+  [ADMIN_ROLES.RECEPTION_ADMIN]: [
+    PERMISSIONS.RECEPTION_VIEW_APPROVED_GATE_PASSES,
+    PERMISSIONS.RECEPTION_MARK_GATE_PASS_EXIT,
+    PERMISSIONS.RECEPTION_ISSUE_LATE_PASS,
+    PERMISSIONS.RECEPTION_VIEW_TODAYS_LOGS,
+    PERMISSIONS.RECEPTION_VIEW_NOTICES,
+  ],
 };
 
 // Module-Role mapping (which roles can access which admin modules)
@@ -199,6 +216,7 @@ export const MODULE_ACCESS: Record<string, string[]> = {
   bus: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.BUS_ADMIN],
   canteen: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.CANTEEN_ADMIN],
   notices: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.PRINCIPAL, ADMIN_ROLES.DEPARTMENT_ADMIN, ADMIN_ROLES.HOD],
+  reception: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.RECEPTION_ADMIN],
   settings: [ADMIN_ROLES.SUPER_ADMIN],
   attendance: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.HOD],
   analytics: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.PRINCIPAL, ADMIN_ROLES.HOD],
@@ -265,6 +283,7 @@ export function getHighestRole(userRoles: string[]): string {
     ADMIN_ROLES.LIBRARY_ADMIN,
     ADMIN_ROLES.BUS_ADMIN,
     ADMIN_ROLES.CANTEEN_ADMIN,
+    ADMIN_ROLES.RECEPTION_ADMIN,
   ];
   
   for (const role of rolePriority) {
@@ -338,6 +357,7 @@ export function getRoleDisplayName(roleName: string): string {
     [ADMIN_ROLES.BUS_ADMIN]: 'Bus Admin',
     [ADMIN_ROLES.CANTEEN_ADMIN]: 'Canteen Admin',
     [ADMIN_ROLES.FINANCE_ADMIN]: 'Finance Admin',
+    [ADMIN_ROLES.RECEPTION_ADMIN]: 'Reception Admin',
   };
   
   return displayNames[roleName] || roleName;

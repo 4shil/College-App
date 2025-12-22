@@ -19,6 +19,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -370,8 +371,22 @@ export default function ExamReportsScreen() {
                 {reportData.toppers.map((topper, index) => (
                   <Animated.View key={index} entering={FadeInDown.delay(350 + index * 50).springify()}>
                     <Card style={styles.topperCard}>
-                      <View style={[styles.rank, { backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : colors.primary }]}>
-                        <Text style={styles.rankText}>{index + 1}</Text>
+                      <View
+                        style={[
+                          styles.rank,
+                          {
+                            backgroundColor:
+                              index === 0
+                                ? colors.warning
+                                : index === 1
+                                  ? colors.info
+                                  : index === 2
+                                    ? colors.success
+                                    : colors.primary,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.rankText, { color: colors.textInverse }]}>{index + 1}</Text>
                       </View>
                       <View style={styles.topperInfo}>
                         <Text style={[styles.topperName, { color: colors.textPrimary }]}>{topper.name}</Text>
@@ -379,7 +394,7 @@ export default function ExamReportsScreen() {
                           {topper.marks} / {selectedSchedule?.max_marks}
                         </Text>
                       </View>
-                      <View style={[styles.topperBadge, { backgroundColor: `${colors.success}20` }]}>
+                      <View style={[styles.topperBadge, { backgroundColor: withAlpha(colors.success, 0.2) }]}>
                         <FontAwesome5 name="trophy" size={16} color={colors.success} />
                       </View>
                     </Card>
@@ -430,7 +445,7 @@ const styles = StyleSheet.create({
   analysisValue: { fontSize: 24, fontWeight: 'bold' },
   topperCard: { flexDirection: 'row', alignItems: 'center', padding: 16, marginBottom: 12 },
   rank: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  rankText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  rankText: { color: 'transparent', fontSize: 18, fontWeight: 'bold' },
   topperInfo: { flex: 1 },
   topperName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   topperMarks: { fontSize: 14 },

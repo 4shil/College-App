@@ -21,6 +21,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface FeeStructure {
   id: string;
@@ -65,7 +66,11 @@ interface Semester {
 
 export default function FeeStructuresScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -285,7 +290,7 @@ export default function FeeStructuresScreen() {
             onPress={openAddModal}
             style={[styles.addButton, { backgroundColor: colors.primary }]}
           >
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
 
@@ -301,7 +306,7 @@ export default function FeeStructuresScreen() {
                 </View>
                 {structure.is_active && (
                   <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                    <Text style={styles.badgeText}>Active</Text>
+                    <Text style={[styles.badgeText, { color: colors.textInverse }]}>Active</Text>
                   </View>
                 )}
               </View>
@@ -357,7 +362,7 @@ export default function FeeStructuresScreen() {
       </ScrollView>
 
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -435,7 +440,7 @@ const styles = StyleSheet.create({
   structureName: { fontSize: 18, fontWeight: '600', marginBottom: 4 },
   structureMeta: { fontSize: 14 },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
   feeBreakdown: { marginBottom: 12 },
   feeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   feeLabel: { fontSize: 14 },
@@ -447,7 +452,7 @@ const styles = StyleSheet.create({
   dueDate: { fontSize: 14 },
   actionButtons: { flexDirection: 'row', gap: 16 },
   actionButton: { padding: 8 },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },

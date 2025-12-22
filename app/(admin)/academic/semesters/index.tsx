@@ -18,6 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Year {
@@ -44,6 +45,10 @@ export default function SemestersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -251,8 +256,17 @@ export default function SemestersScreen() {
   };
 
   const getSemesterColor = (num: number): string => {
-    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#ec4899', '#14b8a6'];
-    return colors[(num - 1) % colors.length];
+    const palette = [
+      colors.primary,
+      colors.success,
+      colors.warning,
+      colors.error,
+      colors.info,
+      colors.primary,
+      colors.success,
+      colors.warning,
+    ];
+    return palette[(num - 1) % palette.length];
   };
 
   const renderSemesterCard = (semester: Semester, index: number) => {
@@ -266,8 +280,17 @@ export default function SemestersScreen() {
       >
         <Card style={styles.semesterCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: semester.is_active ? color + '20' : '#6b728020' }]}>
-              <Text style={[styles.semNumber, { color: semester.is_active ? color : '#6b7280' }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  backgroundColor: semester.is_active
+                    ? withAlpha(color, 0.125)
+                    : withAlpha(colors.textMuted, 0.125),
+                },
+              ]}
+            >
+              <Text style={[styles.semNumber, { color: semester.is_active ? color : colors.textMuted }]}>
                 S{semester.semester_number}
               </Text>
             </View>
@@ -275,8 +298,8 @@ export default function SemestersScreen() {
               <View style={styles.nameRow}>
                 <Text style={[styles.semName, { color: colors.textPrimary }]}>{semester.name}</Text>
                 {!semester.is_active && (
-                  <View style={styles.inactiveBadge}>
-                    <Text style={styles.inactiveText}>Inactive</Text>
+                  <View style={[styles.inactiveBadge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                    <Text style={[styles.inactiveText, { color: colors.error }]}>Inactive</Text>
                   </View>
                 )}
               </View>
@@ -287,13 +310,13 @@ export default function SemestersScreen() {
           </View>
 
           <View style={styles.statsRow}>
-            <View style={[styles.statBadge, { backgroundColor: '#6366f120' }]}>
-              <FontAwesome5 name="book" size={12} color="#6366f1" />
-              <Text style={[styles.statText, { color: '#6366f1' }]}>
+            <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+              <FontAwesome5 name="book" size={12} color={colors.primary} />
+              <Text style={[styles.statText, { color: colors.primary }]}>
                 {semester.courses_count || 0} Subjects
               </Text>
             </View>
-            <View style={[styles.statBadge, { backgroundColor: color + '20' }]}>
+            <View style={[styles.statBadge, { backgroundColor: withAlpha(color, 0.125) }]}>
               <FontAwesome5 name="layer-group" size={12} color={color} />
               <Text style={[styles.statText, { color }]}>
                 Year {semester.year?.year_number || '-'}
@@ -303,26 +326,33 @@ export default function SemestersScreen() {
 
           <View style={styles.actionsRow}>
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
+              style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.08) }]}
               onPress={() => openEditModal(semester)}
             >
               <FontAwesome5 name="edit" size={12} color={colors.primary} />
               <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: semester.is_active ? '#f59e0b15' : '#10b98115' }]}
+              style={[
+                styles.actionBtn,
+                { backgroundColor: semester.is_active ? withAlpha(colors.warning, 0.08) : withAlpha(colors.success, 0.08) },
+              ]}
               onPress={() => handleToggleActive(semester)}
             >
-              <FontAwesome5 name={semester.is_active ? 'ban' : 'check'} size={12} color={semester.is_active ? '#f59e0b' : '#10b981'} />
-              <Text style={[styles.actionBtnText, { color: semester.is_active ? '#f59e0b' : '#10b981' }]}>
+              <FontAwesome5
+                name={semester.is_active ? 'ban' : 'check'}
+                size={12}
+                color={semester.is_active ? colors.warning : colors.success}
+              />
+              <Text style={[styles.actionBtnText, { color: semester.is_active ? colors.warning : colors.success }]}>
                 {semester.is_active ? 'Disable' : 'Enable'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: '#ef444415' }]}
+              style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.08) }]}
               onPress={() => handleDelete(semester)}
             >
-              <FontAwesome5 name="trash" size={12} color="#ef4444" />
+              <FontAwesome5 name="trash" size={12} color={colors.error} />
             </TouchableOpacity>
           </View>
         </Card>
@@ -343,13 +373,13 @@ export default function SemestersScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{filteredSemesters.length} semester(s)</Text>
           </View>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
         {/* Year Filter */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.filterContainer}>
-          <View style={[styles.filterPicker, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+          <View style={[styles.filterPicker, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.03) }]}>
             <Picker
               selectedValue={selectedYear}
               onValueChange={setSelectedYear}
@@ -387,8 +417,8 @@ export default function SemestersScreen() {
 
         {/* Add/Edit Modal */}
         <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
-          <View style={styles.modalOverlay}>
-            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
+            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   {editingSemester ? 'Edit Semester' : 'Add Semester'}
@@ -425,7 +455,7 @@ export default function SemestersScreen() {
 
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Academic Year *</Text>
-                <View style={[styles.pickerContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                <View style={[styles.pickerContainer, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.03) }]}>
                   <Picker
                     selectedValue={formYearId}
                     onValueChange={setFormYearId}
@@ -479,8 +509,8 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1, justifyContent: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   semName: { fontSize: 18, fontWeight: '600' },
-  inactiveBadge: { backgroundColor: '#ef444420', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: '#ef4444' },
+  inactiveBadge: { backgroundColor: 'transparent', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
   semSubtitle: { fontSize: 13, marginTop: 2 },
   statsRow: { flexDirection: 'row', marginTop: 14, gap: 10 },
   statBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, gap: 8 },
@@ -491,7 +521,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 80 },
   emptyTitle: { fontSize: 18, fontWeight: '700', marginTop: 16 },
   emptySubtitle: { fontSize: 14, marginTop: 8 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitle: { fontSize: 20, fontWeight: '700' },

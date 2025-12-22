@@ -248,8 +248,9 @@ export default function SettingsScreen() {
           style={[
             styles.settingItem,
             {
-              backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02),
-              borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+              backgroundColor: colors.cardBackground,
+              borderBottomColor: colors.cardBorder,
+              borderBottomWidth: colors.borderWidth,
             },
           ]}
           onPress={() => {
@@ -343,8 +344,9 @@ export default function SettingsScreen() {
               style={[
                 styles.sectionCard,
                 {
-                  backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.01),
-                  borderColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
                 },
               ]}
             >

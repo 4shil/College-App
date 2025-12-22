@@ -34,6 +34,7 @@ export default function CanteenMenuScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+  const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -366,7 +367,7 @@ export default function CanteenMenuScreen() {
           animationType="slide"
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <GlassCard style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>

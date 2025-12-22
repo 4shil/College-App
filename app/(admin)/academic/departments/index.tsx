@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Department {
@@ -35,6 +36,10 @@ export default function DepartmentsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -264,15 +269,20 @@ export default function DepartmentsScreen() {
     >
       <Card style={styles.deptCard}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: dept.is_active ? '#6366f120' : '#6b728020' }]}>
-            <FontAwesome5 name="building" size={22} color={dept.is_active ? '#6366f1' : '#6b7280'} />
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: dept.is_active ? withAlpha(colors.primary, 0.125) : withAlpha(colors.textMuted, 0.125) },
+            ]}
+          >
+            <FontAwesome5 name="building" size={22} color={dept.is_active ? colors.primary : colors.textMuted} />
           </View>
           <View style={styles.cardInfo}>
             <View style={styles.nameRow}>
               <Text style={[styles.deptName, { color: colors.textPrimary }]}>{dept.name}</Text>
               {!dept.is_active && (
-                <View style={[styles.inactiveBadge]}>
-                  <Text style={styles.inactiveText}>Inactive</Text>
+                <View style={[styles.inactiveBadge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                  <Text style={[styles.inactiveText, { color: colors.error }]}>Inactive</Text>
                 </View>
               )}
             </View>
@@ -286,19 +296,19 @@ export default function DepartmentsScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <View style={[styles.statBadge, { backgroundColor: '#10b98120' }]}>
-            <FontAwesome5 name="user-graduate" size={12} color="#10b981" />
-            <Text style={[styles.statText, { color: '#10b981' }]}>{dept.students_count || 0} Students</Text>
+          <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.success, 0.125) }]}>
+            <FontAwesome5 name="user-graduate" size={12} color={colors.success} />
+            <Text style={[styles.statText, { color: colors.success }]}>{dept.students_count || 0} Students</Text>
           </View>
-          <View style={[styles.statBadge, { backgroundColor: '#3b82f620' }]}>
-            <FontAwesome5 name="chalkboard-teacher" size={12} color="#3b82f6" />
-            <Text style={[styles.statText, { color: '#3b82f6' }]}>{dept.teachers_count || 0} Teachers</Text>
+          <View style={[styles.statBadge, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
+            <FontAwesome5 name="chalkboard-teacher" size={12} color={colors.info} />
+            <Text style={[styles.statText, { color: colors.info }]}>{dept.teachers_count || 0} Teachers</Text>
           </View>
         </View>
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary + '15', opacity: saving ? 0.5 : 1 }]}
+            style={[styles.actionBtn, { backgroundColor: withAlpha(colors.primary, 0.08), opacity: saving ? 0.5 : 1 }]}
             onPress={() => openEditModal(dept)}
             disabled={saving}
           >
@@ -306,22 +316,32 @@ export default function DepartmentsScreen() {
             <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: dept.is_active ? '#f59e0b15' : '#10b98115', opacity: saving ? 0.5 : 1 }]}
+            style={[
+              styles.actionBtn,
+              {
+                backgroundColor: dept.is_active ? withAlpha(colors.warning, 0.08) : withAlpha(colors.success, 0.08),
+                opacity: saving ? 0.5 : 1,
+              },
+            ]}
             onPress={() => handleToggleActive(dept)}
             disabled={saving}
           >
-            <FontAwesome5 name={dept.is_active ? 'ban' : 'check'} size={12} color={dept.is_active ? '#f59e0b' : '#10b981'} />
-            <Text style={[styles.actionBtnText, { color: dept.is_active ? '#f59e0b' : '#10b981' }]}>
+            <FontAwesome5
+              name={dept.is_active ? 'ban' : 'check'}
+              size={12}
+              color={dept.is_active ? colors.warning : colors.success}
+            />
+            <Text style={[styles.actionBtnText, { color: dept.is_active ? colors.warning : colors.success }]}>
               {dept.is_active ? 'Disable' : 'Enable'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#ef444415', opacity: saving ? 0.5 : 1 }]}
+            style={[styles.actionBtn, { backgroundColor: withAlpha(colors.error, 0.08), opacity: saving ? 0.5 : 1 }]}
             onPress={() => handleDelete(dept)}
             disabled={saving}
           >
-            <FontAwesome5 name="trash" size={12} color="#ef4444" />
-            <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>Delete</Text>
+            <FontAwesome5 name="trash" size={12} color={colors.error} />
+            <Text style={[styles.actionBtnText, { color: colors.error }]}>Delete</Text>
           </TouchableOpacity>
         </View>
       </Card>
@@ -349,7 +369,7 @@ export default function DepartmentsScreen() {
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={openAddModal}
           >
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -386,8 +406,8 @@ export default function DepartmentsScreen() {
           transparent
           onRequestClose={() => setShowAddModal(false)}
         >
-          <View style={styles.modalOverlay}>
-            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#fff' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
+            <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   {editingDept ? 'Edit Department' : 'Add Department'}
@@ -489,12 +509,12 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   deptName: { fontSize: 17, fontWeight: '600' },
   inactiveBadge: {
-    backgroundColor: '#ef444420',
+    backgroundColor: 'transparent',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  inactiveText: { fontSize: 10, fontWeight: '600', color: '#ef4444' },
+  inactiveText: { fontSize: 10, fontWeight: '600', color: 'transparent' },
   deptCode: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   deptDesc: { fontSize: 12, marginTop: 6 },
   statsRow: { flexDirection: 'row', marginTop: 14, gap: 10 },
@@ -522,7 +542,7 @@ const styles = StyleSheet.create({
   emptySubtitle: { fontSize: 14, marginTop: 8 },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   modalContent: {

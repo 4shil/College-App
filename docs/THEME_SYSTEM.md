@@ -127,7 +127,7 @@ const lightColors = {
   cardBorder: 'rgba(0, 0, 0, 0.06)',
   shadowColor: '#000000',
   borderRadius: 16,
-  borderWidth: 0,
+  borderWidth: 1.5,
   shadowIntensity: 0.1,
   blurIntensity: 20,
 };
@@ -164,14 +164,14 @@ const darkColors = {
   cardBorder: 'rgba(255, 255, 255, 0.1)',
   shadowColor: '#8B5CF6',
   borderRadius: 16,
-  borderWidth: 0,
+  borderWidth: 1.5,
   shadowIntensity: 0.3,
   blurIntensity: 20,
 };
 ```
 
 **Token behavior notes:**
-- `borderWidth` is **0** in both themes. Some components treat that as “no border” (e.g. `Card`), while others override with a fallback (e.g. `GlassInput` uses 1 if `borderWidth` is 0).
+- `borderWidth` is **1.5** in the default presets, so borders are token-driven and consistent across cards/inputs.
 - `shadowIntensity` is used by `AnimatedBackground` only for the vignette toggle (non-zero => draw vignette). It is not consistently wired into all shadows.
 
 ---

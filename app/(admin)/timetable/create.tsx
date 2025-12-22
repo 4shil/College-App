@@ -567,7 +567,7 @@ export default function CreateTimetableScreen() {
             style={[
               styles.gridCell,
               styles.timeCell,
-              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02) },
+              { backgroundColor: colors.inputBackground },
             ]}
           >
             <Text style={[styles.periodNumber, { color: colors.primary }]}>P{timing.period}</Text>
@@ -595,6 +595,7 @@ export default function CreateTimetableScreen() {
                       : isLab
                         ? withAlpha(colors.primary, 0.125)
                         : withAlpha(colors.success, 0.08),
+                    borderWidth: colors.borderWidth,
                     borderColor: isEmpty
                       ? withAlpha(colors.textMuted, 0.125)
                       : isLab ? withAlpha(colors.primary, 0.25) : withAlpha(colors.success, 0.19),
@@ -789,7 +790,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   editableCell: {
-    borderWidth: 1.5,
+    borderWidth: 0,
     borderStyle: 'dashed',
   },
   timeCell: {

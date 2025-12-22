@@ -21,6 +21,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Semester {
   id: string;
@@ -46,7 +47,8 @@ interface ExternalMark {
 
 export default function ExternalMarksScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+  const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -356,15 +358,20 @@ export default function ExternalMarksScreen() {
                       </View>
                       {mark?.is_approved && (
                         <View style={[styles.badge, { backgroundColor: colors.success }]}>
-                          <FontAwesome5 name="check-circle" size={12} color="#fff" />
-                          <Text style={styles.badgeText}>Approved</Text>
+                          <FontAwesome5 name="check-circle" size={12} color={colors.textInverse} />
+                          <Text style={[styles.badgeText, { color: colors.textInverse }]}>Approved</Text>
                         </View>
                       )}
                     </View>
 
                     {mark ? (
                       <>
-                        <View style={styles.marksRow}>
+                        <View
+                          style={[
+                            styles.marksRow,
+                            { borderColor: withAlpha(colors.textPrimary, isDark ? 0.18 : 0.12) },
+                          ]}
+                        >
                           <View style={styles.markItem}>
                             <Text style={[styles.markLabel, { color: colors.textSecondary }]}>SGPA</Text>
                             <Text style={[styles.markValue, { color: colors.textPrimary }]}>{mark.sgpa.toFixed(2)}</Text>
@@ -375,7 +382,7 @@ export default function ExternalMarksScreen() {
                           </View>
                           <View style={styles.markItem}>
                             <Text style={[styles.markLabel, { color: colors.textSecondary }]}>Status</Text>
-                            <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(mark.result_status)}20` }]}>
+                            <View style={[styles.statusBadge, { backgroundColor: withAlpha(getStatusColor(mark.result_status), 0.2) }]}>
                               <Text style={[styles.statusText, { color: getStatusColor(mark.result_status) }]}>
                                 {mark.result_status.toUpperCase()}
                               </Text>
@@ -439,7 +446,7 @@ export default function ExternalMarksScreen() {
 
       {/* Edit Modal */}
       <Modal visible={showEditModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Enter External Result</Text>
@@ -521,8 +528,8 @@ const styles = StyleSheet.create({
   studentName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   studentAdmNo: { fontSize: 14 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  marksRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(150, 150, 150, 0.2)', marginBottom: 12 },
+  badgeText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
+  marksRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'transparent', marginBottom: 12 },
   markItem: { alignItems: 'center' },
   markLabel: { fontSize: 12, marginBottom: 4 },
   markValue: { fontSize: 24, fontWeight: 'bold' },
@@ -534,7 +541,7 @@ const styles = StyleSheet.create({
   actionText: { fontSize: 14, fontWeight: '600' },
   addButton: { borderWidth: 2, borderStyle: 'dashed', borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
   addButtonText: { fontSize: 16, fontWeight: '600' },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },

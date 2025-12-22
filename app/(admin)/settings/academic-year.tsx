@@ -185,7 +185,8 @@ export default function AcademicYearScreen() {
               style={[styles.input, { 
                 color: colors.textPrimary,
                 backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                borderColor: withAlpha(colors.primary, 0.19)
+                borderColor: withAlpha(colors.primary, 0.19),
+                borderWidth: colors.borderWidth,
               }]}
               placeholder="e.g., 2024-2025"
               placeholderTextColor={colors.textMuted}
@@ -197,7 +198,8 @@ export default function AcademicYearScreen() {
             <TouchableOpacity
               style={[styles.dateButton, { 
                 backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                borderColor: withAlpha(colors.primary, 0.19)
+                borderColor: withAlpha(colors.primary, 0.19),
+                borderWidth: colors.borderWidth,
               }]}
               onPress={() => setShowStartPicker(true)}
             >
@@ -223,7 +225,8 @@ export default function AcademicYearScreen() {
             <TouchableOpacity
               style={[styles.dateButton, { 
                 backgroundColor: withAlpha(colors.textPrimary, 0.05),
-                borderColor: withAlpha(colors.primary, 0.19)
+                borderColor: withAlpha(colors.primary, 0.19),
+                borderWidth: colors.borderWidth,
               }]}
               onPress={() => setShowEndPicker(true)}
             >
@@ -356,14 +359,14 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 0,
     paddingHorizontal: 16,
     fontSize: 16,
   },
   dateButton: {
     height: 48,
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 0,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',

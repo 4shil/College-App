@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface RefundRequest {
   id: string;
@@ -38,6 +39,10 @@ export default function RefundsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,7 +154,7 @@ export default function RefundsScreen() {
                 key={tab.id}
                 style={[
                   styles.filterTab,
-                  filter === tab.id && { backgroundColor: `${colors.primary}20` },
+                  filter === tab.id && { backgroundColor: withAlpha(colors.primary, 0.2) },
                 ]}
                 onPress={() => setFilter(tab.id)}
               >
@@ -204,7 +209,7 @@ export default function RefundsScreen() {
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: `${getStatusColor(refund.status)}20` },
+                        { backgroundColor: withAlpha(getStatusColor(refund.status), 0.2) },
                       ]}
                     >
                       <Text style={[styles.statusText, { color: getStatusColor(refund.status) }]}>
@@ -232,7 +237,12 @@ export default function RefundsScreen() {
                     </View>
                   </View>
 
-                  <View style={styles.reasonBox}>
+                  <View
+                    style={[
+                      styles.reasonBox,
+                      { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.06 : 0.04) },
+                    ]}
+                  >
                     <Text style={[styles.reasonLabel, { color: colors.textMuted }]}>Reason:</Text>
                     <Text style={[styles.reasonText, { color: colors.textPrimary }]}>
                       {refund.reason}
@@ -249,14 +259,14 @@ export default function RefundsScreen() {
                   {refund.status === 'pending' && (
                     <View style={styles.actions}>
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: `${colors.success}15` }]}
+                        style={[styles.actionButton, { backgroundColor: withAlpha(colors.success, 0.15) }]}
                         onPress={() => openApprovalModal(refund)}
                       >
                         <FontAwesome5 name="check" size={14} color={colors.success} />
                         <Text style={[styles.actionText, { color: colors.success }]}>Approve</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: `${colors.error}15` }]}
+                        style={[styles.actionButton, { backgroundColor: withAlpha(colors.error, 0.15) }]}
                         onPress={() => {
                           setSelectedRefund(refund);
                           setNotes('');
@@ -292,7 +302,7 @@ export default function RefundsScreen() {
           animationType="slide"
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <GlassCard style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -437,7 +447,7 @@ const styles = StyleSheet.create({
   },
   reasonBox: {
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'transparent',
     borderRadius: 10,
     marginBottom: 12,
   },
@@ -477,7 +487,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 20,
   },

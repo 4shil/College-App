@@ -187,7 +187,16 @@ export default function BackupRestoreScreen() {
                 <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
               ) : (
                 <View style={styles.statsGrid}>
-                  <View style={[styles.statItem, { backgroundColor: withAlpha(colors.primary, 0.05) }]}>
+                  <View
+                    style={[
+                      styles.statItem,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.cardBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
+                  >
                     <Text style={[styles.statValue, { color: colors.primary }]}>
                       {totalRecords}
                     </Text>
@@ -195,7 +204,16 @@ export default function BackupRestoreScreen() {
                       Total Records
                     </Text>
                   </View>
-                  <View style={[styles.statItem, { backgroundColor: withAlpha(colors.primary, 0.05) }]}>
+                  <View
+                    style={[
+                      styles.statItem,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.cardBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
+                  >
                     <Text style={[styles.statValue, { color: colors.success }]}>
                       {Object.keys(stats).length}
                     </Text>
@@ -359,7 +377,7 @@ export default function BackupRestoreScreen() {
                         setShowRestoreInput(false);
                         setRestoreJson('');
                       }}
-                      style={[styles.cancelButton, { borderColor: withAlpha(colors.textMuted, 0.25) }]}
+                      style={[styles.cancelButton, { borderColor: withAlpha(colors.textMuted, 0.25), borderWidth: colors.borderWidth }]}
                       disabled={processing}
                     >
                       <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
@@ -660,7 +678,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    borderWidth: 1.5,
+    borderWidth: 0,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

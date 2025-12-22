@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -152,7 +153,12 @@ export default function BusReportsScreen() {
                   </Text>
                   <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Routes</Text>
                 </View>
-                <View style={styles.summaryDivider} />
+                <View
+                  style={[
+                    styles.summaryDivider,
+                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) },
+                  ]}
+                />
                 <View style={styles.summaryItem}>
                   <Text style={[styles.summaryValue, { color: colors.success }]}>
                     {stats.totalStudents}
@@ -161,7 +167,12 @@ export default function BusReportsScreen() {
                     Students
                   </Text>
                 </View>
-                <View style={styles.summaryDivider} />
+                <View
+                  style={[
+                    styles.summaryDivider,
+                    { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) },
+                  ]}
+                />
                 <View style={styles.summaryItem}>
                   <Text style={[styles.summaryValue, { color: colors.warning }]}>
                     ₹{(stats.monthlyRevenue / 1000).toFixed(1)}K
@@ -182,7 +193,7 @@ export default function BusReportsScreen() {
             >
               <GlassCard style={styles.reportCard}>
                 <View style={styles.reportHeader}>
-                  <View style={[styles.reportIcon, { backgroundColor: `${section.color}20` }]}>
+                  <View style={[styles.reportIcon, { backgroundColor: withAlpha(section.color, 0.125) }]}>
                     <FontAwesome5 name={section.icon} size={20} color={section.color} />
                   </View>
                   <Text style={[styles.reportTitle, { color: colors.textPrimary }]}>
@@ -216,7 +227,7 @@ export default function BusReportsScreen() {
             >
               <TouchableOpacity>
                 <GlassCard style={styles.exportCard}>
-                  <View style={[styles.exportIcon, { backgroundColor: `${option.color}15` }]}>
+                  <View style={[styles.exportIcon, { backgroundColor: withAlpha(option.color, 0.082) }]}>
                     <FontAwesome5 name={option.icon} size={22} color={option.color} />
                   </View>
                   <Text style={[styles.exportLabel, { color: colors.textPrimary }]}>
@@ -289,7 +300,7 @@ const styles = StyleSheet.create({
   summaryDivider: {
     width: 1,
     height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'transparent',
   },
   reportCard: {
     padding: 16,

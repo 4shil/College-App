@@ -17,6 +17,7 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface DegreeProgram {
   id: string;
@@ -394,9 +395,9 @@ export default function AttendanceReportsScreen() {
   };
 
   const getAttendanceColor = (percentage: number) => {
-    if (percentage >= 75) return '#10b981';
-    if (percentage >= 65) return '#f59e0b';
-    return '#ef4444';
+    if (percentage >= 75) return colors.success;
+    if (percentage >= 65) return colors.warning;
+    return colors.error;
   };
 
   const renderStudentRow = (summary: AttendanceSummary, index: number) => {
@@ -409,13 +410,14 @@ export default function AttendanceReportsScreen() {
         style={[
           styles.studentRow,
           {
-            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-            borderColor: isBelowThreshold ? '#ef444430' : 'transparent',
+            backgroundColor: colors.cardBackground,
+            borderColor: isBelowThreshold ? withAlpha(colors.error, 0.188) : colors.cardBorder,
+            borderWidth: colors.borderWidth,
           },
         ]}
       >
         <View style={styles.studentRowLeft}>
-          <View style={[styles.rollBadge, { backgroundColor: colors.primary + '15' }]}>
+          <View style={[styles.rollBadge, { backgroundColor: withAlpha(colors.primary, 0.082) }]}>
             <Text style={[styles.rollText, { color: colors.primary }]}>{summary.roll_number}</Text>
           </View>
           <View style={styles.studentInfo}>
@@ -423,21 +425,26 @@ export default function AttendanceReportsScreen() {
               {summary.student_name}
             </Text>
             <View style={styles.statsInline}>
-              <Text style={[styles.statInline, { color: '#10b981' }]}>P: {summary.present_count}</Text>
-              <Text style={[styles.statInline, { color: '#f59e0b' }]}>L: {summary.late_count}</Text>
-              <Text style={[styles.statInline, { color: '#ef4444' }]}>A: {summary.absent_count}</Text>
+              <Text style={[styles.statInline, { color: colors.success }]}>P: {summary.present_count}</Text>
+              <Text style={[styles.statInline, { color: colors.warning }]}>L: {summary.late_count}</Text>
+              <Text style={[styles.statInline, { color: colors.error }]}>A: {summary.absent_count}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.studentRowRight}>
-          <View style={[styles.percentageBadge, { backgroundColor: getAttendanceColor(summary.attendance_percentage) + '15' }]}>
+          <View
+            style={[
+              styles.percentageBadge,
+              { backgroundColor: withAlpha(getAttendanceColor(summary.attendance_percentage), 0.082) },
+            ]}
+          >
             <Text style={[styles.percentageText, { color: getAttendanceColor(summary.attendance_percentage) }]}>
               {summary.attendance_percentage}%
             </Text>
           </View>
           {isBelowThreshold && (
-            <FontAwesome5 name="exclamation-triangle" size={14} color="#ef4444" style={{ marginLeft: 8 }} />
+            <FontAwesome5 name="exclamation-triangle" size={14} color={colors.error} style={{ marginLeft: 8 }} />
           )}
         </View>
       </Animated.View>
@@ -454,7 +461,9 @@ export default function AttendanceReportsScreen() {
         style={[
           styles.subjectRow,
           {
-            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           },
         ]}
       >
@@ -469,15 +478,20 @@ export default function AttendanceReportsScreen() {
         </View>
 
         <View style={styles.subjectStats}>
-          <View style={[styles.percentageBadge, { backgroundColor: getAttendanceColor(summary.avg_attendance) + '15' }]}>
+          <View
+            style={[
+              styles.percentageBadge,
+              { backgroundColor: withAlpha(getAttendanceColor(summary.avg_attendance), 0.082) },
+            ]}
+          >
             <Text style={[styles.percentageText, { color: getAttendanceColor(summary.avg_attendance) }]}>
               {summary.avg_attendance}%
             </Text>
           </View>
           {summary.students_below_threshold > 0 && (
-            <View style={[styles.warningBadge, { backgroundColor: '#ef444420' }]}>
-              <FontAwesome5 name="user-times" size={10} color="#ef4444" />
-              <Text style={[styles.warningText, { color: '#ef4444' }]}>
+            <View style={[styles.warningBadge, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+              <FontAwesome5 name="user-times" size={10} color={colors.error} />
+              <Text style={[styles.warningText, { color: colors.error }]}>
                 {summary.students_below_threshold}
               </Text>
             </View>
@@ -526,12 +540,12 @@ export default function AttendanceReportsScreen() {
                   <FontAwesome5
                     name="user-graduate"
                     size={14}
-                    color={reportType === 'student' ? '#fff' : colors.textSecondary}
+                    color={reportType === 'student' ? colors.textInverse : colors.textSecondary}
                   />
                   <Text
                     style={[
                       styles.tabText,
-                      { color: reportType === 'student' ? '#fff' : colors.textSecondary },
+                      { color: reportType === 'student' ? colors.textInverse : colors.textSecondary },
                     ]}
                   >
                     Student-wise
@@ -549,12 +563,12 @@ export default function AttendanceReportsScreen() {
                   <FontAwesome5
                     name="book"
                     size={14}
-                    color={reportType === 'subject' ? '#fff' : colors.textSecondary}
+                    color={reportType === 'subject' ? colors.textInverse : colors.textSecondary}
                   />
                   <Text
                     style={[
                       styles.tabText,
-                      { color: reportType === 'subject' ? '#fff' : colors.textSecondary },
+                      { color: reportType === 'subject' ? colors.textInverse : colors.textSecondary },
                     ]}
                   >
                     Subject-wise
@@ -564,7 +578,15 @@ export default function AttendanceReportsScreen() {
 
               {/* Filters */}
               <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.filtersRow}>
-                <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                <View
+                  style={[
+                    styles.pickerWrapper,
+                    {
+                      backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                      borderColor: withAlpha(colors.primary, 0.2),
+                    },
+                  ]}
+                >
                   <Picker
                     selectedValue={selectedDegree}
                     onValueChange={val => {
@@ -581,7 +603,16 @@ export default function AttendanceReportsScreen() {
                   </Picker>
                 </View>
 
-                <View style={[styles.pickerWrapper, styles.yearPicker, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                <View
+                  style={[
+                    styles.pickerWrapper,
+                    styles.yearPicker,
+                    {
+                      backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                      borderColor: withAlpha(colors.primary, 0.2),
+                    },
+                  ]}
+                >
                   <Picker
                     selectedValue={selectedYear}
                     onValueChange={val => {
@@ -602,7 +633,15 @@ export default function AttendanceReportsScreen() {
               {/* Subject Filter (for student report) */}
               {reportType === 'student' && courses.length > 0 && (
                 <Animated.View entering={FadeInDown.delay(250).duration(400)}>
-                  <View style={[styles.pickerWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                  <View
+                    style={[
+                      styles.pickerWrapper,
+                      {
+                        backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.05 : 0.03),
+                        borderColor: withAlpha(colors.primary, 0.2),
+                      },
+                    ]}
+                  >
                     <Picker
                       selectedValue={selectedCourse}
                       onValueChange={setSelectedCourse}
@@ -637,7 +676,7 @@ export default function AttendanceReportsScreen() {
                         <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Avg Attendance</Text>
                       </View>
                       <View style={styles.summaryStat}>
-                        <Text style={[styles.summaryValue, { color: '#ef4444' }]}>{belowThresholdCount}</Text>
+                        <Text style={[styles.summaryValue, { color: colors.error }]}>{belowThresholdCount}</Text>
                         <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Below 65%</Text>
                       </View>
                     </View>
@@ -648,9 +687,9 @@ export default function AttendanceReportsScreen() {
               {/* Alert for students below threshold */}
               {belowThresholdCount > 0 && reportType === 'student' && (
                 <Animated.View entering={FadeInDown.delay(350).duration(400)}>
-                  <View style={[styles.alertBanner, { backgroundColor: '#ef444420' }]}>
-                    <FontAwesome5 name="exclamation-circle" size={16} color="#ef4444" />
-                    <Text style={[styles.alertText, { color: '#ef4444' }]}>
+                  <View style={[styles.alertBanner, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
+                    <FontAwesome5 name="exclamation-circle" size={16} color={colors.error} />
+                    <Text style={[styles.alertText, { color: colors.error }]}>
                       {belowThresholdCount} student{belowThresholdCount > 1 ? 's' : ''} below minimum {MINIMUM_ATTENDANCE}% attendance
                     </Text>
                   </View>
@@ -739,7 +778,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: 'transparent',
   },
   yearPicker: { flex: 0.35, minWidth: 100 },
   // Summary Card

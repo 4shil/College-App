@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
+import { withAlpha } from '../../../theme/colorUtils';
 import { supabase } from '../../../lib/supabase';
 
 interface MenuOption {
@@ -100,7 +101,7 @@ export default function AcademicIndexScreen() {
       title: 'Departments',
       subtitle: 'Manage academic departments',
       icon: 'building',
-      color: '#6366f1',
+      color: colors.primary,
       route: '/(admin)/academic/departments',
       count: counts.departments,
     },
@@ -109,7 +110,7 @@ export default function AcademicIndexScreen() {
       title: 'Courses',
       subtitle: 'Degree programs and specializations',
       icon: 'graduation-cap',
-      color: '#10b981',
+      color: colors.success,
       route: '/(admin)/academic/courses',
       count: counts.courses,
     },
@@ -118,7 +119,7 @@ export default function AcademicIndexScreen() {
       title: 'Subjects',
       subtitle: 'Course subjects and curriculum',
       icon: 'book',
-      color: '#f59e0b',
+      color: colors.warning,
       route: '/(admin)/academic/subjects',
       count: counts.subjects,
     },
@@ -127,7 +128,7 @@ export default function AcademicIndexScreen() {
       title: 'Years & Sections',
       subtitle: 'Academic years and class sections',
       icon: 'layer-group',
-      color: '#8b5cf6',
+      color: colors.info,
       route: '/(admin)/academic/years',
       count: counts.years,
     },
@@ -136,7 +137,7 @@ export default function AcademicIndexScreen() {
       title: 'Batches',
       subtitle: 'Student batch management',
       icon: 'users-cog',
-      color: '#3b82f6',
+      color: colors.primary,
       route: '/(admin)/academic/batches',
     },
     {
@@ -144,7 +145,7 @@ export default function AcademicIndexScreen() {
       title: 'Semesters',
       subtitle: 'Academic terms and schedules',
       icon: 'calendar-alt',
-      color: '#ec4899',
+      color: colors.primary,
       route: '/(admin)/academic/semesters',
       count: counts.semesters,
     },
@@ -162,7 +163,7 @@ export default function AcademicIndexScreen() {
       >
         <Card style={styles.menuCard}>
           <View style={styles.menuCardContent}>
-            <View style={[styles.iconContainer, { backgroundColor: option.color + '20' }]}>
+            <View style={[styles.iconContainer, { backgroundColor: withAlpha(option.color, 0.125) }]}>
               <FontAwesome5 name={option.icon} size={22} color={option.color} />
             </View>
             <View style={styles.menuTextContainer}>
@@ -175,7 +176,7 @@ export default function AcademicIndexScreen() {
             </View>
             <View style={styles.menuArrow}>
               {option.count !== undefined && (
-                <View style={[styles.countBadge, { backgroundColor: option.color + '20' }]}>
+                <View style={[styles.countBadge, { backgroundColor: withAlpha(option.color, 0.125) }]}>
                   <Text style={[styles.countText, { color: option.color }]}>{option.count}</Text>
                 </View>
               )}
@@ -222,19 +223,19 @@ export default function AcademicIndexScreen() {
             ) : (
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
-                  <FontAwesome5 name="building" size={16} color="#6366f1" />
+                  <FontAwesome5 name="building" size={16} color={colors.primary} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{counts.departments}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Depts</Text>
                 </View>
                 <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
                 <View style={styles.statItem}>
-                  <FontAwesome5 name="graduation-cap" size={16} color="#10b981" />
+                  <FontAwesome5 name="graduation-cap" size={16} color={colors.success} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{counts.courses}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Courses</Text>
                 </View>
                 <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
                 <View style={styles.statItem}>
-                  <FontAwesome5 name="book" size={16} color="#f59e0b" />
+                  <FontAwesome5 name="book" size={16} color={colors.warning} />
                   <Text style={[styles.statValue, { color: colors.textPrimary }]}>{counts.subjects}</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Subjects</Text>
                 </View>

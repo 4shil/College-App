@@ -7,6 +7,7 @@ import { Picker } from '@react-native-picker/picker';
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
 
@@ -17,7 +18,8 @@ interface Assignment {
 
 export default function ManageAssignmentsScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+  const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -117,14 +119,14 @@ export default function ManageAssignmentsScreen() {
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Manage Assignments</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{assignments.length} assignments</Text></View>
           <TouchableOpacity onPress={openAddModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </View>
         {assignments.map((assignment, i) => (
           <Animated.View key={assignment.id} entering={FadeInDown.delay(i * 30).springify()}>
             <Card style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.icon, { backgroundColor: `${colors.primary}20` }]}>
+                <View style={[styles.icon, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                   <FontAwesome5 name="file-alt" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.info}>
@@ -150,7 +152,7 @@ export default function ManageAssignmentsScreen() {
         ))}
       </ScrollView>
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{editingAssignment ? 'Edit' : 'Create'} Assignment</Text>
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   label: { fontSize: 14 }, value: { fontSize: 14, fontWeight: '600' },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },

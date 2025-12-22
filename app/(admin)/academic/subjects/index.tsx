@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
+import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
 
 interface Subject {
@@ -253,7 +254,7 @@ export default function SubjectsScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage subjects mapped to courses and semesters</Text>
           </View>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openCreate}>
-            <FontAwesome5 name="plus" size={18} color="#fff" />
+            <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -283,9 +284,9 @@ export default function SubjectsScreen() {
             filtered.map((s, idx) => (
               <Animated.View key={s.id} entering={FadeInRight.delay(100 + idx * 60).duration(400)}>
                 <TouchableOpacity activeOpacity={0.8} onPress={() => openEdit(s)}>
-                  <Card style={[styles.card, { borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }]}>
+                  <Card style={[styles.card, { borderColor: colors.cardBorder }]}>
                     <View style={styles.cardHeader}>
-                      <View style={[styles.codeBadge, { backgroundColor: colors.primary + '18' }]}>
+                      <View style={[styles.codeBadge, { backgroundColor: withAlpha(colors.primary, 0.09) }]}>
                         <Text style={[styles.codeText, { color: colors.primary }]}>{s.code}</Text>
                       </View>
                       <View style={styles.cardInfo}>
@@ -295,14 +296,14 @@ export default function SubjectsScreen() {
                         </Text>
                       </View>
                       <TouchableOpacity onPress={() => handleDelete(s)} style={styles.deleteBtn}>
-                        <Ionicons name="close-circle" size={22} color="#ef4444" />
+                        <Ionicons name="close-circle" size={22} color={colors.error} />
                       </TouchableOpacity>
                     </View>
                     <View style={styles.metaRow}>
                       <Text style={[styles.meta, { color: colors.textSecondary }]}>Credits: {s.credits}</Text>
                       <Text style={[styles.meta, { color: colors.textSecondary }]}>Hours: {s.contact_hours}</Text>
                       {!s.is_active && (
-                        <Text style={[styles.inactive, { color: '#ef4444' }]}>Inactive</Text>
+                        <Text style={[styles.inactive, { color: colors.error }]}>Inactive</Text>
                       )}
                     </View>
                   </Card>
@@ -313,7 +314,7 @@ export default function SubjectsScreen() {
         </ScrollView>
 
         <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, isDark ? 0.8 : 0.5) }]}>
             <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}> 
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -455,13 +456,13 @@ const styles = StyleSheet.create({
   deleteBtn: { padding: 4 },
   modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 18, borderTopRightRadius: 18, maxHeight: '92%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.08)' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'transparent' },
   modalTitle: { fontSize: 18, fontWeight: '700' },
   form: { paddingHorizontal: 20 },
   formGroup: { marginTop: 14 },
   label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 14 },
-  picker: { borderWidth: 1, borderColor: '#ccc', borderRadius: 10 },
+  picker: { borderWidth: 1, borderColor: 'transparent', borderRadius: 10 },
   row: { flexDirection: 'row', marginTop: 6 },
   modalFooter: { padding: 20 },
 });

@@ -67,7 +67,7 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
   onNavigate 
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const { colors, animationsEnabled } = useThemeStore();
+  const { colors, isDark, animationsEnabled } = useThemeStore();
 
   const activeIconColor = colors.textPrimary;
   const inactiveIconColor = withAlpha(colors.textPrimary, 0.4);
@@ -83,7 +83,7 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
       // Nested module routes that should activate this icon
       nestedRoutes: [
         'academic', 'timetable', 'attendance', 'exams', 'assignments', 
-        'library', 'fees', 'bus', 'canteen', 'notices', 'audit'
+        'library', 'fees', 'bus', 'canteen', 'notices', 'audit', 'reception'
       ]
     },
     { id: 'settings', icon: 'settings-outline', route: '/(admin)/settings' },
@@ -127,7 +127,11 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
   return (
     <View style={styles.dockWrapper}>
       <Animated.View style={[styles.dockContainer, { borderRadius: colors.borderRadius * 2 }, animatedContainerStyle]}>
-        <BlurView intensity={animationsEnabled ? colors.blurIntensity : 0} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView
+          intensity={animationsEnabled ? colors.blurIntensity : 0}
+          tint={isDark ? 'dark' : 'light'}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={[styles.dockBorder, { borderColor: colors.glassBorder, borderRadius: colors.borderRadius * 2 }]} />
 
         <View style={{ flex: 1, overflow: 'hidden', borderRadius: colors.borderRadius * 1.5 }}>
@@ -203,6 +207,7 @@ export default function AdminLayout() {
         <Stack.Screen name="fees" />
         <Stack.Screen name="bus" />
         <Stack.Screen name="canteen" />
+        <Stack.Screen name="reception/index" />
         <Stack.Screen name="audit" />
         <Stack.Screen name="college-info" />
         <Stack.Screen name="change-password" />

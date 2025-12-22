@@ -135,8 +135,22 @@ export default function LibraryReportsScreen() {
                 {stats.popularBooks.map((book, i) => (
                   <Animated.View key={i} entering={FadeInDown.delay(250 + i * 50).springify()}>
                     <Card style={styles.bookCard}>
-                      <View style={[styles.rank, { backgroundColor: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : colors.primary }]}>
-                        <Text style={styles.rankText}>{i + 1}</Text>
+                      <View
+                        style={[
+                          styles.rank,
+                          {
+                            backgroundColor:
+                              i === 0
+                                ? colors.warning
+                                : i === 1
+                                  ? colors.info
+                                  : i === 2
+                                    ? colors.primary
+                                    : colors.secondary,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.rankText, { color: colors.textInverse }]}>{i + 1}</Text>
                       </View>
                       <View style={styles.bookInfo}>
                         <Text style={[styles.bookTitle, { color: colors.textPrimary }]}>{book.title}</Text>
@@ -170,7 +184,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12 },
   bookCard: { flexDirection: 'row', alignItems: 'center', padding: 16, marginBottom: 8 },
   rank: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  rankText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  rankText: { color: 'transparent', fontSize: 18, fontWeight: 'bold' },
   bookInfo: { flex: 1 },
   bookTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   bookMeta: { fontSize: 14 },

@@ -17,6 +17,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface AttendanceStats {
   todayMarked: number;
@@ -180,7 +181,7 @@ export default function AttendanceIndexScreen() {
       title: 'Mark Attendance',
       subtitle: 'Period-wise marking',
       icon: 'clipboard-check',
-      color: '#10b981',
+      color: colors.success,
       route: '/(admin)/attendance/mark',
     },
     {
@@ -188,7 +189,7 @@ export default function AttendanceIndexScreen() {
       title: 'Reports',
       subtitle: 'View attendance reports',
       icon: 'chart-pie',
-      color: '#3b82f6',
+      color: colors.info,
       route: '/(admin)/attendance/reports',
     },
     {
@@ -196,7 +197,7 @@ export default function AttendanceIndexScreen() {
       title: 'Holidays',
       subtitle: 'Manage holidays',
       icon: 'calendar-day',
-      color: '#f59e0b',
+      color: colors.warning,
       route: '/(admin)/attendance/holidays',
       badge: stats.upcomingHolidays,
     },
@@ -205,7 +206,7 @@ export default function AttendanceIndexScreen() {
       title: 'Activity Logs',
       subtitle: 'View all actions',
       icon: 'history',
-      color: '#8b5cf6',
+      color: colors.primary,
       route: '/(admin)/attendance/logs',
     },
   ];
@@ -215,26 +216,26 @@ export default function AttendanceIndexScreen() {
       title: 'Marked Today',
       value: stats.todayMarked,
       icon: 'check-circle',
-      color: '#10b981',
+      color: colors.success,
     },
     {
       title: 'Late Today',
       value: stats.todayLateCount,
       icon: 'clock',
-      color: '#f59e0b',
+      color: colors.warning,
     },
     {
       title: 'Low Attendance',
       value: stats.lowAttendanceCount,
       icon: 'exclamation-triangle',
-      color: '#ef4444',
+      color: colors.error,
       subtitle: 'Below 65%',
     },
     {
       title: 'Holidays',
       value: stats.upcomingHolidays,
       icon: 'calendar-check',
-      color: '#3b82f6',
+      color: colors.info,
       subtitle: 'Upcoming',
     },
   ];
@@ -277,10 +278,14 @@ export default function AttendanceIndexScreen() {
                     key={stat.title}
                     style={[
                       styles.statCard,
-                      { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' },
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.cardBorder,
+                        borderWidth: colors.borderWidth,
+                      },
                     ]}
                   >
-                    <View style={[styles.statIcon, { backgroundColor: stat.color + '15' }]}>
+                    <View style={[styles.statIcon, { backgroundColor: withAlpha(stat.color, 0.082) }]}>
                       <FontAwesome5 name={stat.icon} size={18} color={stat.color} />
                     </View>
                     <Text style={[styles.statValue, { color: colors.textPrimary }]}>
@@ -311,14 +316,15 @@ export default function AttendanceIndexScreen() {
                         style={[
                           styles.actionCard,
                           {
-                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                            borderColor: action.color + '20',
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.cardBorder,
+                            borderWidth: colors.borderWidth,
                           },
                         ]}
                         onPress={() => router.push(action.route as any)}
                         activeOpacity={0.7}
                       >
-                        <View style={[styles.actionIcon, { backgroundColor: action.color + '15' }]}>
+                        <View style={[styles.actionIcon, { backgroundColor: withAlpha(action.color, 0.082) }]}>
                           <FontAwesome5 name={action.icon} size={22} color={action.color} />
                         </View>
                         <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
@@ -329,7 +335,9 @@ export default function AttendanceIndexScreen() {
                         </Text>
                         {action.badge !== undefined && action.badge > 0 && (
                           <View style={[styles.actionBadge, { backgroundColor: action.color }]}>
-                            <Text style={styles.actionBadgeText}>{action.badge}</Text>
+                            <Text style={[styles.actionBadgeText, { color: colors.textInverse }]}>
+                              {action.badge}
+                            </Text>
                           </View>
                         )}
                       </TouchableOpacity>
@@ -341,11 +349,20 @@ export default function AttendanceIndexScreen() {
               {/* Alert Banner */}
               {stats.lowAttendanceCount > 0 && (
                 <Animated.View entering={FadeInDown.delay(300).duration(400)}>
-                  <Card style={[styles.alertCard, { backgroundColor: '#ef444415', borderColor: '#ef444430' }]}>
+                  <Card
+                    style={[
+                      styles.alertCard,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.cardBorder,
+                        borderWidth: colors.borderWidth,
+                      },
+                    ]}
+                  >
                     <View style={styles.alertContent}>
-                      <FontAwesome5 name="exclamation-circle" size={20} color="#ef4444" />
+                      <FontAwesome5 name="exclamation-circle" size={20} color={colors.error} />
                       <View style={styles.alertText}>
-                        <Text style={[styles.alertTitle, { color: '#ef4444' }]}>
+                        <Text style={[styles.alertTitle, { color: colors.error }]}>
                           Low Attendance Alert
                         </Text>
                         <Text style={[styles.alertSubtitle, { color: colors.textSecondary }]}>
@@ -354,10 +371,10 @@ export default function AttendanceIndexScreen() {
                       </View>
                     </View>
                     <TouchableOpacity
-                      style={[styles.alertBtn, { backgroundColor: '#ef4444' }]}
+                      style={[styles.alertBtn, { backgroundColor: colors.error }]}
                       onPress={() => router.push('/(admin)/attendance/reports?filter=low' as any)}
                     >
-                      <Text style={styles.alertBtnText}>View</Text>
+                      <Text style={[styles.alertBtnText, { color: colors.textInverse }]}>View</Text>
                     </TouchableOpacity>
                   </Card>
                 </Animated.View>
@@ -391,8 +408,9 @@ export default function AttendanceIndexScreen() {
                         style={[
                           styles.activityItem,
                           {
-                            backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
-                            borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.cardBorder,
+                            borderWidth: colors.borderWidth,
                           },
                         ]}
                       >
@@ -400,12 +418,14 @@ export default function AttendanceIndexScreen() {
                           style={[
                             styles.activityIcon,
                             {
-                              backgroundColor:
+                              backgroundColor: withAlpha(
                                 activity.type === 'marked'
-                                  ? '#10b98115'
+                                  ? colors.success
                                   : activity.type === 'edited'
-                                  ? '#f59e0b15'
-                                  : '#3b82f615',
+                                  ? colors.warning
+                                  : colors.info,
+                                0.082
+                              ),
                             },
                           ]}
                         >
@@ -420,10 +440,10 @@ export default function AttendanceIndexScreen() {
                             size={12}
                             color={
                               activity.type === 'marked'
-                                ? '#10b981'
+                                ? colors.success
                                 : activity.type === 'edited'
-                                ? '#f59e0b'
-                                : '#3b82f6'
+                                ? colors.warning
+                                : colors.info
                             }
                           />
                         </View>
@@ -449,23 +469,33 @@ export default function AttendanceIndexScreen() {
                   </Text>
                   <View style={styles.summaryRow}>
                     <View style={styles.summaryItem}>
-                      <Text style={[styles.summaryValue, { color: '#10b981' }]}>
+                      <Text style={[styles.summaryValue, { color: colors.success }]}>
                         {stats.todayMarked}
                       </Text>
                       <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
                         Marked
                       </Text>
                     </View>
-                    <View style={[styles.summaryDivider, { backgroundColor: colors.textMuted + '20' }]} />
+                    <View
+                      style={[
+                        styles.summaryDivider,
+                        { backgroundColor: withAlpha(colors.textMuted, 0.125) },
+                      ]}
+                    />
                     <View style={styles.summaryItem}>
-                      <Text style={[styles.summaryValue, { color: '#f59e0b' }]}>
+                      <Text style={[styles.summaryValue, { color: colors.warning }]}>
                         {stats.todayLateCount}
                       </Text>
                       <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
                         Late
                       </Text>
                     </View>
-                    <View style={[styles.summaryDivider, { backgroundColor: colors.textMuted + '20' }]} />
+                    <View
+                      style={[
+                        styles.summaryDivider,
+                        { backgroundColor: withAlpha(colors.textMuted, 0.125) },
+                      ]}
+                    />
                     <View style={styles.summaryItem}>
                       <Text style={[styles.summaryValue, { color: colors.textSecondary }]}>
                         {stats.todayPending}
@@ -566,7 +596,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
   },
-  actionBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  actionBadgeText: { color: 'transparent', fontSize: 10, fontWeight: '700' },
   // Alert Card
   alertCard: {
     flexDirection: 'row',
@@ -585,7 +615,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  alertBtnText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  alertBtnText: { color: 'transparent', fontSize: 12, fontWeight: '600' },
   // Activity
   emptyActivity: { alignItems: 'center', paddingVertical: 30 },
   emptyText: { marginTop: 10, fontSize: 13 },

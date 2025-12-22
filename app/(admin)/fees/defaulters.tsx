@@ -18,6 +18,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
 import { PERMISSIONS } from '../../../hooks/useRBAC';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface Defaulter {
   id: string;
@@ -34,7 +35,7 @@ interface Defaulter {
 
 export default function FeeDefaultersScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -150,7 +151,7 @@ export default function FeeDefaultersScreen() {
           <Animated.View key={defaulter.id} entering={FadeInDown.delay(index * 30).springify()}>
             <Card style={styles.defaulterCard}>
               <View style={styles.cardHeader}>
-                <View style={[styles.warningIcon, { backgroundColor: `${colors.error}20` }]}>
+                <View style={[styles.warningIcon, { backgroundColor: withAlpha(colors.error, 0.2) }]}>
                   <FontAwesome5 name="exclamation-triangle" size={24} color={colors.error} />
                 </View>
                 <View style={styles.defaulterInfo}>
@@ -161,14 +162,19 @@ export default function FeeDefaultersScreen() {
                     {defaulter.student?.admission_number}
                   </Text>
                 </View>
-                <View style={[styles.daysOverdue, { backgroundColor: `${colors.error}20` }]}>
+                <View style={[styles.daysOverdue, { backgroundColor: withAlpha(colors.error, 0.2) }]}>
                   <Text style={[styles.daysText, { color: colors.error }]}>
                     {defaulter.days_overdue}d
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.feeDetails}>
+              <View
+                style={[
+                  styles.feeDetails,
+                  { borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.18 : 0.12) },
+                ]}
+              >
                 <View style={styles.detailRow}>
                   <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total Amount:</Text>
                   <Text style={[styles.detailValue, { color: colors.textPrimary }]}>₹{defaulter.total_amount}</Text>
@@ -208,8 +214,8 @@ export default function FeeDefaultersScreen() {
                 onPress={() => sendReminder(defaulter)}
                 style={[styles.reminderButton, { backgroundColor: colors.warning }]}
               >
-                <FontAwesome5 name="bell" size={16} color="#fff" />
-                <Text style={styles.reminderText}>Send Reminder</Text>
+                <FontAwesome5 name="bell" size={16} color={colors.textInverse} />
+                <Text style={[styles.reminderText, { color: colors.textInverse }]}>Send Reminder</Text>
               </TouchableOpacity>
             </Card>
           </Animated.View>
@@ -248,7 +254,7 @@ const styles = StyleSheet.create({
   studentMeta: { fontSize: 14 },
   daysOverdue: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
   daysText: { fontSize: 16, fontWeight: 'bold' },
-  feeDetails: { marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(150,150,150,0.2)' },
+  feeDetails: { marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'transparent' },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   detailLabel: { fontSize: 14 },
   detailValue: { fontSize: 14, fontWeight: '600' },
@@ -256,7 +262,7 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   contactText: { fontSize: 14 },
   reminderButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12 },
-  reminderText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  reminderText: { color: 'transparent', fontSize: 14, fontWeight: '600' },
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 20, fontWeight: 'bold', marginTop: 16, marginBottom: 8 },
   emptySubtext: { fontSize: 14, textAlign: 'center' },

@@ -197,8 +197,8 @@ export default function AssignmentReportsScreen() {
             ) : (
               topPerformers.map((performer, i) => (
                 <View key={i} style={[styles.performerItem, { borderBottomColor: colors.cardBorder }]}>
-                  <View style={[styles.rank, { backgroundColor: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : colors.cardBorder }]}>
-                    <Text style={[styles.rankText, { color: i < 3 ? '#000' : colors.textPrimary }]}>{i + 1}</Text>
+                  <View style={[styles.rank, { backgroundColor: i === 0 ? colors.warning : i === 1 ? colors.info : i === 2 ? colors.success : colors.cardBorder }]}>
+                    <Text style={[styles.rankText, { color: i < 3 ? colors.textInverse : colors.textPrimary }]}>{i + 1}</Text>
                   </View>
                   <View style={styles.performerInfo}>
                     <Text style={[styles.performerName, { color: colors.textPrimary }]}>{performer.full_name}</Text>

@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface FeeStats {
   totalDue: number;
@@ -81,35 +82,35 @@ export default function FeesIndexScreen() {
       title: 'Fee Structures',
       subtitle: 'Manage fee categories',
       icon: 'list-alt',
-      color: '#6366f1',
+      color: colors.info,
       route: '/(admin)/fees/structures',
     },
     {
       title: 'Student Fees',
       subtitle: 'View and track payments',
       icon: 'users',
-      color: '#10b981',
+      color: colors.success,
       route: '/(admin)/fees/students',
     },
     {
       title: 'Record Payment',
       subtitle: 'Add new payment',
       icon: 'rupee-sign',
-      color: '#f59e0b',
+      color: colors.warning,
       route: '/(admin)/fees/payment',
     },
     {
       title: 'Reports',
       subtitle: 'Fee collection reports',
       icon: 'chart-line',
-      color: '#8b5cf6',
+      color: colors.primary,
       route: '/(admin)/fees/reports',
     },
     {
       title: 'Defaulters',
       subtitle: 'Overdue payments',
       icon: 'exclamation-triangle',
-      color: '#ef4444',
+      color: colors.error,
       route: '/(admin)/fees/defaulters',
     },
   ];
@@ -142,44 +143,48 @@ export default function FeesIndexScreen() {
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.primary}15` : `${colors.primary}10`,
-            borderColor: isDark ? `${colors.primary}30` : `${colors.primary}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.primary }]}>
-              <FontAwesome5 name="rupee-sign" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.primary, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="rupee-sign" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.totalDue.toLocaleString()}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Due</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.success}15` : `${colors.success}10`,
-            borderColor: isDark ? `${colors.success}30` : `${colors.success}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.success }]}>
-              <FontAwesome5 name="check-circle" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.success, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="check-circle" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.totalCollected.toLocaleString()}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Collected</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.warning}15` : `${colors.warning}10`,
-            borderColor: isDark ? `${colors.warning}30` : `${colors.warning}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.warning }]}>
-              <FontAwesome5 name="clock" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.warning, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="clock" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.pending}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
           </View>
 
           <View style={[styles.statCard, { 
-            backgroundColor: isDark ? `${colors.error}15` : `${colors.error}10`,
-            borderColor: isDark ? `${colors.error}30` : `${colors.error}25`,
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+            borderWidth: colors.borderWidth,
           }]}>
-            <View style={[styles.statIcon, { backgroundColor: colors.error }]}>
-              <FontAwesome5 name="exclamation-triangle" size={20} color="#fff" />
+            <View style={[styles.statIcon, { backgroundColor: colors.error, shadowColor: colors.shadowColor }]}>
+              <FontAwesome5 name="exclamation-triangle" size={20} color={colors.textInverse} />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.overdue}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Overdue</Text>
@@ -196,10 +201,11 @@ export default function FeesIndexScreen() {
             >
               <Animated.View entering={FadeInDown.delay(350 + index * 50).springify()}>
                 <View style={[styles.menuCard, {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
                 }]}>
-                  <View style={[styles.menuIcon, { backgroundColor: `${option.color}20` }]}>
+                  <View style={[styles.menuIcon, { backgroundColor: withAlpha(option.color, 0.125) }]}>
                     <FontAwesome5 name={option.icon} size={24} color={option.color} />
                   </View>
                   <View style={styles.menuContent}>
@@ -248,8 +254,8 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 14,
     alignItems: 'center',
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
   },
   statIcon: {
     width: 52,
@@ -258,7 +264,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
+    shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -279,8 +285,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 18,
     marginBottom: 14,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
   },
   menuIcon: {
     width: 56,

@@ -277,9 +277,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.name}
@@ -296,9 +297,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.short_name}
@@ -315,9 +317,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.established_year}
@@ -336,9 +339,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.affiliation}
@@ -355,9 +359,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.motto}
@@ -385,9 +390,10 @@ export default function CollegeInfoScreen() {
                     styles.input,
                     styles.textArea,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.address}
@@ -407,9 +413,10 @@ export default function CollegeInfoScreen() {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                        backgroundColor: colors.inputBackground,
                         color: colors.textPrimary,
-                        borderColor: withAlpha(colors.textPrimary, 0.1),
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       },
                     ]}
                     value={formData.city}
@@ -426,9 +433,10 @@ export default function CollegeInfoScreen() {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                        backgroundColor: colors.inputBackground,
                         color: colors.textPrimary,
-                        borderColor: withAlpha(colors.textPrimary, 0.1),
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       },
                     ]}
                     value={formData.state}
@@ -446,9 +454,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.pincode}
@@ -467,9 +476,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.phone}
@@ -487,9 +497,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.email}
@@ -508,9 +519,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.website}
@@ -539,9 +551,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.principal_name}
@@ -558,9 +571,10 @@ export default function CollegeInfoScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.05),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   value={formData.principal_email}
@@ -585,7 +599,8 @@ export default function CollegeInfoScreen() {
               {
                 paddingBottom: insets.bottom + 20,
                 backgroundColor: withAlpha(colors.cardBackground, 0.8),
-                borderTopColor: withAlpha(colors.textPrimary, 0.1),
+                borderTopColor: colors.cardBorder,
+                borderTopWidth: colors.borderWidth,
               },
             ]}
           >
@@ -594,7 +609,9 @@ export default function CollegeInfoScreen() {
                 style={[
                   styles.cancelButton,
                   {
-                    backgroundColor: withAlpha(colors.textPrimary, 0.1),
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
                 onPress={handleCancel}

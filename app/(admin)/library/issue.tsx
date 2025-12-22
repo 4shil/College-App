@@ -20,7 +20,11 @@ interface BookIssue {
 
 export default function LibraryIssueScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -130,7 +134,7 @@ export default function LibraryIssueScreen() {
         ))}
       </ScrollView>
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={[styles.modalContainer, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
+        <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Issue Book</Text>

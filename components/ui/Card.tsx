@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ViewStyle, Platform, StyleProp } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -16,18 +15,18 @@ interface CardProps {
   intensity?: number;
   delay?: number;
   noPadding?: boolean;
+  animated?: boolean;
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   style,
-  intensity,
   delay = 0,
   noPadding = false,
+  animated = true,
 }) => {
-  const { isDark, colors, animationsEnabled } = useThemeStore();
-  const blurAmount = intensity ?? colors.blurIntensity;
-  const shouldAnimate = animationsEnabled;
+  const { colors, animationsEnabled } = useThemeStore();
+  const shouldAnimate = animationsEnabled && animated;
   const progress = useSharedValue(shouldAnimate ? 0 : 1);
 
   useEffect(() => {
@@ -58,40 +57,22 @@ export const Card: React.FC<CardProps> = ({
     };
   });
 
-  const borderColor = colors.glassBorder;
-
-  const renderContent = () => (
-    <View
+  return (
+    <Animated.View
       style={[
-        styles.content,
+        styles.wrapper,
         {
-          backgroundColor: Platform.OS === 'android' ? colors.glassBackground : 'transparent',
-          borderColor,
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.cardBorder,
           borderWidth: colors.borderWidth,
           borderRadius: colors.borderRadius,
           padding: noPadding ? 0 : 18,
         },
+        animatedStyle,
+        style,
       ]}
     >
       {children}
-    </View>
-  );
-
-  return (
-    <Animated.View style={[styles.wrapper, { borderRadius: colors.borderRadius }, animatedStyle, style]}>
-      {Platform.OS === 'ios' && blurAmount > 0 ? (
-        <BlurView
-          intensity={blurAmount}
-          style={[styles.blur, { backgroundColor: colors.glassBackground, borderRadius: colors.borderRadius }]}
-          tint={isDark ? 'dark' : 'light'}
-        >
-          {renderContent()}
-        </BlurView>
-      ) : (
-        <View style={[styles.blur, { backgroundColor: colors.glassBackground, borderRadius: colors.borderRadius }]}>
-          {renderContent()}
-        </View>
-      )}
     </Animated.View>
   );
 };
@@ -100,13 +81,6 @@ const styles = StyleSheet.create({
   wrapper: {
     overflow: 'hidden',
   },
-  blur: {
-    overflow: 'hidden',
-  },
-  content: {
-    overflow: 'hidden',
-  },
 });
 
 export default Card;
-export { Card as GlassCard };

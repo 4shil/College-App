@@ -15,11 +15,16 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 export default function BusAlertsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [formData, setFormData] = useState({
@@ -90,8 +95,9 @@ export default function BusAlertsScreen() {
                 style={[
                   styles.alertTypeCard,
                   {
-                    backgroundColor: isDark ? `${type.color}15` : `${type.color}10`,
-                    borderColor: `${type.color}30`,
+                    backgroundColor: withAlpha(type.color, isDark ? 0.082 : 0.063),
+                    borderColor: withAlpha(type.color, 0.188),
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
                 onPress={() => {
@@ -114,7 +120,7 @@ export default function BusAlertsScreen() {
           
           <GlassCard style={styles.alertHistoryCard}>
             <View style={styles.historyItem}>
-              <View style={[styles.historyIcon, { backgroundColor: `${colors.warning}20` }]}>
+              <View style={[styles.historyIcon, { backgroundColor: withAlpha(colors.warning, 0.125) }]}>
                 <FontAwesome5 name="calendar-times" size={18} color={colors.warning} />
               </View>
               <View style={styles.historyDetails}>
@@ -131,7 +137,7 @@ export default function BusAlertsScreen() {
 
           <GlassCard style={styles.alertHistoryCard}>
             <View style={styles.historyItem}>
-              <View style={[styles.historyIcon, { backgroundColor: `${colors.error}20` }]}>
+              <View style={[styles.historyIcon, { backgroundColor: withAlpha(colors.error, 0.125) }]}>
                 <FontAwesome5 name="rupee-sign" size={18} color={colors.error} />
               </View>
               <View style={styles.historyDetails}>
@@ -148,7 +154,7 @@ export default function BusAlertsScreen() {
 
           <GlassCard style={styles.alertHistoryCard}>
             <View style={styles.historyItem}>
-              <View style={[styles.historyIcon, { backgroundColor: `${colors.info}20` }]}>
+              <View style={[styles.historyIcon, { backgroundColor: withAlpha(colors.info, 0.125) }]}>
                 <FontAwesome5 name="route" size={18} color={colors.info} />
               </View>
               <View style={styles.historyDetails}>
@@ -171,7 +177,7 @@ export default function BusAlertsScreen() {
           animationType="slide"
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <GlassCard style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Send Alert</Text>
@@ -189,8 +195,8 @@ export default function BusAlertsScreen() {
                         key={type.id}
                         style={[
                           styles.typeButton,
-                          { borderColor: `${colors.primary}30` },
-                          formData.alert_type === type.id && { backgroundColor: `${type.color}20` },
+                          { borderColor: withAlpha(colors.primary, 0.188) },
+                          formData.alert_type === type.id && { backgroundColor: withAlpha(type.color, 0.125) },
                         ]}
                         onPress={() => setFormData({ ...formData, alert_type: type.id })}
                       >
@@ -236,8 +242,8 @@ export default function BusAlertsScreen() {
                     <TouchableOpacity
                       style={[
                         styles.targetButton,
-                        { borderColor: `${colors.primary}30` },
-                        formData.target === 'all' && { backgroundColor: `${colors.primary}20` },
+                        { borderColor: withAlpha(colors.primary, 0.188) },
+                        formData.target === 'all' && { backgroundColor: withAlpha(colors.primary, 0.125) },
                       ]}
                       onPress={() => setFormData({ ...formData, target: 'all' })}
                     >
@@ -253,8 +259,8 @@ export default function BusAlertsScreen() {
                     <TouchableOpacity
                       style={[
                         styles.targetButton,
-                        { borderColor: `${colors.primary}30` },
-                        formData.target === 'routes' && { backgroundColor: `${colors.primary}20` },
+                        { borderColor: withAlpha(colors.primary, 0.188) },
+                        formData.target === 'routes' && { backgroundColor: withAlpha(colors.primary, 0.125) },
                       ]}
                       onPress={() => setFormData({ ...formData, target: 'routes' })}
                     >
@@ -320,8 +326,8 @@ const styles = StyleSheet.create({
   alertTypeCard: {
     width: '48%',
     padding: 20,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 0,
     alignItems: 'center',
     gap: 12,
   },
@@ -362,7 +368,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 20,
   },

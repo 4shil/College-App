@@ -68,6 +68,10 @@ export default function NoticesScreen() {
   const { user, profile } = useAuthStore();
   const { hasPermission } = useRBAC();
 
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
+
   const typeColorByKey = {
     info: colors.info,
     success: colors.success,
@@ -484,14 +488,19 @@ export default function NoticesScreen() {
 
         {/* Create Notice Modal */}
         <Modal visible={showModal} animationType="slide" transparent>
-          <View style={[styles.modalOverlay, { backgroundColor: withAlpha(colors.shadowColor, 0.5) }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
             <View
               style={[
                 styles.modalContent,
                 { backgroundColor: colors.cardBackground },
               ]}
             >
-              <View style={[styles.modalHeader, { borderBottomColor: withAlpha(colors.textPrimary, 0.1) }]}>
+              <View
+                style={[
+                  styles.modalHeader,
+                  { borderBottomColor: colors.cardBorder, borderBottomWidth: colors.borderWidth },
+                ]}
+              >
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   Create Notice
                 </Text>
@@ -506,9 +515,10 @@ export default function NoticesScreen() {
                   style={[
                     styles.input,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.03),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   placeholder="Enter notice title"
@@ -523,9 +533,10 @@ export default function NoticesScreen() {
                     styles.input,
                     styles.textArea,
                     {
-                      backgroundColor: withAlpha(colors.textPrimary, 0.03),
+                      backgroundColor: colors.inputBackground,
                       color: colors.textPrimary,
-                      borderColor: withAlpha(colors.textPrimary, 0.1),
+                      borderColor: colors.inputBorder,
+                      borderWidth: colors.borderWidth,
                     },
                   ]}
                   placeholder="Enter notice content"
@@ -580,7 +591,10 @@ export default function NoticesScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.publishRow, { borderTopColor: withAlpha(colors.textPrimary, 0.1) }]}
+                  style={[
+                    styles.publishRow,
+                    { borderTopColor: colors.cardBorder, borderTopWidth: colors.borderWidth },
+                  ]}
                   onPress={() => setIsPublished(!isPublished)}
                 >
                   <View>

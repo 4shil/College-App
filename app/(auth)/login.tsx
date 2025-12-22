@@ -198,6 +198,7 @@ export default function LoginScreen() {
                       { 
                         backgroundColor: colors.inputBackground,
                         borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
                       },
                       selectedRole === role.key && {
                         backgroundColor: withAlpha(colors.primary, 0.12),
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
   logoGradient: {
     width: 72,
     height: 72,
-    borderRadius: 18,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 14,
-    borderWidth: 1.5,
+    borderWidth: 0,
   },
   roleTextContainer: {
     alignItems: 'flex-start',

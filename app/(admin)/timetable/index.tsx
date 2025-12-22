@@ -247,7 +247,7 @@ export default function TimetableScreen() {
             style={[
               styles.gridCell,
               styles.timeCell,
-              { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.03 : 0.02) },
+              { backgroundColor: colors.inputBackground },
             ]}
           >
             <Text style={[styles.periodNumber, { color: colors.primary }]}>P{timing.period}</Text>

@@ -19,6 +19,7 @@ import { AnimatedBackground, Card } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface AttendanceLog {
   id: string;
@@ -45,19 +46,19 @@ interface AttendanceLog {
 
 type FilterType = 'all' | 'marked' | 'edited' | 'bulk_marked' | 'proxy_detected';
 
-const ACTION_ICONS: { [key: string]: { icon: string; color: string } } = {
-  marked: { icon: 'check-circle', color: '#10b981' },
-  edited: { icon: 'edit', color: '#f59e0b' },
-  bulk_marked: { icon: 'check-double', color: '#6366f1' },
-  proxy_detected: { icon: 'exclamation-triangle', color: '#ef4444' },
-  deleted: { icon: 'trash', color: '#ef4444' },
-};
-
 export default function AttendanceLogsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
   const { profile } = useAuthStore();
+
+  const ACTION_ICONS: { [key: string]: { icon: string; color: string } } = {
+    marked: { icon: 'check-circle', color: colors.success },
+    edited: { icon: 'edit', color: colors.warning },
+    bulk_marked: { icon: 'check-double', color: colors.primary },
+    proxy_detected: { icon: 'exclamation-triangle', color: colors.error },
+    deleted: { icon: 'trash', color: colors.error },
+  };
 
   // Data states
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
@@ -179,7 +180,7 @@ export default function AttendanceLogsScreen() {
       >
         <Card style={[styles.logCard, { borderLeftColor: actionInfo.color }]}>
           <View style={styles.logHeader}>
-            <View style={[styles.iconWrapper, { backgroundColor: actionInfo.color + '15' }]}>
+            <View style={[styles.iconWrapper, { backgroundColor: withAlpha(actionInfo.color, 0.082) }]}>
               <FontAwesome5 name={actionInfo.icon} size={14} color={actionInfo.color} />
             </View>
 
@@ -198,7 +199,16 @@ export default function AttendanceLogsScreen() {
           </View>
 
           {/* Log Details */}
-          <View style={[styles.logDetails, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
+          <View
+            style={[
+              styles.logDetails,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
             {log.student && (
               <View style={styles.detailRow}>
                 <FontAwesome5 name="user" size={10} color={colors.textMuted} />
@@ -279,7 +289,7 @@ export default function AttendanceLogsScreen() {
               style={[styles.backButton, { backgroundColor: colors.primary }]}
               onPress={() => router.back()}
             >
-              <Text style={styles.backButtonText}>Go Back</Text>
+              <Text style={[styles.backButtonText, { color: colors.textInverse }]}>Go Back</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -320,7 +330,14 @@ export default function AttendanceLogsScreen() {
           {/* Date Filter */}
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             <TouchableOpacity
-              style={[styles.dateFilterBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+              style={[
+                styles.dateFilterBtn,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.inputBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
               onPress={() => setShowDatePicker(true)}
             >
               <FontAwesome5 name="calendar-alt" size={14} color={colors.primary} />
@@ -359,7 +376,7 @@ export default function AttendanceLogsScreen() {
                     filterType === type && styles.filterTabActive,
                     {
                       backgroundColor: filterType === type
-                        ? type === 'proxy_detected' ? '#ef4444' : colors.primary
+                        ? type === 'proxy_detected' ? colors.error : colors.primary
                         : colors.glassBackground,
                     },
                   ]}
@@ -369,13 +386,17 @@ export default function AttendanceLogsScreen() {
                     <FontAwesome5
                       name={ACTION_ICONS[type]?.icon || 'circle'}
                       size={10}
-                      color={filterType === type ? '#fff' : ACTION_ICONS[type]?.color || colors.textMuted}
+                      color={
+                        filterType === type
+                          ? colors.textInverse
+                          : ACTION_ICONS[type]?.color || colors.textMuted
+                      }
                     />
                   )}
                   <Text
                     style={[
                       styles.filterTabText,
-                      { color: filterType === type ? '#fff' : colors.textSecondary },
+                      { color: filterType === type ? colors.textInverse : colors.textSecondary },
                     ]}
                   >
                     {type === 'all' ? 'All' : getActionLabel(type)}
@@ -514,7 +535,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   backButtonText: {
-    color: '#fff',
+    color: 'transparent',
     fontSize: 14,
     fontWeight: '600',
   },

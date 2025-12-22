@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface BusRoute {
   id: string;
@@ -33,6 +34,10 @@ export default function BusRoutesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+
+  const modalBackdropColor = isDark
+    ? withAlpha(colors.background, 0.75)
+    : withAlpha(colors.textPrimary, 0.5);
 
   const [routes, setRoutes] = useState<BusRoute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,7 +236,11 @@ export default function BusRoutesScreen() {
                         </Text>
                         <View style={[
                           styles.statusBadge,
-                          { backgroundColor: route.is_active ? `${colors.success}20` : `${colors.error}20` }
+                          {
+                            backgroundColor: route.is_active
+                              ? withAlpha(colors.success, 0.125)
+                              : withAlpha(colors.error, 0.125),
+                          }
                         ]}>
                           <Text style={[
                             styles.statusText,
@@ -270,14 +279,21 @@ export default function BusRoutesScreen() {
 
                   <View style={styles.routeActions}>
                     <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}
+                      style={[styles.actionButton, { backgroundColor: withAlpha(colors.primary, 0.082) }]}
                       onPress={() => openEditModal(route)}
                     >
                       <FontAwesome5 name="edit" size={14} color={colors.primary} />
                       <Text style={[styles.actionText, { color: colors.primary }]}>Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: route.is_active ? `${colors.warning}15` : `${colors.success}15` }]}
+                      style={[
+                        styles.actionButton,
+                        {
+                          backgroundColor: route.is_active
+                            ? withAlpha(colors.warning, 0.082)
+                            : withAlpha(colors.success, 0.082),
+                        },
+                      ]}
                       onPress={() => toggleActive(route)}
                     >
                       <FontAwesome5 
@@ -290,7 +306,7 @@ export default function BusRoutesScreen() {
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: `${colors.error}15` }]}
+                      style={[styles.actionButton, { backgroundColor: withAlpha(colors.error, 0.082) }]}
                       onPress={() => handleDelete(route)}
                     >
                       <FontAwesome5 name="trash" size={14} color={colors.error} />
@@ -310,8 +326,8 @@ export default function BusRoutesScreen() {
           transparent={true}
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a2e' : '#ffffff' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
+            <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                   {editingRoute ? 'Edit Route' : 'Add Route'}
@@ -376,6 +392,7 @@ export default function BusRoutesScreen() {
                   ]}>
                     <View style={[
                       styles.toggleCircle,
+                      { backgroundColor: colors.textInverse },
                       { transform: [{ translateX: isActive ? 20 : 0 }] }
                     ]} />
                   </View>
@@ -509,7 +526,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -555,7 +572,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   saveButton: {
     marginBottom: 40,

@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, GlassCard } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { withAlpha } from '../../../theme/colorUtils';
 
 interface BusApproval {
   id: string;
@@ -134,7 +135,7 @@ export default function BusApprovalsScreen() {
                 key={tab}
                 style={[
                   styles.filterTab,
-                  filter === tab && { backgroundColor: `${colors.primary}20` },
+                  filter === tab && { backgroundColor: withAlpha(colors.primary, 0.125) },
                 ]}
                 onPress={() => setFilter(tab as any)}
               >
@@ -176,7 +177,7 @@ export default function BusApprovalsScreen() {
                 <GlassCard style={styles.approvalCard}>
                   <View style={styles.cardHeader}>
                     <View style={styles.studentInfo}>
-                      <View style={[styles.avatar, { backgroundColor: `${colors.primary}20` }]}>
+                      <View style={[styles.avatar, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                         <FontAwesome5 name="user" size={18} color={colors.primary} />
                       </View>
                       <View style={styles.studentDetails}>
@@ -190,7 +191,7 @@ export default function BusApprovalsScreen() {
                     </View>
                     <View style={[
                       styles.statusBadge,
-                      { backgroundColor: `${getStatusColor(approval.approval_status)}20` }
+                      { backgroundColor: withAlpha(getStatusColor(approval.approval_status), 0.125) }
                     ]}>
                       <Text style={[
                         styles.statusText,
@@ -231,14 +232,14 @@ export default function BusApprovalsScreen() {
                   {approval.approval_status === 'pending' && (
                     <View style={styles.actions}>
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: `${colors.success}15` }]}
+                        style={[styles.actionButton, { backgroundColor: withAlpha(colors.success, 0.082) }]}
                         onPress={() => confirmApproval(approval, 'approved')}
                       >
                         <FontAwesome5 name="check" size={14} color={colors.success} />
                         <Text style={[styles.actionText, { color: colors.success }]}>Approve</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: `${colors.error}15` }]}
+                        style={[styles.actionButton, { backgroundColor: withAlpha(colors.error, 0.082) }]}
                         onPress={() => confirmApproval(approval, 'rejected')}
                       >
                         <FontAwesome5 name="times" size={14} color={colors.error} />
