@@ -286,71 +286,69 @@ export default function AppearanceSettingsScreen() {
           </Animated.View>
 
           {/* Animations Section */}
-          {supportsAnimatedBackground && (
-            <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-              <BlurView
-                intensity={canUseBlur ? 60 : 0}
-                tint="dark"
-                style={[styles2.section, { borderColor: colors.glassBorder }]}
-              >
-                <View style={styles2.sectionHeader}>
-                  <Ionicons name="sparkles" size={24} color={colors.primary} />
-                  <Text style={[styles2.sectionTitle, { color: colors.textPrimary }]}>
-                    Animations
-                  </Text>
-                </View>
-                <Text style={[styles2.sectionDesc, { color: colors.textSecondary }]}>
-                  Enable or disable UI animations and effects
+          <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+            <BlurView
+              intensity={canUseBlur ? 60 : 0}
+              tint="dark"
+              style={[styles2.section, { borderColor: colors.glassBorder }]}
+            >
+              <View style={styles2.sectionHeader}>
+                <Ionicons name="sparkles" size={24} color={colors.primary} />
+                <Text style={[styles2.sectionTitle, { color: colors.textPrimary }]}>
+                  Animations
                 </Text>
+              </View>
+              <Text style={[styles2.sectionDesc, { color: colors.textSecondary }]}>
+                Enable or disable UI animations and effects
+              </Text>
 
-                <TouchableOpacity
-                  onPress={toggleAnimations}
+              <TouchableOpacity
+                onPress={toggleAnimations}
+                style={[
+                  styles2.toggleRow,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.glassBorder,
+                  },
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={styles2.toggleLeft}>
+                  <Ionicons
+                    name={animationsEnabled ? 'play-circle' : 'pause-circle'}
+                    size={28}
+                    color={animationsEnabled ? colors.primary : colors.textSecondary}
+                  />
+                  <View style={styles2.toggleTextContainer}>
+                    <Text style={[styles2.toggleTitle, { color: colors.textPrimary }]}>
+                      {animationsEnabled ? 'Enabled' : 'Disabled'}
+                    </Text>
+                    <Text style={[styles2.toggleDesc, { color: colors.textSecondary }]}>
+                      Smooth transitions and effects
+                    </Text>
+                  </View>
+                </View>
+                <View
                   style={[
-                    styles2.toggleRow,
+                    styles2.toggle,
                     {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.glassBorder,
+                      backgroundColor: animationsEnabled ? colors.primary : colors.glassBorder,
                     },
                   ]}
-                  activeOpacity={0.7}
                 >
-                  <View style={styles2.toggleLeft}>
-                    <Ionicons
-                      name={animationsEnabled ? 'play-circle' : 'pause-circle'}
-                      size={28}
-                      color={animationsEnabled ? colors.primary : colors.textSecondary}
-                    />
-                    <View style={styles2.toggleTextContainer}>
-                      <Text style={[styles2.toggleTitle, { color: colors.textPrimary }]}>
-                        {animationsEnabled ? 'Enabled' : 'Disabled'}
-                      </Text>
-                      <Text style={[styles2.toggleDesc, { color: colors.textSecondary }]}>
-                        Smooth transitions and effects
-                      </Text>
-                    </View>
-                  </View>
                   <View
                     style={[
-                      styles2.toggle,
+                      styles2.toggleKnob,
                       {
-                        backgroundColor: animationsEnabled ? colors.primary : colors.glassBorder,
+                        backgroundColor: colors.textInverse,
+                        transform: [{ translateX: animationsEnabled ? 22 : 2 }],
                       },
                     ]}
-                  >
-                    <View
-                      style={[
-                        styles2.toggleKnob,
-                        {
-                            backgroundColor: colors.textInverse,
-                          transform: [{ translateX: animationsEnabled ? 22 : 2 }],
-                        },
-                      ]}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </BlurView>
-            </Animated.View>
-          )}
+                  />
+                </View>
+              </TouchableOpacity>
+            </BlurView>
+          </Animated.View>
 
           {/* Info Card */}
           <Animated.View entering={FadeInDown.delay(300).duration(400)}>
@@ -365,7 +363,7 @@ export default function AppearanceSettingsScreen() {
                   Note:
                 </Text>
                 <Text style={[styles2.infoDesc, { color: colors.textSecondary }]}>
-                  Animation available for Dark Mode Of Glassmorphism Theme only. 
+                  Animated backgrounds can be enabled across themes. The toggle above controls overall UI animations.
                 </Text>
               </View>
             </BlurView>

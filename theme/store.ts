@@ -50,7 +50,14 @@ const initialResolved = resolveTheme({
   systemIsDark: DEFAULT_IS_DARK,
 });
 
-const initialSupportsAnimatedBackground = !!initialResolved.capabilities.supportsAnimatedBackground;
+// Rollback-safe switch:
+// - true: animated backgrounds are allowed for every theme
+// - false: animated backgrounds are gated by theme capabilities
+const ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES = true;
+
+const initialSupportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
+  ? true
+  : !!initialResolved.capabilities.supportsAnimatedBackground;
 const INITIAL_ANIMATIONS_ENABLED = true;
 const initialCanAnimateBackground = INITIAL_ANIMATIONS_ENABLED && initialSupportsAnimatedBackground;
 
@@ -82,7 +89,9 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           systemIsDark: current.isDark,
         });
 
-        const supportsAnimatedBackground = !!nextResolved.capabilities.supportsAnimatedBackground;
+        const supportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
+          ? true
+          : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
         set({
           mode,
@@ -110,7 +119,9 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           systemIsDark: current.isDark,
         });
 
-        const supportsAnimatedBackground = !!nextResolved.capabilities.supportsAnimatedBackground;
+        const supportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
+          ? true
+          : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
         set({
           activeThemeId: id,
@@ -136,7 +147,9 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           systemIsDark: current.isDark,
         });
 
-        const supportsAnimatedBackground = !!nextResolved.capabilities.supportsAnimatedBackground;
+        const supportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
+          ? true
+          : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
         set({
           mode: newMode,
@@ -171,7 +184,9 @@ export const useGlobalThemeStore = createStore<GlobalThemeState>(
           systemIsDark,
         });
 
-        const supportsAnimatedBackground = !!nextResolved.capabilities.supportsAnimatedBackground;
+        const supportsAnimatedBackground = ALLOW_ANIMATED_BACKGROUND_FOR_ALL_THEMES
+          ? true
+          : !!nextResolved.capabilities.supportsAnimatedBackground;
         const canAnimateBackground = current.animationsEnabled && supportsAnimatedBackground;
 
         set({

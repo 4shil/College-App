@@ -290,7 +290,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   children,
   variant = 'default',
 }) => {
-  const { isDark, canAnimateBackground, colors, uiStyle } = useThemeStore();
+  const { isDark, canAnimateBackground, colors, uiStyle, activeThemeId } = useThemeStore();
   const fadeIn = useSharedValue(0);
 
   useEffect(() => {
@@ -335,8 +335,8 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Animated layers - only if animations enabled and blur > 0 */}
-      {!isMinimal && colors.blurIntensity > 0 && (
+      {/* Animated layers - enabled when animations are allowed */}
+      {!isMinimal && (
         <Animated.View style={[StyleSheet.absoluteFillObject, containerStyle]}>
           {/* Moving gradient mesh */}
           <GradientMesh primaryColor={withAlpha(colors.primary, 0.12)} secondaryColor={withAlpha(colors.secondary, 0.08)} />
@@ -375,15 +375,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         </Animated.View>
       )}
 
-      {/* Top static glow using theme colors */}
-      <View style={styles.topGlow} pointerEvents="none">
-        <LinearGradient
-          colors={[withAlpha(colors.primary, 0.12), withAlpha(colors.secondary, 0.06), 'transparent']}
-          style={StyleSheet.absoluteFillObject}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-        />
-      </View>
+      {/* Top static glow removed (keep top edge flat) */}
 
       {/* Bottom static glow using theme colors */}
       <View style={styles.bottomGlow} pointerEvents="none">
@@ -399,7 +391,8 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
       {colors.shadowIntensity > 0 && (
         <View style={styles.vignette} pointerEvents="none">
           <LinearGradient
-            colors={[withAlpha(colors.shadowColor, 0.25), 'transparent', 'transparent', withAlpha(colors.shadowColor, 0.2)]}
+            // Remove the top dark gradient; keep a subtle bottom vignette only.
+            colors={['transparent', 'transparent', 'transparent', withAlpha(colors.shadowColor, 0.2)]}
             style={StyleSheet.absoluteFillObject}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}

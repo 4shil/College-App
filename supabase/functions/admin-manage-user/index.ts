@@ -3,7 +3,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.1'
 
-type Action = 'set_status' | 'set_role' | 'delete_user'
+type Action = 'set_status' | 'set_role' | 'assign_role' | 'revoke_role' | 'delete_user'
 
 type RequestBody =
   | {
@@ -15,6 +15,16 @@ type RequestBody =
       action: 'set_role'
       target_user_id: string
       primary_role: string
+    }
+  | {
+      action: 'assign_role'
+      target_user_id: string
+      role_id: string
+    }
+  | {
+      action: 'revoke_role'
+      target_user_id: string
+      role_id: string
     }
   | {
       action: 'delete_user'
@@ -232,6 +242,124 @@ Deno.serve(async (req) => {
     }
 
     await insertAudit('update_role', 'profiles', targetUserId, oldValues, newValues)
+
+    return json(200, { ok: true })
+  }
+
+  if (payload.action === 'assign_role') {
+    const roleId = (payload.role_id || '').trim()
+    if (!roleId) {
+      return json(400, { error: 'role_id is required' })
+    }
+
+    const perm = await checkPermission('create_delete_admins')
+    if (perm.error) return json(500, { error: perm.error })
+    if (!perm.allowed) return json(403, { error: 'Forbidden' })
+
+    const { data: roleRow, error: roleErr } = await service.from('roles').select('id, name').eq('id', roleId).single()
+    if (roleErr || !roleRow?.id) {
+      return json(400, { error: 'Role not found' })
+    }
+
+    // Ensure an active user_roles row exists (global assignment with department_id NULL)
+    const { data: existing, error: existingErr } = await service
+      .from('user_roles')
+      .select('id, is_active')
+      .eq('user_id', targetUserId)
+      .eq('role_id', roleRow.id)
+      .is('department_id', null)
+      .limit(1)
+
+    if (existingErr) {
+      return json(500, { error: `Failed to check existing role assignment: ${existingErr.message}` })
+    }
+
+    if (existing && existing.length > 0) {
+      const oldValues = { is_active: existing[0].is_active }
+      const newValues = { is_active: true }
+
+      const { error: updErr } = await service
+        .from('user_roles')
+        .update({ is_active: true, assigned_by: callerId, assigned_at: new Date().toISOString() })
+        .eq('id', existing[0].id)
+
+      if (updErr) {
+        return json(500, { error: `Failed to update role assignment: ${updErr.message}` })
+      }
+
+      await insertAudit('assign_role', 'user_roles', existing[0].id, oldValues, newValues)
+    } else {
+      const { data: insData, error: insErr } = await service
+        .from('user_roles')
+        .insert({
+          user_id: targetUserId,
+          role_id: roleRow.id,
+          department_id: null,
+          assigned_by: callerId,
+          is_active: true,
+        })
+        .select('id')
+        .single()
+
+      if (insErr) {
+        return json(500, { error: `Failed to assign role: ${insErr.message}` })
+      }
+
+      await insertAudit('assign_role', 'user_roles', insData?.id ?? `${targetUserId}:${roleRow.id}`, null, { is_active: true })
+    }
+
+    return json(200, { ok: true })
+  }
+
+  if (payload.action === 'revoke_role') {
+    const roleId = (payload.role_id || '').trim()
+    if (!roleId) {
+      return json(400, { error: 'role_id is required' })
+    }
+
+    const perm = await checkPermission('create_delete_admins')
+    if (perm.error) return json(500, { error: perm.error })
+    if (!perm.allowed) return json(403, { error: 'Forbidden' })
+
+    const { data: roleRow, error: roleErr } = await service.from('roles').select('id, name').eq('id', roleId).single()
+    if (roleErr || !roleRow?.id) {
+      return json(400, { error: 'Role not found' })
+    }
+
+    // Safety: don't revoke the role that is currently set as the user's primary_role
+    if ((targetProfile.primary_role || '').trim() && targetProfile.primary_role === roleRow.name) {
+      return json(400, { error: 'Cannot revoke the user\'s primary role. Change primary role first.' })
+    }
+
+    const { data: existing, error: existingErr } = await service
+      .from('user_roles')
+      .select('id, is_active')
+      .eq('user_id', targetUserId)
+      .eq('role_id', roleRow.id)
+      .is('department_id', null)
+      .limit(1)
+
+    if (existingErr) {
+      return json(500, { error: `Failed to find role assignment: ${existingErr.message}` })
+    }
+
+    if (!existing || existing.length === 0) {
+      return json(404, { error: 'Role assignment not found' })
+    }
+
+    const oldValues = { is_active: existing[0].is_active }
+    const newValues = { is_active: false }
+
+    const { error: updErr } = await service
+      .from('user_roles')
+      .update({ is_active: false, assigned_by: callerId, assigned_at: new Date().toISOString() })
+      .eq('id', existing[0].id)
+
+    if (updErr) {
+      return json(500, { error: `Failed to revoke role: ${updErr.message}` })
+    }
+
+    await insertAudit('revoke_role', 'user_roles', existing[0].id, oldValues, newValues)
 
     return json(200, { ok: true })
   }

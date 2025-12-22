@@ -250,7 +250,7 @@ export default function UsersScreen() {
 
   // Real-time subscription for user updates
   useEffect(() => {
-    const channel = supabase
+    const profilesChannel = supabase
       .channel('profiles-changes')
       .on(
         'postgres_changes',
@@ -261,14 +261,30 @@ export default function UsersScreen() {
         },
         (payload) => {
           console.log('Profile change:', payload.eventType);
-          // Refetch data when any profile changes
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    const rolesChannel = supabase
+      .channel('user-roles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles',
+        },
+        (payload) => {
+          console.log('User roles change:', payload.eventType);
           fetchData();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(rolesChannel);
     };
   }, [fetchData]);
 

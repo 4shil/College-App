@@ -87,6 +87,31 @@ export function useRBAC(): UseRBACReturn {
     fetchUserRoles();
   }, [user?.id]);
 
+  // Realtime: if an admin changes this user's roles, update permissions immediately.
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`rbac-user-roles-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUserRoles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   // Computed values
   const highestRole = getHighestRole(userRoles);
   const roleDisplayName = getRoleDisplayName(highestRole);

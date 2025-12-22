@@ -36,6 +36,7 @@ interface UserRole {
   role_id: string;
   assigned_at: string;
   assigned_by: string;
+  is_active?: boolean;
   roles: {
     id: string;
     name: string;
@@ -104,6 +105,7 @@ export default function AssignRolesScreen() {
             role_id,
             assigned_at,
             assigned_by,
+            is_active,
             roles (
               id,
               name,
@@ -111,6 +113,7 @@ export default function AssignRolesScreen() {
             )
           )
         `)
+        .eq('user_roles.is_active', true)
         .order('full_name');
 
       if (error) throw error;
@@ -137,6 +140,36 @@ export default function AssignRolesScreen() {
     fetchData();
   }, []);
 
+  // Realtime: keep role assignments and profiles in sync
+  useEffect(() => {
+    const rolesChannel = supabase
+      .channel('user-roles-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_roles' },
+        () => {
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    const profilesChannel = supabase
+      .channel('assign-roles-profiles-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        () => {
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(rolesChannel);
+      supabase.removeChannel(profilesChannel);
+    };
+  }, [fetchUsers]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchData();
@@ -161,18 +194,16 @@ export default function AssignRolesScreen() {
 
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: selectedUser.id,
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'assign_role',
+          target_user_id: selectedUser.id,
           role_id: selectedRoleId,
-          assigned_by: user.id,
-        });
+        },
+      });
 
       if (error) throw error;
+      if (!data?.ok) throw new Error('Failed to assign role');
 
       Alert.alert('Success', 'Role assigned successfully');
       setModalVisible(false);
@@ -186,7 +217,7 @@ export default function AssignRolesScreen() {
     }
   };
 
-  const handleRevokeRole = async (userId: string, userRoleId: string, roleName: string) => {
+  const handleRevokeRole = async (userId: string, roleId: string, roleName: string) => {
     Alert.alert(
       'Revoke Role',
       `Are you sure you want to revoke the "${roleName}" role from this user?`,
@@ -198,12 +229,16 @@ export default function AssignRolesScreen() {
           onPress: async () => {
             try {
               setSaving(true);
-              const { error } = await supabase
-                .from('user_roles')
-                .delete()
-                .eq('id', userRoleId);
+              const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+                body: {
+                  action: 'revoke_role',
+                  target_user_id: userId,
+                  role_id: roleId,
+                },
+              });
 
               if (error) throw error;
+              if (!data?.ok) throw new Error('Failed to revoke role');
 
               Alert.alert('Success', 'Role revoked successfully');
               await fetchUsers();
@@ -401,7 +436,7 @@ export default function AssignRolesScreen() {
                             {userRole.roles.display_name}
                           </Text>
                           <TouchableOpacity
-                            onPress={() => handleRevokeRole(user.id, userRole.id, userRole.roles.display_name)}
+                            onPress={() => handleRevokeRole(user.id, userRole.role_id, userRole.roles.display_name)}
                             style={styles.revokeButton}
                           >
                             <Ionicons

@@ -9,6 +9,7 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
 
 interface CardProps {
   children: React.ReactNode;
@@ -27,7 +28,7 @@ export const Card: React.FC<CardProps> = ({
   noPadding = false,
   animated = true,
 }) => {
-  const { colors, isDark, animationsEnabled, capabilities } = useThemeStore();
+  const { colors, isDark, animationsEnabled, capabilities, canAnimateBackground } = useThemeStore();
   const shouldAnimate = animationsEnabled && animated;
   const progress = useSharedValue(shouldAnimate ? 0 : 1);
 
@@ -65,12 +66,22 @@ export const Card: React.FC<CardProps> = ({
     !!capabilities?.supportsBlur &&
     blurAmount > 0;
 
+  // If the background is animated, make cards feel "glass-like" even on non-blur themes
+  // by using a subtle translucent tint.
+  const shouldTintForAnimatedBg = !!canAnimateBackground;
+  const tintedCardBackground = withAlpha(
+    colors.cardBackground,
+    isDark ? 0.72 : 0.86
+  );
+
   const content = (
     <View
       style={[
         styles.content,
         {
-          backgroundColor: shouldBlur ? 'transparent' : colors.cardBackground,
+          backgroundColor: shouldBlur
+            ? 'transparent'
+            : (shouldTintForAnimatedBg ? tintedCardBackground : colors.cardBackground),
           borderColor: colors.cardBorder,
           borderWidth: colors.borderWidth,
           borderRadius: colors.borderRadius,
