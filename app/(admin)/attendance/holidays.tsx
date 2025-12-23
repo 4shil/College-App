@@ -1,16 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Modal,
-  TextInput,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, FadeIn } from 'react-native-reanimated';
@@ -18,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -541,7 +530,7 @@ export default function HolidaysScreen() {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator size="small" color={colors.textInverse} />
+                <LoadingIndicator size="small" color={colors.textInverse} />
               ) : (
                 <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>
                   {editingHoliday ? 'Update' : 'Create'}
@@ -583,7 +572,7 @@ export default function HolidaysScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : (
             <>
               {/* Filter Tabs */}

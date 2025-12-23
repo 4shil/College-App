@@ -1,35 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Dimensions,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Dimensions, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, {
-  FadeInDown,
-  FadeInUp,
-  FadeInLeft,
-  FadeOutLeft,
-  FadeInRight,
-  FadeOutRight,
-} from 'react-native-reanimated';
+  FadeInDown, FadeInUp, FadeInLeft, FadeOutLeft, FadeInRight, FadeOutRight, } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AnimatedBackground,
-  GlassInput,
-  PrimaryButton,
-  ThemeToggle,
-} from '../../components/ui';
+  AnimatedBackground, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, sendOTP } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
@@ -422,7 +401,7 @@ export default function RegisterScreen() {
                 disabled={verifyingApaar}
               >
                 {verifyingApaar ? (
-                  <ActivityIndicator color={colors.textInverse} size="small" />
+                  <LoadingIndicator color={colors.textInverse} size="small" />
                 ) : (
                   <>
                     <Ionicons name="shield-checkmark" size={18} color={colors.textInverse} />
@@ -1052,7 +1031,7 @@ export default function RegisterScreen() {
             disabled={(currentStep === 1 && !apaarVerified) || loading}
           >
             {loading ? (
-              <ActivityIndicator color={colors.textInverse} size="small" />
+              <LoadingIndicator color={colors.textInverse} size="small" />
             ) : (
               <>
                 <Text style={[styles.nextButtonText, { color: colors.textInverse }]}>

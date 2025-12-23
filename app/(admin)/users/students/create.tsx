@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -17,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -729,7 +719,7 @@ export default function CreateStudentScreen() {
 
         {bulkLoading ? (
           <View style={styles.progressContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <LoadingIndicator size="large" color={colors.primary} />
             <Text style={[styles.progressText, { color: colors.textSecondary }]}>
               Importing {bulkProgress.current} of {bulkProgress.total}...
             </Text>

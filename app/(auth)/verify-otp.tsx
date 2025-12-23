@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +21,7 @@ import {
   AnimatedBackground,
   Card,
   ThemeToggle,
+  LoadingIndicator,
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, verifyOTP as verifySupabaseOTP, updateUserPassword, sendOTP } from '../../lib/supabase';
@@ -222,7 +222,7 @@ export default function VerifyOTPScreen() {
               Your account has been created successfully.{'\n'}
               Redirecting to login...
             </Text>
-            <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
+            <LoadingIndicator color={colors.primary} style={{ marginTop: 20, alignItems: 'center' }} />
           </Animated.View>
         </View>
       </AnimatedBackground>
@@ -352,7 +352,7 @@ export default function VerifyOTPScreen() {
                 disabled={loading || otp.join('').length !== OTP_LENGTH}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.textInverse} size="small" />
+                  <LoadingIndicator size="small" color={colors.textInverse} />
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle" size={20} color={colors.textInverse} />
@@ -367,7 +367,7 @@ export default function VerifyOTPScreen() {
                   Didn't receive the code?{' '}
                 </Text>
                 {resending ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <LoadingIndicator size="small" color={colors.primary} />
                 ) : (
                   <TouchableOpacity
                     onPress={resendOTP}

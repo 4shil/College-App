@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, FadeIn } from 'react-native-reanimated';
@@ -17,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -592,7 +582,7 @@ export default function ViewAttendanceScreen() {
               disabled={savingDelegation}
             >
               {savingDelegation ? (
-                <ActivityIndicator size="small" color={colors.textInverse} />
+                <LoadingIndicator size="small" color={colors.textInverse} />
               ) : (
                 <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Grant</Text>
               )}
@@ -670,7 +660,7 @@ export default function ViewAttendanceScreen() {
           showsVerticalScrollIndicator={false}
         >
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : activeTab === 'view' ? (
             // ===== VIEW TAB =====
             <>
@@ -894,7 +884,7 @@ export default function ViewAttendanceScreen() {
 
                   {/* Student Cards */}
                   {loadingStudents ? (
-                    <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
+                    <LoadingIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
                   ) : filteredStudents.length === 0 ? (
                     <View style={styles.emptyState}>
                       <FontAwesome5 name="users-slash" size={32} color={colors.textMuted} />

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
-import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
@@ -108,7 +108,7 @@ export default function ManageAssignmentsScreen() {
     ]);
   };
 
-  if (loading) return <AnimatedBackground><View style={[styles.container, { paddingTop: insets.top + 60 }]}><ActivityIndicator size="large" color={colors.primary} /></View></AnimatedBackground>;
+  if (loading) return <AnimatedBackground><View style={[styles.container, { paddingTop: insets.top + 60 }]}><LoadingIndicator size="large" color={colors.primary} /></View></AnimatedBackground>;
 
   return (
     <Restricted permissions={PERMISSIONS.MANAGE_ASSIGNMENTS} showDeniedMessage={true}>

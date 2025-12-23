@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Dimensions,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, IconBadge, StatCard, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, IconBadge, StatCard, ThemeToggle, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -528,7 +519,7 @@ export default function AdminDashboard() {
             <Card style={styles.activityCard}>
               {activitiesLoading ? (
                 <View style={{ padding: 20, alignItems: 'center' }}>
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <LoadingIndicator size="small" color={colors.primary} />
                 </View>
               ) : recentActivities.length === 0 ? (
                 <View style={styles.activityItem}>

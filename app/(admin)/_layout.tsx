@@ -83,7 +83,7 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
       // Nested module routes that should activate this icon
       nestedRoutes: [
         'academic', 'timetable', 'attendance', 'exams', 'assignments', 
-        'library', 'fees', 'bus', 'canteen', 'notices', 'audit', 'reception'
+        'library', 'fees', 'bus', 'canteen', 'notices', 'events', 'planner-diary', 'reception'
       ]
     },
     { id: 'settings', icon: 'settings-outline', route: '/(admin)/settings' },
@@ -207,8 +207,13 @@ export default function AdminLayout() {
         <Stack.Screen name="fees" />
         <Stack.Screen name="bus" />
         <Stack.Screen name="canteen" />
+        <Stack.Screen name="events" />
+        <Stack.Screen name="events-create" />
+        <Stack.Screen name="events-edit" />
+        <Stack.Screen name="planner-diary/index" />
+        <Stack.Screen name="planner-diary/planners" />
+        <Stack.Screen name="planner-diary/diaries" />
         <Stack.Screen name="reception/index" />
-        <Stack.Screen name="audit" />
         <Stack.Screen name="college-info" />
         <Stack.Screen name="change-password" />
       </Stack>

@@ -1,21 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, FadeIn } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
-import { AnimatedBackground, Card, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -676,7 +666,7 @@ export default function TeacherMarkAttendanceScreen() {
           showsVerticalScrollIndicator={false}
         >
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : (
             <>
               {/* Stats Card */}

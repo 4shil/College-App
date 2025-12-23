@@ -1,21 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-  ActivityIndicator,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -313,7 +303,7 @@ export default function PendingApprovalsScreen() {
               disabled={isProcessing}
             >
               {isProcessing && processingId === student.id ? (
-                <ActivityIndicator size="small" color={colors.textInverse} />
+                <LoadingIndicator size="small" color={colors.textInverse} />
               ) : (
                 <>
                   <Ionicons name="close" size={18} color={colors.textInverse} />
@@ -327,7 +317,7 @@ export default function PendingApprovalsScreen() {
               disabled={isProcessing}
             >
               {isProcessing && processingId === student.id ? (
-                <ActivityIndicator size="small" color={colors.textInverse} />
+                <LoadingIndicator size="small" color={colors.textInverse} />
               ) : (
                 <>
                   <Ionicons name="checkmark" size={18} color={colors.textInverse} />
@@ -411,7 +401,7 @@ export default function PendingApprovalsScreen() {
         >
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <LoadingIndicator size="large" color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
                 Loading pending approvals...
               </Text>

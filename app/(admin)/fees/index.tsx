@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground } from '../../../components/ui';
+import { AnimatedBackground, LoadingIndicator } from '../../../components/ui';
 import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
@@ -127,7 +119,7 @@ export default function FeesIndexScreen() {
     return (
       <AnimatedBackground>
         <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <LoadingIndicator size="large" color={colors.primary} />
         </View>
       </AnimatedBackground>
     );

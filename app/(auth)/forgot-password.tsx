@@ -1,27 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AnimatedBackground,
-  Card,
-  GlassInput,
-  PrimaryButton,
-  ThemeToggle,
-} from '../../components/ui';
+  AnimatedBackground, Card, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { sendOTP, verifyOTP, updateUserPassword } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
@@ -328,7 +313,7 @@ export default function ForgotPasswordScreen() {
               disabled={loading || otp.join('').length !== OTP_LENGTH}
             >
               {loading ? (
-                <ActivityIndicator color={colors.textInverse} size="small" />
+                <LoadingIndicator color={colors.textInverse} size="small" />
               ) : (
                 <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify OTP</Text>
               )}
@@ -339,7 +324,7 @@ export default function ForgotPasswordScreen() {
                 Didn't receive the code?{' '}
               </Text>
               {loading ? (
-                <ActivityIndicator size="small" color={colors.primary} />
+                <LoadingIndicator size="small" color={colors.primary} />
               ) : (
                 <TouchableOpacity onPress={handleResendOTP} disabled={!canResend}>
                   <Text

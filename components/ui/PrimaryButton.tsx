@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
-  ActivityIndicator,
   View,
   Platform,
 } from 'react-native';
@@ -22,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { TriangleLoader } from './TriangleLoader';
 
 interface PrimaryButtonProps {
   title: string;
@@ -48,7 +48,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   glowing = true,
   icon,
 }) => {
-  const { colors, animationsEnabled, isDark, capabilities } = useThemeStore();
+  const { colors, animationsEnabled, isDark, canAnimateBackground } = useThemeStore();
   const scale = useSharedValue(1);
   const glowOpacity = useSharedValue(0.25);
   const pressProgress = useSharedValue(0);
@@ -111,7 +111,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   const getGradientColors = (): [string, string, string] => {
     if (variant === 'primary') {
-      if (capabilities.supportsGlassSurfaces) {
+      if (canAnimateBackground) {
         return [
           withAlpha(colors.primaryLight, isDark ? 0.72 : 0.86),
           withAlpha(colors.primary, isDark ? 0.72 : 0.86),
@@ -122,7 +122,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     }
     if (variant === 'secondary') {
       // No dedicated secondaryDark token in legacy surface; keep a stable 3-stop gradient.
-      if (capabilities.supportsGlassSurfaces) {
+      if (canAnimateBackground) {
         return [
           withAlpha(colors.secondaryLight, isDark ? 0.72 : 0.86),
           withAlpha(colors.secondary, isDark ? 0.72 : 0.86),
@@ -153,7 +153,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 ? colors.primary
                 : 'transparent',
               backgroundColor: variant === 'ghost' 
-                ? withAlpha(colors.cardBackground, isDark ? 0.72 : 0.86)
+                ? (canAnimateBackground
+                    ? withAlpha(colors.cardBackground, isDark ? 0.72 : 0.86)
+                    : colors.cardBackground)
                 : 'transparent',
               opacity: disabled ? 0.5 : 1,
             },
@@ -161,7 +163,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           ]}
         >
           {loading ? (
-            <ActivityIndicator color={colors.primary} size="small" />
+            <TriangleLoader size={16} color={colors.primary} />
           ) : (
             <>
               {icon}
@@ -211,8 +213,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
               height: heights[size],
               borderRadius: colors.borderRadius,
               opacity: disabled ? 0.5 : 1,
-              borderWidth: capabilities.supportsGlassSurfaces ? colors.borderWidth : 0,
-              borderColor: capabilities.supportsGlassSurfaces
+              borderWidth: canAnimateBackground ? colors.borderWidth : 0,
+              borderColor: canAnimateBackground
                 ? withAlpha(colors.glassBorder, isDark ? 0.45 : 0.55)
                 : 'transparent',
             },
@@ -233,7 +235,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
           <View style={[styles.bottomShadow, { backgroundColor: withAlpha(colors.shadowColor, 0.15) }]} />
           
           {loading ? (
-            <ActivityIndicator color={colors.textInverse} size="small" />
+            <TriangleLoader size={16} color={colors.textInverse} />
           ) : (
             <>
               {icon}

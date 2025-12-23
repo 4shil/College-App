@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AnimatedBackground, GlassCard } from '../../../components/ui';
+import { AnimatedBackground, GlassCard, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { exportAuditLogs } from '../../../lib/export';
@@ -252,7 +244,7 @@ export default function AuditLogsScreen() {
         </Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+          <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
         ) : filteredLogs.length ? (
           <View style={styles.logsList}>
             {filteredLogs.map((log, index) => (

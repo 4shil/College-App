@@ -156,26 +156,6 @@ export default function SettingsScreen() {
           value: autoApproval,
           action: () => setAutoApproval(!autoApproval),
         },
-        {
-          id: 'audit-logs',
-          title: 'Audit Logs',
-          subtitle: 'View system activity logs',
-          icon: 'clipboard-list',
-          iconType: 'fa5',
-          color: colors.textMuted,
-          type: 'navigation',
-          route: '/(admin)/audit/logs',
-        },
-        {
-          id: 'backup',
-          title: 'Backup & Restore',
-          subtitle: 'Manage data backups',
-          icon: 'database',
-          iconType: 'fa5',
-          color: colors.info,
-          type: 'navigation',
-          route: '/(admin)/backup',
-        },
       ],
     },
     {
@@ -207,7 +187,6 @@ export default function SettingsScreen() {
 
   const getItemTone = (item: SettingItem) => {
     switch (item.id) {
-      case 'audit-logs':
       case 'about':
         return 'neutral' as const;
       default:

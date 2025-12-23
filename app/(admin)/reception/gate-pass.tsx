@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { Restricted } from '../../../components/Restricted';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
@@ -225,7 +225,7 @@ export default function GatePassVerificationScreen() {
 
               {loading && passes.length === 0 ? (
                 <View style={styles.center}>
-                  <ActivityIndicator color={colors.primary} />
+                  <LoadingIndicator color={colors.primary} />
                 </View>
               ) : passes.length === 0 ? (
                 <Card>

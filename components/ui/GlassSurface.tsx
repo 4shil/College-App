@@ -49,10 +49,7 @@ export const GlassSurface: React.FC<GlassSurfaceProps> = ({
           borderRadius,
           borderWidth,
           borderColor,
-          // Keep the same semi-transparent surface fill on iOS too.
-          // BlurView renders blur behind its children; an opaque child background would hide blur.
-          // Our theme surfaces are already RGBA / alpha-tinted.
-          backgroundColor,
+          backgroundColor: shouldBlur ? 'transparent' : backgroundColor,
         },
         style,
       ]}

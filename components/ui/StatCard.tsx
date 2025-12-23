@@ -1,9 +1,10 @@
 import React from 'react';
-import { ActivityIndicator, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 import { useThemeStore } from '../../store/themeStore';
 import { Card } from './Card';
 import { IconBadge, IconBadgeFamily, IconBadgeTone } from './IconBadge';
+import { TriangleLoader } from './TriangleLoader';
 
 interface StatCardProps {
   title: string;
@@ -38,7 +39,9 @@ export const StatCard: React.FC<StatCardProps> = ({
         style={styles.iconContainer}
       />
       {loading ? (
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 10 }} />
+        <View style={{ marginVertical: 10, alignItems: 'center' }}>
+          <TriangleLoader size={20} color={colors.primary} />
+        </View>
       ) : (
         <Text style={[styles.value, { color: colors.textPrimary }]}>{value}</Text>
       )}

@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { IconBadge } from '../../../components/ui/IconBadge';
 import { supabase } from '../../../lib/supabase';
@@ -226,7 +218,7 @@ export default function AcademicIndexScreen() {
         >
           <Card style={styles.statsCard}>
             {loading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
+              <LoadingIndicator size="small" color={colors.primary} />
             ) : (
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>

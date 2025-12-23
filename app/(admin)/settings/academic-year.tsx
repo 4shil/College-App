@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AnimatedBackground, GlassCard, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, GlassCard, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -261,7 +261,7 @@ export default function AcademicYearScreen() {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <LoadingIndicator size="large" color={colors.primary} />
           </View>
         ) : years.length > 0 ? (
           years.map((year, index) => (

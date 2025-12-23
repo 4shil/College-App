@@ -101,6 +101,21 @@ export default function RoleBasedDashboard() {
       module: 'notices',
     },
     {
+      id: 'events',
+      title: 'Events',
+      icon: 'calendar-alt',
+      route: '/(admin)/events',
+      permission: PERMISSIONS.MANAGE_EVENTS,
+      module: 'events',
+    },
+    {
+      id: 'planner-diary',
+      title: 'Planner & Diary',
+      icon: 'clipboard-check',
+      route: '/(admin)/planner-diary',
+      module: 'planner-diary',
+    },
+    {
       id: 'attendance',
       title: 'Attendance',
       icon: 'clipboard-check',
@@ -113,13 +128,6 @@ export default function RoleBasedDashboard() {
       icon: 'chart-line',
       route: '/(admin)/analytics',
       module: 'analytics',
-    },
-    {
-      id: 'audit',
-      title: 'Audit Logs',
-      icon: 'clipboard-list',
-      route: '/(admin)/audit/logs',
-      module: 'audit',
     },
   ];
 

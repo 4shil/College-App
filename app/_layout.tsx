@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator, Platform } from 'react-native';
+import { View, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { TriangleLoader } from '../components/ui/TriangleLoader';
 
 // Prevent splash auto-hide on native only
 if (Platform.OS !== 'web') {
@@ -36,7 +37,7 @@ export default function RootLayout() {
   if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <TriangleLoader size={50} />
       </View>
     );
   }

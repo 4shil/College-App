@@ -1,23 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-  Alert,
-  ActivityIndicator,
-  Modal,
-  TextInput,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Alert, Modal, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, IconBadge, PrimaryButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, IconBadge, PrimaryButton, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -758,7 +747,7 @@ export default function UsersScreen() {
               disabled={saving || !formRole}
             >
               {saving ? (
-                <ActivityIndicator size="small" color={colors.textInverse} />
+                <LoadingIndicator size="small" color={colors.textInverse} />
               ) : (
                 <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Save</Text>
               )}
@@ -876,7 +865,7 @@ export default function UsersScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         >
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : users.length === 0 ? (
             <View style={styles.emptyState}>
               <IconBadge family="fa5" name="users-slash" tone="primary" size={34} style={styles.emptyIcon} />
@@ -1011,7 +1000,7 @@ export default function UsersScreen() {
                   disabled={saving}
                 >
                   {saving ? (
-                    <ActivityIndicator size="small" color={colors.textInverse} />
+                    <LoadingIndicator size="small" color={colors.textInverse} />
                   ) : (
                     <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Create</Text>
                   )}

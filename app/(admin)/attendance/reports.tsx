@@ -1,20 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
@@ -524,7 +516,7 @@ export default function AttendanceReportsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : (
             <>
               {/* Report Type Tabs */}
@@ -698,7 +690,7 @@ export default function AttendanceReportsScreen() {
 
               {/* Report Data */}
               {loadingReport ? (
-                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
+                <LoadingIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
               ) : reportType === 'student' ? (
                 <View style={styles.reportList}>
                   {studentData.length === 0 ? (

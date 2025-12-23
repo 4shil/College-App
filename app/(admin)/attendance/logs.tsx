@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -15,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -420,7 +412,7 @@ export default function AttendanceLogsScreen() {
 
           {/* Logs List */}
           {loading && logs.length === 0 ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : logs.length === 0 ? (
             <View style={styles.emptyState}>
               <FontAwesome5 name="clipboard-list" size={48} color={colors.textMuted} />
@@ -432,7 +424,7 @@ export default function AttendanceLogsScreen() {
             <View style={styles.logsList}>
               {logs.map((log, index) => renderLogCard(log, index))}
               {hasMore && (
-                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
+                <LoadingIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
               )}
             </View>
           )}

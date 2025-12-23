@@ -1,20 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -307,7 +299,7 @@ export default function TeacherAttendanceHistory() {
           )}
 
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 60 }} />
+            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 60 }} />
           ) : records.length === 0 ? (
             <View style={styles.emptyState}>
               <FontAwesome5 name="clipboard-list" size={48} color={colors.textMuted} />

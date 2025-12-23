@@ -1,21 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, Modal, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card, PrimaryButton } from '../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../components/ui';
 import { Restricted } from '../../components/Restricted';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
@@ -477,7 +466,7 @@ export default function NoticesScreen() {
         >
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <LoadingIndicator size="large" color={colors.primary} />
             </View>
           ) : notices.length > 0 ? (
             notices.map((n, i) => renderNoticeCard(n, i))
