@@ -1,47 +1,33 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInRight, FadeIn } from 'react-native-reanimated';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
 
-// Period timings
-const PERIOD_TIMINGS = [
-  { period: 1, start: '9:40', end: '10:35', label: 'Period 1 (9:40 - 10:35)' },
-  { period: 2, start: '10:50', end: '11:40', label: 'Period 2 (10:50 - 11:40)' },
-  { period: 3, start: '11:50', end: '12:45', label: 'Period 3 (11:50 - 12:45)' },
-  { period: 4, start: '13:25', end: '14:15', label: 'Period 4 (13:25 - 14:15)' },
-  { period: 5, start: '14:20', end: '15:10', label: 'Period 5 (14:20 - 15:10)' },
-];
+type AttendanceStatus = 'present' | 'absent' | 'late';
 
-interface Student {
+type StudentRow = {
   id: string;
   roll_number: string;
   registration_number?: string;
   user_id: string;
   profiles: { full_name: string };
-  status: 'present' | 'absent' | 'late' | null;
-  late_minutes?: number;
-  attendance_id?: string;
-  attendance_record_id?: string;
-  edit_count?: number;
-  is_locked?: boolean;
-}
+  status: AttendanceStatus;
+};
 
-interface TimetableEntry {
+type TimetableEntry = {
   id: string;
   period: number;
-  course_id: string;
-  courses: { code: string; name: string; short_name: string };
-}
-
-type AttendanceStatus = 'present' | 'absent' | 'late';
+  course_id: string | null;
+  teacher_id: string | null;
+  courses?: { code: string; name: string; short_name: string | null } | null;
+};
 
 export default function TeacherMarkAttendanceScreen() {
   const insets = useSafeAreaInsets();
@@ -53,41 +39,22 @@ export default function TeacherMarkAttendanceScreen() {
     yearId: string;
     period: string;
   }>();
+
   const { colors, isDark } = useThemeStore();
-  const { profile, user } = useAuthStore();
+  const { user } = useAuthStore();
 
-  // Data from params
   const entryId = params.entryId;
-  const courseName = params.courseName || '';
-  const courseId = params.courseId || '';
-  const yearId = params.yearId || '';
-  const periodNum = parseInt(params.period || '0');
+  const courseId = params.courseId;
+  const yearId = params.yearId;
+  const periodNum = parseInt(params.period || '0', 10);
 
-  // States
+  const dateStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showLateModal, setShowLateModal] = useState(false);
-  const [selectedStudentForLate, setSelectedStudentForLate] = useState<Student | null>(null);
-  const [lateMinutes, setLateMinutes] = useState('5');
   const [entry, setEntry] = useState<TimetableEntry | null>(null);
-  const [teacherId, setTeacherId] = useState<string | null>(null);
-
-  // Stats
-  const [presentCount, setPresentCount] = useState(0);
-  const [absentCount, setAbsentCount] = useState(0);
-  const [lateCount, setLateCount] = useState(0);
-
-  const today = new Date();
-  const dateStr = today.toISOString().split('T')[0];
-  const timing = PERIOD_TIMINGS.find(t => t.period === periodNum);
-
-  // Check if attendance is locked (older than 24 hours - for historical edits)
-  const isDateLocked = useCallback(() => {
-    // For today's attendance, no lock
-    return false;
-  }, []);
+  const [attendanceId, setAttendanceId] = useState<string | null>(null);
+  const [students, setStudents] = useState<StudentRow[]>([]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
@@ -99,24 +66,84 @@ export default function TeacherMarkAttendanceScreen() {
     return teacher?.id || null;
   }, [user?.id]);
 
+  const ensureAttendanceHeader = useCallback(
+    async (academicYearId: string) => {
+      if (!entryId || !courseId || !user?.id) return null;
+
+      // Look for existing
+      const { data: existing } = await supabase
+        .from('attendance')
+        .select('id')
+        .eq('timetable_entry_id', entryId)
+        .eq('date', dateStr)
+        .eq('period', periodNum)
+        .maybeSingle();
+
+      if (existing?.id) return existing.id;
+
+      // Create
+      const insertPayload: any = {
+        date: dateStr,
+        period: periodNum,
+        course_id: courseId,
+        academic_year_id: academicYearId,
+        marked_by: user.id,
+        timetable_entry_id: entryId,
+        year_id: yearId || null,
+      };
+
+      const { data: created, error } = await supabase
+        .from('attendance')
+        .insert(insertPayload)
+        .select('id')
+        .single();
+
+      if (error) {
+        console.log('Attendance header insert error:', error.message);
+        return null;
+      }
+
+      return created?.id || null;
+    },
+    [courseId, dateStr, entryId, periodNum, user?.id, yearId]
+  );
+
   const fetchData = useCallback(async () => {
-    if (!entryId || !courseId || !yearId) return;
+    if (!entryId || !courseId || !yearId || !user?.id) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Get teacher ID first
-      const tId = await fetchTeacherId();
-      setTeacherId(tId);
+      setLoading(true);
 
-      // Get timetable entry details
+      const tId = await fetchTeacherId();
+
+      // Current academic year
+      const { data: academicYear } = await supabase
+        .from('academic_years')
+        .select('id')
+        .eq('is_current', true)
+        .single();
+
+      if (!academicYear?.id) {
+        Alert.alert('Error', 'No current academic year found');
+        router.back();
+        return;
+      }
+
+      // Entry details
       const { data: entryData } = await supabase
         .from('timetable_entries')
-        .select(`
-          id,
-          period,
-          course_id,
-          teacher_id,
-          courses(code, name, short_name)
-        `)
+        .select(
+          `
+            id,
+            period,
+            course_id,
+            teacher_id,
+            courses(code, name, short_name)
+          `
+        )
         .eq('id', entryId)
         .single();
 
@@ -126,7 +153,6 @@ export default function TeacherMarkAttendanceScreen() {
         return;
       }
 
-      // Verify this teacher is assigned to this class
       if (tId && entryData.teacher_id !== tId) {
         Alert.alert('Unauthorized', 'You are not assigned to this class');
         router.back();
@@ -135,834 +161,253 @@ export default function TeacherMarkAttendanceScreen() {
 
       setEntry(entryData as TimetableEntry);
 
-      // Get course's department first
+      // Course department
       const { data: courseData } = await supabase
         .from('courses')
         .select('department_id')
         .eq('id', courseId)
         .single();
 
-      // Get students in this department and year
+      // Students
       const { data: studentsData } = await supabase
         .from('students')
-        .select(`
-          id,
-          roll_number,
-          registration_number,
-          user_id,
-          profiles:user_id(full_name)
-        `)
+        .select(
+          `
+            id,
+            roll_number,
+            registration_number,
+            user_id,
+            profiles:user_id(full_name)
+          `
+        )
         .eq('department_id', courseData?.department_id)
         .eq('year_id', yearId)
         .eq('current_status', 'active')
         .order('roll_number');
 
-      if (!studentsData) {
-        setStudents([]);
+      const baseStudents: StudentRow[] = (studentsData || []).map((s: any) => ({
+        ...s,
+        roll_number: s.roll_number || s.registration_number,
+        status: 'present' as AttendanceStatus,
+      }));
+
+      // Attendance header + existing records
+      const aId = await ensureAttendanceHeader(academicYear.id);
+      setAttendanceId(aId);
+
+      if (!aId) {
+        setStudents(baseStudents);
         return;
       }
 
-      // Get existing attendance for today
-      const { data: existingAttendanceHeader } = await supabase
-        .from('attendance')
-        .select('id, is_locked')
-        .eq('timetable_entry_id', entryId)
-        .eq('date', dateStr)
-        .eq('period', periodNum)
-        .maybeSingle();
+      const { data: records } = await supabase
+        .from('attendance_records')
+        .select('student_id, status')
+        .eq('attendance_id', aId);
 
-      let existingRecords: any[] = [];
-      if (existingAttendanceHeader) {
-        const { data: records } = await supabase
-          .from('attendance_records')
-          .select('id, student_id, status, late_minutes, edit_count')
-          .eq('attendance_id', existingAttendanceHeader.id);
-        existingRecords = records || [];
-      }
-
-      // Merge attendance data with students
-      const mergedStudents: Student[] = (studentsData as Array<any>).map(student => {
-        const record = existingRecords.find(r => r.student_id === student.id);
+      const merged = baseStudents.map((s) => {
+        const rec = (records || []).find((r: any) => r.student_id === s.id);
         return {
-          ...student,
-          roll_number: student.roll_number || student.registration_number,
-          status: record?.status || null,
-          late_minutes: record?.late_minutes || 0,
-          attendance_id: existingAttendanceHeader?.id,
-          attendance_record_id: record?.id,
-          edit_count: record?.edit_count || 0,
-          is_locked: existingAttendanceHeader?.is_locked || false,
+          ...s,
+          status: (rec?.status as AttendanceStatus) || s.status,
         };
       });
 
-      setStudents(mergedStudents);
-      updateCounts(mergedStudents);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to load class data');
+      setStudents(merged);
+    } catch (e) {
+      console.error('Teacher mark attendance load error:', e);
+      Alert.alert('Error', 'Failed to load attendance');
     } finally {
       setLoading(false);
     }
-  }, [entryId, courseId, yearId, dateStr, periodNum, fetchTeacherId, router]);
+  }, [courseId, entryId, ensureAttendanceHeader, fetchTeacherId, router, user?.id, yearId]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const updateCounts = (studentList: Student[]) => {
-    setPresentCount(studentList.filter(s => s.status === 'present').length);
-    setAbsentCount(studentList.filter(s => s.status === 'absent').length);
-    setLateCount(studentList.filter(s => s.status === 'late').length);
+  const setStatus = (studentId: string, status: AttendanceStatus) => {
+    setStudents((prev) => prev.map((s) => (s.id === studentId ? { ...s, status } : s)));
   };
 
-  const handleMarkStatus = async (student: Student, status: AttendanceStatus) => {
-    if (student.is_locked) {
-      Alert.alert('Locked', 'This attendance record is locked and cannot be modified.');
+  const saveAttendance = async () => {
+    if (!attendanceId) {
+      Alert.alert('Error', 'Attendance header not created');
       return;
     }
-
-    if (status === 'late') {
-      setSelectedStudentForLate(student);
-      setShowLateModal(true);
-      return;
-    }
-
-    await saveAttendance(student, status);
-  };
-
-  const handleConfirmLate = async () => {
-    if (!selectedStudentForLate) return;
-    await saveAttendance(selectedStudentForLate, 'late', parseInt(lateMinutes) || 5);
-    setShowLateModal(false);
-    setSelectedStudentForLate(null);
-    setLateMinutes('5');
-  };
-
-  const saveAttendance = async (student: Student, status: AttendanceStatus, lateMins?: number) => {
-    if (!entry || !profile || !teacherId) return;
 
     try {
-      // Check for proxy (student marked in another class at same time)
-      const { data: proxyCheck } = await supabase
+      setSaving(true);
+
+      const rows = students.map((s) => ({
+        attendance_id: attendanceId,
+        student_id: s.id,
+        status: s.status,
+      }));
+
+      const { error } = await supabase
         .from('attendance_records')
-        .select(`
-          id,
-          attendance:attendance_id(
-            id,
-            period,
-            date,
-            timetable_entry_id,
-            timetable_entries(courses(name))
-          )
-        `)
-        .eq('student_id', student.id)
-        .limit(20);
+        .upsert(rows, { onConflict: 'attendance_id,student_id' });
 
-      // Filter for same date/period but different entry
-      const proxyRecord = (proxyCheck as Array<any> | undefined)?.find(r => {
-        const att = r.attendance as any;
-        return att?.date === dateStr && 
-               att?.period === entry.period && 
-               att?.timetable_entry_id !== entry.id;
-      });
-
-      if (proxyRecord) {
-        const att = proxyRecord.attendance as any;
-        Alert.alert(
-          '⚠️ Proxy Detected!',
-          `${student.profiles.full_name} is already marked in another class for Period ${entry.period}.\n\nExisting: ${att?.timetable_entries?.courses?.name}`,
-          [{ text: 'OK' }]
-        );
-
-        // Log proxy detection
-        await supabase.from('attendance_logs').insert({
-          action_type: 'proxy_detected',
-          performed_by: profile.id,
-          performer_role: 'teacher',
-          target_type: 'student',
-          target_id: student.id,
-          student_id: student.id,
-          timetable_entry_id: entry.id,
-          details: {
-            date: dateStr,
-            period: entry.period,
-            attempted_status: status,
-            existing_attendance_id: att?.id,
-          },
-        });
+      if (error) {
+        console.log('Attendance records upsert error:', error.message);
+        Alert.alert('Error', 'Failed to save attendance');
         return;
       }
 
-      // First, ensure we have an attendance header record
-      let attendanceId = student.attendance_id;
-      
-      if (!attendanceId) {
-        // Create attendance header record
-        const { data: academicYear } = await supabase
-          .from('academic_years')
-          .select('id')
-          .eq('is_current', true)
-          .single();
-
-        const { data: newAttendance, error: attendanceError } = await supabase
-          .from('attendance')
-          .insert({
-            date: dateStr,
-            period: entry.period,
-            course_id: entry.course_id,
-            year_id: yearId,
-            timetable_entry_id: entry.id,
-            academic_year_id: academicYear?.id,
-            marked_by: profile.id,
-          })
-          .select('id')
-          .single();
-
-        if (attendanceError) {
-          // Maybe it already exists (race condition), try to fetch it
-          const { data: existingAtt } = await supabase
-            .from('attendance')
-            .select('id')
-            .eq('date', dateStr)
-            .eq('period', entry.period)
-            .eq('timetable_entry_id', entry.id)
-            .single();
-          
-          attendanceId = existingAtt?.id;
-        } else {
-          attendanceId = newAttendance?.id;
-        }
-      }
-
-      if (!attendanceId) {
-        Alert.alert('Error', 'Failed to create attendance record');
-        return;
-      }
-
-      // Now create or update the student's attendance record
-      if (student.attendance_record_id) {
-        // Update existing record
-        await supabase
-          .from('attendance_records')
-          .update({
-            status,
-            late_minutes: lateMins || 0,
-            edited_by: profile.id,
-            edited_at: new Date().toISOString(),
-            edit_count: (student.edit_count || 0) + 1,
-          })
-          .eq('id', student.attendance_record_id);
-      } else {
-        // Insert new record
-        const { error: insertError } = await supabase
-          .from('attendance_records')
-          .insert({
-            attendance_id: attendanceId,
-            student_id: student.id,
-            status,
-            late_minutes: lateMins || 0,
-            marked_at: new Date().toISOString(),
-          });
-        
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          Alert.alert('Error', insertError.message);
-          return;
-        }
-      }
-
-      // Update local state
-      const updatedStudents = students.map(s =>
-        s.id === student.id
-          ? { 
-              ...s, 
-              status, 
-              late_minutes: lateMins || 0, 
-              attendance_id: attendanceId,
-              attendance_record_id: student.attendance_record_id || 'new',
-              edit_count: (student.edit_count || 0) + (student.attendance_record_id ? 1 : 0),
-            }
-          : s
-      );
-      setStudents(updatedStudents);
-      updateCounts(updatedStudents);
-    } catch (error) {
-      console.error('Error saving attendance:', error);
+      Alert.alert('Saved', 'Attendance saved successfully');
+      router.back();
+    } catch (e) {
+      console.error('Save attendance error:', e);
       Alert.alert('Error', 'Failed to save attendance');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleBulkMark = async (status: AttendanceStatus) => {
-    Alert.alert(
-      `Mark All ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-      `This will mark all unmarked students as ${status}. Continue?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            setSaving(true);
-            try {
-              const unmarkedStudents = students.filter(s => !s.status && !s.is_locked);
-              
-              for (const student of unmarkedStudents) {
-                await saveAttendance(student, status);
-              }
+  const presentCount = useMemo(() => students.filter((s) => s.status === 'present').length, [students]);
+  const absentCount = useMemo(() => students.filter((s) => s.status === 'absent').length, [students]);
+  const lateCount = useMemo(() => students.filter((s) => s.status === 'late').length, [students]);
 
-              // Log bulk action
-              if (profile) {
-                await supabase.from('attendance_logs').insert({
-                  action_type: 'bulk_marked',
-                  performed_by: profile.id,
-                  performer_role: 'teacher',
-                  target_type: 'class',
-                  timetable_entry_id: entry?.id,
-                  details: {
-                    date: dateStr,
-                    period: entry?.period,
-                    status,
-                    count: unmarkedStudents.length,
-                  },
-                });
-              }
-
-              Alert.alert('Success', `Marked ${unmarkedStudents.length} students as ${status}`);
-            } catch (error) {
-              console.error('Error bulk marking:', error);
-              Alert.alert('Error', 'Failed to bulk mark attendance');
-            } finally {
-              setSaving(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const filteredStudents = students.filter(student => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      student.roll_number?.toLowerCase().includes(query) ||
-      student.profiles?.full_name?.toLowerCase().includes(query)
-    );
+  const statusPillStyle = (active: boolean) => ({
+    backgroundColor: active
+      ? withAlpha(colors.primary, isDark ? 0.28 : 0.14)
+      : isDark
+        ? withAlpha(colors.textInverse, 0.07)
+        : withAlpha(colors.shadowColor, 0.05),
+    borderColor: active ? withAlpha(colors.primary, 0.6) : withAlpha(colors.cardBorder, 0.55),
   });
-
-  const renderStudentCard = (student: Student, index: number) => {
-    const isLocked = student.is_locked;
-
-    return (
-      <Animated.View
-        key={student.id}
-        entering={FadeInRight.delay(50 + index * 15).duration(200)}
-        style={[
-          styles.studentCard,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: student.status === 'present'
-              ? withAlpha(colors.success, 0.19)
-              : student.status === 'absent'
-                ? withAlpha(colors.error, 0.19)
-                : student.status === 'late'
-                  ? withAlpha(colors.warning, 0.19)
-                  : colors.cardBorder,
-            borderWidth: colors.borderWidth,
-            opacity: isLocked ? 0.6 : 1,
-          },
-        ]}
-      >
-        <View style={styles.studentInfo}>
-          <View style={[styles.rollBadge, { backgroundColor: withAlpha(colors.primary, 0.08) }]}>
-            <Text style={[styles.rollNumber, { color: colors.primary }]}>
-              {student.roll_number || '—'}
-            </Text>
-          </View>
-          <View style={styles.studentDetails}>
-            <Text style={[styles.studentName, { color: colors.textPrimary }]} numberOfLines={1}>
-              {student.profiles?.full_name || 'Unknown'}
-            </Text>
-            {student.status === 'late' && (student.late_minutes || 0) > 0 && (
-              <Text style={[styles.lateInfo, { color: colors.warning }]}>
-                Late by {student.late_minutes} min
-              </Text>
-            )}
-          </View>
-          {isLocked && (
-            <FontAwesome5 name="lock" size={12} color={colors.textMuted} />
-          )}
-        </View>
-
-        <View style={styles.statusButtons}>
-          <TouchableOpacity
-            style={[
-              styles.statusBtn,
-              {
-                backgroundColor:
-                  student.status === 'present'
-                    ? colors.success
-                    : withAlpha(colors.success, 0.08),
-              },
-            ]}
-            onPress={() => handleMarkStatus(student, 'present')}
-            disabled={isLocked}
-          >
-            <Text
-              style={[
-                styles.statusBtnText,
-                { color: student.status === 'present' ? colors.textInverse : colors.success },
-              ]}
-            >
-              P
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.statusBtn,
-              {
-                backgroundColor:
-                  student.status === 'late'
-                    ? colors.warning
-                    : withAlpha(colors.warning, 0.08),
-              },
-            ]}
-            onPress={() => handleMarkStatus(student, 'late')}
-            disabled={isLocked}
-          >
-            <Text
-              style={[
-                styles.statusBtnText,
-                { color: student.status === 'late' ? colors.textInverse : colors.warning },
-              ]}
-            >
-              L
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.statusBtn,
-              {
-                backgroundColor:
-                  student.status === 'absent'
-                    ? colors.error
-                    : withAlpha(colors.error, 0.08),
-              },
-            ]}
-            onPress={() => handleMarkStatus(student, 'absent')}
-            disabled={isLocked}
-          >
-            <Text
-              style={[
-                styles.statusBtnText,
-                { color: student.status === 'absent' ? colors.textInverse : colors.error },
-              ]}
-            >
-              A
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    );
-  };
-
-  const renderLateModal = () => (
-    <Modal visible={showLateModal} transparent animationType="fade">
-      <View
-        style={[
-          styles.modalOverlay,
-          { backgroundColor: isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5) },
-        ]}
-      >
-        <Card style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-            Late Entry
-          </Text>
-          <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
-            {selectedStudentForLate?.profiles?.full_name}
-          </Text>
-
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-            Late by (minutes)
-          </Text>
-          <View
-            style={[
-              styles.minutesInput,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.inputBorder,
-                borderWidth: colors.borderWidth,
-              },
-            ]}
-          >
-            <TouchableOpacity
-              style={[styles.minusBtn, { backgroundColor: withAlpha(colors.error, 0.08) }]}
-              onPress={() => setLateMinutes(prev => Math.max(1, parseInt(prev) - 5).toString())}
-            >
-              <FontAwesome5 name="minus" size={12} color={colors.error} />
-            </TouchableOpacity>
-            <TextInput
-              style={[styles.minutesValue, { color: colors.textPrimary }]}
-              value={lateMinutes}
-              onChangeText={setLateMinutes}
-              keyboardType="numeric"
-              textAlign="center"
-            />
-            <TouchableOpacity
-              style={[styles.plusBtn, { backgroundColor: withAlpha(colors.success, 0.08) }]}
-              onPress={() => setLateMinutes(prev => (parseInt(prev) + 5).toString())}
-            >
-              <FontAwesome5 name="plus" size={12} color={colors.success} />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[styles.lateWarning, { color: colors.warning }]}>
-            <FontAwesome5 name="info-circle" size={12} /> 4 late entries = 1 half-day leave
-          </Text>
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity
-              style={[styles.modalBtn, { backgroundColor: colors.glassBackground }]}
-              onPress={() => {
-                setShowLateModal(false);
-                setSelectedStudentForLate(null);
-              }}
-            >
-              <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalBtn, { backgroundColor: colors.warning }]}
-              onPress={handleConfirmLate}
-            >
-              <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Mark Late</Text>
-            </TouchableOpacity>
-          </View>
-        </Card>
-      </View>
-    </Modal>
-  );
 
   return (
     <AnimatedBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
-        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <View style={styles.headerContent}>
-            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
-              {courseName || 'Mark Attendance'}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {timing?.label || `Period ${periodNum}`} • {today.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-            </Text>
-          </View>
+      <View style={[styles.container, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 110 }]}>
+        <Animated.View entering={FadeInRight.duration(350)} style={{ marginBottom: 12 }}>
+          <Text style={[styles.header, { color: colors.textPrimary }]}>Mark Attendance</Text>
+          <Text style={[styles.headerSub, { color: colors.textMuted }]}>
+            {entry?.courses?.name || params.courseName || 'Class'} • P{periodNum} • {dateStr}
+          </Text>
         </Animated.View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
-          showsVerticalScrollIndicator={false}
-        >
-          {loading ? (
-            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
-          ) : (
-            <>
-              {/* Stats Card */}
-              <Animated.View entering={FadeIn.delay(150).duration(400)}>
-                <Card style={styles.statsCard}>
-                  <View style={styles.statsRow}>
-                    <View
-                      style={[
-                        styles.statItem,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.cardBorder,
-                          borderWidth: colors.borderWidth,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.statValue, { color: colors.success }]}>{presentCount}</Text>
-                      <Text style={[styles.statLabel, { color: colors.textMuted }]}>Present</Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.statItem,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.cardBorder,
-                          borderWidth: colors.borderWidth,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.statValue, { color: colors.warning }]}>{lateCount}</Text>
-                      <Text style={[styles.statLabel, { color: colors.textMuted }]}>Late</Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.statItem,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.cardBorder,
-                          borderWidth: colors.borderWidth,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.statValue, { color: colors.error }]}>{absentCount}</Text>
-                      <Text style={[styles.statLabel, { color: colors.textMuted }]}>Absent</Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.statItem,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.cardBorder,
-                          borderWidth: colors.borderWidth,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.statValue, { color: colors.textSecondary }]}>
-                        {students.length - presentCount - lateCount - absentCount}
-                      </Text>
-                      <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending</Text>
-                    </View>
-                  </View>
-                </Card>
-              </Animated.View>
+        {loading ? (
+          <View style={{ alignItems: 'center', marginTop: 16 }}>
+            <LoadingIndicator color={colors.primary} />
+            <Text style={{ marginTop: 10, color: colors.textMuted, fontSize: 13 }}>
+              Loading students...
+            </Text>
+          </View>
+        ) : (
+          <>
+            <Animated.View entering={FadeInDown.duration(350)} style={{ marginBottom: 12 }}>
+              <Card>
+                <View style={styles.statsRow}>
+                  <Text style={[styles.stat, { color: colors.textPrimary }]}>Present: {presentCount}</Text>
+                  <Text style={[styles.stat, { color: colors.textPrimary }]}>Absent: {absentCount}</Text>
+                  <Text style={[styles.stat, { color: colors.textPrimary }]}>Late: {lateCount}</Text>
+                </View>
+              </Card>
+            </Animated.View>
 
-              {/* Search & Bulk Actions */}
-              {students.length > 0 && (
-                <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-                  {/* Search */}
-                  <View
-                    style={[
-                      styles.searchBox,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.inputBorder,
-                        borderWidth: colors.borderWidth,
-                      },
-                    ]}
-                  >
-                    <Ionicons name="search" size={18} color={colors.textMuted} />
-                    <TextInput
-                      style={[styles.searchInput, { color: colors.textPrimary }]}
-                      placeholder="Search by roll number or name..."
-                      placeholderTextColor={colors.textMuted}
-                      value={searchQuery}
-                      onChangeText={setSearchQuery}
-                    />
-                    {searchQuery.length > 0 && (
-                      <TouchableOpacity onPress={() => setSearchQuery('')}>
-                        <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 12 }}>
+              {students.map((s, idx) => (
+                <Animated.View key={s.id} entering={FadeInDown.delay(idx * 20).duration(250)} style={{ marginBottom: 10 }}>
+                  <Card>
+                    <View style={styles.studentRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.studentName, { color: colors.textPrimary }]} numberOfLines={1}>
+                          {s.profiles?.full_name || 'Student'}
+                        </Text>
+                        <Text style={[styles.studentMeta, { color: colors.textMuted }]}>
+                          Roll: {s.roll_number}
+                        </Text>
+                      </View>
 
-                  {/* Bulk Actions */}
-                  <View style={styles.bulkActions}>
-                    <Text style={[styles.bulkLabel, { color: colors.textSecondary }]}>
-                      Bulk Mark:
-                    </Text>
-                    <TouchableOpacity
-                      style={[styles.bulkBtn, { backgroundColor: withAlpha(colors.success, 0.08) }]}
-                      onPress={() => handleBulkMark('present')}
-                      disabled={saving}
-                    >
-                      <Text style={[styles.bulkBtnText, { color: colors.success }]}>All Present</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.bulkBtn, { backgroundColor: withAlpha(colors.error, 0.08) }]}
-                      onPress={() => handleBulkMark('absent')}
-                      disabled={saving}
-                    >
-                      <Text style={[styles.bulkBtnText, { color: colors.error }]}>All Absent</Text>
-                    </TouchableOpacity>
-                  </View>
+                      <View style={styles.actions}>
+                        <TouchableOpacity
+                          onPress={() => setStatus(s.id, 'present')}
+                          activeOpacity={0.85}
+                          style={[styles.pill, statusPillStyle(s.status === 'present')]}
+                        >
+                          <Text style={[styles.pillText, { color: s.status === 'present' ? colors.primary : colors.textMuted }]}>P</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setStatus(s.id, 'absent')}
+                          activeOpacity={0.85}
+                          style={[styles.pill, statusPillStyle(s.status === 'absent')]}
+                        >
+                          <Text style={[styles.pillText, { color: s.status === 'absent' ? colors.primary : colors.textMuted }]}>A</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setStatus(s.id, 'late')}
+                          activeOpacity={0.85}
+                          style={[styles.pill, statusPillStyle(s.status === 'late')]}
+                        >
+                          <Text style={[styles.pillText, { color: s.status === 'late' ? colors.primary : colors.textMuted }]}>L</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </Card>
                 </Animated.View>
-              )}
+              ))}
+            </ScrollView>
 
-              {/* Students List */}
-              <View style={styles.studentsList}>
-                {filteredStudents.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <FontAwesome5 name="user-graduate" size={40} color={colors.textMuted} />
-                    <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                      {searchQuery ? 'No students found' : 'No students in this class'}
-                    </Text>
-                  </View>
-                ) : (
-                  filteredStudents.map((student, index) => renderStudentCard(student, index))
-                )}
-              </View>
-            </>
-          )}
-        </ScrollView>
-
-        {renderLateModal()}
+            <View style={{ marginTop: 6 }}>
+              <PrimaryButton title={saving ? 'Saving...' : 'Save Attendance'} onPress={saveAttendance} disabled={saving} />
+            </View>
+          </>
+        )}
       </View>
     </AnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
-  backBtn: { padding: 8, marginRight: 12 },
-  headerContent: { flex: 1 },
-  title: { fontSize: 20, fontWeight: '700' },
-  subtitle: { fontSize: 13, marginTop: 2 },
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20 },
-  // Stats Card
-  statsCard: {
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
+  header: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  headerSub: {
+    marginTop: 4,
+    fontSize: 13,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  statItem: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  statValue: { fontSize: 20, fontWeight: '700' },
-  statLabel: { fontSize: 10, marginTop: 2 },
-  // Search & Bulk
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-    gap: 10,
-  },
-  searchInput: { flex: 1, fontSize: 14 },
-  bulkActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 10,
-  },
-  bulkLabel: { fontSize: 13, fontWeight: '500' },
-  bulkBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  bulkBtnText: { fontSize: 12, fontWeight: '600' },
-  // Students List
-  studentsList: { marginTop: 8 },
-  studentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 10,
-    borderWidth: 1,
   },
-  studentInfo: {
+  stat: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  studentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
     gap: 12,
   },
-  rollBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    minWidth: 50,
-    alignItems: 'center',
-  },
-  rollNumber: { fontSize: 12, fontWeight: '700' },
-  studentDetails: { flex: 1 },
-  studentName: { fontSize: 14, fontWeight: '500' },
-  lateInfo: { fontSize: 10, marginTop: 2, fontWeight: '500' },
-  statusButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statusBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusBtnText: { fontSize: 14, fontWeight: '700' },
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    marginTop: 12,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    borderRadius: 20,
-    padding: 24,
-  },
-  modalTitle: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  modalSubtitle: { fontSize: 14, textAlign: 'center', marginTop: 4, marginBottom: 20 },
-  inputLabel: { fontSize: 13, fontWeight: '600', marginBottom: 10 },
-  minutesInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  minusBtn: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  plusBtn: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  minutesValue: {
-    flex: 1,
-    fontSize: 24,
+  studentName: {
+    fontSize: 15,
     fontWeight: '700',
   },
-  lateWarning: {
+  studentMeta: {
+    marginTop: 4,
     fontSize: 12,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 20,
   },
-  modalActions: {
+  actions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
-  modalBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+  pill: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
-  modalBtnText: { fontSize: 15, fontWeight: '600' },
+  pillText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
 });

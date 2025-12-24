@@ -12,7 +12,7 @@ async function checkTableAccess() {
   const tables = [
     'students', 'teachers', 'courses', 'departments', 
     'profiles', 'notices', 'attendance', 'exams', 
-    'assignments', 'library_books', 'book_issues', 
+    'assignments', 'books', 'book_issues', 
     'fee_payments', 'academic_years', 'timetable_entries'
   ];
   

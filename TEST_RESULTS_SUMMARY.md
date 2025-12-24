@@ -28,7 +28,7 @@
 - ✓ attendance (0 records)
 - ✓ exams (0 records)
 - ✓ assignments (0 records)
-- ✓ library_books (accessible)
+- ✓ books (accessible)
 - ✓ book_issues (0 records)
 - ✓ fee_payments (0 records)
 
@@ -203,7 +203,7 @@ Success Rate: 100.0%
 
 ### Issue 1: Non-existent Tables ✅ RESOLVED
 **Description**: Some tables in backup list didn't exist in schema  
-**Tables Affected**: `exam_results`, `fees_structures`, `canteen_orders`  
+**Tables Affected**: `exam_results`, `fees_structures`, `canteen_orders`, `library_books`  
 **Resolution**: Removed from BACKUP_TABLES array  
 **Impact**: None - backup now only includes existing tables
 

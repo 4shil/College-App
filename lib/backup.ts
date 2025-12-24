@@ -34,7 +34,7 @@ const BACKUP_TABLES = [
   'exams',
   'fee_payments',
   'assignments',
-  'library_books',
+  'books',
   'book_issues',
   'bus_routes',
   'canteen_menu_items',

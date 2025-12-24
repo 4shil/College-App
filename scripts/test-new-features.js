@@ -50,7 +50,7 @@ async function testDatabaseTables() {
   
   const tables = [
     'students', 'teachers', 'courses', 'departments', 'profiles', 'notices',
-    'attendance', 'exams', 'assignments', 'library_books', 'book_issues', 'fee_payments'
+    'attendance', 'attendance_records', 'exams', 'assignments', 'books', 'book_issues', 'fee_payments'
   ];
   
   let passedCount = 0;
@@ -169,9 +169,9 @@ async function testAnalyticsDataFetching() {
       .eq('status', 'pending_approval');
     success(`Pending approvals: ${pendingCount}`);
     
-    // Test attendance calculation
+    // Test attendance calculation (status is stored in attendance_records)
     const { data: attendanceData } = await supabase
-      .from('attendance')
+      .from('attendance_records')
       .select('status');
     
     if (attendanceData) {
@@ -185,7 +185,7 @@ async function testAnalyticsDataFetching() {
     const { count: examCount } = await supabase
       .from('exams')
       .select('id', { count: 'exact' })
-      .gte('date', new Date().toISOString());
+      .gte('start_date', new Date().toISOString());
     success(`Upcoming exams: ${examCount}`);
     
     // Test active assignments
@@ -197,7 +197,7 @@ async function testAnalyticsDataFetching() {
     
     // Test library books
     const { count: bookCount } = await supabase
-      .from('library_books')
+      .from('books')
       .select('id', { count: 'exact' });
     success(`Library books: ${bookCount}`);
     
@@ -205,7 +205,7 @@ async function testAnalyticsDataFetching() {
     const { count: noticeCount } = await supabase
       .from('notices')
       .select('id', { count: 'exact' })
-      .eq('is_published', true);
+      .eq('is_active', true);
     success(`Active notices: ${noticeCount}`);
     
     info('\nTest Result: All analytics queries successful');
@@ -224,7 +224,7 @@ async function testBackupDataStructure() {
   const BACKUP_TABLES = [
     'departments', 'courses', 'profiles', 'students', 'teachers', 'notices',
     'academic_years', 'timetable_entries', 'attendance', 'exams',
-    'fee_payments', 'assignments', 'library_books', 'book_issues',
+    'fee_payments', 'assignments', 'books', 'book_issues',
     'bus_routes', 'canteen_menu_items',
   ];
   

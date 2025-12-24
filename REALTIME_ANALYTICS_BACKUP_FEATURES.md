@@ -54,11 +54,11 @@ Successfully implemented comprehensive realtime analytics and full backup/restor
 - Filename includes timestamp for easy identification
 
 ##### Backup Coverage
-Includes 20+ tables:
+Includes core tables:
 - Core: departments, courses, profiles, students, teachers
-- Academics: academic_years, timetable_entries, attendance, exams, exam_results
-- Financial: fees_structures, fee_payments
-- Extra: assignments, notices, library_books, book_issues, bus_routes, canteen_menu_items, canteen_orders
+- Academics: academic_years, timetable_entries, attendance, exams
+- Financial: fee_payments
+- Extra: assignments, notices, books, book_issues, bus_routes, canteen_menu_items
 
 #### Restore Features
 

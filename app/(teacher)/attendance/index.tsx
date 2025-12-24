@@ -17,9 +17,8 @@ interface TodayClass {
   periodTime: string;
   courseName: string;
   courseCode: string;
-  programName: string;
   yearName: string;
-  programId: string;
+  courseId: string;
   yearId: string;
   studentCount: number;
   markedCount: number;
@@ -117,10 +116,8 @@ export default function TeacherAttendanceIndex() {
           id,
           period,
           course_id,
-          program_id,
           year_id,
-          courses(code, name, short_name),
-          programs(code, name),
+          courses(code, name, short_name, department_id),
           years(name)
         `)
         .eq('teacher_id', teacherId)
@@ -137,13 +134,13 @@ export default function TeacherAttendanceIndex() {
       // For each entry, get attendance status
       const classesWithStatus: TodayClass[] = await Promise.all(
         (entries as any[]).map(async (entry) => {
-          // Count students in this program/year
+          // Count students in this department + year (aligns with mark screen)
           const { count: studentCount } = await supabase
             .from('students')
             .select('id', { count: 'exact', head: true })
-            .eq('program_id', entry.program_id)
-            .or(`year_id.eq.${entry.year_id},current_year_id.eq.${entry.year_id}`)
-            .eq('is_active', true);
+            .eq('department_id', entry.courses?.department_id)
+            .eq('year_id', entry.year_id)
+            .eq('current_status', 'active');
 
           // Check if attendance is marked for this entry today
           const { data: attendance } = await supabase
@@ -170,9 +167,8 @@ export default function TeacherAttendanceIndex() {
             periodTime: timing ? `${timing.start} - ${timing.end}` : '',
             courseName: entry.courses?.name || '',
             courseCode: entry.courses?.code || '',
-            programName: entry.programs?.name || '',
             yearName: entry.years?.name || '',
-            programId: entry.program_id,
+            courseId: entry.course_id,
             yearId: entry.year_id,
             studentCount: studentCount || 0,
             markedCount,
@@ -228,7 +224,7 @@ export default function TeacherAttendanceIndex() {
       params: {
         entryId: classItem.id,
         courseName: classItem.courseName,
-        programId: classItem.programId,
+        courseId: classItem.courseId,
         yearId: classItem.yearId,
         period: classItem.period.toString(),
       },
@@ -308,7 +304,7 @@ export default function TeacherAttendanceIndex() {
               {classItem.courseName}
             </Text>
             <Text style={[styles.courseCode, { color: colors.textSecondary }]}>
-              {classItem.courseCode} • {classItem.programName} • {classItem.yearName}
+              {classItem.courseCode} • {classItem.yearName}
             </Text>
 
             {/* Progress Bar */}
