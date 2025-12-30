@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 export default function TeacherDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark } = useThemeStore();
+  const { colors } = useThemeStore();
   const { user, profile, logout } = useAuthStore();
 
   const handleLogout = async () => {
@@ -47,16 +47,54 @@ export default function TeacherDashboard() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Welcome back, {profile?.full_name || user?.email || 'Teacher'}!
             </Text>
-            <Text style={[styles.placeholder, { color: colors.textMuted }]}>
-              Your teacher dashboard is coming soon...
-            </Text>
-            
-            <View style={styles.buttonContainer}>
+
+            <View style={styles.actions}>
               <PrimaryButton
-                title="Sign Out"
-                onPress={handleLogout}
-                variant="outline"
+                title="Timetable"
+                onPress={() => router.push('/(teacher)/timetable')}
+                variant="primary"
+                size="medium"
               />
+              <PrimaryButton
+                title="Attendance"
+                onPress={() => router.push('/(teacher)/attendance')}
+                variant="outline"
+                size="medium"
+              />
+              <PrimaryButton
+                title="Results (Internal Marks)"
+                onPress={() => router.push('/(teacher)/results')}
+                variant="outline"
+                size="medium"
+              />
+              <PrimaryButton
+                title="Materials"
+                onPress={() => router.push('/(teacher)/materials')}
+                variant="outline"
+                size="medium"
+              />
+              <PrimaryButton
+                title="Assignments"
+                onPress={() => router.push('/(teacher)/assignments')}
+                variant="outline"
+                size="medium"
+              />
+              <PrimaryButton
+                title="Planner"
+                onPress={() => router.push('/(teacher)/planner')}
+                variant="outline"
+                size="medium"
+              />
+              <PrimaryButton
+                title="Diary"
+                onPress={() => router.push('/(teacher)/diary')}
+                variant="outline"
+                size="medium"
+              />
+            </View>
+
+            <View style={styles.signOut}>
+              <PrimaryButton title="Sign Out" onPress={handleLogout} variant="ghost" size="medium" />
             </View>
           </Card>
         </Animated.View>
@@ -96,12 +134,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-  placeholder: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  buttonContainer: {
+  actions: {
     marginTop: 10,
+    gap: 10,
+  },
+  signOut: {
+    marginTop: 14,
   },
 });

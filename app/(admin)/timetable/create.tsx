@@ -151,7 +151,7 @@ export default function CreateTimetableScreen() {
         const { data: existingEntries } = await supabase
           .from('timetable_entries')
           .select('*')
-          .eq('course_id', params.courseId)
+          .eq('programme_id', params.courseId)
           .eq('year_id', params.yearId)
           .eq('academic_year_id', academicYearRes.data.id)
           .eq('is_active', true);
@@ -314,7 +314,7 @@ export default function CreateTimetableScreen() {
       await supabase
         .from('timetable_entries')
         .delete()
-        .eq('course_id', degreeProgram.id)
+        .eq('programme_id', degreeProgram.id)
         .eq('year_id', year.id)
         .eq('academic_year_id', academicYearId);
 
@@ -323,6 +323,7 @@ export default function CreateTimetableScreen() {
         .filter(s => s.courseId)
         .map(s => ({
           course_id: s.courseId, // Subject course being taught
+          programme_id: degreeProgram.id, // Degree programme
           year_id: year.id,
           academic_year_id: academicYearId,
           day_of_week: s.day,

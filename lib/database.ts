@@ -147,11 +147,37 @@ export const getAuthUser = async (userId: string): Promise<AuthUser | null> => {
     ].includes(role)
   );
 
-  const isTeacher = roles.some((role) =>
+  let isTeacher = roles.some((role) =>
     ['subject_teacher', 'class_teacher', 'mentor', 'coordinator'].includes(role)
   );
 
-  const isStudent = roles.includes('student');
+  let isStudent = roles.includes('student');
+
+  // Fallbacks when roles/primary_role are not yet configured correctly.
+  // This keeps UX sane (e.g., teacher accounts landing in teacher dashboard).
+  if (!isTeacher) {
+    const { data: teacherRow, error: teacherError } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!teacherError && teacherRow?.id) {
+      isTeacher = true;
+    }
+  }
+
+  if (!isStudent) {
+    const { data: studentRow, error: studentError } = await supabase
+      .from('students')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!studentError && studentRow?.id) {
+      isStudent = true;
+    }
+  }
 
   return {
     id: userId,

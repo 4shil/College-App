@@ -39,7 +39,7 @@ interface TimetableEntry {
   course_id: string;
   teacher_id: string;
   room: string | null;
-  program_id: string;
+  programme_id: string | null;
   year_id: string;
   courses: { code: string; name: string; short_name: string };
   teachers: { id: string; employee_id: string; profiles: { full_name: string } };
@@ -103,7 +103,7 @@ export default function SubstitutionsScreen() {
           original_teacher:teachers!substitutions_original_teacher_id_fkey(id, employee_id, profiles(full_name)),
           substitute_teacher:teachers!substitutions_substitute_teacher_id_fkey(id, employee_id, profiles(full_name)),
           timetable_entry:timetable_entry_id(
-            id, day_of_week, period, course_id, teacher_id, room, program_id, year_id,
+            id, day_of_week, period, course_id, teacher_id, room, programme_id, year_id,
             courses(code, name, short_name),
             teachers(id, employee_id, profiles(full_name)),
             year:year_id(name)
@@ -178,7 +178,7 @@ export default function SubstitutionsScreen() {
     const { data } = await supabase
       .from('timetable_entries')
       .select(`
-        id, day_of_week, period, course_id, teacher_id, room, program_id, year_id,
+        id, day_of_week, period, course_id, teacher_id, room, programme_id, year_id,
         courses(code, name, short_name),
         teachers(id, employee_id, profiles(full_name)),
         year:year_id(name)

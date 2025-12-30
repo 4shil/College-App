@@ -193,7 +193,7 @@ export default function RegisterScreen() {
 
       case 3:
         if (!formData.program_id) {
-          setError('Please select a course/program');
+          setError('Please select a programme');
           return false;
         }
         if (!formData.roll_number.trim()) {
@@ -680,7 +680,7 @@ export default function RegisterScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                Course/Program *
+                Programme *
               </Text>
               <View style={styles.programScrollContainer}>
                 <ScrollView

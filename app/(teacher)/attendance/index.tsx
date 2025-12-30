@@ -20,6 +20,8 @@ interface TodayClass {
   yearName: string;
   courseId: string;
   yearId: string;
+  programmeId: string | null;
+  departmentId: string | null;
   studentCount: number;
   markedCount: number;
   isCompleted: boolean;
@@ -117,6 +119,7 @@ export default function TeacherAttendanceIndex() {
           period,
           course_id,
           year_id,
+          programme_id,
           courses(code, name, short_name, department_id),
           years(name)
         `)
@@ -134,13 +137,19 @@ export default function TeacherAttendanceIndex() {
       // For each entry, get attendance status
       const classesWithStatus: TodayClass[] = await Promise.all(
         (entries as any[]).map(async (entry) => {
-          // Count students in this department + year (aligns with mark screen)
-          const { count: studentCount } = await supabase
+          const programmeId = (entry.programme_id as string | null) ?? null;
+          const departmentId = (entry.courses?.department_id as string | null) ?? null;
+
+          // Count students by programme/year when possible; else fallback to department/year.
+          const baseStudents = supabase
             .from('students')
             .select('id', { count: 'exact', head: true })
-            .eq('department_id', entry.courses?.department_id)
             .eq('year_id', entry.year_id)
             .eq('current_status', 'active');
+
+          const { count: studentCount } = programmeId
+            ? await baseStudents.eq('course_id', programmeId)
+            : await baseStudents.eq('department_id', departmentId);
 
           // Check if attendance is marked for this entry today
           const { data: attendance } = await supabase
@@ -170,6 +179,8 @@ export default function TeacherAttendanceIndex() {
             yearName: entry.years?.name || '',
             courseId: entry.course_id,
             yearId: entry.year_id,
+            programmeId,
+            departmentId,
             studentCount: studentCount || 0,
             markedCount,
             isCompleted: markedCount > 0 && markedCount === (studentCount || 0),
@@ -226,6 +237,8 @@ export default function TeacherAttendanceIndex() {
         courseName: classItem.courseName,
         courseId: classItem.courseId,
         yearId: classItem.yearId,
+        programmeId: classItem.programmeId || '',
+        departmentId: classItem.departmentId || '',
         period: classItem.period.toString(),
       },
     });

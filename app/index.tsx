@@ -1,6 +1,68 @@
-import { Redirect } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { useRouter } from 'expo-router';
+
+import { TriangleLoader } from '../components/ui/TriangleLoader';
+import { useThemeStore } from '../store/themeStore';
+import { useAuthStore } from '../store/authStore';
+import { supabase } from '../lib/supabase';
+import { getAuthUser } from '../lib/database';
 
 export default function Index() {
-  // Redirect to login by default
-  return <Redirect href="/(auth)/login" />;
+  const router = useRouter();
+  const { colors } = useThemeStore();
+  const { setSession, setAuthUser } = useAuthStore();
+
+  const [booting, setBooting] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const run = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          router.replace('/(auth)/login');
+          return;
+        }
+
+        const session = data.session;
+        setSession(session);
+
+        const userId = session?.user?.id;
+        if (!userId) {
+          router.replace('/(auth)/login');
+          return;
+        }
+
+        const authUser = await getAuthUser(userId);
+        setAuthUser(authUser);
+
+        if (authUser?.isAdmin) {
+          router.replace('/(admin)/dashboard');
+        } else if (authUser?.isTeacher) {
+          router.replace('/(teacher)/dashboard');
+        } else {
+          router.replace('/(student)/dashboard');
+        }
+      } finally {
+        if (mounted) setBooting(false);
+      }
+    };
+
+    run();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router, setAuthUser, setSession]);
+
+  if (!booting) return null;
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+      <TriangleLoader size={50} />
+    </View>
+  );
 }

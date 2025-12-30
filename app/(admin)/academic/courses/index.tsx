@@ -81,7 +81,7 @@ export default function CoursesScreen() {
       setDepartments(deptsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to fetch courses');
+      Alert.alert('Error', 'Failed to fetch programmes');
     }
   };
 
@@ -176,11 +176,11 @@ export default function CoursesScreen() {
       if (editingCourse) {
         const { error } = await supabase.from('courses').update(payload).eq('id', editingCourse.id);
         if (error) throw error;
-        Alert.alert('Success', 'Course updated successfully');
+        Alert.alert('Success', 'Programme updated successfully');
       } else {
         const { error } = await supabase.from('courses').insert({ ...payload, is_active: true });
         if (error) throw error;
-        Alert.alert('Success', 'Course created successfully');
+        Alert.alert('Success', 'Programme created successfully');
       }
 
       setShowAddModal(false);
@@ -211,7 +211,7 @@ export default function CoursesScreen() {
 
   const handleDelete = (course: Course) => {
     Alert.alert(
-      'Delete Course',
+      'Delete Programme',
       `Are you sure you want to delete "${course.name}"? This will deactivate it but data will be preserved.`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -228,7 +228,7 @@ export default function CoursesScreen() {
               
               if (error) {
                 console.error('Delete error:', error);
-                throw new Error(error.message || 'Failed to delete course');
+                throw new Error(error.message || 'Failed to delete programme');
               }
               
               Alert.alert('Success', `${course.name} has been deactivated`);
@@ -237,7 +237,7 @@ export default function CoursesScreen() {
               console.error('Error deleting course:', error);
               Alert.alert(
                 'Delete Failed',
-                error.message || 'Unable to delete course. It may have associated students or subjects.',
+                error.message || 'Unable to delete programme. It may have associated students or subjects.',
                 [{ text: 'OK' }]
               );
             } finally {
@@ -369,8 +369,8 @@ export default function CoursesScreen() {
             <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerContent}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Courses</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{courses.length} course(s)</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Programmes</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{courses.length} programme(s)</Text>
           </View>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
             <Ionicons name="add" size={22} color={colors.textInverse} />
@@ -393,8 +393,8 @@ export default function CoursesScreen() {
           ) : (
             <View style={styles.emptyState}>
               <FontAwesome5 name="graduation-cap" size={48} color={colors.textMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Courses</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Add your first course</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Programmes</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Add your first programme</Text>
             </View>
           )}
         </ScrollView>
@@ -405,7 +405,7 @@ export default function CoursesScreen() {
             <Animated.View entering={FadeInDown.duration(300)} style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-                  {editingCourse ? 'Edit Course' : 'Add Course'}
+                  {editingCourse ? 'Edit Programme' : 'Add Programme'}
                 </Text>
                 <TouchableOpacity onPress={() => setShowAddModal(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
@@ -414,7 +414,7 @@ export default function CoursesScreen() {
 
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course Name *</Text>
+                  <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Programme Name *</Text>
                   <GlassInput placeholder="e.g., BCA, B.Com" value={formName} onChangeText={setFormName} autoCapitalize="words" />
                 </View>
 

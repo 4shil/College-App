@@ -37,6 +37,8 @@ export default function TeacherMarkAttendanceScreen() {
     courseName: string;
     courseId: string;
     yearId: string;
+    programmeId?: string;
+    departmentId?: string;
     period: string;
   }>();
 
@@ -46,6 +48,8 @@ export default function TeacherMarkAttendanceScreen() {
   const entryId = params.entryId;
   const courseId = params.courseId;
   const yearId = params.yearId;
+  const programmeId = (params.programmeId || '').trim() || null;
+  const departmentId = (params.departmentId || '').trim() || null;
   const periodNum = parseInt(params.period || '0', 10);
 
   const dateStr = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -68,7 +72,7 @@ export default function TeacherMarkAttendanceScreen() {
 
   const ensureAttendanceHeader = useCallback(
     async (academicYearId: string) => {
-      if (!entryId || !courseId || !user?.id) return null;
+      if (!entryId || !courseId || !yearId || !user?.id) return null;
 
       // Look for existing
       const { data: existing } = await supabase
@@ -86,6 +90,8 @@ export default function TeacherMarkAttendanceScreen() {
         date: dateStr,
         period: periodNum,
         course_id: courseId,
+        programme_id: programmeId,
+        department_id: departmentId,
         academic_year_id: academicYearId,
         marked_by: user.id,
         timetable_entry_id: entryId,
@@ -105,7 +111,7 @@ export default function TeacherMarkAttendanceScreen() {
 
       return created?.id || null;
     },
-    [courseId, dateStr, entryId, periodNum, user?.id, yearId]
+    [courseId, dateStr, departmentId, entryId, periodNum, programmeId, user?.id, yearId]
   );
 
   const fetchData = useCallback(async () => {
@@ -128,6 +134,12 @@ export default function TeacherMarkAttendanceScreen() {
 
       if (!academicYear?.id) {
         Alert.alert('Error', 'No current academic year found');
+        router.back();
+        return;
+      }
+
+      if (!(periodNum >= 1 && periodNum <= 5)) {
+        Alert.alert('Error', 'Invalid period. Expected 1–5.');
         router.back();
         return;
       }
@@ -161,13 +173,6 @@ export default function TeacherMarkAttendanceScreen() {
 
       setEntry(entryData as TimetableEntry);
 
-      // Course department
-      const { data: courseData } = await supabase
-        .from('courses')
-        .select('department_id')
-        .eq('id', courseId)
-        .single();
-
       // Students
       const { data: studentsData } = await supabase
         .from('students')
@@ -180,12 +185,34 @@ export default function TeacherMarkAttendanceScreen() {
             profiles:user_id(full_name)
           `
         )
-        .eq('department_id', courseData?.department_id)
         .eq('year_id', yearId)
         .eq('current_status', 'active')
         .order('roll_number');
 
-      const baseStudents: StudentRow[] = (studentsData || []).map((s: any) => ({
+      // Apply programme/department scoping if provided
+      // - programmeId maps to students.course_id (degree programme)
+      // - departmentId maps to students.department_id
+      let scopedStudentsQuery = supabase
+        .from('students')
+        .select(
+          `
+            id,
+            roll_number,
+            registration_number,
+            user_id,
+            profiles:user_id(full_name)
+          `
+        )
+        .eq('year_id', yearId)
+        .eq('current_status', 'active')
+        .order('roll_number');
+
+      if (programmeId) scopedStudentsQuery = scopedStudentsQuery.eq('course_id', programmeId);
+      else if (departmentId) scopedStudentsQuery = scopedStudentsQuery.eq('department_id', departmentId);
+
+      const { data: scopedStudentsData } = await scopedStudentsQuery;
+
+      const baseStudents: StudentRow[] = (scopedStudentsData || studentsData || []).map((s: any) => ({
         ...s,
         roll_number: s.roll_number || s.registration_number,
         status: 'present' as AttendanceStatus,
@@ -220,7 +247,7 @@ export default function TeacherMarkAttendanceScreen() {
     } finally {
       setLoading(false);
     }
-  }, [courseId, entryId, ensureAttendanceHeader, fetchTeacherId, router, user?.id, yearId]);
+  }, [courseId, entryId, ensureAttendanceHeader, fetchTeacherId, periodNum, router, user?.id, yearId]);
 
   useEffect(() => {
     fetchData();

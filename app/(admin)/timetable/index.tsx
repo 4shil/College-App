@@ -45,6 +45,8 @@ interface TimetableEntry {
   day_of_week: number;
   period: number;
   course_id: string | null;
+  programme_id?: string | null;
+  year_id?: string | null;
   teacher_id: string | null;
   room: string | null;
   is_lab: boolean;
@@ -122,7 +124,7 @@ export default function TimetableScreen() {
 
       if (!academicYear) return;
 
-      // Fetch timetable entries - for degree programs, course_id = degree course
+      // Fetch timetable entries for a degree programme + year
       const { data, error } = await supabase
         .from('timetable_entries')
         .select(`
@@ -130,13 +132,15 @@ export default function TimetableScreen() {
           day_of_week,
           period,
           course_id,
+          programme_id,
+          year_id,
           teacher_id,
           room,
           is_lab,
           courses(code, short_name, name),
           teachers(id, profiles(full_name))
         `)
-        .eq('course_id', selectedCourse)
+        .eq('programme_id', selectedCourse)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('is_active', true)

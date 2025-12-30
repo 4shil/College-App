@@ -161,7 +161,7 @@ export default function CreateStudentScreen() {
       return false;
     }
     if (!formData.course_id) {
-      Alert.alert('Validation Error', 'Please select a course');
+      Alert.alert('Validation Error', 'Please select a programme');
       return false;
     }
     if (!formData.year_id) {
@@ -335,7 +335,7 @@ export default function CreateStudentScreen() {
 
   const processBulkImport = async (students: any[]) => {
     if (!formData.department_id || !formData.course_id || !formData.year_id) {
-      Alert.alert('Error', 'Please select Department, Course, and Year before bulk import');
+      Alert.alert('Error', 'Please select Department, Programme, and Year before bulk import');
       return;
     }
 
@@ -523,7 +523,7 @@ export default function CreateStudentScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Programme *</Text>
           <View
             style={[
               styles.pickerContainer,
@@ -540,7 +540,7 @@ export default function CreateStudentScreen() {
               style={{ color: colors.textPrimary }}
               enabled={filteredCourses.length > 0}
             >
-              <Picker.Item label={filteredCourses.length > 0 ? "Select Course" : "Select Department first"} value="" />
+              <Picker.Item label={filteredCourses.length > 0 ? "Select Programme" : "Select Department first"} value="" />
               {filteredCourses.map((course) => (
                 <Picker.Item key={course.id} label={`${course.name} (${course.code})`} value={course.id} />
               ))}
@@ -566,7 +566,7 @@ export default function CreateStudentScreen() {
               style={{ color: colors.textPrimary }}
               enabled={filteredYears.length > 0}
             >
-              <Picker.Item label={filteredYears.length > 0 ? "Select Year" : "Select Course first"} value="" />
+              <Picker.Item label={filteredYears.length > 0 ? "Select Year" : "Select Programme first"} value="" />
               {filteredYears.map((year) => (
                 <Picker.Item key={year.id} label={year.name} value={year.id} />
               ))}
@@ -665,7 +665,7 @@ export default function CreateStudentScreen() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Course *</Text>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Programme *</Text>
             <View
               style={[
                 styles.pickerContainer,
@@ -682,7 +682,7 @@ export default function CreateStudentScreen() {
                 style={{ color: colors.textPrimary }}
                 enabled={filteredCourses.length > 0}
               >
-                <Picker.Item label={filteredCourses.length > 0 ? "Select Course" : "Select Dept first"} value="" />
+                <Picker.Item label={filteredCourses.length > 0 ? "Select Programme" : "Select Dept first"} value="" />
                 {filteredCourses.map((course) => (
                   <Picker.Item key={course.id} label={`${course.name} (${course.code})`} value={course.id} />
                 ))}
@@ -708,7 +708,7 @@ export default function CreateStudentScreen() {
                 style={{ color: colors.textPrimary }}
                 enabled={filteredYears.length > 0}
               >
-                <Picker.Item label={filteredYears.length > 0 ? "Select Year" : "Select Course first"} value="" />
+                <Picker.Item label={filteredYears.length > 0 ? "Select Year" : "Select Programme first"} value="" />
                 {filteredYears.map((year) => (
                   <Picker.Item key={year.id} label={year.name} value={year.id} />
                 ))}
