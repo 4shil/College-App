@@ -13,7 +13,7 @@ import { PERMISSIONS } from '../../../hooks/useRBAC';
 
 interface Assignment {
   id: string; title: string; description: string; due_date: string; max_marks: number; status: string; course_id: string;
-  course?: { name: string; course_code: string; };
+  course?: { name: string; code: string; };
 }
 
 export default function ManageAssignmentsScreen() {
@@ -36,8 +36,8 @@ export default function ManageAssignmentsScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [assignmentsRes, coursesRes] = await Promise.all([
-        supabase.from('assignments').select('*, course:courses(name,course_code)').order('due_date', { ascending: false }),
-        supabase.from('courses').select('id, name, course_code').eq('is_active', true),
+        supabase.from('assignments').select('*, course:courses(name,code)').order('due_date', { ascending: false }),
+        supabase.from('courses').select('id, name, code').eq('is_active', true),
       ]);
       if (assignmentsRes.error) throw assignmentsRes.error;
       if (coursesRes.error) throw coursesRes.error;
@@ -131,7 +131,7 @@ export default function ManageAssignmentsScreen() {
                 </View>
                 <View style={styles.info}>
                   <Text style={[styles.assignmentTitle, { color: colors.textPrimary }]}>{assignment.title}</Text>
-                  <Text style={[styles.meta, { color: colors.textSecondary }]}>{assignment.course?.course_code} - {assignment.course?.name}</Text>
+                  <Text style={[styles.meta, { color: colors.textSecondary }]}>{assignment.course?.code} - {assignment.course?.name}</Text>
                 </View>
               </View>
               {assignment.description && (
@@ -165,7 +165,7 @@ export default function ManageAssignmentsScreen() {
               <View style={[styles.pickerContainer, { backgroundColor: colors.inputBackground, borderColor: colors.cardBorder }]}>
                 <Picker selectedValue={formCourseId} onValueChange={setFormCourseId} style={[styles.picker, { color: colors.textPrimary }]} dropdownIconColor={colors.textPrimary}>
                   <Picker.Item label="Select Course" value="" />
-                  {courses.map(c => <Picker.Item key={c.id} label={`${c.course_code} - ${c.name}`} value={c.id} />)}
+                  {courses.map(c => <Picker.Item key={c.id} label={`${c.code} - ${c.name}`} value={c.id} />)}
                 </Picker>
               </View>
               <GlassInput placeholder="Due Date (YYYY-MM-DD) *" value={formDueDate} onChangeText={setFormDueDate} />
