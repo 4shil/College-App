@@ -19,16 +19,19 @@ interface ExamSchedule {
   id: string;
   exam_id: string;
   course_id: string;
-  exam_date: string;
+  date: string;
   start_time: string;
+  end_time?: string;
   max_marks: number;
-  course?: { name: string; course_code: string };
+  exam?: { academic_year_id: string };
+  course?: { name: string; code: string };
 }
 
 interface Student {
   id: string;
-  admission_number: string;
-  users: { full_name: string };
+  roll_number: string | null;
+  registration_number: string;
+  profiles?: { full_name: string };
 }
 
 interface ExamMark {
@@ -83,11 +86,18 @@ export default function ExamMarksScreen() {
       const { data, error } = await supabase
         .from('exam_schedules')
         .select(`
-          *,
-          course:courses(name, course_code)
+          id,
+          exam_id,
+          course_id,
+          date,
+          start_time,
+          end_time,
+          max_marks,
+          exam:exam_id(academic_year_id),
+          course:courses(name, code)
         `)
         .eq('exam_id', selectedExamId)
-        .order('exam_date');
+        .order('date');
 
       if (error) throw error;
       setSchedules(data || []);
@@ -107,23 +117,64 @@ export default function ExamMarksScreen() {
       const schedule = schedules.find(s => s.id === selectedScheduleId);
       if (!schedule) return;
 
-      // Fetch students enrolled in this course
-      const { data: enrollments, error: enrollError } = await supabase
-        .from('enrollments')
-        .select(`
-          student:students(
-            id,
-            admission_number,
-            users(full_name)
-          )
-        `)
+      // Derive cohort from timetable (programme + year) for this subject.
+      const academicYearId = schedule.exam?.academic_year_id;
+      if (!academicYearId) {
+        setStudents([]);
+        return;
+      }
+
+      const { data: classKeys, error: classKeyError } = await supabase
+        .from('timetable_entries')
+        .select('programme_id, year_id')
+        .eq('academic_year_id', academicYearId)
         .eq('course_id', schedule.course_id)
-        .eq('status', 'active');
+        .eq('is_active', true);
 
-      if (enrollError) throw enrollError;
+      if (classKeyError) throw classKeyError;
 
-      const studentsList = enrollments?.map((e: any) => e.student).filter(Boolean) || [];
-      setStudents(studentsList);
+      const keyMap = new Map<string, { programme_id: string | null; year_id: string }>();
+      (classKeys as Array<any> | undefined)?.forEach((k) => {
+        if (!k?.year_id) return;
+        keyMap.set(`${k.programme_id || 'null'}:${k.year_id}`, { programme_id: k.programme_id ?? null, year_id: k.year_id });
+      });
+
+      const keys = Array.from(keyMap.values());
+      if (keys.length === 0) {
+        setStudents([]);
+      } else {
+        if (keys.length > 1) {
+          Alert.alert(
+            'Multiple Classes Found',
+            'This subject appears in more than one programme/year. Showing combined students.'
+          );
+        }
+
+        const lists = await Promise.all(
+          keys.map(async (k) => {
+            let q = supabase
+              .from('students')
+              .select('id, roll_number, registration_number, profiles:user_id(full_name)')
+              .eq('year_id', k.year_id)
+              .eq('current_status', 'active');
+
+            if (k.programme_id) {
+              q = q.eq('course_id', k.programme_id);
+            }
+
+            const { data: rows, error: studentsError } = await q.order('roll_number');
+            if (studentsError) throw studentsError;
+            return (rows as Student[]) || [];
+          })
+        );
+
+        const merged = lists.flat();
+        const byId = new Map<string, Student>();
+        merged.forEach((s) => {
+          if (s?.id) byId.set(s.id, s);
+        });
+        setStudents(Array.from(byId.values()));
+      }
 
       // Fetch existing marks
       const { data: existingMarks, error: marksError } = await supabase
@@ -287,7 +338,7 @@ export default function ExamMarksScreen() {
                 {schedules.map(schedule => (
                   <Picker.Item
                     key={schedule.id}
-                    label={`${schedule.course?.course_code} - ${schedule.course?.name} (Max: ${schedule.max_marks})`}
+                    label={`${schedule.course?.code} - ${schedule.course?.name} (Max: ${schedule.max_marks})`}
                     value={schedule.id}
                   />
                 ))}
@@ -308,7 +359,7 @@ export default function ExamMarksScreen() {
             <View style={styles.infoRow}>
               <FontAwesome5 name="calendar" size={16} color={colors.primary} />
               <Text style={[styles.infoText, { color: colors.textPrimary }]}>
-                {new Date(selectedSchedule.exam_date).toLocaleDateString()}
+                {new Date(selectedSchedule.date).toLocaleDateString()}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -349,10 +400,10 @@ export default function ExamMarksScreen() {
                     <View style={styles.studentHeader}>
                       <View style={styles.studentInfo}>
                         <Text style={[styles.studentName, { color: colors.textPrimary }]}>
-                          {student.users?.full_name}
+                          {student.profiles?.full_name}
                         </Text>
                         <Text style={[styles.studentAdmNo, { color: colors.textSecondary }]}>
-                          {student.admission_number}
+                          {student.roll_number || student.registration_number}
                         </Text>
                       </View>
                       {mark?.status === 'published' && (

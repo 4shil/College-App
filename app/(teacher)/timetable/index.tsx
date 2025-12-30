@@ -89,7 +89,7 @@ export default function TeacherTimetableScreen() {
           year_id,
           room,
           is_lab,
-          courses(code, name, short_name),
+          courses:courses!timetable_entries_course_id_fkey(code, name, short_name),
           years(name)
         `
       )

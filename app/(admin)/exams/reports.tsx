@@ -24,7 +24,7 @@ interface ExamSchedule {
   exam_id: string;
   course_id: string;
   max_marks: number;
-  course?: { name: string; course_code: string };
+  course?: { name: string; code: string };
 }
 
 interface StudentMark {
@@ -87,10 +87,10 @@ export default function ExamReportsScreen() {
         .from('exam_schedules')
         .select(`
           *,
-          course:courses(name, course_code)
+          course:courses(name, code)
         `)
         .eq('exam_id', selectedExamId)
-        .order('exam_date');
+        .order('date');
 
       if (error) throw error;
       setSchedules(data || []);
@@ -250,7 +250,7 @@ export default function ExamReportsScreen() {
                 {schedules.map(schedule => (
                   <Picker.Item
                     key={schedule.id}
-                    label={`${schedule.course?.course_code} - ${schedule.course?.name}`}
+                    label={`${schedule.course?.code} - ${schedule.course?.name}`}
                     value={schedule.id}
                   />
                 ))}

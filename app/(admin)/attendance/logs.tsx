@@ -96,7 +96,7 @@ export default function AttendanceLogsScreen() {
           *,
           performer:performed_by(full_name),
           student:student_id(roll_number, registration_number, user_id, profile:user_id(full_name)),
-          timetable_entry:timetable_entry_id(courses(name))
+          timetable_entry:timetable_entry_id(courses:courses!timetable_entries_course_id_fkey(name))
         `)
         .order('created_at', { ascending: false })
         .range(currentPage * LIMIT, (currentPage + 1) * LIMIT - 1);

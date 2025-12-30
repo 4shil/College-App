@@ -72,7 +72,7 @@ export default function TeacherCreateAssignmentScreen() {
 
     const { data, error } = await supabase
       .from('timetable_entries')
-      .select('course_id, courses(id, code, name, short_name)')
+      .select('course_id, courses:courses!timetable_entries_course_id_fkey(id, code, name, short_name)')
       .eq('teacher_id', tId)
       .eq('academic_year_id', academicYear.id)
       .eq('is_active', true);

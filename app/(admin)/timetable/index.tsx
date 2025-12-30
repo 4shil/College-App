@@ -137,7 +137,7 @@ export default function TimetableScreen() {
           teacher_id,
           room,
           is_lab,
-          courses(code, short_name, name),
+          courses:courses!timetable_entries_course_id_fkey(code, short_name, name),
           teachers(id, profiles(full_name))
         `)
         .eq('programme_id', selectedCourse)

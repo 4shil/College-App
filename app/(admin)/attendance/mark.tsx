@@ -180,10 +180,10 @@ export default function ViewAttendanceScreen() {
         .from('timetable_entries')
         .select(`
           id, day_of_week, period, course_id, teacher_id,
-          courses(code, name, short_name),
+          courses:courses!timetable_entries_course_id_fkey(code, name, short_name),
           teachers(id, profiles:user_id(full_name))
         `)
-        .eq('course_id', selectedCourse)
+        .eq('programme_id', selectedCourse)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('day_of_week', dayOfWeek)

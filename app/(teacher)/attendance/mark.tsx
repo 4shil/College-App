@@ -153,7 +153,7 @@ export default function TeacherMarkAttendanceScreen() {
             period,
             course_id,
             teacher_id,
-            courses(code, name, short_name)
+            courses:courses!timetable_entries_course_id_fkey(code, name, short_name)
           `
         )
         .eq('id', entryId)

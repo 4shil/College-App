@@ -127,7 +127,7 @@ export default function TeacherResultsIndex() {
           course_id,
           section_id,
           sections(id, name, year_id, department_id),
-          courses(id, code, name, short_name)
+          courses:courses!timetable_entries_course_id_fkey(id, code, name, short_name)
         `
       )
       .eq('academic_year_id', selectedAcademicYearId)

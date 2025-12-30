@@ -117,8 +117,8 @@ export default function AttendanceReportsScreen() {
 
       const { data: entries } = await supabase
         .from('timetable_entries')
-        .select('course_id, courses(id, name, code)')
-        .eq('course_id', selectedDegree)
+        .select('course_id, courses:courses!timetable_entries_course_id_fkey(id, name, code)')
+        .eq('programme_id', selectedDegree)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('is_active', true);
@@ -183,6 +183,8 @@ export default function AttendanceReportsScreen() {
           late_minutes,
           attendance:attendance_id(
             id,
+            programme_id,
+            department_id,
             course_id,
             timetable_entry_id
           )
@@ -191,10 +193,18 @@ export default function AttendanceReportsScreen() {
 
       const { data: allRecords } = await attendanceQuery;
 
-      // If course filter, filter records by course
-      let filteredRecords = allRecords || [];
-      if (selectedCourse && allRecords) {
-        filteredRecords = (allRecords as Array<any>).filter(r => {
+      // Filter records to selected programme (with legacy fallback)
+      let filteredRecords = (allRecords as Array<any> | undefined)?.filter(r => {
+        const att = r.attendance as any;
+        if (!att) return false;
+        if (att.programme_id) return att.programme_id === selectedDegree;
+        // Legacy: programme was stored in course_id
+        return att.course_id === selectedDegree;
+      }) || [];
+
+      // Optional subject-course filter
+      if (selectedCourse) {
+        filteredRecords = filteredRecords.filter(r => {
           const att = r.attendance as any;
           return att?.course_id === selectedCourse;
         });
@@ -267,9 +277,9 @@ export default function AttendanceReportsScreen() {
         .select(`
           id,
           course_id,
-          courses(id, name, code)
+          courses:courses!timetable_entries_course_id_fkey(id, name, code)
         `)
-        .eq('course_id', selectedDegree)
+        .eq('programme_id', selectedDegree)
         .eq('year_id', selectedYear)
         .eq('academic_year_id', academicYear.id)
         .eq('is_active', true);

@@ -120,7 +120,7 @@ export default function TeacherAttendanceIndex() {
           course_id,
           year_id,
           programme_id,
-          courses(code, name, short_name, department_id),
+          courses:courses!timetable_entries_course_id_fkey(code, name, short_name, department_id),
           years(name)
         `)
         .eq('teacher_id', teacherId)

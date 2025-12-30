@@ -86,7 +86,7 @@ export default function ReportsScreen() {
             profiles(full_name)
           ),
           timetable_entries(
-            courses(name, short_name)
+            courses:courses!timetable_entries_course_id_fkey(name, short_name)
           )
         `)
         .gte('date', monthStart)

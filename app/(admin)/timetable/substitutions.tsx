@@ -104,7 +104,7 @@ export default function SubstitutionsScreen() {
           substitute_teacher:teachers!substitutions_substitute_teacher_id_fkey(id, employee_id, profiles(full_name)),
           timetable_entry:timetable_entry_id(
             id, day_of_week, period, course_id, teacher_id, room, programme_id, year_id,
-            courses(code, name, short_name),
+            courses:courses!timetable_entries_course_id_fkey(code, name, short_name),
             teachers(id, employee_id, profiles(full_name)),
             year:year_id(name)
           )
@@ -179,7 +179,7 @@ export default function SubstitutionsScreen() {
       .from('timetable_entries')
       .select(`
         id, day_of_week, period, course_id, teacher_id, room, programme_id, year_id,
-        courses(code, name, short_name),
+        courses:courses!timetable_entries_course_id_fkey(code, name, short_name),
         teachers(id, employee_id, profiles(full_name)),
         year:year_id(name)
       `)
