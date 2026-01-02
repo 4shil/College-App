@@ -2,11 +2,13 @@ import type { RoleName } from '../types/database';
 
 export type TeacherModuleId =
   | 'dashboard'
+  | 'profile'
   | 'timetable'
   | 'attendance'
   | 'results'
   | 'materials'
   | 'assignments'
+  | 'notices'
   | 'planner'
   | 'diary'
   | 'class_tools'
@@ -69,6 +71,7 @@ export function canAccessTeacherModule(item: TeacherNavItem, roles: RoleName[]):
 export function getTeacherNavItems(): TeacherNavItem[] {
   return [
     { id: 'dashboard', title: 'Home', icon: 'home-outline', route: '/(teacher)/dashboard', implemented: true },
+    { id: 'profile', title: 'Profile', icon: 'person-outline', route: '/(teacher)/profile', implemented: true },
     { id: 'timetable', title: 'Timetable', icon: 'calendar-outline', route: '/(teacher)/timetable', implemented: true },
     {
       id: 'attendance',
@@ -100,6 +103,14 @@ export function getTeacherNavItems(): TeacherNavItem[] {
       icon: 'document-text-outline',
       route: '/(teacher)/assignments',
       nestedRoutes: ['assignments'],
+      implemented: true,
+    },
+    {
+      id: 'notices',
+      title: 'Notices',
+      icon: 'notifications-outline',
+      route: '/(teacher)/notices',
+      nestedRoutes: ['notices'],
       implemented: true,
     },
     {

@@ -1150,77 +1150,48 @@ resolveConflicts(conflicts[])
 ```
 app/(teacher)/
 ├── _layout.tsx                    ✅ Built
-├── dashboard.tsx                  ⚠️ Basic (needs enhancement)
-├── profile.tsx                    ❌ TODO
+├── dashboard.tsx                  ✅ Built
+├── profile.tsx                    ✅ Built
 │
 ├── timetable/
-│   └── index.tsx                  ❌ TODO - View daily/weekly timetable
+│   └── index.tsx                  ✅ Built
 │
 ├── attendance/
-│   ├── index.tsx                  ❌ TODO - Mark attendance
-│   ├── [courseId].tsx             ❌ TODO - Subject attendance
-│   ├── history.tsx                ❌ TODO - View history
-│   └── reports.tsx                ❌ TODO - Attendance reports
+│   ├── index.tsx                  ✅ Built
+│   ├── mark.tsx                   ✅ Built
+│   └── history.tsx                ✅ Built
 │
 ├── materials/
-│   ├── index.tsx                  ❌ TODO - My materials
-│   ├── upload.tsx                 ❌ TODO - Upload new
-│   └── [materialId].tsx           ❌ TODO - View/Edit
+│   ├── index.tsx                  ✅ Built
+│   └── create.tsx                 ✅ Built
 │
 ├── assignments/
-│   ├── index.tsx                  ❌ TODO - All assignments
-│   ├── create.tsx                 ❌ TODO - Create new
-│   ├── [assignmentId].tsx         ❌ TODO - View submissions
-│   └── grade.tsx                  ❌ TODO - Grade submissions
+│   ├── index.tsx                  ✅ Built
+│   ├── create.tsx                 ✅ Built
+│   └── submissions.tsx            ✅ Built
 │
-├── exams/
-│   ├── index.tsx                  ❌ TODO - My exams
-│   ├── create.tsx                 ❌ TODO - Create internal/model
-│   ├── marks/
-│   │   ├── [examId].tsx           ❌ TODO - Manual entry
-│   │   └── upload.tsx             ❌ TODO - CSV upload
-│   └── results.tsx                ❌ TODO - View performance
+├── notices/
+│   ├── index.tsx                  ✅ Built (List notices)
+│   └── create.tsx                 ✅ Built (Create class notice)
+│
+├── results/
+│   ├── index.tsx                  ✅ Built
+│   └── mark.tsx                   ✅ Built
 │
 ├── planner/
-│   ├── index.tsx                  ❌ TODO - Lesson planner
-│   ├── upload.tsx                 ❌ TODO - Upload syllabus
-│   ├── weekly.tsx                 ❌ TODO - Weekly view
-│   └── status.tsx                 ❌ TODO - Approval status
+│   ├── index.tsx                  ✅ Built
+│   ├── create.tsx                 ✅ Built
+│   └── edit/
+│       └── [id].tsx               ✅ Built (Edit & resubmit rejected)
 │
-├── diary/
-│   ├── index.tsx                  ❌ TODO - Work diary
-│   ├── entry.tsx                  ❌ TODO - Daily entry
-│   ├── monthly.tsx                ❌ TODO - Monthly summary
-│   └── status.tsx                 ❌ TODO - Approval status
-│
-├── students/                      # Class Teacher only
-│   ├── index.tsx                  ❌ TODO - Class students
-│   ├── [studentId].tsx            ❌ TODO - Student detail
-│   ├── attendance.tsx             ❌ TODO - Class attendance
-│   ├── marks.tsx                  ❌ TODO - Class marks
-│   └── reports.tsx                ❌ TODO - Class reports
-│
-├── mentees/                       # Mentor only
-│   ├── index.tsx                  ❌ TODO - My mentees
-│   ├── [studentId].tsx            ❌ TODO - Mentee detail
-│   └── counselling.tsx            ❌ TODO - Add notes
-│
-├── substitutes/                   # Coordinator only
-│   ├── index.tsx                  ❌ TODO - Manage substitutes
-│   └── assign.tsx                 ❌ TODO - Assign substitute
-│
-├── department/                    # HoD only
-│   ├── index.tsx                  ❌ TODO - Dept overview
-│   ├── teachers.tsx               ❌ TODO - Dept teachers
-│   ├── subjects.tsx               ❌ TODO - Subject mapping
-│   ├── approvals/
-│   │   ├── planners.tsx           ❌ TODO - Approve planners
-│   │   ├── diaries.tsx            ❌ TODO - Approve diaries
-│   │   └── leaves.tsx             ❌ TODO - Approve leaves
-│   ├── analytics.tsx              ❌ TODO - Dept analytics
-│   └── announcements.tsx          ❌ TODO - Dept notices
-│
-└── settings.tsx                   ❌ TODO - Teacher settings
+└── diary/
+  ├── index.tsx                  ✅ Built
+  ├── create.tsx                 ✅ Built
+  └── edit/
+    └── [id].tsx               ✅ Built (Edit & resubmit rejected)
+
+# Role-unlocked modules (currently hidden in UI via implemented=false)
+# class-tools/ mentor/ coordinator/ department/ (and related screens) ❌ Not implemented
 ```
 
 ---

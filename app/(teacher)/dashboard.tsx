@@ -18,7 +18,7 @@ export default function TeacherDashboard() {
   const { user, profile, logout, roles } = useAuthStore();
 
   const unlocked = getUnlockedTeacherNavItems(roles)
-    .filter((i) => i.id !== 'dashboard')
+    .filter((i) => i.id !== 'dashboard' && i.id !== 'profile')
     // Keep the most common teaching modules first, role-unlocked modules after.
     .sort((a, b) => {
       const order = [
@@ -27,6 +27,7 @@ export default function TeacherDashboard() {
         'results',
         'materials',
         'assignments',
+        'notices',
         'planner',
         'diary',
         'class_tools',

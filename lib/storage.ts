@@ -51,10 +51,12 @@ export async function uploadFileToBucket(opts: {
   uri: string;
   name: string;
   mimeType?: string;
+  path?: string;
+  upsert?: boolean;
 }): Promise<{ publicUrl: string; path: string }>
 {
   const safeName = sanitizeFileName(opts.name || 'file');
-  const path = `${opts.prefix}/${Date.now()}_${randomSuffix()}_${safeName}`;
+  const path = opts.path ?? `${opts.prefix}/${Date.now()}_${randomSuffix()}_${safeName}`;
 
   const base64 = await FileSystem.readAsStringAsync(opts.uri, {
     encoding: FileSystem.EncodingType.Base64,
@@ -63,7 +65,7 @@ export async function uploadFileToBucket(opts: {
 
   const { error } = await supabase.storage.from(opts.bucket).upload(path, bytes, {
     contentType: opts.mimeType || 'application/octet-stream',
-    upsert: false,
+    upsert: opts.upsert ?? false,
   });
 
   if (error) throw error;

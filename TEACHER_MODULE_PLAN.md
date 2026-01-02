@@ -4,7 +4,7 @@ Date: 2026-01-02
 
 ## Current State (Repo Reality)
 - Teacher module is already **multi-module** in the repo (not dashboard-only):
-  - Navbar: GlassDock with multiple tabs (dashboard, timetable, attendance, results, materials, assignments, planner, diary)
+  - Navbar: GlassDock with multiple tabs (dashboard, profile, timetable, attendance, results, materials, assignments, notices, planner, diary)
   - Attendance:
     - Mark attendance (existing)
     - Attendance history screen is implemented and routed: `/(teacher)/attendance/history`
@@ -12,6 +12,7 @@ Date: 2026-01-02
   - Results: marks entry routes exist
   - Assignments: list + create routes exist
     - Submissions + grading screen is implemented and routed: `/(teacher)/assignments/submissions`
+  - Notices: list + create routes exist
 
 ## Implementation Audit (As of 2026-01-02)
 
@@ -26,25 +27,29 @@ Date: 2026-01-02
 ### What is completed now (MVP core flows)
 This section answers: **“How much is completed and how much is left?”** using two scopes:
 
-**Scope A — Teacher Navbar Modules (MVP):** 8/8 implemented (100%)
+**Scope A — Teacher Navbar Modules (MVP):** 10/10 implemented (100%)
 - Dashboard
+- Profile (basic view/edit)
 - Timetable
 - Attendance (mark + history)
 - Results (internal/model marks entry)
 - Materials (create + list)
 - Assignments (create + list + grade submissions)
+- Notices (list + create class notice)
 - Lesson Planner (draft + submit)
 - Work Diary (draft + submit)
 
-**Scope B — Teacher Routes/Screens:** 16/16 implemented (100%)
+**Scope B — Teacher Routes/Screens:** 21/21 implemented (100%)
 - `/(teacher)/dashboard`
+- `/(teacher)/profile`
 - `/(teacher)/timetable`
 - `/(teacher)/attendance` + `/(teacher)/attendance/mark` + `/(teacher)/attendance/history`
 - `/(teacher)/results` + `/(teacher)/results/mark`
 - `/(teacher)/materials` + `/(teacher)/materials/create`
 - `/(teacher)/assignments` + `/(teacher)/assignments/create` + `/(teacher)/assignments/submissions`
-- `/(teacher)/planner` + `/(teacher)/planner/create`
-- `/(teacher)/diary` + `/(teacher)/diary/create`
+- `/(teacher)/notices` + `/(teacher)/notices/create`
+- `/(teacher)/planner` + `/(teacher)/planner/create` + `/(teacher)/planner/edit/[id]`
+- `/(teacher)/diary` + `/(teacher)/diary/create` + `/(teacher)/diary/edit/[id]`
 
 ### What works end-to-end today
 - **Timetable:** teacher can view assigned `timetable_entries` for current academic year.
@@ -53,6 +58,7 @@ This section answers: **“How much is completed and how much is left?”** usin
 - **Materials:** teacher can create materials (link/URL) and toggle visibility (active/hidden).
 - **Assignments:** teacher can create assignments, view submissions, and enter marks + feedback.
 - **Results (internal/model):** teacher can pick academic year → exam → subject schedule → section → enter marks.
+- **Notices (Class Notices):** teacher can list relevant notices and create **class-scoped** notices for sections they teach (timetable-based).
 - **Lesson Planner:** teacher can create a weekly planner draft and submit.
 - **Work Diary:** teacher can create a monthly diary draft and submit.
 
@@ -84,6 +90,30 @@ The following items are planned in the “Full Feature Catalogue (2025)” below
 - Push notifications triggers (assignments/materials/marks/planner/diary updates).
 - Offline-first mode and sync.
 - Audit dashboards for teachers (beyond basic lists).
+
+## Mapping to the simplified spec (your checklist)
+
+Roles:
+- ✅ Subject Teacher (base) — implemented
+- ❌ Class Teacher tools — NOT IMPLEMENTED (hidden)
+- ❌ Mentor tools — NOT IMPLEMENTED (hidden)
+- ❌ Coordinator substitutions — NOT IMPLEMENTED (hidden)
+- ❌ HoD tools inside Teacher module — NOT IMPLEMENTED (hidden; approvals exist in Admin module)
+
+0) Login + Profile
+- ✅ Email login + multi-role detection
+- ✅ Profile edit (basic: name/phone)
+- ✅ Profile photo upload (Storage + profiles.photo_url)
+
+1) Subject Teacher (Base)
+- Daily class handling: ⚠️ Timetable is implemented; “period session tools per period” is not a distinct flow (yet)
+- Attendance: ✅ mark + edit-with-window + history (server-side lock enforced)
+- Materials: ✅ upload links/files + list (student push notification is NOT IMPLEMENTED)
+- Assignments: ✅ create + view submissions + grade submissions
+- Exams: ✅ internal/model marks entry + CSV upload + lock; ✅ basic class performance stats/distribution (in marks screen)
+- Lesson Planner: ✅ create + submit + edit/resubmit rejected
+- Work Diary: ✅ create + submit + edit/resubmit rejected
+- Subject announcements: ✅ implemented as **Class Notices** (not subject-batch announcements); ❌ push notifications
 
 ### Dependencies (why some features may appear “missing”)
 - Many advanced flows depend on the canonical timetable + section/program mapping being consistent (see P0 prerequisites below).
@@ -216,7 +246,8 @@ Features:
   - `hod` defaults to **Teacher dashboard** (even though admin-category)
   - Other admin-category roles default to **Admin dashboard**
   - Teacher-category roles default to **Teacher dashboard**
-- Profile view/edit + profile photo
+- Profile view/edit (basic fields like name/phone)
+- Profile photo upload (NOT IMPLEMENTED)
 - Secure session management
 
 Functions:
@@ -267,6 +298,11 @@ Work diary:
 Communication (subject-level):
 - Announcements to subject batch
 - Attachments
+
+Implementation status note:
+- ✅ Teacher can post **class-scoped notices** (list + create) for sections they teach (based on current timetable)
+- ✅ Optional attachment upload via Supabase Storage
+- ❌ Push notifications for notices (NOT IMPLEMENTED)
 
 ### 2) Class Teacher (Stacked on Subject Teacher)
 Class administration:

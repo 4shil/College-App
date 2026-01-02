@@ -483,6 +483,63 @@ export default function TeacherEnterMarksScreen() {
     return courseName;
   }, [schedule?.courses?.name, schedule?.courses?.short_name]);
 
+  const performance = useMemo(() => {
+    const total = students.length;
+    let absent = 0;
+    let entered = 0;
+    let sum = 0;
+    let high: number | null = null;
+    let low: number | null = null;
+
+    // Buckets by percentage of maxMarks
+    const buckets = [
+      { id: 'lt40', label: '< 40%', count: 0, tone: 'error' as const },
+      { id: '40_59', label: '40–59%', count: 0, tone: 'warning' as const },
+      { id: '60_79', label: '60–79%', count: 0, tone: 'info' as const },
+      { id: '80p', label: '≥ 80%', count: 0, tone: 'success' as const },
+    ];
+
+    students.forEach((s) => {
+      const m = marks.get(s.id);
+      if (!m) return;
+      if (m.is_absent) {
+        absent++;
+        return;
+      }
+
+      const { num } = clampTextToNumber(m.marksText);
+      if (num === null) return;
+
+      entered++;
+      sum += num;
+      high = high === null ? num : Math.max(high, num);
+      low = low === null ? num : Math.min(low, num);
+
+      const pct = maxMarks > 0 ? (num / maxMarks) * 100 : 0;
+      if (pct < 40) buckets[0].count++;
+      else if (pct < 60) buckets[1].count++;
+      else if (pct < 80) buckets[2].count++;
+      else buckets[3].count++;
+    });
+
+    const present = total - absent;
+    const average = entered > 0 ? sum / entered : null;
+    const maxBucket = Math.max(1, ...buckets.map((b) => b.count));
+
+    return {
+      total,
+      present,
+      absent,
+      entered,
+      missing: Math.max(0, present - entered),
+      average,
+      high,
+      low,
+      buckets,
+      maxBucket,
+    };
+  }, [marks, maxMarks, students]);
+
   if (loading) {
     return (
       <AnimatedBackground>
@@ -520,6 +577,62 @@ export default function TeacherEnterMarksScreen() {
             ) : null}
           </Card>
         ) : null}
+
+        <Animated.View entering={FadeInDown.delay(90).duration(450)} style={{ marginBottom: 12 }}>
+          <Card>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Class performance</Text>
+            <Text style={[styles.sectionSub, { color: colors.textSecondary }]}>
+              {performance.entered}/{performance.present} entered • {performance.absent} absent • {performance.missing} missing
+            </Text>
+
+            <View style={styles.statsRow}>
+              <View style={[styles.statCard, { borderColor: withAlpha(colors.cardBorder, 0.7) }]}>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                  {performance.average === null ? '—' : `${performance.average.toFixed(1)}`}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>Avg</Text>
+              </View>
+              <View style={[styles.statCard, { borderColor: withAlpha(colors.cardBorder, 0.7) }]}>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                  {performance.high === null ? '—' : `${performance.high}`}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>High</Text>
+              </View>
+              <View style={[styles.statCard, { borderColor: withAlpha(colors.cardBorder, 0.7) }]}>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                  {performance.low === null ? '—' : `${performance.low}`}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>Low</Text>
+              </View>
+            </View>
+
+            <View style={{ height: 10 }} />
+
+            {performance.buckets.map((b) => {
+              const pct = (b.count / performance.maxBucket) * 100;
+              const fillColor =
+                b.tone === 'success'
+                  ? colors.success
+                  : b.tone === 'warning'
+                    ? colors.warning
+                    : b.tone === 'error'
+                      ? colors.error
+                      : colors.info;
+
+              return (
+                <View key={b.id} style={styles.barItem}>
+                  <View style={styles.barLabelRow}>
+                    <Text style={[styles.barLabel, { color: colors.textPrimary }]}>{b.label}</Text>
+                    <Text style={[styles.barCount, { color: colors.textMuted }]}>{b.count}</Text>
+                  </View>
+                  <View style={[styles.barTrack, { backgroundColor: withAlpha(colors.textPrimary, 0.05) }]}>
+                    <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: fillColor }]} />
+                  </View>
+                </View>
+              );
+            })}
+          </Card>
+        </Animated.View>
 
         <Card style={styles.card}>
           {(students || []).map((s) => {
@@ -649,6 +762,25 @@ const styles = StyleSheet.create({
   lockBanner: { marginBottom: 14 },
   lockTitle: { fontSize: 14, fontWeight: '800' },
   lockSub: { marginTop: 6, fontSize: 12, fontWeight: '600' },
+  sectionTitle: { fontSize: 14, fontWeight: '800' },
+  sectionSub: { marginTop: 6, fontSize: 12, fontWeight: '600' },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  statCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statValue: { fontSize: 16, fontWeight: '900' },
+  statLabel: { marginTop: 6, fontSize: 12, fontWeight: '700' },
+  barItem: { marginTop: 10 },
+  barLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  barLabel: { fontSize: 12, fontWeight: '700' },
+  barCount: { fontSize: 12, fontWeight: '800' },
+  barTrack: { height: 8, borderRadius: 10, overflow: 'hidden', marginTop: 6 },
+  barFill: { height: 8, borderRadius: 10 },
   footer: { marginTop: 14 },
   footerActions: { gap: 10, marginBottom: 10 },
   backBtn: { alignSelf: 'center', paddingVertical: 10 },
