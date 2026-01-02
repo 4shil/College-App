@@ -114,6 +114,13 @@ export default function TeacherAssignmentsIndex() {
     router.push('/(teacher)/assignments/create');
   };
 
+  const openSubmissions = (assignmentId: string) => {
+    router.push({
+      pathname: '/(teacher)/assignments/submissions',
+      params: { assignmentId },
+    });
+  };
+
   const toggleActive = async (row: AssignmentRow) => {
     if (!teacherId) return;
 
@@ -167,6 +174,15 @@ export default function TeacherAssignmentsIndex() {
               <View style={[styles.chip, { backgroundColor: chipBg }]}>
                 <Text style={[styles.chipText, { color: chipText }]}>{a.is_active ? 'Active' : 'Closed'}</Text>
               </View>
+
+              <TouchableOpacity
+                onPress={() => openSubmissions(a.id)}
+                style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="people-outline" size={18} color={colors.primary} />
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => toggleActive(a)}
                 style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}

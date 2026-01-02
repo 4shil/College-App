@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 
 import { AnimatedBackground, Card, GlassInput, LoadingIndicator, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
@@ -59,6 +61,62 @@ function clampTextToNumber(text: string) {
   return { cleaned, num: Number.isFinite(num) ? num : null };
 }
 
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+
+  const pushField = () => {
+    row.push(field);
+    field = '';
+  };
+
+  const pushRow = () => {
+    // Trim trailing empty fields/rows
+    const trimmed = row.map((c) => c.trim());
+    const hasAny = trimmed.some((c) => c.length > 0);
+    if (hasAny) rows.push(trimmed);
+    row = [];
+  };
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (ch === '"') {
+      if (inQuotes && next === '"') {
+        field += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (!inQuotes && (ch === ',' || ch === ';' || ch === '\t')) {
+      pushField();
+      continue;
+    }
+
+    if (!inQuotes && (ch === '\n' || ch === '\r')) {
+      // Handle CRLF
+      if (ch === '\r' && next === '\n') i++;
+      pushField();
+      pushRow();
+      continue;
+    }
+
+    field += ch;
+  }
+
+  // Flush
+  pushField();
+  pushRow();
+
+  return rows;
+}
+
 export default function TeacherEnterMarksScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -76,6 +134,9 @@ export default function TeacherEnterMarksScreen() {
   const [schedule, setSchedule] = useState<ScheduleInfo | null>(null);
   const [section, setSection] = useState<SectionInfo | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
+
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockedAt, setLockedAt] = useState<string | null>(null);
 
   const [marks, setMarks] = useState<Map<string, DraftMark>>(new Map());
 
@@ -184,6 +245,27 @@ export default function TeacherEnterMarksScreen() {
     setMarks(map);
   }, [scheduleId, sectionId]);
 
+  const fetchLockStatus = useCallback(async () => {
+    if (!scheduleId || !sectionId) return;
+
+    const { data, error } = await supabase
+      .from('exam_marks_locks')
+      .select('locked_at, locked_by')
+      .eq('exam_schedule_id', scheduleId)
+      .eq('section_id', sectionId)
+      .maybeSingle();
+
+    if (error) {
+      console.log('Teacher marks lock status error:', error.message);
+      setIsLocked(false);
+      setLockedAt(null);
+      return;
+    }
+
+    setIsLocked(Boolean(data));
+    setLockedAt((data as any)?.locked_at ?? null);
+  }, [scheduleId, sectionId]);
+
   useEffect(() => {
     const load = async () => {
       if (!scheduleId || !sectionId) {
@@ -194,11 +276,12 @@ export default function TeacherEnterMarksScreen() {
       setLoading(true);
       await fetchScheduleAndSection();
       await fetchStudentsAndExistingMarks();
+      await fetchLockStatus();
       setLoading(false);
     };
 
     load();
-  }, [fetchScheduleAndSection, fetchStudentsAndExistingMarks, scheduleId, sectionId]);
+  }, [fetchScheduleAndSection, fetchStudentsAndExistingMarks, fetchLockStatus, scheduleId, sectionId]);
 
   const setMarkField = (studentId: string, next: Partial<DraftMark>) => {
     setMarks((prev) => {
@@ -249,10 +332,150 @@ export default function TeacherEnterMarksScreen() {
       await fetchStudentsAndExistingMarks();
     } catch (e: any) {
       console.log('Teacher marks save error:', e?.message || e);
-      Alert.alert('Error', e?.message || 'Failed to save marks');
+      const msg = String(e?.message || '').toLowerCase();
+      const lockedHint =
+        msg.includes('row-level security') ||
+        msg.includes('permission denied') ||
+        msg.includes('policy') ||
+        msg.includes('not allowed') ||
+        msg.includes('locked');
+
+      Alert.alert('Error', lockedHint ? 'Marks are locked or you do not have access.' : e?.message || 'Failed to save marks');
     } finally {
       setSaving(false);
     }
+  };
+
+  const importCsv = async () => {
+    if (isLocked) return;
+    if (!students.length) {
+      Alert.alert('No students', 'There are no students to import marks for.');
+      return;
+    }
+
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['text/csv', 'text/comma-separated-values', 'text/plain', 'application/vnd.ms-excel', '*/*'],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+
+    if (result.canceled) return;
+    const file = result.assets?.[0];
+    if (!file?.uri) {
+      Alert.alert('Error', 'Failed to read file');
+      return;
+    }
+
+    try {
+      const text = await FileSystem.readAsStringAsync(file.uri, { encoding: FileSystem.EncodingType.UTF8 });
+      const rows = parseCsv(text);
+
+      if (!rows.length) {
+        Alert.alert('Empty file', 'No rows found in CSV.');
+        return;
+      }
+
+      const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
+      const header = rows[0].map(norm);
+      const hasHeader = header.some((h) =>
+        ['registration_number', 'regno', 'roll_number', 'rollno', 'marks', 'mark', 'is_absent', 'absent'].includes(h)
+      );
+
+      const effectiveHeader = hasHeader ? header : ['registration_number', 'marks'];
+      const startIndex = hasHeader ? 1 : 0;
+
+      const idx = (names: string[]) => effectiveHeader.findIndex((h) => names.includes(h));
+      const regIdx = idx(['registration_number', 'regno']);
+      const rollIdx = idx(['roll_number', 'rollno']);
+      const marksIdx = idx(['marks', 'mark']);
+      const absentIdx = idx(['is_absent', 'absent']);
+
+      if (regIdx < 0 && rollIdx < 0) {
+        Alert.alert('Invalid CSV', 'CSV must include registration_number or roll_number column.');
+        return;
+      }
+      if (marksIdx < 0 && absentIdx < 0) {
+        Alert.alert('Invalid CSV', 'CSV must include marks column (or is_absent).');
+        return;
+      }
+
+      const byReg = new Map<string, string>();
+      const byRoll = new Map<string, string>();
+      students.forEach((s) => {
+        byReg.set(String(s.registration_number).trim().toLowerCase(), s.id);
+        if (s.roll_number) byRoll.set(String(s.roll_number).trim().toLowerCase(), s.id);
+      });
+
+      let imported = 0;
+      let skipped = 0;
+
+      setMarks((prev) => {
+        const copy = new Map(prev);
+
+        for (let i = startIndex; i < rows.length; i++) {
+          const r = rows[i];
+          const reg = regIdx >= 0 ? String(r[regIdx] ?? '').trim().toLowerCase() : '';
+          const roll = rollIdx >= 0 ? String(r[rollIdx] ?? '').trim().toLowerCase() : '';
+          const marksRaw = marksIdx >= 0 ? String(r[marksIdx] ?? '').trim() : '';
+          const absentRaw = absentIdx >= 0 ? String(r[absentIdx] ?? '').trim().toLowerCase() : '';
+          const isAbsent = ['1', 'true', 'yes', 'y', 'abs', 'a'].includes(absentRaw);
+
+          const studentId = (reg && byReg.get(reg)) || (roll && byRoll.get(roll)) || '';
+          if (!studentId) {
+            skipped++;
+            continue;
+          }
+
+          copy.set(studentId, { marksText: isAbsent ? '' : marksRaw, is_absent: isAbsent });
+          imported++;
+        }
+
+        return copy;
+      });
+
+      Alert.alert('Imported', `Imported ${imported} row(s). Skipped ${skipped} row(s).`);
+    } catch (e: any) {
+      console.log('CSV import error:', e?.message || e);
+      Alert.alert('Error', 'Failed to import CSV');
+    }
+  };
+
+  const lockMarks = async () => {
+    if (isLocked) return;
+    if (!user?.id) {
+      Alert.alert('Error', 'Not signed in');
+      return;
+    }
+    if (!scheduleId || !sectionId) return;
+
+    Alert.alert('Final Submit', 'Lock marks for this class? You will not be able to edit after locking.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Lock',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setSaving(true);
+            const { error } = await supabase.from('exam_marks_locks').insert({
+              exam_schedule_id: scheduleId,
+              section_id: sectionId,
+              locked_by: user.id,
+            });
+
+            if (error) throw error;
+
+            setIsLocked(true);
+            setLockedAt(new Date().toISOString());
+            Alert.alert('Locked', 'Marks are locked successfully');
+          } catch (e: any) {
+            console.log('Lock marks error:', e?.message || e);
+            Alert.alert('Error', e?.message || 'Failed to lock marks');
+          } finally {
+            setSaving(false);
+          }
+        },
+      },
+    ]);
   };
 
   const title = useMemo(() => {
@@ -286,6 +509,18 @@ export default function TeacherEnterMarksScreen() {
           </Text>
         </Animated.View>
 
+        {isLocked ? (
+          <Card style={styles.lockBanner}>
+            <Text style={[styles.lockTitle, { color: colors.textPrimary }]}>Marks locked</Text>
+            <Text style={[styles.lockSub, { color: colors.textSecondary }]}>Editing is disabled for this class.</Text>
+            {lockedAt ? (
+              <Text style={[styles.lockSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                Locked at: {new Date(lockedAt).toLocaleString()}
+              </Text>
+            ) : null}
+          </Card>
+        ) : null}
+
         <Card style={styles.card}>
           {(students || []).map((s) => {
             const m = marks.get(s.id) || { marksText: '', is_absent: false };
@@ -305,6 +540,7 @@ export default function TeacherEnterMarksScreen() {
                 <View style={styles.controls}>
                   <TouchableOpacity
                     onPress={() => {
+                      if (isLocked) return;
                       const nextAbsent = !m.is_absent;
                       setMarkField(s.id, { is_absent: nextAbsent, marksText: nextAbsent ? '' : m.marksText });
                     }}
@@ -313,9 +549,11 @@ export default function TeacherEnterMarksScreen() {
                       {
                         backgroundColor: m.is_absent ? withAlpha(colors.error, 0.14) : withAlpha(colors.cardBackground, 0.3),
                         borderColor: m.is_absent ? withAlpha(colors.error, 0.35) : withAlpha(colors.cardBorder, 0.6),
+                        opacity: isLocked ? 0.5 : 1,
                       },
                     ]}
                     activeOpacity={0.9}
+                    disabled={isLocked}
                   >
                     <Ionicons
                       name={m.is_absent ? 'close-circle' : 'close-circle-outline'}
@@ -331,7 +569,7 @@ export default function TeacherEnterMarksScreen() {
                       onChangeText={(t) => setMarkField(s.id, { marksText: t })}
                       placeholder={m.is_absent ? '—' : '0'}
                       keyboardType="numeric"
-                      editable={!m.is_absent}
+                      editable={!m.is_absent && !isLocked}
                       containerStyle={{ marginBottom: 0 }}
                     />
                   </View>
@@ -342,7 +580,32 @@ export default function TeacherEnterMarksScreen() {
         </Card>
 
         <View style={styles.footer}>
-          <PrimaryButton title={saving ? 'Saving…' : 'Save Marks'} onPress={saveMarks} disabled={saving} />
+          {!isLocked ? (
+            <View style={styles.footerActions}>
+              <PrimaryButton
+                title="Import CSV"
+                onPress={importCsv}
+                variant="outline"
+                size="medium"
+                disabled={saving}
+                glowing={false}
+              />
+              <PrimaryButton
+                title="Final Submit (Lock)"
+                onPress={lockMarks}
+                variant="secondary"
+                size="medium"
+                disabled={saving}
+                glowing={false}
+              />
+            </View>
+          ) : null}
+
+          <PrimaryButton
+            title={saving ? 'Saving…' : isLocked ? 'Locked' : 'Save Marks'}
+            onPress={saveMarks}
+            disabled={saving || isLocked}
+          />
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={[styles.backText, { color: colors.textSecondary }]}>Back</Text>
           </TouchableOpacity>
@@ -383,7 +646,11 @@ const styles = StyleSheet.create({
   },
   absentText: { fontSize: 12, fontWeight: '700' },
   marksInputWrap: { flex: 1, minWidth: 90 },
+  lockBanner: { marginBottom: 14 },
+  lockTitle: { fontSize: 14, fontWeight: '800' },
+  lockSub: { marginTop: 6, fontSize: 12, fontWeight: '600' },
   footer: { marginTop: 14 },
+  footerActions: { gap: 10, marginBottom: 10 },
   backBtn: { alignSelf: 'center', paddingVertical: 10 },
   backText: { fontSize: 13, fontWeight: '700' },
 });

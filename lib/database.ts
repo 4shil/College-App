@@ -147,8 +147,9 @@ export const getAuthUser = async (userId: string): Promise<AuthUser | null> => {
     ].includes(role)
   );
 
+  // Teacher-capable roles (HOD is admin-category but should still use teacher flows)
   let isTeacher = roles.some((role) =>
-    ['subject_teacher', 'class_teacher', 'mentor', 'coordinator'].includes(role)
+    ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(role)
   );
 
   let isStudent = roles.includes('student');

@@ -112,7 +112,7 @@ SELECT 'Allowed Students', COUNT(*) FROM allowed_students
 UNION ALL
 SELECT 'Courses (Subjects)', COUNT(*) FROM courses
 UNION ALL
-SELECT 'Programs', COUNT(*) FROM programs
+SELECT 'Programmes', COUNT(*) FROM courses WHERE program_type IS NOT NULL
 UNION ALL
 SELECT 'Departments', COUNT(*) FROM departments;
 

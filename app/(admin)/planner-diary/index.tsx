@@ -8,6 +8,7 @@ import { AnimatedBackground, GlassCard, PrimaryButton, LoadingIndicator } from '
 import { Restricted } from '../../../components/Restricted';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
+import { useRBAC, PERMISSIONS } from '../../../hooks/useRBAC';
 
 type PlannerRow = {
   id: string;
@@ -29,6 +30,13 @@ export default function PlannerDiaryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors } = useThemeStore();
+  const { hasPermission } = useRBAC();
+
+  const canApproveAnything =
+    hasPermission(PERMISSIONS.APPROVE_PLANNER_LEVEL_1) ||
+    hasPermission(PERMISSIONS.APPROVE_PLANNER_FINAL) ||
+    hasPermission(PERMISSIONS.APPROVE_DIARY_LEVEL_1) ||
+    hasPermission(PERMISSIONS.APPROVE_DIARY_FINAL);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,6 +121,13 @@ export default function PlannerDiaryScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Admin monitoring (read-only)</Text>
 
             <View style={styles.actionsRow}>
+              {canApproveAnything ? (
+                <PrimaryButton
+                  title="Approvals"
+                  onPress={() => router.push('/(admin)/planner-diary/approvals' as any)}
+                  size="medium"
+                />
+              ) : null}
               <PrimaryButton
                 title="Monitor Planners"
                 onPress={() => router.push('/(admin)/planner-diary/planners' as any)}

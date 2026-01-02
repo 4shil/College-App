@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as DocumentPicker from 'expo-document-picker';
 
 import { AnimatedBackground, Card, GlassInput, LoadingIndicator, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { uploadFileToBucket } from '../../../lib/storage';
 import { withAlpha } from '../../../theme/colorUtils';
 
 type CourseOption = {
@@ -34,6 +36,7 @@ export default function TeacherCreateAssignmentScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
   const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
@@ -42,6 +45,8 @@ export default function TeacherCreateAssignmentScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [maxMarks, setMaxMarks] = useState('10');
+
+  const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
 
   const [dueDate, setDueDate] = useState<Date>(() => {
     const d = new Date();
@@ -127,8 +132,47 @@ export default function TeacherCreateAssignmentScreen() {
   }, [courseId, courseOptions]);
 
   const canSave = useMemo(() => {
-    return !!teacherId && !!courseId && title.trim().length > 0 && !saving;
-  }, [teacherId, courseId, title, saving]);
+    return !!teacherId && !!courseId && title.trim().length > 0 && !saving && !uploading;
+  }, [teacherId, courseId, title, saving, uploading]);
+
+  const addAttachment = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'Not signed in');
+      return;
+    }
+
+    const result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true,
+      multiple: false,
+      type: ['application/pdf', 'application/msword', 'application/vnd.ms-powerpoint', 'image/*', 'text/plain', '*/*'],
+    });
+
+    if (result.canceled) return;
+    const file = result.assets?.[0];
+    if (!file?.uri) {
+      Alert.alert('Error', 'Failed to read file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const { publicUrl } = await uploadFileToBucket({
+        bucket: 'teacher_uploads',
+        prefix: `assignments/${user.id}`,
+        uri: file.uri,
+        name: file.name || 'attachment',
+        mimeType: file.mimeType || undefined,
+      });
+
+      setAttachmentUrls((prev) => [...prev, publicUrl]);
+      Alert.alert('Uploaded', 'Attachment uploaded');
+    } catch (e: any) {
+      console.log('Assignment attachment upload error:', e?.message || e);
+      Alert.alert('Error', e?.message || 'Failed to upload attachment');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const pillStyle = (active: boolean) => ({
     backgroundColor: active
@@ -172,7 +216,7 @@ export default function TeacherCreateAssignmentScreen() {
         teacher_id: teacherId,
         due_date: dueIso,
         max_marks: mm,
-        attachment_urls: [],
+        attachment_urls: attachmentUrls,
         is_active: true,
       };
 
@@ -276,6 +320,44 @@ export default function TeacherCreateAssignmentScreen() {
                   onChangeText={setMaxMarks}
                   keyboardType="numeric"
                 />
+              </Card>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(75).duration(300)} style={{ marginBottom: 12 }}>
+              <Card>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Attachments</Text>
+                <Text style={[styles.helper, { color: colors.textMuted, marginTop: 6 }]}>Optional</Text>
+
+                <View style={{ marginTop: 10 }}>
+                  <PrimaryButton
+                    title={uploading ? 'Uploading…' : 'Add Attachment'}
+                    onPress={addAttachment}
+                    disabled={uploading || saving}
+                    variant="outline"
+                    size="medium"
+                    glowing={false}
+                  />
+                </View>
+
+                {attachmentUrls.length > 0 ? (
+                  <View style={{ marginTop: 12, gap: 8 }}>
+                    {attachmentUrls.map((u, idx) => (
+                      <View key={u + idx} style={[styles.attachmentRow, { borderColor: withAlpha(colors.cardBorder, 0.7) }]}
+                      >
+                        <Text style={[styles.attachmentText, { color: colors.textSecondary }]} numberOfLines={1}>
+                          {u}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setAttachmentUrls((prev) => prev.filter((_, i) => i !== idx))}
+                          activeOpacity={0.85}
+                          style={[styles.removeBtn, { backgroundColor: withAlpha(colors.error, 0.12) }]}
+                        >
+                          <Ionicons name="trash-outline" size={16} color={colors.error} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
               </Card>
             </Animated.View>
 
@@ -394,5 +476,26 @@ const styles = StyleSheet.create({
   dateBtnText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  attachmentRow: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  attachmentText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  removeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

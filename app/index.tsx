@@ -39,7 +39,12 @@ export default function Index() {
         const authUser = await getAuthUser(userId);
         setAuthUser(authUser);
 
-        if (authUser?.isAdmin) {
+        const roles = authUser?.roles || [];
+
+        // HOD is an admin-category role but should default into Teacher module.
+        if (roles.includes('hod')) {
+          router.replace('/(teacher)/dashboard');
+        } else if (authUser?.isAdmin) {
           router.replace('/(admin)/dashboard');
         } else if (authUser?.isTeacher) {
           router.replace('/(teacher)/dashboard');

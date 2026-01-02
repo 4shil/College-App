@@ -9,12 +9,33 @@ import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
 import { useRouter } from 'expo-router';
+import { getUnlockedTeacherNavItems } from '../../lib/teacherModules';
 
 export default function TeacherDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors } = useThemeStore();
-  const { user, profile, logout } = useAuthStore();
+  const { user, profile, logout, roles } = useAuthStore();
+
+  const unlocked = getUnlockedTeacherNavItems(roles)
+    .filter((i) => i.id !== 'dashboard')
+    // Keep the most common teaching modules first, role-unlocked modules after.
+    .sort((a, b) => {
+      const order = [
+        'timetable',
+        'attendance',
+        'results',
+        'materials',
+        'assignments',
+        'planner',
+        'diary',
+        'class_tools',
+        'mentor',
+        'coordinator',
+        'department',
+      ];
+      return order.indexOf(a.id) - order.indexOf(b.id);
+    });
 
   const handleLogout = async () => {
     await signOut();
@@ -49,48 +70,15 @@ export default function TeacherDashboard() {
             </Text>
 
             <View style={styles.actions}>
-              <PrimaryButton
-                title="Timetable"
-                onPress={() => router.push('/(teacher)/timetable')}
-                variant="primary"
-                size="medium"
-              />
-              <PrimaryButton
-                title="Attendance"
-                onPress={() => router.push('/(teacher)/attendance')}
-                variant="outline"
-                size="medium"
-              />
-              <PrimaryButton
-                title="Results (Internal Marks)"
-                onPress={() => router.push('/(teacher)/results')}
-                variant="outline"
-                size="medium"
-              />
-              <PrimaryButton
-                title="Materials"
-                onPress={() => router.push('/(teacher)/materials')}
-                variant="outline"
-                size="medium"
-              />
-              <PrimaryButton
-                title="Assignments"
-                onPress={() => router.push('/(teacher)/assignments')}
-                variant="outline"
-                size="medium"
-              />
-              <PrimaryButton
-                title="Planner"
-                onPress={() => router.push('/(teacher)/planner')}
-                variant="outline"
-                size="medium"
-              />
-              <PrimaryButton
-                title="Diary"
-                onPress={() => router.push('/(teacher)/diary')}
-                variant="outline"
-                size="medium"
-              />
+              {unlocked.map((item, idx) => (
+                <PrimaryButton
+                  key={item.id}
+                  title={item.title}
+                  onPress={() => router.push(item.route as any)}
+                  variant={idx === 0 ? 'primary' : 'outline'}
+                  size="medium"
+                />
+              ))}
             </View>
 
             <View style={styles.signOut}>

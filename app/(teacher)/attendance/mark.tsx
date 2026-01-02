@@ -40,6 +40,7 @@ export default function TeacherMarkAttendanceScreen() {
     programmeId?: string;
     departmentId?: string;
     period: string;
+    date?: string;
   }>();
 
   const { colors, isDark } = useThemeStore();
@@ -52,7 +53,11 @@ export default function TeacherMarkAttendanceScreen() {
   const departmentId = (params.departmentId || '').trim() || null;
   const periodNum = parseInt(params.period || '0', 10);
 
-  const dateStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const dateStr = useMemo(() => {
+    const raw = (params.date || '').trim();
+    if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    return new Date().toISOString().split('T')[0];
+  }, [params.date]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -278,7 +283,19 @@ export default function TeacherMarkAttendanceScreen() {
 
       if (error) {
         console.log('Attendance records upsert error:', error.message);
-        Alert.alert('Error', 'Failed to save attendance');
+        const msg = (error.message || '').toLowerCase();
+        const lockedHint =
+          msg.includes('row-level security') ||
+          msg.includes('permission denied') ||
+          msg.includes('policy') ||
+          msg.includes('not allowed');
+
+        Alert.alert(
+          'Error',
+          lockedHint
+            ? 'Attendance is locked or outside the allowed time window.'
+            : 'Failed to save attendance'
+        );
         return;
       }
 

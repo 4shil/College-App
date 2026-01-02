@@ -4,11 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
 
 import { AnimatedBackground, Card, GlassInput, LoadingIndicator, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
+import { uploadFileToBucket } from '../../../lib/storage';
 import { withAlpha } from '../../../theme/colorUtils';
 
 type CourseOption = {
@@ -30,6 +32,7 @@ export default function TeacherCreateMaterialScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
   const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
@@ -114,8 +117,57 @@ export default function TeacherCreateMaterialScreen() {
   }, [courseId, courseOptions]);
 
   const canSave = useMemo(() => {
-    return !!teacherId && !!courseId && title.trim().length > 0 && fileUrl.trim().length > 0 && !saving;
-  }, [teacherId, courseId, title, fileUrl, saving]);
+    return !!teacherId && !!courseId && title.trim().length > 0 && fileUrl.trim().length > 0 && !saving && !uploading;
+  }, [teacherId, courseId, title, fileUrl, saving, uploading]);
+
+  const inferFileType = (name: string): FileType => {
+    const lower = (name || '').toLowerCase();
+    if (lower.endsWith('.pdf')) return 'pdf';
+    if (lower.endsWith('.ppt') || lower.endsWith('.pptx')) return 'ppt';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return 'doc';
+    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.mkv') || lower.endsWith('.webm')) return 'video';
+    return 'link';
+  };
+
+  const pickAndUpload = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'Not signed in');
+      return;
+    }
+
+    const result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true,
+      multiple: false,
+      type: ['application/pdf', 'application/msword', 'application/vnd.ms-powerpoint', 'text/plain', '*/*'],
+    });
+
+    if (result.canceled) return;
+    const file = result.assets?.[0];
+    if (!file?.uri) {
+      Alert.alert('Error', 'Failed to read file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const { publicUrl } = await uploadFileToBucket({
+        bucket: 'teacher_uploads',
+        prefix: `materials/${user.id}`,
+        uri: file.uri,
+        name: file.name || 'material',
+        mimeType: file.mimeType || undefined,
+      });
+
+      setFileUrl(publicUrl);
+      setFileType(inferFileType(file.name || ''));
+      Alert.alert('Uploaded', 'File uploaded successfully');
+    } catch (e: any) {
+      console.log('Material upload error:', e?.message || e);
+      Alert.alert('Error', e?.message || 'Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async () => {
     if (!teacherId) {
@@ -251,6 +303,17 @@ export default function TeacherCreateMaterialScreen() {
                   onChangeText={setFileUrl}
                   autoCapitalize="none"
                 />
+
+                <View style={{ marginTop: 10 }}>
+                  <PrimaryButton
+                    title={uploading ? 'Uploading…' : 'Pick & Upload File'}
+                    onPress={pickAndUpload}
+                    disabled={uploading || saving}
+                    variant="outline"
+                    size="medium"
+                    glowing={false}
+                  />
+                </View>
                 <View style={{ height: 10 }} />
                 <GlassInput
                   icon="chatbox-ellipses-outline"

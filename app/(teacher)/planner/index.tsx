@@ -21,6 +21,8 @@ type PlannerRow = {
   week_end_date: string;
   status: PlannerStatus;
   submitted_at: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
   created_at: string;
   courses?: { code: string; name: string; short_name: string | null } | null;
 };
@@ -71,6 +73,8 @@ export default function TeacherPlannerIndex() {
           week_end_date,
           status,
           submitted_at,
+          approved_at,
+          rejection_reason,
           created_at,
           courses(code, name, short_name)
         `
@@ -133,9 +137,10 @@ export default function TeacherPlannerIndex() {
   const submitPlanner = async (row: PlannerRow) => {
     if (!teacherId) return;
 
+    const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from('lesson_planners')
-      .update({ status: 'submitted', submitted_at: new Date().toISOString() })
+      .update({ status: 'submitted', submitted_at: nowIso, rejection_reason: null })
       .eq('id', row.id)
       .eq('teacher_id', teacherId)
       .eq('status', 'draft');
@@ -145,7 +150,26 @@ export default function TeacherPlannerIndex() {
       return;
     }
 
-    setRows((prev) => prev.map((p) => (p.id === row.id ? { ...p, status: 'submitted', submitted_at: new Date().toISOString() } : p)));
+    setRows((prev) => prev.map((p) => (p.id === row.id ? { ...p, status: 'submitted', submitted_at: nowIso, rejection_reason: null } : p)));
+  };
+
+  const resubmitPlanner = async (row: PlannerRow) => {
+    if (!teacherId) return;
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from('lesson_planners')
+      .update({ status: 'submitted', submitted_at: nowIso, rejection_reason: null })
+      .eq('id', row.id)
+      .eq('teacher_id', teacherId)
+      .eq('status', 'rejected');
+
+    if (error) {
+      Alert.alert('Error', 'Failed to resubmit planner');
+      return;
+    }
+
+    setRows((prev) => prev.map((p) => (p.id === row.id ? { ...p, status: 'submitted', submitted_at: nowIso, rejection_reason: null } : p)));
   };
 
   const renderRow = (p: PlannerRow, index: number) => {
@@ -167,6 +191,17 @@ export default function TeacherPlannerIndex() {
                   Submitted: {new Date(p.submitted_at).toLocaleString()}
                 </Text>
               ) : null}
+              {p.status === 'approved' && p.approved_at ? (
+                <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
+                  Approved: {new Date(p.approved_at).toLocaleString()}
+                </Text>
+              ) : null}
+              {p.status === 'rejected' && p.rejection_reason ? (
+                <View style={[styles.reasonBox, { backgroundColor: withAlpha(colors.error, isDark ? 0.16 : 0.1) }]}>
+                  <Text style={[styles.reasonTitle, { color: colors.error }]}>Rejection reason</Text>
+                  <Text style={[styles.reasonText, { color: colors.textSecondary }]}>{p.rejection_reason}</Text>
+                </View>
+              ) : null}
             </View>
 
             <View style={styles.rightCol}>
@@ -181,6 +216,16 @@ export default function TeacherPlannerIndex() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="send-outline" size={18} color={colors.primary} />
+                </TouchableOpacity>
+              ) : null}
+
+              {p.status === 'rejected' ? (
+                <TouchableOpacity
+                  onPress={() => router.push(`/(teacher)/planner/edit/${p.id}`)}
+                  style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="create-outline" size={18} color={colors.primary} />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -303,6 +348,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  reasonBox: {
+    marginTop: 10,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  reasonTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  reasonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
   },
   emptyTitle: {
     fontSize: 16,

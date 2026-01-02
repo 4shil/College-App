@@ -6,6 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { Restricted } from '../../components/Restricted';
+import { useAuthStore } from '../../store/authStore';
+import type { TeacherNavItem } from '../../lib/teacherModules';
+import { getUnlockedTeacherNavItems } from '../../lib/teacherModules';
 
 // Keep the same navbar structure as admin, but teacher has only Home for now.
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -55,56 +59,16 @@ const DockItem: React.FC<{
   );
 };
 
-const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => void }> = ({
+const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => void; navItems: TeacherNavItem[] }> = ({
   activeRoute,
   onNavigate,
+  navItems,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const { colors, isDark, animationsEnabled } = useThemeStore();
 
   const activeIconColor = colors.textPrimary;
   const inactiveIconColor = withAlpha(colors.textPrimary, 0.4);
-
-  const navItems = [
-    { id: 'dashboard', icon: 'home-outline', route: '/(teacher)/dashboard' },
-    { id: 'timetable', icon: 'calendar-outline', route: '/(teacher)/timetable' },
-    {
-      id: 'attendance',
-      icon: 'clipboard-outline',
-      route: '/(teacher)/attendance',
-      nestedRoutes: ['attendance'],
-    },
-    {
-      id: 'results',
-      icon: 'stats-chart-outline',
-      route: '/(teacher)/results',
-      nestedRoutes: ['results'],
-    },
-    {
-      id: 'materials',
-      icon: 'book-outline',
-      route: '/(teacher)/materials',
-      nestedRoutes: ['materials'],
-    },
-    {
-      id: 'assignments',
-      icon: 'document-text-outline',
-      route: '/(teacher)/assignments',
-      nestedRoutes: ['assignments'],
-    },
-    {
-      id: 'planner',
-      icon: 'create-outline',
-      route: '/(teacher)/planner',
-      nestedRoutes: ['planner'],
-    },
-    {
-      id: 'diary',
-      icon: 'journal-outline',
-      route: '/(teacher)/diary',
-      nestedRoutes: ['diary'],
-    },
-  ];
 
   const activeIndex = navItems.findIndex((i) => {
     if (i.id === 'dashboard') {
@@ -191,36 +155,49 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
 export default function TeacherLayout() {
   const router = useRouter();
   const pathname = usePathname();
+  const { roles } = useAuthStore();
+
+  const unlockedNavItems = getUnlockedTeacherNavItems(roles);
 
   const handleNavigate = (route: string) => {
     router.replace(route as any);
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-        }}
-      >
-        <Stack.Screen name="dashboard" />
-        <Stack.Screen name="timetable" />
-        <Stack.Screen name="attendance/index" />
-        <Stack.Screen name="attendance/mark" />
-        <Stack.Screen name="results/index" />
-        <Stack.Screen name="results/mark" />
-        <Stack.Screen name="materials/index" />
-        <Stack.Screen name="materials/create" />
-        <Stack.Screen name="assignments/index" />
-        <Stack.Screen name="assignments/create" />
-        <Stack.Screen name="planner/index" />
-        <Stack.Screen name="planner/create" />
-        <Stack.Screen name="diary/index" />
-        <Stack.Screen name="diary/create" />
-      </Stack>
-      <GlassDock activeRoute={pathname} onNavigate={handleNavigate} />
-    </View>
+    <Restricted
+      roles={['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']}
+      showDeniedMessage
+      deniedMessage="Teacher access required."
+    >
+      <View style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+          }}
+        >
+          <Stack.Screen name="dashboard" />
+          <Stack.Screen name="timetable/index" />
+          <Stack.Screen name="attendance/index" />
+          <Stack.Screen name="attendance/mark" />
+          <Stack.Screen name="attendance/history" />
+          <Stack.Screen name="results/index" />
+          <Stack.Screen name="results/mark" />
+          <Stack.Screen name="materials/index" />
+          <Stack.Screen name="materials/create" />
+          <Stack.Screen name="assignments/index" />
+          <Stack.Screen name="assignments/create" />
+          <Stack.Screen name="assignments/submissions" />
+          <Stack.Screen name="planner/index" />
+          <Stack.Screen name="planner/create" />
+          <Stack.Screen name="planner/edit/[id]" />
+          <Stack.Screen name="diary/index" />
+          <Stack.Screen name="diary/create" />
+          <Stack.Screen name="diary/edit/[id]" />
+        </Stack>
+        <GlassDock activeRoute={pathname} onNavigate={handleNavigate} navItems={unlockedNavItems} />
+      </View>
+    </Restricted>
   );
 }
 

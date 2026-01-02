@@ -1,12 +1,122 @@
 # Teacher Module Plan (MVP → Full)
 
-Date: 2025-12-24
+Date: 2026-01-02
 
 ## Current State (Repo Reality)
-- Teacher module is intentionally minimal right now:
-  - Routes kept: `/(teacher)/dashboard` only
-  - Navbar: GlassDock with **Home** only (admin-style dock UI)
-- Previous teacher attendance/materials/results/profile routes were removed to avoid unfinished modules being exposed.
+- Teacher module is already **multi-module** in the repo (not dashboard-only):
+  - Navbar: GlassDock with multiple tabs (dashboard, timetable, attendance, results, materials, assignments, planner, diary)
+  - Attendance:
+    - Mark attendance (existing)
+    - Attendance history screen is implemented and routed: `/(teacher)/attendance/history`
+  - Materials: list + create routes exist
+  - Results: marks entry routes exist
+  - Assignments: list + create routes exist
+    - Submissions + grading screen is implemented and routed: `/(teacher)/assignments/submissions`
+
+## Implementation Audit (As of 2026-01-02)
+
+### Recent completions (since last audit)
+- **Planner/Diary approvals backend enforcement:** approvals are enforced via RPC functions + RLS (admins can’t bypass workflow via direct table updates).
+- **Admin approvals UI:** a styled screen exists to approve/reject planners/diaries.
+- **Teacher rejection loop:** teacher lists show rejection reason and allow resubmission for rejected planners/diaries.
+- **Edit & Resubmit screens (Teacher):** dedicated edit routes added for rejected planners/diaries so teachers can update JSON content then resubmit.
+- **Teacher RBAC wrapper (layout-level):** `/(teacher)` routes are now gated via `Restricted` to teacher/HOD roles.
+- **RLS tightened for teachers:** teachers can no longer directly set “approved” statuses; they can only edit/submit in allowed states.
+
+### What is completed now (MVP core flows)
+This section answers: **“How much is completed and how much is left?”** using two scopes:
+
+**Scope A — Teacher Navbar Modules (MVP):** 8/8 implemented (100%)
+- Dashboard
+- Timetable
+- Attendance (mark + history)
+- Results (internal/model marks entry)
+- Materials (create + list)
+- Assignments (create + list + grade submissions)
+- Lesson Planner (draft + submit)
+- Work Diary (draft + submit)
+
+**Scope B — Teacher Routes/Screens:** 16/16 implemented (100%)
+- `/(teacher)/dashboard`
+- `/(teacher)/timetable`
+- `/(teacher)/attendance` + `/(teacher)/attendance/mark` + `/(teacher)/attendance/history`
+- `/(teacher)/results` + `/(teacher)/results/mark`
+- `/(teacher)/materials` + `/(teacher)/materials/create`
+- `/(teacher)/assignments` + `/(teacher)/assignments/create` + `/(teacher)/assignments/submissions`
+- `/(teacher)/planner` + `/(teacher)/planner/create`
+- `/(teacher)/diary` + `/(teacher)/diary/create`
+
+### What works end-to-end today
+- **Timetable:** teacher can view assigned `timetable_entries` for current academic year.
+- **Attendance:** teacher can load today’s periods, mark P/A/L, and view/edit recent history.
+  - Server-side enforcement: attendance marking/editing is allowed only within a time window (period end + grace) via RLS.
+- **Materials:** teacher can create materials (link/URL) and toggle visibility (active/hidden).
+- **Assignments:** teacher can create assignments, view submissions, and enter marks + feedback.
+- **Results (internal/model):** teacher can pick academic year → exam → subject schedule → section → enter marks.
+- **Lesson Planner:** teacher can create a weekly planner draft and submit.
+- **Work Diary:** teacher can create a monthly diary draft and submit.
+
+### What is left / not implemented yet (Full scope)
+The following items are planned in the “Full Feature Catalogue (2025)” below but are **not implemented** (or only partially implemented) in the Teacher module UI:
+
+**Role expansion (Class Teacher / Mentor / Coordinator / HOD / Principal)**
+- Class teacher tools: class roster, cross-subject summaries, shortage/weak student workflows.
+- Mentor tools: mentee list, counselling notes, follow-up reminders.
+- Coordinator substitution workflow (assignment + auto-expire + audit) in Teacher module.
+- HOD/Principal approval dashboards and department-level oversight inside Teacher module.
+
+**Approvals workflow (HOD → Principal)**
+- **Implemented (Admin module):** HOD/Principal approvals are available via the Admin approvals screen, and approvals are backend-enforced.
+- For the current app scope, approvals stay in the Admin module (no separate Teacher approvals area).
+- **Completed (teacher edit loop):** teachers can open rejected items, edit the stored JSON content, then resubmit.
+
+**Attendance hard rules**
+- Grace window + auto-locking edits, and policy-based restrictions (now enforced server-side via RLS time window).
+
+**Marks advanced features**
+- CSV upload/import for internal marks.
+- Lock/final-submit flows for marks (final submit creates a server-enforced lock per exam schedule + class).
+
+**Content uploads**
+- File upload to storage (implemented: materials + assignment attachments upload to Supabase Storage and save public URLs).
+
+**System-level features**
+- Push notifications triggers (assignments/materials/marks/planner/diary updates).
+- Offline-first mode and sync.
+- Audit dashboards for teachers (beyond basic lists).
+
+### Dependencies (why some features may appear “missing”)
+- Many advanced flows depend on the canonical timetable + section/program mapping being consistent (see P0 prerequisites below).
+- Security should primarily rely on **Postgres RLS** (now tightened for planner/diary approvals); teacher screens still do not use a component-level RBAC wrapper.
+
+## Next steps (recommended, highest impact)
+1. **Apply DB migration + validate RLS:** deploy latest migrations and confirm teachers cannot approve by direct updates; only RPC-based approvals work.
+2. **Edit & Resubmit screens:** completed (teacher can edit rejected planner/diary content and resubmit).
+3. **Attendance hard rules:** completed (server-side enforced) + optional UI messaging refinements.
+4. **Marks advanced:** CSV import for internal marks + locking/final-submit flow.
+
+### Concrete backlog (remaining not-implemented scopes)
+This is the “make the not implemented scopes” list in a buildable order, without expanding UX beyond the spec.
+
+P0 — Security + correctness
+- **Teacher RBAC wrapper (layout-level):** completed (teacher routes gated via `Restricted`; RLS still enforces real permissions).
+- **Timetable canonicalization confirmation:** verify teacher timetable/attendance/results all read the same canonical keys and constraints.
+
+P1 — Attendance hard rules (server-side)
+- **Grace window + auto-lock edits:** completed (enforced via DB RLS time window); UI shows a clear error when blocked.
+
+P2 — Marks advanced
+- **CSV import for internal marks:** completed (import CSV into the marks grid, then save).
+- **Lock/final-submit flow:** completed (server-side lock table + RLS blocks edits after lock).
+
+P2 — Content uploads
+- **Supabase Storage uploads:** completed (pick file → upload → public URL stored in DB).
+
+P3 — Role expansion tools
+- **Class teacher tools:** roster + summaries.
+- **Mentor tools:** mentee list + notes.
+- **Coordinator substitutions workflow:** time-bound access + audit.
+- **HOD/Principal teacher-module monitoring:** read-only dashboards.
 
 ## 2025 System Rules (Must Stay Aligned)
 These constraints are treated as **requirements** for all teacher features:
@@ -42,13 +152,20 @@ This section maps **what each teacher-type role can do** in the Teacher module.
 ### Roles (Seeded in DB)
 Teacher-category roles (non-admin):
 - `subject_teacher` — base teaching role
-- `class_teacher` — in-charge of a class (student-level responsibilities)
-- `mentor` — mentors assigned students
-- `coordinator` — coordinates substitutions / operational coordination
+- `class_teacher` — in-charge of a class (student-level responsibilities). **Also a subject teacher** (base teaching role implied).
+- `mentor` — mentors assigned students. **Also a teacher** (may also be a `class_teacher` / `coordinator`).
+- `coordinator` — coordinates substitutions / operational coordination. **Also a teacher** (may also be a `class_teacher` / `mentor`).
 
 Elevated roles that may also use teacher flows:
 - `hod` — seeded as **admin category** in DB, but described as “teacher role with admin powers” (approvals, dept attendance, holidays)
 - `principal` — seeded as **admin category** in DB (final approvals + monitoring)
+
+Notes (important):
+- **Roles are stackable.** A single user can hold multiple roles at once (e.g., `hod` + `mentor` + `class_teacher`).
+- **HOD is teacher-capable.** Even though `hod` is stored as admin-category in the DB, they should still be able to use the Teacher module day-to-day flows.
+- **Default landing:** if a user has `hod`, route them to the Teacher dashboard by default.
+- **Hierarchy rule:** treat `subject_teacher` as the **base** capability. `class_teacher` implies subject-teacher capability (plus extra responsibilities).
+- **Mentor/coordinator are add-ons:** they can coexist with `subject_teacher` and/or `class_teacher`.
 
 ### Practical hierarchy (simplified)
 1. Subject Teacher (`subject_teacher`)
@@ -94,7 +211,11 @@ This is the “complete list” to implement over time, while keeping the curren
 Features:
 - Email + password login
 - Multi-role detection (subject_teacher / class_teacher / mentor / coordinator / hod)
-- Auto-route dashboard based on **highest role**
+- `subject_teacher` is the **common/base** teaching capability (other teacher roles stack on top)
+- Auto-route dashboard based on landing rules:
+  - `hod` defaults to **Teacher dashboard** (even though admin-category)
+  - Other admin-category roles default to **Admin dashboard**
+  - Teacher-category roles default to **Teacher dashboard**
 - Profile view/edit + profile photo
 - Secure session management
 
@@ -181,7 +302,8 @@ Temporary assignment / substitution support:
 - Log substitution for audit
 
 Constraint:
-- Coordinator should have **no other** teacher permissions beyond substitution workflow.
+- If an account is **coordinator-only**, it should have **no other** teacher permissions beyond substitution workflow.
+- If a user is both `coordinator` + `subject_teacher`/`class_teacher`, they get the combined permissions (stacked roles).
 
 ### 5) HOD (Department Authority)
 Teacher/subject management:

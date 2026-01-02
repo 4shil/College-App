@@ -211,6 +211,7 @@ export default function AdminLayout() {
         <Stack.Screen name="events-create" />
         <Stack.Screen name="events-edit" />
         <Stack.Screen name="planner-diary/index" />
+        <Stack.Screen name="planner-diary/approvals" />
         <Stack.Screen name="planner-diary/planners" />
         <Stack.Screen name="planner-diary/diaries" />
         <Stack.Screen name="reception/index" />

@@ -48,6 +48,8 @@ const TEACHER_ROLES: RoleName[] = [
   'class_teacher',
   'mentor',
   'coordinator',
+  // HOD is admin-category in DB but should still be able to use teacher flows.
+  'hod',
 ];
 
 export const useAuthStore = createStore<AuthState>((set, get) => ({

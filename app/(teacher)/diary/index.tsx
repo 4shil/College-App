@@ -21,6 +21,9 @@ type DiaryRow = {
   year: number;
   status: DiaryStatus;
   submitted_at: string | null;
+  hod_approved_at: string | null;
+  principal_approved_at: string | null;
+  rejection_reason: string | null;
   created_at: string;
 };
 
@@ -59,7 +62,7 @@ export default function TeacherDiaryIndex() {
 
     const { data, error } = await supabase
       .from('work_diaries')
-      .select('id,teacher_id,academic_year_id,month,year,status,submitted_at,created_at')
+      .select('id,teacher_id,academic_year_id,month,year,status,submitted_at,hod_approved_at,principal_approved_at,rejection_reason,created_at')
       .eq('teacher_id', teacherId)
       .order('year', { ascending: false })
       .order('month', { ascending: false })
@@ -123,7 +126,7 @@ export default function TeacherDiaryIndex() {
     const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from('work_diaries')
-      .update({ status: 'submitted', submitted_at: nowIso })
+      .update({ status: 'submitted', submitted_at: nowIso, rejection_reason: null })
       .eq('id', row.id)
       .eq('teacher_id', teacherId)
       .eq('status', 'draft');
@@ -133,7 +136,47 @@ export default function TeacherDiaryIndex() {
       return;
     }
 
-    setRows((prev) => prev.map((d) => (d.id === row.id ? { ...d, status: 'submitted', submitted_at: nowIso } : d)));
+    setRows((prev) => prev.map((d) => (d.id === row.id ? { ...d, status: 'submitted', submitted_at: nowIso, rejection_reason: null } : d)));
+  };
+
+  const resubmitDiary = async (row: DiaryRow) => {
+    if (!teacherId) return;
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from('work_diaries')
+      .update({
+        status: 'submitted',
+        submitted_at: nowIso,
+        hod_approved_by: null,
+        hod_approved_at: null,
+        principal_approved_by: null,
+        principal_approved_at: null,
+        rejection_reason: null,
+      })
+      .eq('id', row.id)
+      .eq('teacher_id', teacherId)
+      .eq('status', 'rejected');
+
+    if (error) {
+      Alert.alert('Error', 'Failed to resubmit diary');
+      return;
+    }
+
+    setRows((prev) =>
+      prev.map((d) =>
+        d.id === row.id
+          ? {
+              ...d,
+              status: 'submitted',
+              submitted_at: nowIso,
+              hod_approved_at: null,
+              principal_approved_at: null,
+              rejection_reason: null,
+            }
+          : d
+      )
+    );
   };
 
   const renderRow = (d: DiaryRow, index: number) => {
@@ -155,6 +198,22 @@ export default function TeacherDiaryIndex() {
                   Submitted: {new Date(d.submitted_at).toLocaleString()}
                 </Text>
               ) : null}
+              {d.status === 'hod_approved' && d.hod_approved_at ? (
+                <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
+                  HOD Approved: {new Date(d.hod_approved_at).toLocaleString()}
+                </Text>
+              ) : null}
+              {d.status === 'principal_approved' && d.principal_approved_at ? (
+                <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
+                  Principal Approved: {new Date(d.principal_approved_at).toLocaleString()}
+                </Text>
+              ) : null}
+              {d.status === 'rejected' && d.rejection_reason ? (
+                <View style={[styles.reasonBox, { backgroundColor: withAlpha(colors.error, isDark ? 0.16 : 0.1) }]}>
+                  <Text style={[styles.reasonTitle, { color: colors.error }]}>Rejection reason</Text>
+                  <Text style={[styles.reasonText, { color: colors.textSecondary }]}>{d.rejection_reason}</Text>
+                </View>
+              ) : null}
             </View>
 
             <View style={styles.rightCol}>
@@ -169,6 +228,16 @@ export default function TeacherDiaryIndex() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="send-outline" size={18} color={colors.primary} />
+                </TouchableOpacity>
+              ) : null}
+
+              {d.status === 'rejected' ? (
+                <TouchableOpacity
+                  onPress={() => router.push(`/(teacher)/diary/edit/${d.id}`)}
+                  style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="create-outline" size={18} color={colors.primary} />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -291,6 +360,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  reasonBox: {
+    marginTop: 10,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  reasonTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  reasonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
   },
   emptyTitle: {
     fontSize: 16,
