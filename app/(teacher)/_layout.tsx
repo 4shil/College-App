@@ -203,6 +203,7 @@ export default function TeacherLayout() {
           <Stack.Screen name="assignments/submissions" />
           <Stack.Screen name="notices/index" />
           <Stack.Screen name="notices/create" />
+          <Stack.Screen name="session/[entryId]" />
           <Stack.Screen name="planner/index" />
           <Stack.Screen name="planner/create" />
           <Stack.Screen name="planner/edit/[id]" />

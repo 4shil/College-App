@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
@@ -31,14 +32,17 @@ type TimetableEntry = {
   period: number;
   course_id: string | null;
   year_id: string | null;
+  section_id?: string | null;
   room: string | null;
   is_lab?: boolean | null;
   courses?: { code: string; name: string; short_name: string | null } | null;
   years?: { name: string } | null;
+  sections?: { name: string } | null;
 };
 
 export default function TeacherTimetableScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { colors, isDark } = useThemeStore();
   const { user } = useAuthStore();
 
@@ -87,10 +91,12 @@ export default function TeacherTimetableScreen() {
           period,
           course_id,
           year_id,
+          section_id,
           room,
           is_lab,
           courses:courses!timetable_entries_course_id_fkey(code, name, short_name),
-          years(name)
+          years(name),
+          sections(name)
         `
       )
       .eq('teacher_id', teacherId)
@@ -149,9 +155,28 @@ export default function TeacherTimetableScreen() {
                 {entry.courses?.name || 'Class'}
                 {entry.years?.name ? ` • ${entry.years.name}` : ''}
               </Text>
+              {entry.sections?.name ? (
+                <Text style={[styles.meta, { color: colors.textMuted }]}>Section: {entry.sections.name}</Text>
+              ) : null}
               {entry.room ? (
                 <Text style={[styles.meta, { color: colors.textMuted }]}>Room: {entry.room}</Text>
               ) : null}
+
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/(teacher)/session/[entryId]', params: { entryId: entry.id } })}
+                activeOpacity={0.85}
+                style={[
+                  styles.sessionCta,
+                  {
+                    backgroundColor: isDark
+                      ? withAlpha(colors.textInverse, 0.08)
+                      : withAlpha(colors.shadowColor, 0.06),
+                    borderColor: withAlpha(colors.cardBorder, 0.55),
+                  },
+                ]}
+              >
+                <Text style={[styles.sessionCtaText, { color: colors.textPrimary }]}>Session tools</Text>
+              </TouchableOpacity>
             </View>
 
             <View
@@ -251,6 +276,18 @@ const styles = StyleSheet.create({
   pillText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  sessionCta: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  sessionCtaText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   emptyTitle: {
     fontSize: 16,
