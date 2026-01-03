@@ -66,6 +66,11 @@ export const Card: React.FC<CardProps> = ({
     !!capabilities?.supportsBlur &&
     blurAmount > 0;
 
+  const shouldLightGlassWhileAnimated =
+    !!canAnimateBackground &&
+    !!capabilities?.supportsGlassSurfaces &&
+    !isDark;
+
   const getColorAlpha = (color: string): number | null => {
     const c = color.trim();
 
@@ -116,9 +121,9 @@ export const Card: React.FC<CardProps> = ({
 
   const tintedCardBackground = withAlpha(colors.cardBackground, isDark ? 0.72 : 0.86);
 
-  const resolvedCardBackground = shouldTintForAnimatedBg
-    ? tintedCardBackground
-    : colors.cardBackground;
+  const resolvedCardBackground = shouldLightGlassWhileAnimated
+    ? withAlpha(colors.cardBackground, 0.62)
+    : (shouldTintForAnimatedBg ? tintedCardBackground : colors.cardBackground);
 
   const content = (
     <View
@@ -148,7 +153,7 @@ export const Card: React.FC<CardProps> = ({
           // Critical: ensure overflow clipping uses rounded corners.
           borderRadius: colors.borderRadius,
           // Fill the wrapper to avoid corner artifacts on some devices.
-          backgroundColor: resolvedCardBackground,
+          backgroundColor: shouldBlur ? 'transparent' : resolvedCardBackground,
         },
         style,
       ]}
@@ -160,7 +165,7 @@ export const Card: React.FC<CardProps> = ({
           style={[
             styles.blur,
             {
-              backgroundColor: colors.cardBackground,
+              backgroundColor: shouldLightGlassWhileAnimated ? 'transparent' : colors.cardBackground,
               borderRadius: colors.borderRadius,
             },
           ]}

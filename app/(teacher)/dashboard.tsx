@@ -1,93 +1,432 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-
-import { AnimatedBackground, Card, PrimaryButton, ThemeToggle } from '../../components/ui';
-import { useThemeStore } from '../../store/themeStore';
-import { useAuthStore } from '../../store/authStore';
-import { signOut } from '../../lib/supabase';
 import { useRouter } from 'expo-router';
-import { getUnlockedTeacherNavItems } from '../../lib/teacherModules';
+
+import { AnimatedBackground, Card, LoadingIndicator, ThemeToggle } from '../../components/ui';
+import { useThemeStore } from '../../store/themeStore';
+import { withAlpha } from '../../theme/colorUtils';
+import { useTeacherDashboardSummary } from '../../hooks/useTeacherDashboardSummary';
+
+function titleCaseScope(scope: string) {
+  if (!scope) return '';
+  if (scope === 'exam') return 'Exam Cell';
+  if (scope === 'department') return 'Department';
+  if (scope === 'college') return 'Principal';
+  return scope;
+}
 
 export default function TeacherDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
-  const { user, profile, logout, roles } = useAuthStore();
+  const { colors, isDark } = useThemeStore();
+  const { summary, loading, refreshing, refresh } = useTeacherDashboardSummary();
 
-  const unlocked = getUnlockedTeacherNavItems(roles)
-    .filter((i) => i.id !== 'dashboard' && i.id !== 'profile')
-    // Keep the most common teaching modules first, role-unlocked modules after.
-    .sort((a, b) => {
-      const order = [
-        'timetable',
-        'attendance',
-        'results',
-        'materials',
-        'assignments',
-        'notices',
-        'planner',
-        'diary',
-        'class_tools',
-        'mentor',
-        'coordinator',
-        'department',
-      ];
-      return order.indexOf(a.id) - order.indexOf(b.id);
-    });
+  const alert = summary?.criticalAlert || null;
+  const showAlert = Boolean(alert);
 
-  const handleLogout = async () => {
-    await signOut();
-    logout();
-    router.replace('/(auth)/login');
+  // Hero is always first; the alert banner (if present) is the second child.
+  const stickyHeaderIndices = useMemo(() => (showAlert ? [1] : undefined), [showAlert]);
+
+  const handleAlertCta = () => {
+    if (!alert) return;
+    if (alert.kind === 'attendance') {
+      router.push('/(teacher)/attendance' as any);
+      return;
+    }
+    if (alert.kind === 'marks') {
+      router.push('/(teacher)/results' as any);
+      return;
+    }
+    router.push('/(teacher)/assignments' as any);
   };
+
+  const alertBg = alert
+    ? alert.kind === 'attendance'
+      ? withAlpha(colors.error, isDark ? 0.25 : 0.14)
+      : alert.kind === 'marks'
+        ? withAlpha(colors.warning, isDark ? 0.25 : 0.14)
+        : withAlpha(colors.warning, isDark ? 0.25 : 0.12)
+    : 'transparent';
+
+  const alertText = alert
+    ? alert.kind === 'attendance'
+      ? colors.error
+      : alert.kind === 'marks'
+        ? colors.warning
+        : colors.warning
+    : colors.textPrimary;
+
+  const contentTopPadding = insets.top + 12;
+
+  const hero = useMemo(() => {
+    const now = new Date();
+    const hour = now.getHours();
+    const greetingText = hour < 12 ? 'Good Morning!' : hour < 17 ? 'Good Afternoon!' : 'Good Evening!';
+    const timeText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return { greetingText, timeText };
+  }, []);
+
+  const tileAccent = {
+    attendance: colors.primary,
+    assignments: colors.secondary,
+    marks: colors.info,
+    notices: colors.warning,
+    important: colors.primary,
+  } as const;
 
   return (
     <AnimatedBackground>
-      {/* Theme Toggle */}
-      <Animated.View
-        entering={FadeInDown.delay(100).duration(400)}
-        style={[styles.themeToggleContainer, { top: insets.top + 10 }]}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingTop: contentTopPadding, paddingBottom: insets.bottom + 128 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+        showsVerticalScrollIndicator={false}
       >
-        <ThemeToggle />
-      </Animated.View>
+        {/* Hero (Inspired) */}
+        <View style={styles.hero}>
+          <View style={styles.heroTopRow}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/(teacher)/modules' as any)}
+              style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.12) }]}
+            >
+              <Ionicons name="grid-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
 
-      <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}>
-        <Animated.View
-          entering={FadeInDown.delay(200).duration(500)}
-          style={styles.cardContainer}
-        >
-          <Card>
-            <View style={styles.iconContainer}>
-              <FontAwesome5 name="chalkboard-teacher" size={48} color={colors.primary} />
+            <View style={styles.heroTopRight}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => router.push('/(teacher)/profile' as any)}
+                style={[styles.iconBtn, { backgroundColor: withAlpha(colors.secondary, isDark ? 0.18 : 0.12) }]}
+              >
+                <Ionicons name="person-circle-outline" size={24} color={colors.secondary} />
+              </TouchableOpacity>
             </View>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
-              Teacher Dashboard
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Welcome back, {profile?.full_name || user?.email || 'Teacher'}!
-            </Text>
+          </View>
 
-            <View style={styles.actions}>
-              {unlocked.map((item, idx) => (
-                <PrimaryButton
-                  key={item.id}
-                  title={item.title}
-                  onPress={() => router.push(item.route as any)}
-                  variant={idx === 0 ? 'primary' : 'outline'}
-                  size="medium"
-                />
+          <Text style={[styles.heroGreeting, { color: colors.textPrimary }]} numberOfLines={1}>
+            {hero.greetingText}
+          </Text>
+          <Text style={[styles.heroTime, { color: colors.primary }]}>{hero.timeText}</Text>
+
+          <View style={styles.heroActionsRow}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/(teacher)/notices' as any)}
+              style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.warning, isDark ? 0.18 : 0.12) }]}
+            >
+              <Ionicons name="notifications-outline" size={18} color={colors.warning} />
+              <Text style={[styles.heroActionText, { color: colors.warning }]}>Notices</Text>
+            </TouchableOpacity>
+            <View style={styles.heroSpacer} />
+            <ThemeToggle />
+          </View>
+        </View>
+
+        {/* Critical Alert Strip (Conditional + Sticky) */}
+        {showAlert ? (
+          <View style={[styles.alertStrip, { backgroundColor: alertBg, borderColor: withAlpha(alertText, 0.45) }]}>
+            <View style={styles.alertLeft}>
+              <View style={[styles.alertIcon, { backgroundColor: withAlpha(alertText, isDark ? 0.16 : 0.1) }]}>
+                <Ionicons name="alert-circle-outline" size={18} color={alertText} />
+              </View>
+              <Text style={[styles.alertText, { color: alertText }]} numberOfLines={2}>
+                {alert?.title}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleAlertCta}
+              style={[styles.alertCta, { backgroundColor: withAlpha(alertText, isDark ? 0.18 : 0.12) }]}
+            >
+              <Text style={[styles.alertCtaText, { color: alertText }]} numberOfLines={1}>
+                {alert?.ctaLabel}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={alertText} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* Tasks (Tile Grid) */}
+        <View style={{ marginTop: showAlert ? 18 : 10 }}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tasks</Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/(teacher)/modules' as any)}
+              style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+            >
+              <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.tileGrid}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/(teacher)/attendance' as any)}
+              style={styles.tileItem}
+            >
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.attendance, isDark ? 0.18 : 0.12) }]}>
+                  <Ionicons name="clipboard-outline" size={20} color={tileAccent.attendance} />
+                </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Attendance
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.attendancePendingCount ?? (loading ? '—' : 0)} pending
+                </Text>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/(teacher)/assignments' as any)}
+              style={styles.tileItem}
+            >
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.assignments, isDark ? 0.18 : 0.12) }]}>
+                  <Ionicons name="document-text-outline" size={20} color={tileAccent.assignments} />
+                </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Assignments
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.assignmentsToEvaluateCount ?? (loading ? '—' : 0)} to evaluate
+                </Text>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/(teacher)/results' as any)}
+              style={styles.tileItem}
+            >
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.marks, isDark ? 0.18 : 0.12) }]}>
+                  <Ionicons name="stats-chart-outline" size={20} color={tileAccent.marks} />
+                </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Internal Marks
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.internalMarksPendingCount == null ? '—' : summary.internalMarksPendingCount} pending
+                </Text>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/(teacher)/notices' as any)}
+              style={styles.tileItem}
+            >
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.notices, isDark ? 0.18 : 0.12) }]}>
+                  <Ionicons name="notifications-outline" size={20} color={tileAccent.notices} />
+                </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Notices
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.noticesUnreadCount == null ? '—' : summary.noticesUnreadCount} unread
+                </Text>
+              </Card>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Classes (Inspired) */}
+        <View style={{ marginTop: 20 }}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Classes</Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/(teacher)/timetable' as any)}
+              style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+            >
+              <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          {summary?.nextClass ? (
+            <Card style={styles.wideCard}>
+              <View style={styles.wideRow}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="school-outline" size={20} color={colors.textPrimary} />
+                </View>
+                <View style={{ flex: 1, paddingLeft: 12 }}>
+                  <Text style={[styles.wideTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {summary.nextClass.subjectLabel}
+                  </Text>
+                  <Text style={[styles.wideSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                    {summary.nextClass.classLabel}
+                    {summary.nextClass.roomLabel ? ` • ${summary.nextClass.roomLabel}` : ''}
+                  </Text>
+                </View>
+                <View style={[styles.pill, { backgroundColor: withAlpha(colors.primary, isDark ? 0.22 : 0.12) }]}>
+                  <Text style={[styles.pillText, { color: colors.primary }]} numberOfLines={1}>
+                    {summary.nextClass.startsInMinutes} min
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          ) : null}
+
+          {loading && !summary ? (
+            <Card style={styles.wideCard}>
+              <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                <LoadingIndicator color={colors.primary} />
+              </View>
+            </Card>
+          ) : summary?.todayClasses?.length ? (
+            <View style={styles.tileGrid}>
+              {summary.todayClasses.slice(0, 4).map((c, idx) => {
+                const chipBg =
+                  c.status === 'Attendance Pending'
+                    ? withAlpha(colors.error, isDark ? 0.22 : 0.12)
+                    : c.status === 'Ongoing'
+                      ? withAlpha(colors.warning, isDark ? 0.22 : 0.12)
+                      : c.status === 'Completed'
+                        ? withAlpha(colors.success, isDark ? 0.22 : 0.12)
+                        : isDark
+                          ? withAlpha(colors.textInverse, 0.08)
+                          : withAlpha(colors.shadowColor, 0.06);
+
+                const chipText =
+                  c.status === 'Attendance Pending'
+                    ? colors.error
+                    : c.status === 'Ongoing'
+                      ? colors.warning
+                      : c.status === 'Completed'
+                        ? colors.success
+                        : colors.textMuted;
+
+                return (
+                  <Animated.View
+                    key={c.entryId}
+                    entering={FadeInDown.delay(40 + idx * 25).duration(220)}
+                    style={styles.tileItem}
+                  >
+                    <Card style={styles.tileCard}>
+                      <View style={styles.classTileTop}>
+                        <Text style={[styles.classTileTime, { color: colors.textMuted }]} numberOfLines={1}>
+                          {c.timeLabel}
+                        </Text>
+                        <View style={[styles.miniChip, { backgroundColor: chipBg, borderColor: withAlpha(chipText, 0.35) }]}>
+                          <Text style={[styles.miniChipText, { color: chipText }]} numberOfLines={1}>
+                            {c.status}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                        {c.subjectLabel}
+                      </Text>
+                      <Text style={[styles.tileSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {c.classLabel}
+                        {c.roomLabel ? ` • ${c.roomLabel}` : ''}
+                      </Text>
+
+                      {c.status === 'Attendance Pending' && c.routeParams ? (
+                        <TouchableOpacity
+                          activeOpacity={0.9}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/(teacher)/attendance/mark',
+                              params: c.routeParams,
+                            } as any)
+                          }
+                          style={[
+                            styles.miniCta,
+                            {
+                              backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1),
+                              borderColor: withAlpha(colors.primary, 0.35),
+                            },
+                          ]}
+                        >
+                          <Ionicons name="checkbox-outline" size={16} color={colors.primary} />
+                          <Text style={[styles.miniCtaText, { color: colors.primary }]} numberOfLines={1}>
+                            Mark
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </Card>
+                  </Animated.View>
+                );
+              })}
+            </View>
+          ) : (
+            <Card style={styles.wideCard}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No classes today</Text>
+              <Text style={[styles.emptySub, { color: colors.textMuted }]}>Your timetable has no active entries for today.</Text>
+            </Card>
+          )}
+        </View>
+
+        {/* Important Notices (Tiles) */}
+        <View style={{ marginTop: 20 }}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Important</Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/(teacher)/notices' as any)}
+              style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+            >
+              <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          {loading && !summary ? (
+            <Card style={styles.wideCard}>
+              <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                <LoadingIndicator color={colors.primary} size="small" />
+              </View>
+            </Card>
+          ) : summary?.importantNotices?.length ? (
+            <View style={styles.tileGrid}>
+              {summary.importantNotices.slice(0, 2).map((n) => (
+                <TouchableOpacity
+                  key={n.id}
+                  activeOpacity={0.9}
+                  onPress={() => router.push('/(teacher)/notices' as any)}
+                  style={styles.tileItem}
+                >
+                  <Card style={styles.tileCard}>
+                    <View style={styles.noticeTileTop}>
+                      <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.important, isDark ? 0.18 : 0.12) }]}>
+                        <Ionicons name="megaphone-outline" size={20} color={tileAccent.important} />
+                      </View>
+                      <View style={[styles.scopePill, { backgroundColor: withAlpha(colors.primary, isDark ? 0.22 : 0.12) }]}>
+                        <Text style={[styles.scopePillText, { color: colors.primary }]} numberOfLines={1}>
+                          {titleCaseScope(n.scope)}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.noticeTileTitle, { color: colors.textPrimary }]} numberOfLines={3}>
+                      {n.title}
+                    </Text>
+                    <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                      Tap to open notices
+                    </Text>
+                  </Card>
+                </TouchableOpacity>
               ))}
             </View>
+          ) : (
+            <Card style={styles.wideCard}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No important notices</Text>
+              <Text style={[styles.emptySub, { color: colors.textMuted }]}>Nothing urgent from exam cell/department/principal.</Text>
+            </Card>
+          )}
+        </View>
 
-            <View style={styles.signOut}>
-              <PrimaryButton title="Sign Out" onPress={handleLogout} variant="ghost" size="medium" />
-            </View>
-          </Card>
-        </Animated.View>
-      </View>
+        <View style={{ height: 10 }} />
+      </ScrollView>
     </AnimatedBackground>
   );
 }
@@ -95,39 +434,242 @@ export default function TeacherDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  hero: {
+    paddingTop: 6,
+    paddingBottom: 14,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
-  themeToggleContainer: {
-    position: 'absolute',
-    right: 20,
-    zIndex: 100,
-  },
-  cardContainer: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  iconContainer: {
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  actions: {
-    marginTop: 10,
+  heroTopRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
-  signOut: {
+  heroGreeting: {
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  heroTime: {
+    marginTop: 8,
+    fontSize: 56,
+    fontWeight: '200',
+    letterSpacing: -1.2,
+  },
+  heroActionsRow: {
     marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  heroActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 18,
+  },
+  heroActionText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  heroSpacer: {
+    flex: 1,
+  },
+  iconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertStrip: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  alertLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  alertIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  alertCta: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  alertCtaText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  tileGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  tileItem: {
+    width: '48%',
+  },
+  tileCard: {
+    minHeight: 132,
+  },
+  wideCard: {
+    marginBottom: 12,
+  },
+  tileIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  tileTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  tileSub: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  wideRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  wideTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  wideSub: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  classTileTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 10,
+  },
+  classTileTime: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  miniChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  miniChipText: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  miniCta: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  miniCtaText: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  noticeTileTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 8,
+  },
+  scopePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 16,
+  },
+  scopePillText: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  noticeTileTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  pillText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  emptySub: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

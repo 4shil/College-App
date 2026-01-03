@@ -42,10 +42,11 @@ export interface GlobalThemeState {
 const DEFAULT_MODE: ThemeMode = 'dark';
 const DEFAULT_IS_DARK = true;
 const DEFAULT_UI_STYLE: UIStyle = 'glassmorphism';
+const DEFAULT_THEME_ID = 'neutral-solid';
 
 const initialResolved = resolveTheme({
   registry: themeRegistry,
-  activeThemeId: 'default',
+  activeThemeId: DEFAULT_THEME_ID,
   mode: DEFAULT_MODE,
   systemIsDark: DEFAULT_IS_DARK,
 });
@@ -74,7 +75,7 @@ const initialCapabilities = {
 export const useGlobalThemeStore = createStore<GlobalThemeState>(
   persist(
     (set, get) => ({
-      activeThemeId: 'default',
+      activeThemeId: DEFAULT_THEME_ID,
       activeThemeName: initialResolved.presetName,
       capabilities: initialCapabilities,
       supportsAnimatedBackground: initialSupportsAnimatedBackground,

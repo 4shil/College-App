@@ -8,8 +8,14 @@ import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { Restricted } from '../../components/Restricted';
 import { useAuthStore } from '../../store/authStore';
-import type { TeacherNavItem } from '../../lib/teacherModules';
-import { getUnlockedTeacherNavItems } from '../../lib/teacherModules';
+
+type DockNavItem = {
+  id: string;
+  title: string;
+  icon: string;
+  route: string;
+  nestedRoutes?: string[];
+};
 
 // Keep the same navbar structure as admin, but teacher has only Home for now.
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -59,7 +65,7 @@ const DockItem: React.FC<{
   );
 };
 
-const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => void; navItems: TeacherNavItem[] }> = ({
+const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => void; navItems: DockNavItem[] }> = ({
   activeRoute,
   onNavigate,
   navItems,
@@ -157,7 +163,33 @@ export default function TeacherLayout() {
   const pathname = usePathname();
   const { roles } = useAuthStore();
 
-  const unlockedNavItems = getUnlockedTeacherNavItems(roles);
+  const dockNavItems: DockNavItem[] = [
+    { id: 'dashboard', title: 'Dashboard', icon: 'home-outline', route: '/(teacher)/dashboard' },
+    { id: 'timetable', title: 'Timetable', icon: 'calendar-outline', route: '/(teacher)/timetable', nestedRoutes: ['timetable'] },
+    { id: 'materials', title: 'Materials', icon: 'book-outline', route: '/(teacher)/materials', nestedRoutes: ['materials'] },
+    {
+      id: 'modules',
+      title: 'Modules',
+      icon: 'apps-outline',
+      route: '/(teacher)/modules',
+      nestedRoutes: [
+        'attendance',
+        'assignments',
+        'results',
+        'notices',
+        'planner',
+        'diary',
+        'class-tools',
+        'mentor',
+        'coordinator',
+        'department',
+        'principal',
+        'profile',
+        'session',
+      ],
+    },
+    { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
+  ];
 
   const isPrincipal = roles.includes('principal');
   const isTeacherCapable = roles.some((r) =>
@@ -189,6 +221,7 @@ export default function TeacherLayout() {
           }}
         >
           <Stack.Screen name="dashboard" />
+          <Stack.Screen name="modules" />
           <Stack.Screen name="profile" />
           <Stack.Screen name="settings" />
           <Stack.Screen name="change-password" />
@@ -220,7 +253,7 @@ export default function TeacherLayout() {
           <Stack.Screen name="department/index" />
           <Stack.Screen name="principal/index" />
         </Stack>
-        <GlassDock activeRoute={pathname} onNavigate={handleNavigate} navItems={unlockedNavItems} />
+        <GlassDock activeRoute={pathname} onNavigate={handleNavigate} navItems={dockNavItems} />
       </View>
     </Restricted>
   );
