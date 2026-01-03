@@ -62,14 +62,11 @@ export const Card: React.FC<CardProps> = ({
 
   const blurAmount = intensity ?? colors.blurIntensity;
   const shouldBlur =
-    Platform.OS === 'ios' &&
+    Platform.OS !== 'web' &&
     !!capabilities?.supportsBlur &&
     blurAmount > 0;
 
-  const shouldLightGlassWhileAnimated =
-    !!canAnimateBackground &&
-    !!capabilities?.supportsGlassSurfaces &&
-    !isDark;
+  const isLightGlass = !!capabilities?.supportsGlassSurfaces && !isDark;
 
   const getColorAlpha = (color: string): number | null => {
     const c = color.trim();
@@ -121,8 +118,8 @@ export const Card: React.FC<CardProps> = ({
 
   const tintedCardBackground = withAlpha(colors.cardBackground, isDark ? 0.72 : 0.86);
 
-  const resolvedCardBackground = shouldLightGlassWhileAnimated
-    ? withAlpha(colors.cardBackground, 0.62)
+  const resolvedCardBackground = isLightGlass
+    ? (isAlreadyTranslucent ? colors.cardBackground : withAlpha(colors.cardBackground, 0.35))
     : (shouldTintForAnimatedBg ? tintedCardBackground : colors.cardBackground);
 
   const content = (
@@ -165,7 +162,7 @@ export const Card: React.FC<CardProps> = ({
           style={[
             styles.blur,
             {
-              backgroundColor: shouldLightGlassWhileAnimated ? 'transparent' : colors.cardBackground,
+              backgroundColor: isLightGlass ? 'transparent' : colors.cardBackground,
               borderRadius: colors.borderRadius,
             },
           ]}

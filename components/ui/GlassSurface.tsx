@@ -33,13 +33,13 @@ export const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const resolvedBlurIntensity = blurIntensity ?? (variant === 'card' ? 60 : 0);
 
   const shouldBlur =
-    Platform.OS === 'ios' &&
+    Platform.OS !== 'web' &&
     !!capabilities?.supportsBlur &&
     resolvedBlurIntensity > 0;
 
   const overlayColors: readonly [string, string, ...string[]] = isDark
     ? [withAlpha(colors.secondary, 0.06), 'transparent', withAlpha(colors.primary, 0.04)]
-    : [withAlpha(colors.secondary, 0.04), 'transparent', withAlpha(colors.primary, 0.03)];
+    : [withAlpha(colors.secondary, 0.025), 'transparent', withAlpha(colors.primary, 0.02)];
 
   const content = (
     <View
@@ -60,7 +60,7 @@ export const GlassSurface: React.FC<GlassSurfaceProps> = ({
         colors={
           isDark
             ? [withAlpha(colors.glassBackgroundStrong, 0.15), withAlpha(colors.glassBackgroundStrong, 0.03), 'transparent']
-            : [withAlpha(colors.glassBackgroundStrong, 0.98), withAlpha(colors.glassBackgroundStrong, 0.6), 'transparent']
+            : [withAlpha(colors.glassBackgroundStrong, 0.18), withAlpha(colors.glassBackgroundStrong, 0.06), 'transparent']
         }
         style={[
           styles.topHighlight,
