@@ -96,7 +96,7 @@ export default function TeacherTimetableScreen() {
           is_lab,
           courses:courses!timetable_entries_course_id_fkey(code, name, short_name),
           years(name),
-          sections(name)
+          sections:sections!timetable_entries_section_id_fkey(name)
         `
       )
       .eq('teacher_id', teacherId)

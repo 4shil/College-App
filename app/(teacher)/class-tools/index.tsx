@@ -28,6 +28,24 @@ type StudentRow = {
   profiles?: { full_name: string } | null;
 };
 
+type TodaySummary = {
+  scheduledCount: number;
+  markedCount: number;
+  absentCount: number;
+  lateCount: number;
+};
+
+function todayYmd() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function todayDayOfWeek() {
+  const d = new Date();
+  let day = d.getDay();
+  if (day === 0) day = 7;
+  return day;
+}
+
 export default function TeacherClassToolsScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
@@ -40,6 +58,7 @@ export default function TeacherClassToolsScreen() {
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string>('');
   const [students, setStudents] = useState<StudentRow[]>([]);
+  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
 
   const fetchAcademicYear = useCallback(async () => {
     const { data, error } = await supabase
@@ -109,6 +128,77 @@ export default function TeacherClassToolsScreen() {
     setStudents((data || []) as any as StudentRow[]);
   }, [selectedSectionId]);
 
+  const fetchTodaySummary = useCallback(async () => {
+    if (!selectedSectionId || !academicYear?.id) {
+      setTodaySummary(null);
+      return;
+    }
+
+    try {
+      const day = todayDayOfWeek();
+      const { data: entries, error: entriesError } = await supabase
+        .from('timetable_entries')
+        .select('id')
+        .eq('section_id', selectedSectionId)
+        .eq('academic_year_id', academicYear.id)
+        .eq('is_active', true)
+        .eq('day_of_week', day);
+
+      if (entriesError) {
+        console.log('Class tools today entries error:', entriesError.message);
+        setTodaySummary(null);
+        return;
+      }
+
+      const entryIds = (entries || []).map((e: any) => e.id).filter(Boolean);
+      const scheduledCount = entryIds.length;
+
+      if (scheduledCount === 0) {
+        setTodaySummary({ scheduledCount: 0, markedCount: 0, absentCount: 0, lateCount: 0 });
+        return;
+      }
+
+      const { data: attendanceRows, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('id')
+        .eq('date', todayYmd())
+        .in('timetable_entry_id', entryIds);
+
+      if (attendanceError) {
+        console.log('Class tools today attendance error:', attendanceError.message);
+        setTodaySummary({ scheduledCount, markedCount: 0, absentCount: 0, lateCount: 0 });
+        return;
+      }
+
+      const attendanceIds = (attendanceRows || []).map((a: any) => a.id).filter(Boolean);
+      const markedCount = attendanceIds.length;
+
+      if (markedCount === 0) {
+        setTodaySummary({ scheduledCount, markedCount: 0, absentCount: 0, lateCount: 0 });
+        return;
+      }
+
+      const { data: records, error: recordsError } = await supabase
+        .from('attendance_records')
+        .select('status')
+        .in('attendance_id', attendanceIds);
+
+      if (recordsError) {
+        console.log('Class tools today attendance records error:', recordsError.message);
+        setTodaySummary({ scheduledCount, markedCount, absentCount: 0, lateCount: 0 });
+        return;
+      }
+
+      const absentCount = (records || []).filter((r: any) => r.status === 'absent').length;
+      const lateCount = (records || []).filter((r: any) => r.status === 'late').length;
+
+      setTodaySummary({ scheduledCount, markedCount, absentCount, lateCount });
+    } catch (e) {
+      console.log('Class tools today summary error:', (e as any)?.message || e);
+      setTodaySummary(null);
+    }
+  }, [academicYear?.id, selectedSectionId]);
+
   const selectedSection = useMemo(() => sections.find((s) => s.id === selectedSectionId) || null, [sections, selectedSectionId]);
 
   const load = useCallback(async () => {
@@ -130,9 +220,13 @@ export default function TeacherClassToolsScreen() {
     fetchStudents();
   }, [fetchStudents]);
 
+  useEffect(() => {
+    fetchTodaySummary();
+  }, [fetchTodaySummary]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchAcademicYear(), fetchSections(), fetchStudents()]);
+    await Promise.all([fetchAcademicYear(), fetchSections(), fetchStudents(), fetchTodaySummary()]);
     setRefreshing(false);
   };
 
@@ -165,6 +259,41 @@ export default function TeacherClassToolsScreen() {
               </Card>
             ) : (
               <>
+                <Card>
+                  <Text style={[styles.blockTitle, { color: colors.textPrimary }]}>Class summary (today)</Text>
+                  <Text style={[styles.blockSub, { color: colors.textSecondary }]}>Quick status for your section</Text>
+
+                  <View style={{ height: 12 }} />
+
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Active students</Text>
+                    <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>{students.length}</Text>
+                  </View>
+
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Periods scheduled</Text>
+                    <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
+                      {todaySummary ? todaySummary.scheduledCount : '—'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Attendance marked</Text>
+                    <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
+                      {todaySummary ? `${todaySummary.markedCount}/${todaySummary.scheduledCount}` : '—'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Absents / Late</Text>
+                    <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
+                      {todaySummary ? `${todaySummary.absentCount} / ${todaySummary.lateCount}` : '—'}
+                    </Text>
+                  </View>
+                </Card>
+
+                <View style={{ height: 12 }} />
+
                 <Card>
                   <Text style={[styles.blockTitle, { color: colors.textPrimary }]}>Students</Text>
                   <Text style={[styles.blockSub, { color: colors.textSecondary }]}>Active students in your class</Text>
@@ -220,6 +349,9 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, textAlign: 'center' },
   blockTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center' },
   blockSub: { marginTop: 6, fontSize: 12, textAlign: 'center' },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  summaryLabel: { fontSize: 13, fontWeight: '600' },
+  summaryValue: { fontSize: 13, fontWeight: '800' },
   studentRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
   studentName: { fontSize: 14, fontWeight: '700' },
   studentMeta: { marginTop: 2, fontSize: 12 },

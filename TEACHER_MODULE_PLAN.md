@@ -98,6 +98,7 @@ The following items are planned in the “Full Feature Catalogue (2025)” below
 Roles:
 - ✅ Subject Teacher (base) — implemented
 - ✅ Class Teacher tools — implemented (MVP: read-only class roster)
+- ✅ Class Teacher tools — implemented (MVP: roster + basic today summary card)
 - ✅ Mentor tools — implemented (mentee list + session notes)
 - ✅ Coordinator substitutions — implemented (request creation + list; approvals handled by HoD/Admin)
 - ⚠️ HoD tools inside Teacher module — partial (MVP: department overview + substitution approve/reject; other approvals still in Admin)
@@ -109,7 +110,7 @@ Roles:
 - ✅ Profile photo upload (Storage + profiles.photo_url)
 
 1) Subject Teacher (Base)
-- Daily class handling: ⚠️ Timetable is implemented; “period session tools per period” is not a distinct flow (yet)
+- Daily class handling: ✅ Timetable + per-period “Session tools” screen (quick actions for Attendance/Materials/Assignments/Notices/Marks)
 - Attendance: ✅ mark + edit-with-window + history (server-side lock enforced)
 - Materials: ✅ upload links/files + list (student push notification is NOT IMPLEMENTED)
 - Assignments: ✅ create + view submissions + grade submissions
@@ -262,7 +263,7 @@ Functions:
 ### 1) Subject Teacher (Base)
 Daily class handling:
 - View daily/weekly timetable
-- Start class session (context for Attendance / Materials / Assignments / Internal marks)
+- Start class session (context for Attendance / Materials / Assignments / Internal marks) — implemented (Session tools)
 - Substitute-teacher mode (if assigned)
 
 Attendance (subject-wise):

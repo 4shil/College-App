@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -31,8 +31,11 @@ function toIsoOrNull(date: Date | null) {
 export default function TeacherCreateAssignmentScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ courseId?: string }>();
   const { colors, isDark } = useThemeStore();
   const { user } = useAuthStore();
+
+  const preferredCourseId = typeof params.courseId === 'string' ? params.courseId : '';
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -112,13 +115,16 @@ export default function TeacherCreateAssignmentScreen() {
       if (tId) {
         const opts = await fetchCourseOptions(tId);
         setCourseOptions(opts);
-        if (opts.length > 0) setCourseId(opts[0].id);
+        if (opts.length > 0) {
+          const preferred = preferredCourseId && opts.some((o) => o.id === preferredCourseId) ? preferredCourseId : '';
+          setCourseId(preferred || opts[0].id);
+        }
       }
 
       setLoading(false);
     };
     init();
-  }, [fetchCourseOptions, fetchTeacherId]);
+  }, [fetchCourseOptions, fetchTeacherId, preferredCourseId]);
 
   useEffect(() => {
     const iso = toIsoOrNull(dueDate);

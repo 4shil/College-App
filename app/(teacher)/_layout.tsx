@@ -190,6 +190,8 @@ export default function TeacherLayout() {
         >
           <Stack.Screen name="dashboard" />
           <Stack.Screen name="profile" />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="change-password" />
           <Stack.Screen name="timetable/index" />
           <Stack.Screen name="attendance/index" />
           <Stack.Screen name="attendance/mark" />

@@ -24,7 +24,7 @@ type TeacherSection = {
 export default function TeacherCreateNoticeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{ viewUrl?: string; sectionId?: string }>();
   const { colors, isDark } = useThemeStore();
   const { user } = useAuthStore();
 
@@ -42,6 +42,7 @@ export default function TeacherCreateNoticeScreen() {
   const [attachmentUrl, setAttachmentUrl] = useState('');
 
   const viewUrl = typeof params.viewUrl === 'string' ? params.viewUrl : '';
+  const preferredSectionId = typeof params.sectionId === 'string' ? params.sectionId : '';
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
@@ -85,13 +86,16 @@ export default function TeacherCreateNoticeScreen() {
       if (tId) {
         const sects = await fetchTeacherSections(tId);
         setSections(sects);
-        if (sects.length > 0) setSectionId(sects[0].id);
+        if (sects.length > 0) {
+          const preferred = preferredSectionId && sects.some((s) => s.id === preferredSectionId) ? preferredSectionId : '';
+          setSectionId(preferred || sects[0].id);
+        }
       }
 
       setLoading(false);
     };
     init();
-  }, [fetchTeacherId, fetchTeacherSections]);
+  }, [fetchTeacherId, fetchTeacherSections, preferredSectionId]);
 
   const canSave = useMemo(() => {
     return (

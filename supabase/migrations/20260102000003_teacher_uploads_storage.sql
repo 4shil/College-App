@@ -12,10 +12,11 @@ ON CONFLICT (id) DO NOTHING;
 -- Policies (storage.objects is in the storage schema)
 
 DROP POLICY IF EXISTS "Authenticated read teacher_uploads" ON storage.objects;
-CREATE POLICY "Authenticated read teacher_uploads"
+DROP POLICY IF EXISTS "Public read teacher_uploads" ON storage.objects;
+CREATE POLICY "Public read teacher_uploads"
 ON storage.objects
 FOR SELECT
-TO authenticated
+TO anon, authenticated
 USING (bucket_id = 'teacher_uploads');
 
 DROP POLICY IF EXISTS "Authenticated upload teacher_uploads" ON storage.objects;
