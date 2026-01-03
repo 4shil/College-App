@@ -8,6 +8,7 @@ import {
   ViewStyle,
   Platform,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -33,7 +34,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   error = false,
   ...props
 }) => {
-  const { colors, isDark, canAnimateBackground } = useThemeStore();
+  const { colors, isDark, canAnimateBackground, capabilities } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -68,20 +69,49 @@ export const GlassInput: React.FC<GlassInputProps> = ({
     };
   });
 
+  const isGlassTheme = !!capabilities?.supportsGlassSurfaces;
+  const blurAmount = Math.max(0, Math.min(100, colors.blurIntensity));
+  const shouldBlur =
+    Platform.OS !== 'web' &&
+    !!capabilities?.supportsBlur &&
+    blurAmount > 0;
+
+  const baseBackground = isGlassTheme ? colors.glassBackground : colors.inputBackground;
+
+  // Only tint non-glass themes when an animated background is enabled; do not override
+  // alpha for already-translucent glass themes.
+  const resolvedBackground =
+    canAnimateBackground && !isGlassTheme
+      ? withAlpha(baseBackground, isDark ? 0.72 : 0.86)
+      : baseBackground;
+
   return (
     <Animated.View style={[styles.wrapper, animatedContainerStyle, containerStyle]}>
       <Animated.View
         style={[
           styles.container,
           {
-            backgroundColor: canAnimateBackground
-              ? withAlpha(colors.inputBackground, isDark ? 0.72 : 0.86)
-              : colors.inputBackground,
+            backgroundColor: shouldBlur ? 'transparent' : resolvedBackground,
             borderRadius: colors.borderRadius,
           },
           animatedBorderStyle,
         ]}
       >
+        {shouldBlur && (
+          <>
+            <BlurView
+              pointerEvents="none"
+              intensity={blurAmount}
+              tint={isDark ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFillObject, { backgroundColor: resolvedBackground }]}
+            />
+          </>
+        )}
+
         <View style={styles.innerContent}>
           {icon && (
             <Ionicons
@@ -132,6 +162,7 @@ const styles = StyleSheet.create({
   container: {
     height: 52,
     overflow: 'hidden',
+    position: 'relative',
   },
   innerContent: {
     flex: 1,

@@ -204,7 +204,6 @@ export default function SettingsScreen() {
           style={[
             styles.settingItem,
             {
-              backgroundColor: colors.cardBackground,
               borderBottomColor: colors.cardBorder,
               borderBottomWidth: colors.borderWidth,
             },
@@ -301,18 +300,9 @@ export default function SettingsScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
               {section.title}
             </Text>
-            <View
-              style={[
-                styles.sectionCard,
-                {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.cardBorder,
-                  borderWidth: colors.borderWidth,
-                },
-              ]}
-            >
+            <Card noPadding style={styles.sectionCard}>
               {section.items.map((item, index) => renderSettingItem(item, index))}
-            </View>
+            </Card>
           </Animated.View>
         ))}
 
@@ -415,7 +405,6 @@ const styles = StyleSheet.create({
   sectionCard: {
     borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
   },
   settingItem: {
     flexDirection: 'row',

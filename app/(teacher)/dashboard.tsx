@@ -69,14 +69,6 @@ export default function TeacherDashboard() {
     return { greetingText, timeText };
   }, []);
 
-  const tileAccent = {
-    attendance: colors.primary,
-    assignments: colors.secondary,
-    marks: colors.info,
-    notices: colors.warning,
-    important: colors.primary,
-  } as const;
-
   return (
     <AnimatedBackground>
       <ScrollView
@@ -91,18 +83,18 @@ export default function TeacherDashboard() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => router.push('/(teacher)/modules' as any)}
-              style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.12) }]}
+              style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
-              <Ionicons name="grid-outline" size={20} color={colors.primary} />
+              <Ionicons name="grid-outline" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
 
             <View style={styles.heroTopRight}>
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => router.push('/(teacher)/profile' as any)}
-                style={[styles.iconBtn, { backgroundColor: withAlpha(colors.secondary, isDark ? 0.18 : 0.12) }]}
+                style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
               >
-                <Ionicons name="person-circle-outline" size={24} color={colors.secondary} />
+                <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -110,16 +102,16 @@ export default function TeacherDashboard() {
           <Text style={[styles.heroGreeting, { color: colors.textPrimary }]} numberOfLines={1}>
             {hero.greetingText}
           </Text>
-          <Text style={[styles.heroTime, { color: colors.primary }]}>{hero.timeText}</Text>
+          <Text style={[styles.heroTime, { color: colors.textPrimary }]}>{hero.timeText}</Text>
 
           <View style={styles.heroActionsRow}>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => router.push('/(teacher)/notices' as any)}
-              style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.warning, isDark ? 0.18 : 0.12) }]}
+              style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
-              <Ionicons name="notifications-outline" size={18} color={colors.warning} />
-              <Text style={[styles.heroActionText, { color: colors.warning }]}>Notices</Text>
+              <Ionicons name="notifications-outline" size={18} color={colors.textPrimary} />
+              <Text style={[styles.heroActionText, { color: colors.textPrimary }]}>Notices</Text>
             </TouchableOpacity>
             <View style={styles.heroSpacer} />
             <ThemeToggle />
@@ -171,8 +163,8 @@ export default function TeacherDashboard() {
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
-                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.attendance, isDark ? 0.18 : 0.12) }]}>
-                  <Ionicons name="clipboard-outline" size={20} color={tileAccent.attendance} />
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="clipboard-outline" size={20} color={colors.textPrimary} />
                 </View>
                 <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                   Attendance
@@ -189,8 +181,8 @@ export default function TeacherDashboard() {
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
-                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.assignments, isDark ? 0.18 : 0.12) }]}>
-                  <Ionicons name="document-text-outline" size={20} color={tileAccent.assignments} />
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="document-text-outline" size={20} color={colors.textPrimary} />
                 </View>
                 <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                   Assignments
@@ -207,8 +199,8 @@ export default function TeacherDashboard() {
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
-                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.marks, isDark ? 0.18 : 0.12) }]}>
-                  <Ionicons name="stats-chart-outline" size={20} color={tileAccent.marks} />
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="stats-chart-outline" size={20} color={colors.textPrimary} />
                 </View>
                 <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                   Internal Marks
@@ -225,8 +217,8 @@ export default function TeacherDashboard() {
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
-                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.notices, isDark ? 0.18 : 0.12) }]}>
-                  <Ionicons name="notifications-outline" size={20} color={tileAccent.notices} />
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
                 </View>
                 <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                   Notices
@@ -398,8 +390,8 @@ export default function TeacherDashboard() {
                 >
                   <Card style={styles.tileCard}>
                     <View style={styles.noticeTileTop}>
-                      <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tileAccent.important, isDark ? 0.18 : 0.12) }]}>
-                        <Ionicons name="megaphone-outline" size={20} color={tileAccent.important} />
+                      <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                        <Ionicons name="megaphone-outline" size={20} color={colors.textPrimary} />
                       </View>
                       <View style={[styles.scopePill, { backgroundColor: withAlpha(colors.primary, isDark ? 0.22 : 0.12) }]}>
                         <Text style={[styles.scopePillText, { color: colors.primary }]} numberOfLines={1}>

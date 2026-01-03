@@ -106,6 +106,8 @@ export default function TeacherAppearanceSettingsScreen() {
   } = useThemeStore();
 
   const canUseBlur = capabilities.supportsBlur && animationsEnabled;
+  const isGlassTheme = !!capabilities.supportsGlassSurfaces;
+  const blurTint: 'light' | 'dark' = isDark ? 'dark' : 'light';
   const isDefaultGlassmorphism = activeThemeId === 'default' || activeThemeId === 'glassmorphism';
   const showAnimations = !!supportsAnimatedBackground && (!isDark || isDefaultGlassmorphism);
 
@@ -133,13 +135,26 @@ export default function TeacherAppearanceSettingsScreen() {
       <View style={styles.container}>
         <BlurView
           intensity={canUseBlur ? 80 : 0}
-          tint="dark"
-          style={[styles.headerBlur, { paddingTop: insets.top + 10 }]}
+          tint={blurTint}
+          style={[
+            styles.headerBlur,
+            {
+              paddingTop: insets.top + 10,
+              backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+            },
+          ]}
         >
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={[styles.backBtn, { backgroundColor: colors.cardBackground }]}
+              style={[
+                styles.backBtn,
+                {
+                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
             >
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -160,8 +175,14 @@ export default function TeacherAppearanceSettingsScreen() {
           <Animated.View entering={FadeInDown.delay(100).duration(400)}>
             <BlurView
               intensity={canUseBlur ? 60 : 0}
-              tint="dark"
-              style={[styles.section, { borderColor: colors.glassBorder }]}
+              tint={blurTint}
+              style={[
+                styles.section,
+                {
+                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                },
+              ]}
             >
               <View style={styles.sectionHeader}>
                 <Ionicons name="color-palette" size={24} color={colors.primary} />

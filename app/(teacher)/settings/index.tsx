@@ -138,7 +138,6 @@ export default function TeacherSettingsScreen() {
           style={[
             styles.settingItem,
             {
-              backgroundColor: colors.cardBackground,
               borderBottomColor: colors.cardBorder,
               borderBottomWidth: colors.borderWidth,
             },
@@ -223,18 +222,9 @@ export default function TeacherSettingsScreen() {
             style={styles.section}
           >
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{section.title}</Text>
-            <View
-              style={[
-                styles.sectionCard,
-                {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.cardBorder,
-                  borderWidth: colors.borderWidth,
-                },
-              ]}
-            >
+            <Card noPadding style={styles.sectionCard}>
               {section.items.map((item, index) => renderSettingItem(item, index))}
-            </View>
+            </Card>
           </Animated.View>
         ))}
 
@@ -297,7 +287,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginLeft: 4,
   },
-  sectionCard: { borderRadius: 16, overflow: 'hidden', borderWidth: 1 },
+  sectionCard: { borderRadius: 16, overflow: 'hidden' },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -95,6 +95,8 @@ export default function AppearanceSettingsScreen() {
   const router = useRouter();
   const { colors, animationsEnabled, toggleAnimations, mode, setMode, supportsAnimatedBackground, capabilities, activeThemeId, setActiveThemeId, isDark } = useThemeStore();
   const canUseBlur = capabilities.supportsBlur && animationsEnabled;
+  const isGlassTheme = !!capabilities.supportsGlassSurfaces;
+  const blurTint: 'light' | 'dark' = isDark ? 'dark' : 'light';
   const isDefaultGlassmorphism = activeThemeId === 'default' || activeThemeId === 'glassmorphism';
   const showAnimations = !!supportsAnimatedBackground && (!isDark || isDefaultGlassmorphism);
 
@@ -121,11 +123,28 @@ export default function AppearanceSettingsScreen() {
     <AnimatedBackground>
       <View style={styles2.container}>
         {/* Fixed Header */}
-        <BlurView intensity={canUseBlur ? 80 : 0} tint="dark" style={[styles2.headerBlur, { paddingTop: insets.top + 10 }]}>
+        <BlurView
+          intensity={canUseBlur ? 80 : 0}
+          tint={blurTint}
+          style={[
+            styles2.headerBlur,
+            {
+              paddingTop: insets.top + 10,
+              backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+            },
+          ]}
+        >
           <View style={styles2.header}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={[styles2.backBtn, { backgroundColor: colors.cardBackground }]}
+              style={[
+                styles2.backBtn,
+                {
+                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                  borderWidth: colors.borderWidth,
+                },
+              ]}
             >
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -153,8 +172,14 @@ export default function AppearanceSettingsScreen() {
           <Animated.View entering={FadeInDown.delay(100).duration(400)}>
             <BlurView
               intensity={canUseBlur ? 60 : 0}
-              tint="dark"
-              style={[styles2.section, { borderColor: colors.glassBorder }]}
+              tint={blurTint}
+              style={[
+                styles2.section,
+                {
+                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                },
+              ]}
             >
               <View style={styles2.sectionHeader}>
                 <Ionicons name="color-palette" size={24} color={colors.primary} />
@@ -225,8 +250,14 @@ export default function AppearanceSettingsScreen() {
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             <BlurView
               intensity={canUseBlur ? 60 : 0}
-              tint="dark"
-              style={[styles2.section, { borderColor: colors.glassBorder }]}
+              tint={blurTint}
+              style={[
+                styles2.section,
+                {
+                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                },
+              ]}
             >
               <View style={styles2.sectionHeader}>
                 <Ionicons name="layers" size={24} color={colors.primary} />

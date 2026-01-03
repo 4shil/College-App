@@ -66,7 +66,15 @@ export const Card: React.FC<CardProps> = ({
     !!capabilities?.supportsBlur &&
     blurAmount > 0;
 
-  const isLightGlass = !!capabilities?.supportsGlassSurfaces && !isDark;
+  const isGlassTheme = !!capabilities?.supportsGlassSurfaces;
+  const isGlassLightMode = isGlassTheme && !isDark;
+  const resolvedBorderColor = isGlassTheme ? colors.glassBorder : colors.cardBorder;
+  const resolvedNonBlurBackground = isGlassTheme ? colors.glassBackground : colors.cardBackground;
+
+  const shouldLightGlassWhileAnimated =
+    !!canAnimateBackground &&
+    !!capabilities?.supportsGlassSurfaces &&
+    !isDark;
 
   const getColorAlpha = (color: string): number | null => {
     const c = color.trim();
@@ -118,19 +126,21 @@ export const Card: React.FC<CardProps> = ({
 
   const tintedCardBackground = withAlpha(colors.cardBackground, isDark ? 0.72 : 0.86);
 
-  const resolvedCardBackground = isLightGlass
-    ? (isAlreadyTranslucent ? colors.cardBackground : withAlpha(colors.cardBackground, 0.35))
+  const resolvedCardBackground = shouldLightGlassWhileAnimated
+    ? withAlpha(colors.cardBackground, 0.62)
     : (shouldTintForAnimatedBg ? tintedCardBackground : colors.cardBackground);
+
+  const resolvedBackground = shouldBlur
+    ? 'transparent'
+    : (isGlassTheme ? resolvedNonBlurBackground : resolvedCardBackground);
 
   const content = (
     <View
       style={[
         styles.content,
         {
-          backgroundColor: shouldBlur
-            ? 'transparent'
-            : resolvedCardBackground,
-          borderColor: colors.cardBorder,
+          backgroundColor: resolvedBackground,
+          borderColor: resolvedBorderColor,
           borderWidth: colors.borderWidth,
           borderRadius: colors.borderRadius,
           padding: noPadding ? 0 : 18,
@@ -150,7 +160,7 @@ export const Card: React.FC<CardProps> = ({
           // Critical: ensure overflow clipping uses rounded corners.
           borderRadius: colors.borderRadius,
           // Fill the wrapper to avoid corner artifacts on some devices.
-          backgroundColor: shouldBlur ? 'transparent' : resolvedCardBackground,
+          backgroundColor: resolvedBackground,
         },
         style,
       ]}
@@ -162,7 +172,7 @@ export const Card: React.FC<CardProps> = ({
           style={[
             styles.blur,
             {
-              backgroundColor: isLightGlass ? 'transparent' : colors.cardBackground,
+              backgroundColor: (shouldLightGlassWhileAnimated || isGlassLightMode) ? 'transparent' : colors.cardBackground,
               borderRadius: colors.borderRadius,
             },
           ]}
