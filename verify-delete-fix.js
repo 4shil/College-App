@@ -15,13 +15,20 @@ async function testDeleteFix() {
   console.log('🧪 Testing Delete Fix\n');
 
   // Login as admin
+  const adminEmail = process.env.TEST_ADMIN_EMAIL || 'admin@jpmcollege.edu';
+  const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'Admin@123';
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email: 'admin@jpmcollege.edu',
-    password: 'Admin@123',
+    email: adminEmail,
+    password: adminPassword,
   });
 
   if (authError) {
     console.error('❌ Login failed. Make sure test users exist.');
+    console.log('\n💡 Create a verified admin user first, then retry:');
+    console.log('   Option A (recommended): Run scripts/create-single-admin.sql or scripts/create-verified-admin-users.sql in Supabase SQL Editor');
+    console.log('   Option B: Set SUPABASE_SERVICE_ROLE_KEY and run: node scripts/create-test-users.js');
+    console.log('\n💡 You can also override credentials with:');
+    console.log('   $env:TEST_ADMIN_EMAIL = "..."; $env:TEST_ADMIN_PASSWORD = "..."');
     process.exit(1);
   }
 

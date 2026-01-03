@@ -159,13 +159,25 @@ export default function TeacherLayout() {
 
   const unlockedNavItems = getUnlockedTeacherNavItems(roles);
 
+  const isPrincipal = roles.includes('principal');
+  const isTeacherCapable = roles.some((r) =>
+    ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(r)
+  );
+
+  // If the user is principal-only, route them to the principal module by default.
+  useEffect(() => {
+    if (isPrincipal && !isTeacherCapable && !pathname.includes('/principal')) {
+      router.replace('/(teacher)/principal' as any);
+    }
+  }, [isPrincipal, isTeacherCapable, pathname, router]);
+
   const handleNavigate = (route: string) => {
     router.replace(route as any);
   };
 
   return (
     <Restricted
-      roles={['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']}
+      roles={['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod', 'principal']}
       showDeniedMessage
       deniedMessage="Teacher access required."
     >
@@ -197,6 +209,13 @@ export default function TeacherLayout() {
           <Stack.Screen name="diary/index" />
           <Stack.Screen name="diary/create" />
           <Stack.Screen name="diary/edit/[id]" />
+
+          {/* Role-expansion modules */}
+          <Stack.Screen name="class-tools/index" />
+          <Stack.Screen name="mentor/index" />
+          <Stack.Screen name="coordinator/index" />
+          <Stack.Screen name="department/index" />
+          <Stack.Screen name="principal/index" />
         </Stack>
         <GlassDock activeRoute={pathname} onNavigate={handleNavigate} navItems={unlockedNavItems} />
       </View>

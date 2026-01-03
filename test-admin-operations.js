@@ -13,9 +13,12 @@ const { createClient } = require('@supabase/supabase-js');
 const SUPABASE_URL = 'https://celwfcflcofejjpkpgcq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlbHdmY2ZsY29mZWpqcGtwZ2NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjEzNTQsImV4cCI6MjA3OTgzNzM1NH0.hDdQIjIy5fkmdXV2GjWlATujnXgVcXZD932_k1KvLwA';
 
-// Test admin credentials
-const ADMIN_EMAIL = 'admin@jpmcollege.edu';
-const ADMIN_PASSWORD = 'Admin@123';
+// Test admin credentials (verified users)
+// Override via env if needed:
+//   $env:TEST_ADMIN_EMAIL = 'superadmin@college.com'
+//   $env:TEST_ADMIN_PASSWORD = 'Super@2024'
+const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'superadmin@college.com';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'Super@2024';
 
 async function main() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -33,7 +36,11 @@ async function main() {
 
   if (authError) {
     console.error('❌ Login failed:', authError.message);
-    console.log('\n💡 Make sure you\'ve run: node scripts/create-test-users.js');
+    console.log('\n💡 Create a verified admin user first, then retry:');
+    console.log('   Option A (recommended): Run scripts/create-verified-admin-users.sql in Supabase SQL Editor');
+    console.log('   Option B: Set SUPABASE_SERVICE_ROLE_KEY and run: node scripts/create-test-users.js');
+    console.log('\n💡 You can also override credentials with:');
+    console.log('   $env:TEST_ADMIN_EMAIL = "..."; $env:TEST_ADMIN_PASSWORD = "..."');
     process.exit(1);
   }
 

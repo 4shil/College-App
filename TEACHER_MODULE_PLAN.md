@@ -1,6 +1,6 @@
 # Teacher Module Plan (MVP → Full)
 
-Date: 2026-01-02
+Date: 2026-01-03
 
 ## Current State (Repo Reality)
 - Teacher module is already **multi-module** in the repo (not dashboard-only):
@@ -14,7 +14,7 @@ Date: 2026-01-02
     - Submissions + grading screen is implemented and routed: `/(teacher)/assignments/submissions`
   - Notices: list + create routes exist
 
-## Implementation Audit (As of 2026-01-02)
+## Implementation Audit (As of 2026-01-03)
 
 ### Recent completions (since last audit)
 - **Planner/Diary approvals backend enforcement:** approvals are enforced via RPC functions + RLS (admins can’t bypass workflow via direct table updates).
@@ -39,7 +39,7 @@ This section answers: **“How much is completed and how much is left?”** usin
 - Lesson Planner (draft + submit)
 - Work Diary (draft + submit)
 
-**Scope B — Teacher Routes/Screens:** 21/21 implemented (100%)
+**Scope B — Teacher Routes/Screens:** 22/22 implemented (100%)
 - `/(teacher)/dashboard`
 - `/(teacher)/profile`
 - `/(teacher)/timetable`
@@ -50,6 +50,7 @@ This section answers: **“How much is completed and how much is left?”** usin
 - `/(teacher)/notices` + `/(teacher)/notices/create`
 - `/(teacher)/planner` + `/(teacher)/planner/create` + `/(teacher)/planner/edit/[id]`
 - `/(teacher)/diary` + `/(teacher)/diary/create` + `/(teacher)/diary/edit/[id]`
+- `/(teacher)/principal`
 
 ### What works end-to-end today
 - **Timetable:** teacher can view assigned `timetable_entries` for current academic year.
@@ -68,8 +69,9 @@ The following items are planned in the “Full Feature Catalogue (2025)” below
 **Role expansion (Class Teacher / Mentor / Coordinator / HOD / Principal)**
 - Class teacher tools: class roster, cross-subject summaries, shortage/weak student workflows.
 - Mentor tools: mentee list, counselling notes, follow-up reminders.
-- Coordinator substitution workflow (assignment + auto-expire + audit) in Teacher module.
-- HOD/Principal approval dashboards and department-level oversight inside Teacher module.
+- Coordinator substitution workflow: ✅ request creation + list implemented; ⚠️ auto-expire + richer audit views not implemented.
+- HOD tools inside Teacher module: ✅ substitution approve/reject implemented; ⚠️ broader approval dashboards stay in Admin.
+- Principal tools inside Teacher module: ✅ read-only monitoring screen implemented; ⚠️ principal approval dashboard stays in Admin.
 
 **Approvals workflow (HOD → Principal)**
 - **Implemented (Admin module):** HOD/Principal approvals are available via the Admin approvals screen, and approvals are backend-enforced.
@@ -95,10 +97,11 @@ The following items are planned in the “Full Feature Catalogue (2025)” below
 
 Roles:
 - ✅ Subject Teacher (base) — implemented
-- ❌ Class Teacher tools — NOT IMPLEMENTED (hidden)
-- ❌ Mentor tools — NOT IMPLEMENTED (hidden)
-- ❌ Coordinator substitutions — NOT IMPLEMENTED (hidden)
-- ❌ HoD tools inside Teacher module — NOT IMPLEMENTED (hidden; approvals exist in Admin module)
+- ✅ Class Teacher tools — implemented (MVP: read-only class roster)
+- ✅ Mentor tools — implemented (mentee list + session notes)
+- ✅ Coordinator substitutions — implemented (request creation + list; approvals handled by HoD/Admin)
+- ⚠️ HoD tools inside Teacher module — partial (MVP: department overview + substitution approve/reject; other approvals still in Admin)
+- ✅ Principal tools inside Teacher module — implemented (MVP: read-only monitoring screen)
 
 0) Login + Profile
 - ✅ Email login + multi-role detection
@@ -247,7 +250,7 @@ Features:
   - Other admin-category roles default to **Admin dashboard**
   - Teacher-category roles default to **Teacher dashboard**
 - Profile view/edit (basic fields like name/phone)
-- Profile photo upload (NOT IMPLEMENTED)
+- Profile photo upload (Storage + profiles.photo_url) — implemented
 - Secure session management
 
 Functions:

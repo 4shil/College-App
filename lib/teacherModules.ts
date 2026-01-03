@@ -14,7 +14,8 @@ export type TeacherModuleId =
   | 'class_tools'
   | 'mentor'
   | 'coordinator'
-  | 'department';
+  | 'department'
+  | 'principal';
 
 export type TeacherNavItem = {
   id: TeacherModuleId;
@@ -137,7 +138,7 @@ export function getTeacherNavItems(): TeacherNavItem[] {
       icon: 'people-outline',
       route: '/(teacher)/class-tools',
       nestedRoutes: ['class-tools'],
-      implemented: false,
+      implemented: true,
       requiresAnyRole: ['class_teacher', 'hod'],
     },
     {
@@ -146,7 +147,7 @@ export function getTeacherNavItems(): TeacherNavItem[] {
       icon: 'heart-outline',
       route: '/(teacher)/mentor',
       nestedRoutes: ['mentor'],
-      implemented: false,
+      implemented: true,
       requiresAnyRole: ['mentor', 'hod'],
     },
     {
@@ -155,7 +156,7 @@ export function getTeacherNavItems(): TeacherNavItem[] {
       icon: 'swap-horizontal-outline',
       route: '/(teacher)/coordinator',
       nestedRoutes: ['coordinator'],
-      implemented: false,
+      implemented: true,
       requiresAnyRole: ['coordinator', 'hod'],
     },
     {
@@ -164,8 +165,18 @@ export function getTeacherNavItems(): TeacherNavItem[] {
       icon: 'business-outline',
       route: '/(teacher)/department',
       nestedRoutes: ['department'],
-      implemented: false,
+      implemented: true,
       requiresAnyRole: ['hod'],
+    },
+
+    {
+      id: 'principal',
+      title: 'Principal',
+      icon: 'school-outline',
+      route: '/(teacher)/principal',
+      nestedRoutes: ['principal'],
+      implemented: true,
+      requiresAnyRole: ['principal'],
     },
   ];
 }
