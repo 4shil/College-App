@@ -35,7 +35,7 @@ export const defaultDarkTokens: ThemeTokensNormalized = {
       dark: '#7C3AED',
     },
     secondary: {
-      base: '#06B6D4',
+      base: '#0658d4ff',
       light: '#22D3EE',
     },
   },
