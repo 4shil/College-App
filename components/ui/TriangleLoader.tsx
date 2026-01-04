@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleSheet, View, ViewStyle } from 'react-native';
+import { Animated, Easing, StyleSheet, View, ViewStyle } from 'react-native';
 import { useThemeStore } from '../../store/themeStore';
 
 export type TriangleLoaderProps = {
@@ -9,154 +9,118 @@ export type TriangleLoaderProps = {
   style?: ViewStyle;
 };
 
-const TRI_HEIGHT_RATIO = 0.866; // ~= sqrt(3)/2
+const BAR_COUNT = 8;
 
 export function TriangleLoader({ size = 50, color, animating = true, style }: TriangleLoaderProps) {
   const { colors } = useThemeStore();
   const fill = color ?? colors.primary;
 
-  const progress = useRef(new Animated.Value(0)).current;
+  const barProgress = useRef(
+    Array.from({ length: BAR_COUNT }, () => new Animated.Value(0))
+  ).current;
 
   useEffect(() => {
     if (!animating) {
-      progress.stopAnimation(() => {
-        progress.setValue(0);
-      });
+      for (const v of barProgress) {
+        v.stopAnimation(() => v.setValue(0));
+      }
       return;
     }
 
-    const loop = Animated.loop(
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-        isInteraction: false,
-      }),
-      { iterations: -1, resetBeforeIteration: true }
-    );
+    const animations = barProgress.map((v, index) => {
+      const delay = (index + 1) * 100;
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(v, {
+            toValue: 1,
+            duration: 600,
+            easing: Easing.linear,
+            useNativeDriver: true,
+            isInteraction: false,
+          }),
+          Animated.timing(v, {
+            toValue: 0,
+            duration: 600,
+            easing: Easing.linear,
+            useNativeDriver: true,
+            isInteraction: false,
+          }),
+        ]),
+        { iterations: -1, resetBeforeIteration: true }
+      );
+    });
 
-    loop.start();
+    animations.forEach((a) => a.start());
     return () => {
-      loop.stop();
-      progress.setValue(0);
+      animations.forEach((a) => a.stop());
+      for (const v of barProgress) v.setValue(0);
     };
-  }, [animating, progress]);
+  }, [animating, barProgress]);
 
-  const { width, height, smallSide, smallHeight } = useMemo(() => {
-    const w = size;
-    const h = size * TRI_HEIGHT_RATIO;
-    const s = Math.round(size / 2);
-    const sh = s * TRI_HEIGHT_RATIO;
-    return { width: w, height: h, smallSide: s, smallHeight: sh };
+  const { barWidth, barHeight, gap, containerWidth } = useMemo(() => {
+    // Keep the same visual proportions as the provided CSS loader:
+    // size=50 => barWidth≈10, barHeight≈70.
+    const w = Math.max(2, Math.round(size * 0.2));
+    const h = Math.max(16, Math.round(size * 1.4));
+    const g = Math.max(2, Math.round(w * 0.4));
+    const total = BAR_COUNT * w + (BAR_COUNT - 1) * g;
+    return { barWidth: w, barHeight: h, gap: g, containerWidth: total };
   }, [size]);
-
-  const topOpacity = progress.interpolate({
-    inputRange: [0, 0.1333, 0.6, 0.7333, 1],
-    outputRange: [0, 1, 1, 0, 0],
-    extrapolate: 'clamp',
-  });
-
-  const rightOpacity = progress.interpolate({
-    inputRange: [0, 0.2667, 0.6, 0.8667, 1],
-    outputRange: [0, 1, 1, 0, 0],
-    extrapolate: 'clamp',
-  });
-
-  const leftOpacity = progress.interpolate({
-    inputRange: [0, 0.4, 0.6, 1],
-    outputRange: [0, 1, 1, 0],
-    extrapolate: 'clamp',
-  });
-
-  const topScale = progress.interpolate({
-    inputRange: [0, 0.1333, 0.6, 0.7333, 1],
-    outputRange: [0.88, 1, 1, 0.9, 0.88],
-    extrapolate: 'clamp',
-  });
-
-  const rightScale = progress.interpolate({
-    inputRange: [0, 0.2667, 0.6, 0.8667, 1],
-    outputRange: [0.88, 1, 1, 0.9, 0.88],
-    extrapolate: 'clamp',
-  });
-
-  const leftScale = progress.interpolate({
-    inputRange: [0, 0.4, 0.6, 1],
-    outputRange: [0.88, 1, 1, 0.88],
-    extrapolate: 'clamp',
-  });
 
   return (
     <View
-      style={[styles.container, { width, height }, style]}
+      style={[styles.container, { width: containerWidth, height: barHeight }, style]}
       accessibilityRole="progressbar"
       accessibilityLabel="Loading"
     >
-      <Animated.View
-        style={[
-          styles.triangleWrap,
-          {
-            left: (width - smallSide) / 2,
-            top: 0,
-            opacity: topOpacity,
-            transform: [{ scale: topScale }],
-          },
-        ]}
-      >
-        <View style={triangleStyle(smallSide, fill)} />
-      </Animated.View>
+      <View style={[styles.row, { gap }]}>
+        {barProgress.map((v, index) => {
+          const scaleY = v.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.1, 1],
+          });
 
-      <Animated.View
-        style={[
-          styles.triangleWrap,
-          {
-            left: width / 2,
-            top: height - smallHeight,
-            opacity: rightOpacity,
-            transform: [{ scale: rightScale }],
-          },
-        ]}
-      >
-        <View style={triangleStyle(smallSide, fill)} />
-      </Animated.View>
+          const opacity = v.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.15, 1],
+          });
 
-      <Animated.View
-        style={[
-          styles.triangleWrap,
-          {
-            left: 0,
-            top: height - smallHeight,
-            opacity: leftOpacity,
-            transform: [{ scale: leftScale }],
-          },
-        ]}
-      >
-        <View style={triangleStyle(smallSide, fill)} />
-      </Animated.View>
+          return (
+            <Animated.View
+              key={index}
+              style={[
+                styles.bar,
+                {
+                  width: barWidth,
+                  height: barHeight,
+                  backgroundColor: fill,
+                  opacity,
+                  transform: [{ scaleY }],
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
     </View>
   );
-}
-
-function triangleStyle(side: number, fill: string) {
-  const h = side * TRI_HEIGHT_RATIO;
-
-  return {
-    width: 0,
-    height: 0,
-    borderLeftWidth: side / 2,
-    borderRightWidth: side / 2,
-    borderBottomWidth: h,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: fill,
-  } as const;
 }
 
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  triangleWrap: {
-    position: 'absolute',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  bar: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    transformOrigin: 'bottom' as any,
   },
 });

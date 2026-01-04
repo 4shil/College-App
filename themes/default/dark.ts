@@ -1,12 +1,12 @@
 import { ThemeTokensNormalized } from '../../theme/types';
 
-// Default theme (DARK) — extracted 1:1 from the previous `store/themeStore.ts` darkColors.
-// IMPORTANT: Do not change any values.
+// Glassmorphism theme (DARK).
+// NOTE: Background gradient tuned for a bluish→pinkish look.
 export const defaultDarkTokens: ThemeTokensNormalized = {
   background: {
     base: '#0F0F1A',
-    gradientStart: '#0F0F1A',
-    gradientEnd: '#1A1A2E',
+    gradientStart: '#101A33',
+    gradientEnd: '#2A1030',
   },
 
   surface: {

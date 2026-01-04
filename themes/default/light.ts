@@ -1,12 +1,12 @@
 import { ThemeTokensNormalized } from '../../theme/types';
 
-// Default theme (LIGHT) — extracted 1:1 from the previous `store/themeStore.ts` lightColors.
-// IMPORTANT: Do not change any values.
+// Glassmorphism theme (LIGHT).
+// NOTE: Background gradient tuned for a bluish→pinkish look.
 export const defaultLightTokens: ThemeTokensNormalized = {
   background: {
     base: '#FFFFFF',
-    gradientStart: '#FFFFFF',
-    gradientEnd: '#EFF6FF',
+    gradientStart: '#EAF2FF',
+    gradientEnd: '#FFE7F3',
   },
 
   surface: {
