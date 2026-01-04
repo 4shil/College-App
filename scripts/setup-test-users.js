@@ -2,12 +2,47 @@
 // Run: node scripts/setup-test-users.js
 
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 const SUPABASE_URL = 'https://celwfcflcofejjpkpgcq.supabase.co';
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function loadServiceRoleKey() {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Fallback: read from repo-local .env (gitignored) without requiring dotenv.
+  try {
+    const envPath = path.resolve(__dirname, '..', '.env');
+    if (!fs.existsSync(envPath)) return null;
+
+    const raw = fs.readFileSync(envPath, 'utf8');
+    const lines = raw.split(/\r?\n/);
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const idx = trimmed.indexOf('=');
+      if (idx <= 0) continue;
+      const key = trimmed.slice(0, idx).trim();
+      if (key !== 'SUPABASE_SERVICE_ROLE_KEY') continue;
+      let value = trimmed.slice(idx + 1).trim();
+      // Strip surrounding quotes.
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      return value || null;
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
+}
+
+const SERVICE_ROLE_KEY = loadServiceRoleKey();
 
 if (!SERVICE_ROLE_KEY) {
-  console.log('❌ SUPABASE_SERVICE_ROLE_KEY environment variable required');
+  console.log('❌ SUPABASE_SERVICE_ROLE_KEY is required (env var or .env file)');
   process.exit(1);
 }
 
@@ -57,8 +92,77 @@ async function runSQL(sql) {
   });
 }
 
+function restRequest(pathnameWithQuery, method = 'GET', body = null) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(`${SUPABASE_URL}${pathnameWithQuery}`);
+    const data = body ? JSON.stringify(body) : null;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'apikey': SERVICE_ROLE_KEY,
+      'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+      'Prefer': 'return=representation',
+    };
+    if (data) headers['Content-Length'] = Buffer.byteLength(data);
+
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method,
+      headers,
+    };
+
+    const req = https.request(options, (res) => {
+      let responseBody = '';
+      res.on('data', (chunk) => (responseBody += chunk));
+      res.on('end', () => {
+        let parsed = responseBody;
+        try {
+          parsed = JSON.parse(responseBody || 'null');
+        } catch {
+          // keep as string
+        }
+        resolve({ status: res.statusCode, body: parsed });
+      });
+    });
+
+    req.on('error', reject);
+    if (data) req.write(data);
+    req.end();
+  });
+}
+
+async function ensureCseDepartment() {
+  // setup_test_teacher() assumes departments.code='CSE' exists.
+  const lookup = await restRequest('/rest/v1/departments?code=eq.CSE&select=id');
+  if (lookup.status >= 200 && lookup.status < 300 && Array.isArray(lookup.body) && lookup.body[0]?.id) {
+    return lookup.body[0].id;
+  }
+
+  const create = await restRequest('/rest/v1/departments', 'POST', {
+    code: 'CSE',
+    name: 'Computer Science and Engineering',
+    short_name: 'CSE',
+    is_active: true,
+  });
+
+  if (!(create.status >= 200 && create.status < 300) || !Array.isArray(create.body) || !create.body[0]?.id) {
+    const msg = typeof create.body === 'string' ? create.body : JSON.stringify(create.body);
+    throw new Error(`Failed to ensure CSE department (status ${create.status}): ${msg}`);
+  }
+
+  return create.body[0].id;
+}
+
 async function main() {
   console.log('Setting up test user profiles and roles...\n');
+
+  try {
+    await ensureCseDepartment();
+  } catch (e) {
+    console.log(`⚠️  Preflight warning: ${e.message}`);
+    console.log('   Continuing anyway (RPC functions may still fail if required reference data is missing).\n');
+  }
   
   const setupCommands = [
     { sql: "SELECT setup_test_admin('admin@jpmcollege.edu')", label: 'Admin' },

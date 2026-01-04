@@ -43,6 +43,7 @@ export type TodayClassSummary = {
     courseName: string;
     courseId: string;
     yearId: string;
+    sectionId: string;
     programmeId: string;
     departmentId: string;
     period: string;
@@ -217,6 +218,7 @@ export function useTeacherDashboardSummary() {
                 period,
                 course_id,
                 year_id,
+                section_id,
                 programme_id,
                 room,
                 is_lab,
@@ -279,6 +281,7 @@ export function useTeacherDashboardSummary() {
                         courseName: (e.courses?.name || subjectLabel) as string,
                         courseId: (e.course_id || '') as string,
                         yearId: (e.year_id || '') as string,
+                        sectionId: (e.section_id || '') as string,
                         programmeId: (e.programme_id || '') as string,
                         departmentId: (e.courses?.department_id || '') as string,
                         period: String(e.period),

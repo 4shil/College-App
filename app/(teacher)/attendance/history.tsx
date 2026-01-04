@@ -18,6 +18,7 @@ type AttendanceHistoryRow = {
   timetable_entry_id: string | null;
   course_id: string;
   year_id: string | null;
+  section_id: string | null;
   programme_id: string | null;
   department_id: string | null;
   courses?: { code: string; name: string; short_name: string | null; department_id?: string | null } | null;
@@ -59,6 +60,7 @@ export default function TeacherAttendanceHistoryScreen() {
           timetable_entry_id,
           course_id,
           year_id,
+          section_id,
           programme_id,
           department_id,
           courses:course_id(code, name, short_name, department_id)
@@ -105,6 +107,7 @@ export default function TeacherAttendanceHistoryScreen() {
         courseName: r.courses?.name || '',
         courseId: r.course_id,
         yearId: r.year_id || '',
+        sectionId: r.section_id || '',
         programmeId: r.programme_id || '',
         departmentId: deptId,
         period: String(r.period),

@@ -15,6 +15,7 @@ type TimetableEntryRow = {
   period: number;
   course_id: string | null;
   year_id: string | null;
+  programme_id?: string | null;
   section_id: string | null;
   room: string | null;
   is_lab: boolean | null;
@@ -78,6 +79,7 @@ export default function TeacherSessionToolsScreen() {
             period,
             course_id,
             year_id,
+            programme_id,
             section_id,
             room,
             is_lab,
@@ -144,6 +146,8 @@ export default function TeacherSessionToolsScreen() {
         entryId: entry.id,
         courseId: entry.course_id as string,
         yearId: entry.year_id as string,
+        sectionId: entry.section_id || '',
+        programmeId: (entry.programme_id as string | null) || '',
         period: String(entry.period),
         date: todayYmd(),
         courseName: entry.courses?.name || '',

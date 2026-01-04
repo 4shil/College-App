@@ -32,10 +32,17 @@ export type TeacherNavItem = {
   requiresAnyRole?: RoleName[];
 };
 
-const TEACHER_BASE_ROLES: RoleName[] = ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'];
+const TEACHER_BASE_ROLES: RoleName[] = ['subject_teacher', 'class_teacher', 'mentor', 'hod'];
+const COORDINATOR_ROLE: RoleName = 'coordinator';
 
 function hasAny(roles: RoleName[], required: RoleName[]) {
   return required.some((r) => roles.includes(r));
+}
+
+function isCoordinatorOnly(roles: RoleName[]): boolean {
+  // Coordinator-only = has coordinator, and does not have any base teacher capability.
+  // (Admin roles like principal may co-exist, but should not unlock teacher workflows.)
+  return roles.includes(COORDINATOR_ROLE) && !hasAny(roles, TEACHER_BASE_ROLES);
 }
 
 /**
@@ -60,11 +67,21 @@ function impliedRoles(roles: RoleName[]): Set<RoleName> {
 }
 
 export function canAccessTeacherModule(item: TeacherNavItem, roles: RoleName[]): boolean {
+  const coordinatorOnly = isCoordinatorOnly(roles);
+
+  // Strict mode: coordinator-only users should not get general teacher workflows.
+  if (coordinatorOnly) {
+    if (item.id === 'coordinator') return true;
+    if (item.id === 'profile' || item.id === 'settings') return true;
+    if (roles.includes('principal') && item.id === 'principal') return true;
+    return false;
+  }
+
   const effective = impliedRoles(roles);
 
   // Base modules: any teacher-capable role.
   if (!item.requiresAnyRole || item.requiresAnyRole.length === 0) {
-    return hasAny(Array.from(effective), TEACHER_BASE_ROLES) || effective.has('subject_teacher');
+    return hasAny(Array.from(effective), TEACHER_BASE_ROLES) || effective.has('subject_teacher') || effective.has(COORDINATOR_ROLE);
   }
 
   return item.requiresAnyRole.some((r) => effective.has(r));

@@ -1,181 +1,219 @@
-# Teacher Module Plan (MVP → Full)
+## Teacher Module Plan — Implementation Audit (MVP → Full)
 
-Date: 2026-01-03
+Date: 2026-01-04
 
-## Current State (Repo Reality)
-- Teacher module is already **multi-module** in the repo (not dashboard-only):
-  - Navbar: GlassDock with multiple tabs (dashboard, profile, timetable, attendance, results, materials, assignments, notices, planner, diary)
-  - Attendance:
-    - Mark attendance (existing)
-    - Attendance history screen is implemented and routed: `/(teacher)/attendance/history`
-  - Materials: list + create routes exist
-  - Results: marks entry routes exist
-  - Assignments: list + create routes exist
-    - Submissions + grading screen is implemented and routed: `/(teacher)/assignments/submissions`
-  - Notices: list + create routes exist
+This document is an audit of **what is actually implemented in the repo** vs **what is not implemented / partially implemented**.
 
-## Implementation Audit (As of 2026-01-03)
+## TL;DR (Status)
 
-### Recent completions (since last audit)
-- **Planner/Diary approvals backend enforcement:** approvals are enforced via RPC functions + RLS (admins can’t bypass workflow via direct table updates).
-- **Admin approvals UI:** a styled screen exists to approve/reject planners/diaries.
-- **Teacher rejection loop:** teacher lists show rejection reason and allow resubmission for rejected planners/diaries.
-- **Edit & Resubmit screens (Teacher):** dedicated edit routes added for rejected planners/diaries so teachers can update JSON content then resubmit.
-- **Teacher RBAC wrapper (layout-level):** `/(teacher)` routes are now gated via `Restricted` to teacher/HOD roles.
-- **RLS tightened for teachers:** teachers can no longer directly set “approved” statuses; they can only edit/submit in allowed states.
+### Implemented (Teacher app UI + routes exist)
+- Dashboard + Modules hub
+- Profile (basic edit + photo upload)
+- Settings + change password
+- Timetable (today/week view) + per-period **Session tools** screen
+- Attendance: today list, mark screen, history screen (with RLS/time-window error messaging)
+- Materials: list + create + file upload to Supabase Storage
+- Assignments: list + create + submissions/grading screen
+- Notices: list + create + attachment upload
+- Results (internal/model): selection flow + marks grid + **CSV import** + **Final submit (lock)**
+- Lesson Planner: list + create + submit + rejected edit/resubmit
+- Work Diary: list + create + submit + rejected edit/resubmit
 
-### What is completed now (MVP core flows)
-This section answers: **“How much is completed and how much is left?”** using two scopes:
+### Implemented (Role expansion modules, but scope-limited)
+- Class Tools (`class_teacher`/`hod`): class roster + a small “today summary” (attendance counts)
+- Mentor (`mentor`/`hod`): mentee list + mentoring session notes
+- Coordinator (`coordinator`/`hod`): substitution request creation + list
+- Department (`hod`): substitution approve/reject + simple teacher list
+- Principal (`principal`): read-only monitoring screen
 
-**Scope A — Teacher Navbar Modules (MVP):** 10/10 implemented (100%)
-- Dashboard
-- Profile (basic view/edit)
-- Timetable
-- Attendance (mark + history)
-- Results (internal/model marks entry)
-- Materials (create + list)
-- Assignments (create + list + grade submissions)
-- Notices (list + create class notice)
-- Lesson Planner (draft + submit)
-- Work Diary (draft + submit)
+### Not implemented / gaps (still remaining)
+- Push notifications (materials/assignments/notices/marks/planner/diary)
+- Offline-first mode + sync
+- Teacher-side Planner/Diary approval UI (approvals currently stay in Admin)
+- Substitution extras: auto-expire, richer audit timeline, escalation rules
+- **“Coordinator-only strict mode”** (see “Known gaps” below)
 
-**Scope B — Teacher Routes/Screens:** 22/22 implemented (100%)
+---
+
+## Implemented routes (repo reality)
+
+These are present under `app/(teacher)` and registered in the teacher stack:
+
+Core:
 - `/(teacher)/dashboard`
+- `/(teacher)/modules`
 - `/(teacher)/profile`
+- `/(teacher)/settings` + `/(teacher)/change-password`
 - `/(teacher)/timetable`
+- `/(teacher)/session/[entryId]`
+
+Subject teacher modules:
 - `/(teacher)/attendance` + `/(teacher)/attendance/mark` + `/(teacher)/attendance/history`
-- `/(teacher)/results` + `/(teacher)/results/mark`
 - `/(teacher)/materials` + `/(teacher)/materials/create`
 - `/(teacher)/assignments` + `/(teacher)/assignments/create` + `/(teacher)/assignments/submissions`
 - `/(teacher)/notices` + `/(teacher)/notices/create`
+- `/(teacher)/results` + `/(teacher)/results/mark`
 - `/(teacher)/planner` + `/(teacher)/planner/create` + `/(teacher)/planner/edit/[id]`
 - `/(teacher)/diary` + `/(teacher)/diary/create` + `/(teacher)/diary/edit/[id]`
+
+Role expansion modules:
+- `/(teacher)/class-tools`
+- `/(teacher)/mentor`
+- `/(teacher)/coordinator`
+- `/(teacher)/department`
 - `/(teacher)/principal`
 
-### What works end-to-end today
-- **Timetable:** teacher can view assigned `timetable_entries` for current academic year.
-- **Attendance:** teacher can load today’s periods, mark P/A/L, and view/edit recent history.
-  - Server-side enforcement: attendance marking/editing is allowed only within a time window (period end + grace) via RLS.
-- **Materials:** teacher can create materials (link/URL) and toggle visibility (active/hidden).
-- **Assignments:** teacher can create assignments, view submissions, and enter marks + feedback.
-- **Results (internal/model):** teacher can pick academic year → exam → subject schedule → section → enter marks.
-- **Notices (Class Notices):** teacher can list relevant notices and create **class-scoped** notices for sections they teach (timetable-based).
-- **Lesson Planner:** teacher can create a weekly planner draft and submit.
-- **Work Diary:** teacher can create a monthly diary draft and submit.
+---
 
-### What is left / not implemented yet (Full scope)
-The following items are planned in the “Full Feature Catalogue (2025)” below but are **not implemented** (or only partially implemented) in the Teacher module UI:
+## Access control (how it is gated today)
 
-**Role expansion (Class Teacher / Mentor / Coordinator / HOD / Principal)**
-- Class teacher tools: class roster, cross-subject summaries, shortage/weak student workflows.
-- Mentor tools: mentee list, counselling notes, follow-up reminders.
-- Coordinator substitution workflow: ✅ request creation + list implemented; ⚠️ auto-expire + richer audit views not implemented.
-- HOD tools inside Teacher module: ✅ substitution approve/reject implemented; ⚠️ broader approval dashboards stay in Admin.
-- Principal tools inside Teacher module: ✅ read-only monitoring screen implemented; ⚠️ principal approval dashboard stays in Admin.
+- Layout-level gating: all `/(teacher)` routes are wrapped by `Restricted` and require one of:
+  `subject_teacher`, `class_teacher`, `mentor`, `coordinator`, `hod`, `principal`.
+- Navigation unlocks are role-aware via `lib/teacherModules.ts` (module list + `requiresAnyRole`).
+- **Important:** security is still expected to be enforced by **Postgres RLS**. UI gating is convenience, not a security boundary.
 
-**Approvals workflow (HOD → Principal)**
-- **Implemented (Admin module):** HOD/Principal approvals are available via the Admin approvals screen, and approvals are backend-enforced.
-- For the current app scope, approvals stay in the Admin module (no separate Teacher approvals area).
-- **Completed (teacher edit loop):** teachers can open rejected items, edit the stored JSON content, then resubmit.
+---
 
-**Attendance hard rules**
-- Grace window + auto-locking edits, and policy-based restrictions (now enforced server-side via RLS time window).
+## What works end-to-end today (based on screens + queries)
 
-**Marks advanced features**
-- CSV upload/import for internal marks.
-- Lock/final-submit flows for marks (final submit creates a server-enforced lock per exam schedule + class).
+- Timetable → Session tools: teacher can open a timetable entry and jump to quick actions for attendance/materials/assignments/notices/marks.
+- Attendance:
+  - Creates/loads an attendance header for (date, period, timetable_entry_id)
+  - Upserts `attendance_records`
+  - If blocked by policy, UI shows: “Attendance is locked or outside the allowed time window.” (i.e., RLS/policy errors are surfaced).
+- Materials/Notices/Profile uploads: file picking + upload to Supabase Storage (`teacher_uploads` bucket) and save public URL.
+- Results (internal/model):
+  - Exam → schedule → section selection
+  - Marks grid saves via upsert
+  - CSV import is implemented (DocumentPicker + parsing)
+  - Final submit locking is implemented using `exam_marks_locks` (and UI disables edits when locked)
+- Planner/Diary:
+  - Teacher can create drafts and submit
+  - Rejected items show rejection reason
+  - Rejected items have dedicated edit screens and resubmission
+  - Approvals are performed in the Admin module via RPC functions (`approve_lesson_planner`, `approve_work_diary`) + RLS.
+- Coordinator substitutions:
+  - Create substitution request (pending)
+  - List substitutions (RLS governs visibility)
+- HOD Department:
+  - Shows departments where the user is `hod_user_id`
+  - Approve/reject substitutions (via updating `substitutions.status`; RLS must enforce who can do this)
+- Principal:
+  - Read-only monitoring (substitution overview)
 
-**Content uploads**
-- File upload to storage (implemented: materials + assignment attachments upload to Supabase Storage and save public URLs).
+---
 
-**System-level features**
-- Push notifications triggers (assignments/materials/marks/planner/diary updates).
-- Offline-first mode and sync.
-- Audit dashboards for teachers (beyond basic lists).
+## Known gaps / mismatches (doc vs current code)
 
-## Mapping to the simplified spec (your checklist)
+1) **Coordinator-only strict mode is not enforced**
+- The earlier spec says: “If an account is coordinator-only, it should have no other teacher permissions beyond substitution workflow.”
+- Current implementation treats `coordinator` as “teacher-capable” (it unlocks base teacher modules in navigation logic via role implications).
+- If you want coordinator-only restriction, it needs explicit enforcement in:
+  - nav unlock logic, and/or
+  - RLS policies (preferred), and/or
+  - teacher layout routing.
 
-Roles:
-- ✅ Subject Teacher (base) — implemented
-- ✅ Class Teacher tools — implemented (MVP: read-only class roster)
-- ✅ Class Teacher tools — implemented (MVP: roster + basic today summary card)
-- ✅ Mentor tools — implemented (mentee list + session notes)
-- ✅ Coordinator substitutions — implemented (request creation + list; approvals handled by HoD/Admin)
-- ⚠️ HoD tools inside Teacher module — partial (MVP: department overview + substitution approve/reject; other approvals still in Admin)
-- ✅ Principal tools inside Teacher module — implemented (MVP: read-only monitoring screen)
+2) Timetable schema drift is still visible in code
+- Some screens assume `timetable_entries.section_id`, others have fallbacks around `program_id`.
+- This can produce “works in some places, breaks in others” if DB schema/data is not consistent.
 
-0) Login + Profile
-- ✅ Email login + multi-role detection
-- ✅ Profile edit (basic: name/phone)
-- ✅ Profile photo upload (Storage + profiles.photo_url)
+---
 
-1) Subject Teacher (Base)
-- Daily class handling: ✅ Timetable + per-period “Session tools” screen (quick actions for Attendance/Materials/Assignments/Notices/Marks)
-- Attendance: ✅ mark + edit-with-window + history (server-side lock enforced)
-- Materials: ✅ upload links/files + list (student push notification is NOT IMPLEMENTED)
-- Assignments: ✅ create + view submissions + grade submissions
-- Exams: ✅ internal/model marks entry + CSV upload + lock; ✅ basic class performance stats/distribution (in marks screen)
-- Lesson Planner: ✅ create + submit + edit/resubmit rejected
-- Work Diary: ✅ create + submit + edit/resubmit rejected
-- Subject announcements: ✅ implemented as **Class Notices** (not subject-batch announcements); ❌ push notifications
+## Not implemented (full-scope catalogue, remaining items)
 
-### Dependencies (why some features may appear “missing”)
-- Many advanced flows depend on the canonical timetable + section/program mapping being consistent (see P0 prerequisites below).
-- Security should primarily rely on **Postgres RLS** (now tightened for planner/diary approvals); teacher screens still do not use a component-level RBAC wrapper.
+System-level:
+- Push notification triggers
+- Offline-first mode + sync
+- Broad teacher analytics dashboards
 
-## Next steps (recommended, highest impact)
-1. **Apply DB migration + validate RLS:** deploy latest migrations and confirm teachers cannot approve by direct updates; only RPC-based approvals work.
-2. **Edit & Resubmit screens:** completed (teacher can edit rejected planner/diary content and resubmit).
-3. **Attendance hard rules:** completed (server-side enforced) + optional UI messaging refinements.
-4. **Marks advanced:** CSV import for internal marks + locking/final-submit flow.
+Approvals UX:
+- Teacher-side approval inbox for `hod`/`principal` (approvals stay in Admin today)
 
-### Concrete backlog (remaining not-implemented scopes)
-This is the “make the not implemented scopes” list in a buildable order, without expanding UX beyond the spec.
+Substitutions:
+- Auto-expire / time-bound access
+- Rich audit views (who changed what, when)
 
-P0 — Security + correctness
-- **Teacher RBAC wrapper (layout-level):** completed (teacher routes gated via `Restricted`; RLS still enforces real permissions).
-- **Timetable canonicalization confirmation:** verify teacher timetable/attendance/results all read the same canonical keys and constraints.
+Content:
+- Any extra “subject-batch announcements” concept beyond current class-scoped notices
 
-P1 — Attendance hard rules (server-side)
-- **Grace window + auto-lock edits:** completed (enforced via DB RLS time window); UI shows a clear error when blocked.
+---
 
-P2 — Marks advanced
-- **CSV import for internal marks:** completed (import CSV into the marks grid, then save).
-- **Lock/final-submit flow:** completed (server-side lock table + RLS blocks edits after lock).
+## Recommended next steps (highest impact)
 
-P2 — Content uploads
-- **Supabase Storage uploads:** completed (pick file → upload → public URL stored in DB).
+P0 — correctness/security
+- Confirm/standardize canonical timetable keys (same keys used across timetable/attendance/results/substitutions)
+  - Inventory (current code uses these in different places):
+    - `timetable_entries`: `id`, `academic_year_id`, `teacher_id`, `day_of_week`, `period`, `course_id`, `year_id`, `section_id`, `room` (+ some fallback code references `program_id`)
+    - Attendance writes store extra scoping: `attendance.programme_id` and/or `attendance.department_id` (passed from timetable/history screens)
+  - Decide the single canonical shape for class identity:
+    - Preferred in UI today: `section_id` (used by results selection + session tools + timetable joins)
+    - Avoid split-brain between `section_id` vs (`year_id` + `programme_id`/`department_id`)
+  - Acceptance checks (P0 done when true):
+    - Teacher timetable shows the same classes that attendance + results screens expect
+    - Substitution filtering in Department screen can be done without fallback logic
+    - No screen needs to guess between `section_id` and `program_id`
 
-P3 — Role expansion tools
-- **Class teacher tools:** roster + summaries.
-- **Mentor tools:** mentee list + notes.
-- **Coordinator substitutions workflow:** time-bound access + audit.
-- **HOD/Principal teacher-module monitoring:** read-only dashboards.
+- Decide how to enforce “coordinator-only strict mode” (if still required)
+  - Problem: current role logic treats `coordinator` as teacher-capable (so it unlocks core teacher modules).
+  - Option A (recommended): enforce in Postgres RLS (real security)
+    - Make “coordinator-only” accounts able to access only `substitutions` and read minimal timetable context needed for substitutions.
+    - Block `attendance`, `exam_marks`, `lesson_planners`, `work_diaries`, etc for coordinator-only via policies.
+  - Option B: enforce in UI + nav (convenience) *and* RLS (security)
+    - UI/nav: if roles === [`coordinator`] only, show only Coordinator module in `/(teacher)/modules` and dock.
+    - Still keep RLS as the enforcement boundary.
+  - Acceptance checks (P0 done when true):
+    - A coordinator-only user cannot mark attendance or enter marks (even via direct API calls)
+    - A coordinator+teacher user retains normal teacher permissions (stacked roles)
 
-## 2025 System Rules (Must Stay Aligned)
-These constraints are treated as **requirements** for all teacher features:
-- **Email-only login** (no phone login).
-- **Teachers upload ONLY internal marks**.
-- **External marks uploaded by students**.
-- **Admin sets exam dates & timetable** → teachers consume schedules and only enter internal marks.
-- **No QR attendance in events** (event attendance is not QR-based).
-- **No extra admin-level operations inside Teacher module** (admin tasks remain in Admin module).
-- **Lesson Planner + Diary approvals** follow: Teacher → **HOD (L1)** → **Principal (Final)**.
-- Must stay aligned with current Admin + Student modules and RBAC/RLS enforcement.
+- Run an RLS validation checklist (manual, action-level)
+  - Setup
+    - Use at least 2 teacher users: Teacher A and Teacher B, with non-overlapping timetable entries.
+    - Ensure at least 1 section/class exists for each teacher via `timetable_entries`.
+    - If testing role-expansion: have one `hod` and one `principal` user.
+  - Timetable (`timetable_entries`)
+    - Teacher A can `SELECT` only their entries (no Teacher B entries).
+    - Teacher A cannot `INSERT/UPDATE/DELETE` timetable entries.
+  - Attendance (`attendance`, `attendance_records`)
+    - Teacher A can create attendance only for their own `timetable_entry_id`.
+    - Teacher A cannot create attendance for Teacher B’s `timetable_entry_id`.
+    - Teacher A can upsert records only for attendance headers they are allowed to access.
+    - Time-window enforcement: after the allowed window, `UPDATE/UPSERT` must fail and UI should show the locked message.
+  - Marks (`exam_marks`, `exam_marks_locks`, `exam_schedules`)
+    - Teacher A can `SELECT` only schedules that match their assigned subjects (as defined by your current mapping).
+    - Teacher A can `UPSERT` marks only for schedules/sections they are allowed to edit.
+    - Locking:
+      - Teacher A can create one lock row in `exam_marks_locks` for their allowed schedule+section.
+      - After lock exists, Teacher A cannot modify `exam_marks` for that schedule+section.
+      - Teacher B cannot lock or edit marks for Teacher A’s schedule+section.
+  - Planner (`lesson_planners`)
+    - Teacher can create drafts and submit.
+    - Teacher cannot set status to `approved` directly.
+    - Only approval RPC path (Admin module) can advance approvals.
+    - Teacher can update only when `status IN ('draft','rejected')`.
+  - Diary (`work_diaries`)
+    - Teacher can create drafts and submit.
+    - Teacher cannot directly set `hod_approved` / `principal_approved`.
+    - Teacher can update only when `status IN ('draft','rejected')`.
+  - Substitutions (`substitutions`)
+    - Coordinator can create a substitution request for permitted timetable entries (as per your policy).
+    - Teacher A cannot approve/reject unless they are `hod` (or explicitly permitted).
+    - HOD can approve/reject substitutions only within their department scope.
+    - Principal screen is read-only (no mutation permissions).
+  - Optional: add a “negative test” for each table
+    - Attempt a direct update with Supabase client and confirm it fails with RLS/policy error.
 
-## Goals
-- Deliver a **teacher-facing workflow** for day-to-day operations:
-  1. View timetable / assigned periods
-  2. Mark attendance
-  3. Upload and manage teaching materials
-  4. Enter and review marks/results
-  5. Optional: lesson planner + work diary
-- Ensure **server-side enforcement** via Postgres RLS (not UI-only gating).
+P1 — product polish
+- Add push notifications (only if desired)
+- Improve substitution lifecycle (expiry + audit)
 
-## Non-Goals (For MVP)
-- “Nice to have” dashboards, analytics, or advanced filters.
-- Scheduling local backups from teacher device.
-- Building additional navigation icons/tabs before modules exist.
+---
+
+## System rules (must stay aligned)
+- Email-only login
+- Teacher module: internal/model marks entry only
+- Student module: external marks upload
+- Admin sets exam schedules & timetables; teachers consume and input within policy
+- Lesson Planner + Diary approvals: Teacher → HOD (L1) → Principal (Final)
 
 ---
 

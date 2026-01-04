@@ -17,7 +17,7 @@ type DockNavItem = {
   nestedRoutes?: string[];
 };
 
-// Keep the same navbar structure as admin, but teacher has only Home for now.
+// Keep the same navbar structure as admin, with teacher modules (and coordinator-only strict mode).
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_SIZE = 60;
 const GAP = 10;
@@ -163,38 +163,59 @@ export default function TeacherLayout() {
   const pathname = usePathname();
   const { roles } = useAuthStore();
 
-  const dockNavItems: DockNavItem[] = [
-    { id: 'dashboard', title: 'Dashboard', icon: 'home-outline', route: '/(teacher)/dashboard' },
-    { id: 'timetable', title: 'Timetable', icon: 'calendar-outline', route: '/(teacher)/timetable', nestedRoutes: ['timetable'] },
-    { id: 'materials', title: 'Materials', icon: 'book-outline', route: '/(teacher)/materials', nestedRoutes: ['materials'] },
-    {
-      id: 'modules',
-      title: 'Modules',
-      icon: 'apps-outline',
-      route: '/(teacher)/modules',
-      nestedRoutes: [
-        'attendance',
-        'assignments',
-        'results',
-        'notices',
-        'planner',
-        'diary',
-        'class-tools',
-        'mentor',
-        'coordinator',
-        'department',
-        'principal',
-        'profile',
-        'session',
-      ],
-    },
-    { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
-  ];
+  const isCoordinatorOnly = roles.includes('coordinator') && !roles.some((r) => ['subject_teacher', 'class_teacher', 'mentor', 'hod'].includes(r));
+
+  const dockNavItems: DockNavItem[] = isCoordinatorOnly
+    ? [
+        { id: 'coordinator', title: 'Coordinator', icon: 'swap-horizontal-outline', route: '/(teacher)/coordinator', nestedRoutes: ['coordinator'] },
+        ...(roles.includes('principal')
+          ? [{ id: 'principal', title: 'Principal', icon: 'school-outline', route: '/(teacher)/principal', nestedRoutes: ['principal'] }]
+          : []),
+        { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
+      ]
+    : [
+        { id: 'dashboard', title: 'Dashboard', icon: 'home-outline', route: '/(teacher)/dashboard' },
+        { id: 'timetable', title: 'Timetable', icon: 'calendar-outline', route: '/(teacher)/timetable', nestedRoutes: ['timetable'] },
+        { id: 'materials', title: 'Materials', icon: 'book-outline', route: '/(teacher)/materials', nestedRoutes: ['materials'] },
+        {
+          id: 'modules',
+          title: 'Modules',
+          icon: 'apps-outline',
+          route: '/(teacher)/modules',
+          nestedRoutes: [
+            'attendance',
+            'assignments',
+            'results',
+            'notices',
+            'planner',
+            'diary',
+            'class-tools',
+            'mentor',
+            'coordinator',
+            'department',
+            'principal',
+            'profile',
+            'session',
+          ],
+        },
+        { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
+      ];
 
   const isPrincipal = roles.includes('principal');
   const isTeacherCapable = roles.some((r) =>
     ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(r)
   );
+
+  // Coordinator-only strict mode: route to Coordinator module by default.
+  useEffect(() => {
+    if (!isCoordinatorOnly) return;
+
+    // Allow principal-only screen if present (principal module is read-only).
+    const allowed = pathname.includes('/coordinator') || pathname.includes('/settings') || pathname.includes('/change-password') || pathname.includes('/principal');
+    if (!allowed) {
+      router.replace('/(teacher)/coordinator' as any);
+    }
+  }, [isCoordinatorOnly, pathname, router]);
 
   // If the user is principal-only, route them to the principal module by default.
   useEffect(() => {

@@ -37,6 +37,7 @@ export default function TeacherMarkAttendanceScreen() {
     courseName: string;
     courseId: string;
     yearId: string;
+    sectionId?: string;
     programmeId?: string;
     departmentId?: string;
     period: string;
@@ -49,6 +50,7 @@ export default function TeacherMarkAttendanceScreen() {
   const entryId = params.entryId;
   const courseId = params.courseId;
   const yearId = params.yearId;
+  const sectionId = (params.sectionId || '').trim() || null;
   const programmeId = (params.programmeId || '').trim() || null;
   const departmentId = (params.departmentId || '').trim() || null;
   const periodNum = parseInt(params.period || '0', 10);
@@ -97,6 +99,7 @@ export default function TeacherMarkAttendanceScreen() {
         course_id: courseId,
         programme_id: programmeId,
         department_id: departmentId,
+        section_id: sectionId,
         academic_year_id: academicYearId,
         marked_by: user.id,
         timetable_entry_id: entryId,
@@ -178,22 +181,6 @@ export default function TeacherMarkAttendanceScreen() {
 
       setEntry(entryData as TimetableEntry);
 
-      // Students
-      const { data: studentsData } = await supabase
-        .from('students')
-        .select(
-          `
-            id,
-            roll_number,
-            registration_number,
-            user_id,
-            profiles:user_id(full_name)
-          `
-        )
-        .eq('year_id', yearId)
-        .eq('current_status', 'active')
-        .order('roll_number');
-
       // Apply programme/department scoping if provided
       // - programmeId maps to students.course_id (degree programme)
       // - departmentId maps to students.department_id
@@ -208,16 +195,21 @@ export default function TeacherMarkAttendanceScreen() {
             profiles:user_id(full_name)
           `
         )
-        .eq('year_id', yearId)
         .eq('current_status', 'active')
         .order('roll_number');
 
-      if (programmeId) scopedStudentsQuery = scopedStudentsQuery.eq('course_id', programmeId);
-      else if (departmentId) scopedStudentsQuery = scopedStudentsQuery.eq('department_id', departmentId);
+      // Canonical: section-based roster.
+      if (sectionId) {
+        scopedStudentsQuery = scopedStudentsQuery.eq('section_id', sectionId);
+      } else {
+        scopedStudentsQuery = scopedStudentsQuery.eq('year_id', yearId);
+        if (programmeId) scopedStudentsQuery = scopedStudentsQuery.eq('course_id', programmeId);
+        else if (departmentId) scopedStudentsQuery = scopedStudentsQuery.eq('department_id', departmentId);
+      }
 
       const { data: scopedStudentsData } = await scopedStudentsQuery;
 
-      const baseStudents: StudentRow[] = (scopedStudentsData || studentsData || []).map((s: any) => ({
+      const baseStudents: StudentRow[] = (scopedStudentsData || []).map((s: any) => ({
         ...s,
         roll_number: s.roll_number || s.registration_number,
         status: 'present' as AttendanceStatus,
@@ -252,7 +244,7 @@ export default function TeacherMarkAttendanceScreen() {
     } finally {
       setLoading(false);
     }
-  }, [courseId, entryId, ensureAttendanceHeader, fetchTeacherId, periodNum, router, user?.id, yearId]);
+  }, [courseId, departmentId, entryId, ensureAttendanceHeader, fetchTeacherId, periodNum, programmeId, router, sectionId, user?.id, yearId]);
 
   useEffect(() => {
     fetchData();

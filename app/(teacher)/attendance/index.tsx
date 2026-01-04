@@ -20,6 +20,7 @@ interface TodayClass {
   yearName: string;
   courseId: string;
   yearId: string;
+  sectionId: string | null;
   programmeId: string | null;
   departmentId: string | null;
   studentCount: number;
@@ -119,6 +120,7 @@ export default function TeacherAttendanceIndex() {
           period,
           course_id,
           year_id,
+          section_id,
           programme_id,
           courses:courses!timetable_entries_course_id_fkey(code, name, short_name, department_id),
           years(name)
@@ -137,6 +139,7 @@ export default function TeacherAttendanceIndex() {
       // For each entry, get attendance status
       const classesWithStatus: TodayClass[] = await Promise.all(
         (entries as any[]).map(async (entry) => {
+          const sectionId = (entry.section_id as string | null) ?? null;
           const programmeId = (entry.programme_id as string | null) ?? null;
           const departmentId = (entry.courses?.department_id as string | null) ?? null;
 
@@ -144,12 +147,13 @@ export default function TeacherAttendanceIndex() {
           const baseStudents = supabase
             .from('students')
             .select('id', { count: 'exact', head: true })
-            .eq('year_id', entry.year_id)
             .eq('current_status', 'active');
 
-          const { count: studentCount } = programmeId
-            ? await baseStudents.eq('course_id', programmeId)
-            : await baseStudents.eq('department_id', departmentId);
+          const { count: studentCount } = sectionId
+            ? await baseStudents.eq('section_id', sectionId)
+            : programmeId
+              ? await baseStudents.eq('year_id', entry.year_id).eq('course_id', programmeId)
+              : await baseStudents.eq('year_id', entry.year_id).eq('department_id', departmentId);
 
           // Check if attendance is marked for this entry today
           const { data: attendance } = await supabase
@@ -179,6 +183,7 @@ export default function TeacherAttendanceIndex() {
             yearName: entry.years?.name || '',
             courseId: entry.course_id,
             yearId: entry.year_id,
+            sectionId,
             programmeId,
             departmentId,
             studentCount: studentCount || 0,
@@ -237,6 +242,7 @@ export default function TeacherAttendanceIndex() {
         courseName: classItem.courseName,
         courseId: classItem.courseId,
         yearId: classItem.yearId,
+        sectionId: classItem.sectionId || '',
         programmeId: classItem.programmeId || '',
         departmentId: classItem.departmentId || '',
         period: classItem.period.toString(),
