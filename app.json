@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "JPM College",
-    "slug": "college-app",
+    "slug": "jpm-college-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -39,6 +39,13 @@
     "plugins": [
       "expo-router",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "28170231-fe6a-494b-8fc3-49ce78ced287"
+      }
+    },
+    "owner": "jpm-college-app"
   }
 }

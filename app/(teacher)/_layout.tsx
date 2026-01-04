@@ -162,6 +162,7 @@ export default function TeacherLayout() {
   const router = useRouter();
   const pathname = usePathname();
   const { roles } = useAuthStore();
+  const { colors } = useThemeStore();
 
   const isCoordinatorOnly = roles.includes('coordinator') && !roles.some((r) => ['subject_teacher', 'class_teacher', 'mentor', 'hod'].includes(r));
 
@@ -234,11 +235,14 @@ export default function TeacherLayout() {
       showDeniedMessage
       deniedMessage="Teacher access required."
     >
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Stack
           screenOptions={{
             headerShown: false,
             animation: 'fade',
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
           }}
         >
           <Stack.Screen name="dashboard" />

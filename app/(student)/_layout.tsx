@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import { View } from 'react-native';
 import { BottomNav } from '../../components/ui';
+import { useThemeStore } from '../../store/themeStore';
 
 type NavPage = 'dashboard' | 'attendance' | 'materials' | 'results' | 'profile';
 
@@ -9,6 +10,7 @@ export default function StudentLayout() {
   const router = useRouter();
   const pathname = usePathname();
   const [currentPage, setCurrentPage] = useState<NavPage>('dashboard');
+  const { colors } = useThemeStore();
 
   // Update current page based on pathname
   useEffect(() => {
@@ -32,11 +34,14 @@ export default function StudentLayout() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack
         screenOptions={{
           headerShown: false,
           animation: 'fade',
+          contentStyle: {
+            backgroundColor: colors.background,
+          },
         }}
       >
         <Stack.Screen name="dashboard" />

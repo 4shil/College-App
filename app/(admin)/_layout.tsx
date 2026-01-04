@@ -177,17 +177,21 @@ export default function AdminLayout() {
   const { canAccessModule } = useRBAC();
   const router = useRouter();
   const pathname = usePathname();
+  const { colors } = useThemeStore();
 
   const handleNavigate = (route: string) => {
     router.replace(route as any);
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack
         screenOptions={{
           headerShown: false,
           animation: 'fade',
+          contentStyle: {
+            backgroundColor: colors.background,
+          },
         }}
       >
         <Stack.Screen name="dashboard" />

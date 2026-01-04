@@ -48,17 +48,17 @@ export default function RootLayout() {
 function RootLayoutNav() {
   // Import theme store here AFTER initial render
   const { useThemeStore } = require('../store/themeStore');
-  const { isDark } = useThemeStore();
+  const { isDark, colors } = useThemeStore();
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
           animation: 'fade',
           contentStyle: {
-            backgroundColor: 'transparent',
+            backgroundColor: colors.background,
           },
         }}
       >
