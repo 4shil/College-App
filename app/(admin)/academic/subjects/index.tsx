@@ -6,7 +6,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
@@ -242,9 +242,9 @@ export default function SubjectsScreen() {
             <Text style={[styles.title, { color: colors.textPrimary }]}>Subjects</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage subjects mapped to courses and semesters</Text>
           </View>
-          <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openCreate}>
+          <SolidButton style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openCreate}>
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(140).duration(350)} style={styles.searchContainer}>

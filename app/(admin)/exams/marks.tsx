@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -374,13 +374,13 @@ export default function ExamMarksScreen() {
         {/* Bulk Actions */}
         {selectedScheduleId && students.length > 0 && (
           <View style={styles.bulkActions}>
-            <TouchableOpacity
+            <SolidButton
               onPress={handleBulkAbsent}
               style={[styles.bulkButton, { backgroundColor: colors.warning }]}
             >
               <FontAwesome5 name="user-times" size={16} color={colors.textInverse} />
               <Text style={[styles.bulkButtonText, { color: colors.textInverse }]}>Mark All Absent</Text>
-            </TouchableOpacity>
+            </SolidButton>
           </View>
         )}
 

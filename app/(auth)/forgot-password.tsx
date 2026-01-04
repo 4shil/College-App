@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AnimatedBackground, Card, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator } from '../../components/ui';
+  AnimatedBackground, Card, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator, SolidButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { sendOTP, verifyOTP, updateUserPassword } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
@@ -307,17 +307,17 @@ export default function ForgotPasswordScreen() {
               ))}
             </View>
 
-            <TouchableOpacity
-              style={[styles.verifyButton, { backgroundColor: colors.primary }]}
+            <SolidButton
               onPress={() => handleVerifyOTP()}
               disabled={loading || otp.join('').length !== OTP_LENGTH}
+              style={[styles.verifyButton, { backgroundColor: colors.primary }]}
             >
               {loading ? (
                 <LoadingIndicator color={colors.textInverse} size="small" />
               ) : (
                 <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify OTP</Text>
               )}
-            </TouchableOpacity>
+            </SolidButton>
 
             <View style={styles.resendContainer}>
               <Text style={[styles.resendText, { color: colors.textMuted }]}>

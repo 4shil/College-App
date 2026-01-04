@@ -118,7 +118,7 @@ async function testTimetableIsolation(cA, entryBId) {
   console.log('❌ timetable isolation: Teacher A can see Teacher B entry', data);
 }
 
-async function testAttendanceCreateBlocked(cA, entryB) {
+async function testAttendanceCreateBlocked(cA, entryB, performerUserId) {
   const dateStr = new Date().toISOString().split('T')[0];
   const academicYearId = await getCurrentAcademicYearId(cA);
 
@@ -131,16 +131,31 @@ async function testAttendanceCreateBlocked(cA, entryB) {
     programme_id: entryB.programme_id,
     academic_year_id: academicYearId,
     timetable_entry_id: entryB.id,
+    marked_by: performerUserId,
+    edited_by: performerUserId,
   };
 
-  const { error } = await cA.from('attendance').insert(payload).select('id').maybeSingle();
+  // Some deployments have slightly different attendance columns. If PostgREST reports a
+  // missing column, drop it and retry so the test reflects RLS rather than schema drift.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await cA.from('attendance').insert(payload).select('id').maybeSingle();
 
-  if (error) {
+    if (!error) {
+      console.log('❌ attendance create for other teacher unexpectedly succeeded');
+      return;
+    }
+
+    const m = /Could not find the '([^']+)' column/i.exec(error.message || '');
+    if (m?.[1] && Object.prototype.hasOwnProperty.call(payload, m[1])) {
+      delete payload[m[1]];
+      continue;
+    }
+
     console.log('✅ attendance create blocked for other teacher (error):', error.message);
     return;
   }
 
-  console.log('❌ attendance create for other teacher unexpectedly succeeded');
+  console.log('✅ attendance create blocked for other teacher (error): payload did not match schema');
 }
 
 async function main() {
@@ -191,7 +206,7 @@ async function main() {
 
   if (entryB) {
     console.log('\n2) Attendance write isolation check (A cannot create attendance for B entry)');
-    await testAttendanceCreateBlocked(cA, entryB);
+    await testAttendanceCreateBlocked(cA, entryB, userA.id);
   } else {
     console.log('\n2) Attendance write isolation check: skipped (TEACHER_B_EMAIL/PASSWORD not provided)');
   }

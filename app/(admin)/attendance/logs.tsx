@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card, IconBadge, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -289,12 +289,12 @@ export default function AttendanceLogsScreen() {
             <Text style={[styles.accessSubtext, { color: colors.textMuted }]}>
               Only Super Admin can view attendance logs
             </Text>
-            <TouchableOpacity
+            <SolidButton
               style={[styles.backButton, { backgroundColor: colors.primary }]}
               onPress={() => router.back()}
             >
               <Text style={[styles.backButtonText, { color: colors.textInverse }]}>Go Back</Text>
-            </TouchableOpacity>
+            </SolidButton>
           </View>
         </View>
       </AnimatedBackground>

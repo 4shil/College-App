@@ -22,6 +22,7 @@ import {
   Card,
   ThemeToggle,
   LoadingIndicator,
+  SolidButton,
 } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, verifyOTP as verifySupabaseOTP, updateUserPassword, sendOTP } from '../../lib/supabase';
@@ -342,14 +343,14 @@ export default function VerifyOTPScreen() {
               )}
 
               {/* Verify Button */}
-              <TouchableOpacity
+              <SolidButton
+                onPress={() => verifyOTP()}
+                disabled={loading || otp.join('').length !== OTP_LENGTH}
                 style={[
                   styles.verifyButton,
                   { backgroundColor: colors.primary },
                   loading && { opacity: 0.7 },
                 ]}
-                onPress={() => verifyOTP()}
-                disabled={loading || otp.join('').length !== OTP_LENGTH}
               >
                 {loading ? (
                   <LoadingIndicator size="small" color={colors.textInverse} />
@@ -359,7 +360,7 @@ export default function VerifyOTPScreen() {
                     <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify & Create Account</Text>
                   </>
                 )}
-              </TouchableOpacity>
+              </SolidButton>
 
               {/* Resend */}
               <View style={styles.resendContainer}>

@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -576,7 +576,7 @@ export default function ViewAttendanceScreen() {
             >
               <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            <SolidButton
               style={[styles.modalBtn, { backgroundColor: colors.primary }]}
               onPress={handleGrantDelegation}
               disabled={savingDelegation}
@@ -586,7 +586,7 @@ export default function ViewAttendanceScreen() {
               ) : (
                 <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Grant</Text>
               )}
-            </TouchableOpacity>
+            </SolidButton>
           </View>
         </Card>
       </View>
@@ -915,13 +915,13 @@ export default function ViewAttendanceScreen() {
               </Animated.View>
 
               {/* Add Delegation Button */}
-              <TouchableOpacity
+              <SolidButton
                 style={[styles.addDelegationBtn, { backgroundColor: colors.primary }]}
                 onPress={() => setShowDelegationModal(true)}
               >
                 <FontAwesome5 name="plus" size={14} color={colors.textInverse} />
                 <Text style={[styles.addDelegationText, { color: colors.textInverse }]}>Grant New Delegation</Text>
-              </TouchableOpacity>
+              </SolidButton>
 
               {/* Active Delegations */}
               <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 24 }]}>

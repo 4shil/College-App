@@ -6,5 +6,6 @@ export { GlassInput } from './GlassInput';
 export { IconBadge } from './IconBadge';
 export { LoadingIndicator } from './LoadingIndicator';
 export { PrimaryButton } from './PrimaryButton';
+export { SolidButton } from './SolidButton';
 export { StatCard } from './StatCard';
 export { ThemeToggle } from './ThemeToggle';

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, M
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -126,9 +126,9 @@ export default function LibraryBooksScreen() {
         <View style={styles.header}>
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Library Books</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{books.length} books</Text></View>
-          <TouchableOpacity onPress={openAddModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
+          <SolidButton onPress={openAddModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </View>
         {books.map((book, i) => (
           <Animated.View key={book.id} entering={FadeInDown.delay(i * 30).springify()}>

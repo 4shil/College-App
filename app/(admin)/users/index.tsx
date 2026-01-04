@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-re
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, IconBadge, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, IconBadge, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -741,7 +741,7 @@ export default function UsersScreen() {
             >
               <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            <SolidButton
               style={[styles.modalBtn, { backgroundColor: colors.primary }]}
               onPress={() => selectedUser && handleChangeRole(selectedUser.id, formRole)}
               disabled={saving || !formRole}
@@ -751,7 +751,7 @@ export default function UsersScreen() {
               ) : (
                 <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Save</Text>
               )}
-            </TouchableOpacity>
+            </SolidButton>
           </View>
         </Card>
       </View>
@@ -789,12 +789,12 @@ export default function UsersScreen() {
                 >
                   <FontAwesome5 name="user-shield" size={18} color={colors.primary} />
                 </TouchableOpacity>
-                <TouchableOpacity
+                <SolidButton
                   style={[styles.addBtn, { backgroundColor: colors.primary }]}
                   onPress={openAddUserModal}
                 >
                   <Ionicons name="add" size={22} color={colors.textInverse} />
-                </TouchableOpacity>
+                </SolidButton>
               </>
             )}
           </View>
@@ -988,13 +988,13 @@ export default function UsersScreen() {
               </ScrollView>
 
               <View style={styles.modalActions}>
-                <TouchableOpacity
+                <SolidButton
                   style={[styles.modalBtn, { backgroundColor: colors.glassBackground }]}
                   onPress={() => setShowAddModal(false)}
                 >
                   <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </SolidButton>
+                <SolidButton
                   style={[styles.modalBtn, { backgroundColor: colors.primary }]}
                   onPress={handleCreateUser}
                   disabled={saving}
@@ -1004,7 +1004,7 @@ export default function UsersScreen() {
                   ) : (
                     <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Create</Text>
                   )}
-                </TouchableOpacity>
+                </SolidButton>
               </View>
             </Card>
           </View>

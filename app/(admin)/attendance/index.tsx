@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -362,12 +362,12 @@ export default function AttendanceIndexScreen() {
                         </Text>
                       </View>
                     </View>
-                    <TouchableOpacity
+                    <SolidButton
                       style={[styles.alertBtn, { backgroundColor: colors.error }]}
                       onPress={() => router.push('/(admin)/attendance/reports?filter=low' as any)}
                     >
                       <Text style={[styles.alertBtnText, { color: colors.textInverse }]}>View</Text>
-                    </TouchableOpacity>
+                    </SolidButton>
                   </Card>
                 </Animated.View>
               )}

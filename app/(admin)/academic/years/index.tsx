@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
@@ -323,9 +323,9 @@ export default function YearsScreen() {
             <Text style={[styles.title, { color: colors.textPrimary }]}>Academic Years</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{years.length} year(s)</Text>
           </View>
-          <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
+          <SolidButton style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={openAddModal}>
             <Ionicons name="add" size={22} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
 
         {/* Content */}

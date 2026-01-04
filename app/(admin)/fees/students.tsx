@@ -5,7 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -239,13 +239,13 @@ export default function StudentFeesScreen() {
                 <Text style={[styles.dueDate, { color: colors.textSecondary }]}>
                   Due: {new Date(fee.due_date).toLocaleDateString()}
                 </Text>
-                <TouchableOpacity
+                <SolidButton
                   onPress={() => router.push('/(admin)/fees/payment' as any)}
                   style={[styles.payButton, { backgroundColor: colors.primary }]}
                 >
                   <FontAwesome5 name="rupee-sign" size={14} color={colors.textInverse} />
                   <Text style={[styles.payButtonText, { color: colors.textInverse }]}>Pay</Text>
-                </TouchableOpacity>
+                </SolidButton>
               </View>
             </Card>
           </Animated.View>

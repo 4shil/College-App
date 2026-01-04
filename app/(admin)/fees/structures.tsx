@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -275,12 +275,12 @@ export default function FeeStructuresScreen() {
             <Text style={[styles.title, { color: colors.textPrimary }]}>Fee Structures</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{structures.length} structures</Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             onPress={openAddModal}
             style={[styles.addButton, { backgroundColor: colors.primary }]}
           >
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </View>
 
         {structures.map((structure, index) => (

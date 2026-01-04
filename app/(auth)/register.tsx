@@ -8,7 +8,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AnimatedBackground, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator } from '../../components/ui';
+  AnimatedBackground, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator, SolidButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, sendOTP } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
@@ -392,13 +392,10 @@ export default function RegisterScreen() {
             )}
 
             {!apaarVerified && (
-              <TouchableOpacity
-                style={[
-                  styles.verifyButton,
-                  { backgroundColor: colors.primary },
-                ]}
+              <SolidButton
                 onPress={verifyApaarId}
                 disabled={verifyingApaar}
+                style={[styles.verifyButton, { backgroundColor: colors.primary }]}
               >
                 {verifyingApaar ? (
                   <LoadingIndicator color={colors.textInverse} size="small" />
@@ -408,7 +405,7 @@ export default function RegisterScreen() {
                     <Text style={[styles.verifyButtonText, { color: colors.textInverse }]}>Verify APAAR ID</Text>
                   </>
                 )}
-              </TouchableOpacity>
+              </SolidButton>
             )}
 
             <View
@@ -1020,15 +1017,15 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity
+          <SolidButton
+            onPress={nextStep}
+            disabled={(currentStep === 1 && !apaarVerified) || loading}
             style={[
               styles.navButton,
               styles.nextButton,
               { backgroundColor: colors.primary },
               currentStep === 1 && !apaarVerified && { opacity: 0.5 },
             ]}
-            onPress={nextStep}
-            disabled={(currentStep === 1 && !apaarVerified) || loading}
           >
             {loading ? (
               <LoadingIndicator color={colors.textInverse} size="small" />
@@ -1044,7 +1041,7 @@ export default function RegisterScreen() {
                 />
               </>
             )}
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
       </KeyboardAvoidingView>
     </AnimatedBackground>

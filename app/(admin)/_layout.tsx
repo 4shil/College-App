@@ -152,11 +152,9 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
                     if (!expanded) {
                       setExpanded(true);
                     } else {
-                      // Always navigate to the route, even if on a nested module page
-                      if (item.id === 'role-dashboard') {
-                        // Always go back to main modules page
-                        onNavigate(item.route);
-                      } else if (!isCurrentRoute) {
+                      // When expanded, only navigate if selecting a different destination.
+                      // This avoids unexpected jumps when the active icon is tapped.
+                      if (!isCurrentRoute) {
                         onNavigate(item.route);
                       }
                       setExpanded(false);

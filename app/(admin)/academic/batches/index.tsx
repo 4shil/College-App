@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { withAlpha } from '../../../../theme/colorUtils';
 import { supabase } from '../../../../lib/supabase';
@@ -278,13 +278,12 @@ export default function BatchesScreen() {
               {batches.length} active batches
             </Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             onPress={openAddModal}
             style={[styles.addButton, { backgroundColor: colors.primary }]}
-            activeOpacity={0.7}
           >
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </View>
 
         {/* Batches List */}

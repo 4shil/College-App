@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
@@ -529,12 +529,12 @@ export default function CreateTimetableScreen() {
             >
               <Text style={[styles.clearBtnText, { color: colors.error }]}>Clear</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            <SolidButton
               style={[styles.saveBtn, { backgroundColor: colors.primary }]}
               onPress={handleSaveSlot}
             >
               <Text style={[styles.saveBtnText, { color: colors.textInverse }]}>Save Slot</Text>
-            </TouchableOpacity>
+            </SolidButton>
           </View>
         </Card>
       </View>

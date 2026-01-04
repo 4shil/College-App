@@ -129,26 +129,88 @@ async function ensureSection(departmentId, academicYearId) {
   return { id: created.body[0].id, year_id: created.body[0].year_id || year.id };
 }
 
+async function ensureCourse(departmentId) {
+  // Try to find any existing course in the department.
+  let course = await firstRow(`/rest/v1/courses?department_id=eq.${departmentId}&select=id&limit=1`);
+  if (course?.id) return course.id;
+
+  // Create a minimal course (non-destructive) if none exist.
+  const semester = await mustSingleRow('/rest/v1/semesters?select=id,semester_number&order=semester_number.asc&limit=1', 'Semester');
+  const code = `TEST${Date.now().toString().slice(-6)}`;
+
+  const created = await request('/rest/v1/courses', 'POST', {
+    code,
+    name: 'Test Course',
+    short_name: 'TEST',
+    department_id: departmentId,
+    semester_id: semester.id,
+    course_type: 'core',
+    theory_hours: 3,
+    lab_hours: 0,
+    is_active: true,
+  });
+
+  if (!(created.status >= 200 && created.status < 300) || !Array.isArray(created.body) || !created.body[0]?.id) {
+    throw new Error(
+      `Failed to create course (status ${created.status}): ${typeof created.body === 'string' ? created.body : JSON.stringify(created.body)}`,
+    );
+  }
+
+  return created.body[0].id;
+}
+
 async function main() {
-  // 1) Get the test teacher row created by setup_test_teacher
-  const teacher = await mustSingleRow('/rest/v1/teachers?employee_id=eq.EMP001&select=id,department_id&order=created_at.desc&limit=1', 'Teacher');
+  const teacherEmail = process.env.TEACHER_EMAIL || '';
+  const employeeId = process.env.TEACHER_EMPLOYEE_ID || 'EMP001';
+
+  // 1) Resolve the target teachers row.
+  // Prefer email (more stable), fallback to employee_id.
+  let teacher = null;
+
+  if (teacherEmail) {
+    const prof = await request(`/rest/v1/profiles?email=eq.${encodeURIComponent(teacherEmail)}&select=id&limit=1`, 'GET');
+    const userId = Array.isArray(prof.body) ? prof.body[0]?.id : null;
+    if (!userId) throw new Error(`Profile not found for email: ${teacherEmail}`);
+
+    teacher = await firstRow(`/rest/v1/teachers?user_id=eq.${userId}&select=id,department_id&order=created_at.desc&limit=1`);
+    if (!teacher) throw new Error(`Teacher not found for user_id of ${teacherEmail}`);
+  } else {
+    teacher = await firstRow(
+      `/rest/v1/teachers?employee_id=eq.${encodeURIComponent(employeeId)}&select=id,department_id&order=created_at.desc&limit=1`,
+    );
+    if (!teacher) throw new Error('Teacher not found');
+  }
 
   // 2) Current academic year
   const academicYear = await mustSingleRow('/rest/v1/academic_years?is_current=eq.true&select=id&limit=1', 'Current academic year');
 
   // 3) If teacher already has an entry, do nothing
   const existing = await request(
-    `/rest/v1/timetable_entries?teacher_id=eq.${teacher.id}&academic_year_id=eq.${academicYear.id}&is_active=eq.true&select=id&limit=1`,
+    `/rest/v1/timetable_entries?teacher_id=eq.${teacher.id}&academic_year_id=eq.${academicYear.id}&is_active=eq.true&select=id,course_id&limit=1`,
   );
-  if (existing.status >= 200 && existing.status < 300 && Array.isArray(existing.body) && existing.body.length > 0) {
-    console.log('✅ Timetable already assigned for test teacher; no changes made.');
-    return;
-  }
+  const existingEntry =
+    existing.status >= 200 && existing.status < 300 && Array.isArray(existing.body) && existing.body.length > 0 ? existing.body[0] : null;
 
-  // 4) Pick a section + course in the same department (best-effort).
+  // 4) Pick or create required references.
   const section = await ensureSection(teacher.department_id, academicYear.id);
 
-  const course = await firstRow(`/rest/v1/courses?department_id=eq.${teacher.department_id}&select=id&limit=1`);
+  const courseId = await ensureCourse(teacher.department_id);
+
+  // If an entry already exists but course_id is missing, patch it (so attendance tests can run).
+  if (existingEntry?.id) {
+    if (!existingEntry.course_id) {
+      const patch = await request(`/rest/v1/timetable_entries?id=eq.${existingEntry.id}`, 'PATCH', { course_id: courseId });
+      if (!(patch.status >= 200 && patch.status < 300)) {
+        throw new Error(
+          `Failed to patch timetable entry with course_id (status ${patch.status}): ${typeof patch.body === 'string' ? patch.body : JSON.stringify(patch.body)}`,
+        );
+      }
+      console.log('✅ Timetable already assigned; patched existing entry with course_id.');
+    } else {
+      console.log('✅ Timetable already assigned for test teacher; no changes made.');
+    }
+    return;
+  }
 
   // 5) Insert one entry (Mon, Period 1)
   const payload = {
@@ -157,7 +219,7 @@ async function main() {
     period: 1,
     start_time: '09:40',
     end_time: '10:35',
-    ...(course?.id ? { course_id: course.id } : {}),
+    course_id: courseId,
     teacher_id: teacher.id,
     year_id: section.year_id,
     section_id: section.id,

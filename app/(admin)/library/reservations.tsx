@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
-import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -111,9 +111,9 @@ export default function LibraryReservationsScreen() {
         <View style={styles.header}>
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Reservations</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{reservations.length} pending</Text></View>
-          <TouchableOpacity onPress={openModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
+          <SolidButton onPress={openModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </View>
         {reservations.map((res, i) => (
           <Animated.View key={res.id} entering={FadeInDown.delay(i * 30).springify()}>

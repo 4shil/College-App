@@ -201,7 +201,12 @@ export default function TeacherAppearanceSettingsScreen() {
                       styles.modeButton,
                       {
                         backgroundColor: mode === themeMode ? colors.primary : colors.cardBackground,
-                        borderColor: mode === themeMode ? colors.primary : colors.glassBorder,
+                        borderColor:
+                          mode === themeMode
+                            ? colors.primary
+                            : isGlassTheme
+                              ? colors.glassBorder
+                              : colors.cardBorder,
                       },
                     ]}
                     activeOpacity={0.7}
@@ -248,8 +253,14 @@ export default function TeacherAppearanceSettingsScreen() {
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             <BlurView
               intensity={canUseBlur ? 60 : 0}
-              tint="dark"
-              style={[styles.section, { borderColor: colors.glassBorder }]}
+              tint={blurTint}
+              style={[
+                styles.section,
+                {
+                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                },
+              ]}
             >
               <View style={styles.sectionHeader}>
                 <Ionicons name="layers" size={24} color={colors.primary} />
@@ -268,7 +279,12 @@ export default function TeacherAppearanceSettingsScreen() {
                       styles.modeButton,
                       {
                         backgroundColor: activeThemeId === preset.id ? colors.primary : colors.cardBackground,
-                        borderColor: activeThemeId === preset.id ? colors.primary : colors.glassBorder,
+                        borderColor:
+                          activeThemeId === preset.id
+                            ? colors.primary
+                            : isGlassTheme
+                              ? colors.glassBorder
+                              : colors.cardBorder,
                       },
                     ]}
                     activeOpacity={0.7}
@@ -310,8 +326,14 @@ export default function TeacherAppearanceSettingsScreen() {
             <Animated.View entering={FadeInDown.delay(200).duration(400)}>
               <BlurView
                 intensity={canUseBlur ? 60 : 0}
-                tint="dark"
-                style={[styles.section, { borderColor: colors.glassBorder }]}
+                tint={blurTint}
+                style={[
+                  styles.section,
+                  {
+                    borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
+                    backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                  },
+                ]}
               >
                 <View style={styles.sectionHeader}>
                   <Ionicons name="sparkles" size={24} color={colors.primary} />
@@ -327,7 +349,7 @@ export default function TeacherAppearanceSettingsScreen() {
                     styles.toggleRow,
                     {
                       backgroundColor: colors.cardBackground,
-                      borderColor: colors.glassBorder,
+                      borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
                     },
                   ]}
                   activeOpacity={0.7}
@@ -348,7 +370,7 @@ export default function TeacherAppearanceSettingsScreen() {
                       styles.togglePill,
                       {
                         backgroundColor: animationsEnabled ? colors.success : colors.inputBackground,
-                        borderColor: colors.glassBorder,
+                        borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
                       },
                     ]}
                   >

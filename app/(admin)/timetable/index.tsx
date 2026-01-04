@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -341,13 +341,13 @@ export default function TimetableScreen() {
           : 'Select a course and year to view timetable'}
       </Text>
       {selectedCourse && selectedYear && (
-        <TouchableOpacity
+        <SolidButton
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={handleEditTimetable}
         >
           <Ionicons name="add" size={20} color={colors.textInverse} />
           <Text style={[styles.createBtnText, { color: colors.textInverse }]}>Create Timetable</Text>
-        </TouchableOpacity>
+        </SolidButton>
       )}
     </View>
   );
@@ -370,12 +370,12 @@ export default function TimetableScreen() {
             </Text>
           </View>
           {selectedCourse && selectedYear && timetableEntries.length > 0 && (
-            <TouchableOpacity
+            <SolidButton
               style={[styles.editBtn, { backgroundColor: colors.primary }]}
               onPress={handleEditTimetable}
             >
               <FontAwesome5 name="edit" size={14} color={colors.textInverse} />
-            </TouchableOpacity>
+            </SolidButton>
           )}
         </Animated.View>
 

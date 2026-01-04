@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
@@ -185,9 +185,9 @@ export default function GradeScreen() {
                       {submission.feedback && <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>Feedback: {submission.feedback}</Text>}
                     </View>
                   )}
-                  <TouchableOpacity onPress={() => setEditingSubmission(submission.id)} style={[styles.gradeButton, { backgroundColor: colors.primary }]}>
+                  <SolidButton onPress={() => setEditingSubmission(submission.id)} style={[styles.gradeButton, { backgroundColor: colors.primary }]}>
                     <Text style={[styles.gradeButtonText, { color: colors.textInverse }]}>{submission.status === 'graded' ? 'Edit Grade' : 'Grade Submission'}</Text>
-                  </TouchableOpacity>
+                  </SolidButton>
                 </View>
               )}
             </Card>

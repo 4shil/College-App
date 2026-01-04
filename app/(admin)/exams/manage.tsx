@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -250,13 +250,12 @@ export default function ManageExamsScreen() {
               {exams.length} exams scheduled
             </Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             onPress={openAddModal}
             style={[styles.addButton, { backgroundColor: colors.primary }]}
-            activeOpacity={0.7}
           >
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </View>
 
         {exams.length === 0 ? (

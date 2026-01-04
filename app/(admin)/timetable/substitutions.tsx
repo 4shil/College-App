@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -673,12 +673,12 @@ export default function SubstitutionsScreen() {
               Manage teacher replacements
             </Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={() => setShowCreateModal(true)}
           >
             <Ionicons name="add" size={22} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
 
         {/* Stats */}

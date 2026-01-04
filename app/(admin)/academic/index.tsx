@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { IconBadge } from '../../../components/ui/IconBadge';
 import { supabase } from '../../../lib/supabase';
@@ -202,13 +202,12 @@ export default function AcademicIndexScreen() {
               Manage academic structure
             </Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/(admin)/academic/departments?create=1' as any)}
-            activeOpacity={0.8}
           >
             <Ionicons name="add" size={22} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
 
         {/* Quick Stats */}

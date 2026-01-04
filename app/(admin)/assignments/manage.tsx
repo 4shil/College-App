@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
@@ -118,9 +118,9 @@ export default function ManageAssignmentsScreen() {
         <View style={styles.header}>
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Manage Assignments</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{assignments.length} assignments</Text></View>
-          <TouchableOpacity onPress={openAddModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
+          <SolidButton onPress={openAddModal} style={[styles.addButton, { backgroundColor: colors.primary }]}>
             <FontAwesome5 name="plus" size={18} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </View>
         {assignments.map((assignment, i) => (
           <Animated.View key={assignment.id} entering={FadeInDown.delay(i * 30).springify()}>

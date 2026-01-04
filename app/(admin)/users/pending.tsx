@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, IconBadge, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -297,8 +297,8 @@ export default function PendingApprovalsScreen() {
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.error }, { opacity: isProcessing ? 0.5 : 1 }]}
+            <SolidButton
+              style={[styles.actionBtn, { backgroundColor: colors.error }]}
               onPress={() => handleReject(student)}
               disabled={isProcessing}
             >
@@ -310,9 +310,9 @@ export default function PendingApprovalsScreen() {
                   <Text style={[styles.actionBtnText, { color: colors.textInverse }]}>Reject</Text>
                 </>
               )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.success }, { opacity: isProcessing ? 0.5 : 1 }]}
+            </SolidButton>
+            <SolidButton
+              style={[styles.actionBtn, { backgroundColor: colors.success }]}
               onPress={() => handleApprove(student)}
               disabled={isProcessing}
             >
@@ -324,7 +324,7 @@ export default function PendingApprovalsScreen() {
                   <Text style={[styles.actionBtnText, { color: colors.textInverse }]}>Approve</Text>
                 </>
               )}
-            </TouchableOpacity>
+            </SolidButton>
           </View>
         </Card>
       </Animated.View>

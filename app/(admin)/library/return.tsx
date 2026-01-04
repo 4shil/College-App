@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, A
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -117,10 +117,10 @@ export default function LibraryReturnScreen() {
                       <Text style={[styles.value, { color: colors.error }]}>₹{issue.fine_amount}</Text></View>
                   )}
                 </View>
-                <TouchableOpacity onPress={() => handleReturn(issue)} style={[styles.returnButton, { backgroundColor: colors.success }]}>
+                <SolidButton onPress={() => handleReturn(issue)} style={[styles.returnButton, { backgroundColor: colors.success }]}>
                   <FontAwesome5 name="check" size={16} color={colors.textInverse} />
                   <Text style={[styles.returnText, { color: colors.textInverse }]}>Return Book</Text>
-                </TouchableOpacity>
+                </SolidButton>
               </Card>
             </Animated.View>
           );

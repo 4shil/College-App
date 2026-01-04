@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, IconBadge, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, Card, IconBadge, LoadingIndicator, SolidButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -217,12 +217,12 @@ export default function TeachersListScreen() {
               {teachers.length} teacher(s) registered
             </Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/(admin)/users/teachers/create' as any)}
           >
             <Ionicons name="add" size={22} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
 
         {/* Search Bar */}

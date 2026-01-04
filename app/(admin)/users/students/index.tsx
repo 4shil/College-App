@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, IconBadge, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, Card, IconBadge, LoadingIndicator, SolidButton } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -269,7 +269,7 @@ export default function StudentsListScreen() {
               {students.length} active student(s)
             </Text>
           </View>
-          <TouchableOpacity
+          <SolidButton
             style={[
               styles.filterBtn,
               showFilters
@@ -283,13 +283,13 @@ export default function StudentsListScreen() {
             onPress={() => setShowFilters(!showFilters)}
           >
             <Ionicons name="filter" size={18} color={showFilters ? colors.textInverse : colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
+          </SolidButton>
+          <SolidButton
             style={[styles.addBtn, { backgroundColor: colors.success }]}
             onPress={() => router.push('/(admin)/users/students/create' as any)}
           >
             <Ionicons name="add" size={20} color={colors.textInverse} />
-          </TouchableOpacity>
+          </SolidButton>
         </Animated.View>
 
         {/* Search Bar */}

@@ -81,7 +81,7 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
       return activeRoute === '/(teacher)/dashboard' || activeRoute.endsWith('/dashboard');
     }
     if ((i as any).nestedRoutes) {
-      return (i as any).nestedRoutes.some((route: string) => activeRoute.includes(route));
+      return activeRoute.includes(i.id) || (i as any).nestedRoutes.some((route: string) => activeRoute.includes(route));
     }
     return activeRoute.includes(i.id);
   });
@@ -129,7 +129,7 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
                 item.id === 'dashboard'
                   ? (activeRoute === '/(teacher)/dashboard' || activeRoute.endsWith('/dashboard'))
                   : ((item as any).nestedRoutes
-                      ? (item as any).nestedRoutes.some((route: string) => activeRoute.includes(route))
+                      ? (activeRoute.includes(item.id) || (item as any).nestedRoutes.some((route: string) => activeRoute.includes(route)))
                       : activeRoute.includes(item.id));
 
               return (

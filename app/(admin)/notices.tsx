@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator } from '../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton, LoadingIndicator, SolidButton } from '../../components/ui';
 import { Restricted } from '../../components/Restricted';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
@@ -399,12 +399,12 @@ export default function NoticesScreen() {
             permissions={[PERMISSIONS.POST_GLOBAL_NOTICES, PERMISSIONS.POST_DEPT_NOTICES]}
             fallback={<View />}
           >
-            <TouchableOpacity
+            <SolidButton
               style={[styles.addBtn, { backgroundColor: colors.primary }]}
               onPress={() => setShowModal(true)}
             >
               <Ionicons name="add" size={22} color={colors.textInverse} />
-            </TouchableOpacity>
+            </SolidButton>
           </Restricted>
         </Animated.View>
 
