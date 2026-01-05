@@ -23,8 +23,8 @@ export const defaultLightTokens: ThemeTokensNormalized = {
 
   text: {
     primary: '#1F2937',
-    secondary: '#374151',
-    muted: '#9CA3AF',
+    secondary: '#000000ff',
+    muted: '#000000ff',
     inverse: '#ffffff',
   },
 

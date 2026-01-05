@@ -162,25 +162,23 @@ export default function RoleBasedDashboard() {
           </View>
         </View>
 
-        {/* Role Badge - Redesigned without Card background */}
+        {/* Role Badge */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
-          <View style={[styles.roleBadge, { 
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.cardBorder,
-            borderWidth: colors.borderWidth,
-          }]}>
-            <View style={[styles.roleIconContainer, { 
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.primary,
-              borderWidth: colors.borderWidth,
-            }]}>
-              <FontAwesome5 name="shield-alt" size={20} color={colors.primary} />
+          <GlassCard>
+            <View style={styles.roleBadgeContent}>
+              <View style={[styles.roleIconContainer, { 
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.primary,
+                borderWidth: colors.borderWidth,
+              }]}>
+                <FontAwesome5 name="shield-alt" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.roleInfo}>
+                <Text style={[styles.roleLabel, { color: colors.textSecondary }]}>Current Role</Text>
+                <Text style={[styles.roleName, { color: colors.primary }]}>{roleDisplayName}</Text>
+              </View>
             </View>
-            <View style={styles.roleInfo}>
-              <Text style={[styles.roleLabel, { color: colors.textSecondary }]}>Current Role</Text>
-              <Text style={[styles.roleName, { color: colors.primary }]}>{roleDisplayName}</Text>
-            </View>
-          </View>
+          </GlassCard>
         </Animated.View>
 
         {/* Modules Grid */}
@@ -196,23 +194,21 @@ export default function RoleBasedDashboard() {
                 onPress={() => router.push(module.route as any)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.moduleCard, { 
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.cardBorder,
-                  borderWidth: colors.borderWidth,
-                }]}>
-                  <View style={[styles.iconContainer, { 
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.primary,
-                    borderWidth: colors.borderWidth,
-                    shadowColor: colors.shadowColor,
-                  }]}>
-                    <FontAwesome5 name={module.icon} size={24} color={colors.primary} />
+                <GlassCard style={styles.moduleCard}>
+                  <View style={styles.moduleCardContent}>
+                    <View style={[styles.iconContainer, { 
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.primary,
+                      borderWidth: colors.borderWidth,
+                      shadowColor: colors.shadowColor,
+                    }]}>
+                      <FontAwesome5 name={module.icon} size={24} color={colors.primary} />
+                    </View>
+                    <Text style={[styles.moduleTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+                      {module.title}
+                    </Text>
                   </View>
-                  <Text style={[styles.moduleTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-                    {module.title}
-                  </Text>
-                </View>
+                </GlassCard>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -248,12 +244,9 @@ const styles = StyleSheet.create({
   roleBadgeContainer: {
     marginBottom: 28,
   },
-  roleBadge: {
+  roleBadgeContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    borderRadius: 20,
-    borderWidth: 0,
   },
   roleIconContainer: {
     width: 52,
@@ -272,11 +265,11 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   moduleCard: {
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 0,
-    borderRadius: 20,
     height: 150,
+  },
+  moduleCardContent: {
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   iconContainer: {
