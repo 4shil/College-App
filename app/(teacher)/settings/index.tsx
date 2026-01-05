@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -188,7 +189,23 @@ export default function TeacherSettingsScreen() {
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>
           <Card style={styles.userCard}>
             <View style={styles.userInfo}>
-              <IconBadge family="ion" name="person" tone="primary" size={24} style={styles.userAvatar} />
+              {profile?.photo_url ? (
+                <View
+                  style={[
+                    styles.userAvatar,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.cardBorder,
+                      borderWidth: colors.borderWidth,
+                      overflow: 'hidden',
+                    },
+                  ]}
+                >
+                  <Image source={{ uri: profile.photo_url }} style={styles.userAvatarImage} />
+                </View>
+              ) : (
+                <IconBadge family="ion" name="person" tone="primary" size={24} style={styles.userAvatar} />
+              )}
               <View style={styles.userDetails}>
                 <Text style={[styles.userName, { color: colors.textPrimary }]}>
                   {profile?.full_name || 'Teacher'}
@@ -266,6 +283,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+  },
+  userAvatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   userDetails: { flex: 1 },
   userName: { fontSize: 18, fontWeight: '700' },

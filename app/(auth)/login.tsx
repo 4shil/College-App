@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +20,7 @@ import {
   AnimatedBackground,
   ThemeToggle,
 } from '../../components/ui';
+import { GlassInput } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { signInWithEmail } from '../../lib/supabase';
 import { getAuthUser } from '../../lib/database';
@@ -39,7 +39,6 @@ export default function LoginScreen() {
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRoleCategory>('staff');
   const [loading, setLoadingState] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -241,53 +240,27 @@ export default function LoginScreen() {
             {/* Input Fields */}
             <View style={styles.inputsContainer}>
               <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Email / Username</Text>
-              <View style={[
-                styles.inputWrapper,
-                { 
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.inputBorder,
-                }
-              ]}>
-                <TextInput
-                  style={[styles.input, { color: colors.textPrimary }]}
-                  placeholder="Enter your email"
-                  placeholderTextColor={colors.placeholder}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-              </View>
+              <GlassInput
+                icon="mail-outline"
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                editable={!loading}
+              />
 
               <Text style={[styles.inputLabel, { marginTop: 16, color: colors.textSecondary }]}>Password</Text>
-              <View style={[
-                styles.inputWrapper,
-                { 
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.inputBorder,
-                }
-              ]}>
-                <TextInput
-                  style={[styles.input, { color: colors.textPrimary }]}
-                  placeholder="Enter your password"
-                  placeholderTextColor={colors.placeholder}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off' : 'eye'}
-                    size={20}
-                    color={colors.textMuted}
-                  />
-                </TouchableOpacity>
-              </View>
+              <GlassInput
+                icon="lock-closed-outline"
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                isPassword
+                autoCapitalize="none"
+                editable={!loading}
+              />
 
               {/* Error Message */}
               {error && (

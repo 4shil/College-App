@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInputProps,
+  StyleProp,
   ViewStyle,
   Platform,
 } from 'react-native';
@@ -23,7 +24,7 @@ import { withAlpha } from '../../theme/colorUtils';
 interface GlassInputProps extends TextInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
   isPassword?: boolean;
-  containerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
   error?: boolean;
 }
 
@@ -37,6 +38,9 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   const { colors, isDark, canAnimateBackground, capabilities } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const isMultiline = !!props.multiline;
+  const editable = props.editable !== false;
 
   const focusProgress = useSharedValue(0);
 
@@ -85,6 +89,8 @@ export const GlassInput: React.FC<GlassInputProps> = ({
       ? withAlpha(baseBackground, isDark ? 0.72 : 0.86)
       : baseBackground;
 
+  const disabledOpacity = editable ? 1 : 0.6;
+
   return (
     <Animated.View style={[styles.wrapper, animatedContainerStyle, containerStyle]}>
       <Animated.View
@@ -93,6 +99,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           {
             backgroundColor: shouldBlur ? 'transparent' : resolvedBackground,
             borderRadius: colors.borderRadius,
+            opacity: disabledOpacity,
           },
           animatedBorderStyle,
         ]}
@@ -112,7 +119,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           </>
         )}
 
-        <View style={styles.innerContent}>
+        <View style={[styles.innerContent, isMultiline && styles.innerContentMultiline]}>
           {icon && (
             <Ionicons
               name={icon}
@@ -124,6 +131,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           <TextInput
             style={[
               styles.input,
+              isMultiline && styles.inputMultiline,
               {
                 color: colors.textPrimary,
               },
@@ -134,6 +142,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
             onBlur={() => setIsFocused(false)}
             autoCapitalize="none"
             selectionColor={colors.primary}
+            editable={editable}
             {...props}
           />
           {isPassword && (
@@ -160,7 +169,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   container: {
-    height: 52,
+    minHeight: 52,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -170,14 +179,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
   },
+  innerContentMultiline: {
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+  },
   icon: {
     marginRight: 12,
+    marginTop: 2,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    height: '100%',
+    paddingVertical: 0,
     letterSpacing: 0.2,
+  },
+  inputMultiline: {
+    minHeight: 92,
+    textAlignVertical: 'top',
   },
   eyeButton: {
     padding: 6,

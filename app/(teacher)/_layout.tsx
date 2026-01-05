@@ -73,6 +73,11 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
   const [expanded, setExpanded] = useState(false);
   const { colors, isDark, animationsEnabled } = useThemeStore();
 
+  // Keep the dock translucent, but stabilize it so content behind doesn't overpower it.
+  const dockBlurIntensity = animationsEnabled ? Math.min(65, Math.round(colors.blurIntensity * 0.75)) : 0;
+  const dockScrimColor = withAlpha(colors.background, isDark ? 0.12 : 0.1);
+  const dockBorderColor = withAlpha(colors.textPrimary, isDark ? 0.16 : 0.12);
+
   const activeIconColor = colors.textPrimary;
   const inactiveIconColor = withAlpha(colors.textPrimary, 0.4);
 
@@ -116,11 +121,15 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
         style={[styles.dockContainer, { borderRadius: colors.borderRadius * 2 }, animatedContainerStyle]}
       >
         <BlurView
-          intensity={animationsEnabled ? colors.blurIntensity : 0}
-          tint={isDark ? 'dark' : 'light'}
+          intensity={dockBlurIntensity}
+          tint="default"
           style={StyleSheet.absoluteFill}
         />
-        <View style={[styles.dockBorder, { borderColor: colors.glassBorder, borderRadius: colors.borderRadius * 2 }]} />
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: dockScrimColor }]} />
+        <View
+          pointerEvents="none"
+          style={[styles.dockBorder, { borderColor: dockBorderColor, borderRadius: colors.borderRadius * 2 }]}
+        />
 
         <View style={{ flex: 1, overflow: 'hidden', borderRadius: colors.borderRadius * 1.5 }}>
           <Animated.View style={[styles.dockItemsRow, animatedItemsStyle]}>

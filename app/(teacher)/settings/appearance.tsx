@@ -5,89 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Switch,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { BlurView } from 'expo-blur';
 
-import { AnimatedBackground } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { themeRegistry } from '../../../theme/registry';
-
-function parseColorToRgb(color: string): { r: number; g: number; b: number } | null {
-  const c = color.trim();
-
-  // #RGB, #RRGGBB, #RRGGBBAA
-  if (c[0] === '#') {
-    const hex = c.slice(1);
-    const isShort = hex.length === 3;
-    const isLong = hex.length === 6 || hex.length === 8;
-    if (!isShort && !isLong) return null;
-
-    const full = isShort
-      ? hex.split('').map((ch) => ch + ch).join('')
-      : hex.slice(0, 6);
-
-    const r = Number.parseInt(full.slice(0, 2), 16);
-    const g = Number.parseInt(full.slice(2, 4), 16);
-    const b = Number.parseInt(full.slice(4, 6), 16);
-    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-    return { r, g, b };
-  }
-
-  // rgb()/rgba()
-  const rgbMatch = c.match(/^rgba?\(([^)]+)\)$/i);
-  if (rgbMatch) {
-    const parts = rgbMatch[1].split(',').map((p) => p.trim());
-    if (parts.length < 3) return null;
-    const r = Number(parts[0]);
-    const g = Number(parts[1]);
-    const b = Number(parts[2]);
-    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-    return { r, g, b };
-  }
-
-  return null;
-}
-
-function relativeLuminance(rgb: { r: number; g: number; b: number }): number {
-  // sRGB → linear
-  const toLinear = (v: number) => {
-    const s = v / 255;
-    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  };
-  const r = toLinear(rgb.r);
-  const g = toLinear(rgb.g);
-  const b = toLinear(rgb.b);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contrastRatio(bg: string, fg: string): number | null {
-  const bgRgb = parseColorToRgb(bg);
-  const fgRgb = parseColorToRgb(fg);
-  if (!bgRgb || !fgRgb) return null;
-  const L1 = relativeLuminance(bgRgb);
-  const L2 = relativeLuminance(fgRgb);
-  const lighter = Math.max(L1, L2);
-  const darker = Math.min(L1, L2);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function getBestContrastOnColor(
-  backgroundColor: string,
-  candidateA: string,
-  candidateB: string,
-  fallback: string
-): string {
-  const a = contrastRatio(backgroundColor, candidateA);
-  const b = contrastRatio(backgroundColor, candidateB);
-  if (a == null && b == null) return fallback;
-  if (a == null) return candidateB;
-  if (b == null) return candidateA;
-  return a >= b ? candidateA : candidateB;
-}
 
 export default function TeacherAppearanceSettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -105,22 +32,8 @@ export default function TeacherAppearanceSettingsScreen() {
     isDark,
   } = useThemeStore();
 
-  const canUseBlur = capabilities.supportsBlur && animationsEnabled;
-  const isGlassTheme = !!capabilities.supportsGlassSurfaces;
-  const blurTint: 'light' | 'dark' = isDark ? 'dark' : 'light';
   const isDefaultGlassmorphism = activeThemeId === 'default' || activeThemeId === 'glassmorphism';
   const showAnimations = !!supportsAnimatedBackground && (!isDark || isDefaultGlassmorphism);
-
-  const onSelectedColor = React.useMemo(
-    () =>
-      getBestContrastOnColor(
-        colors.primary,
-        colors.textPrimary,
-        colors.textInverse,
-        colors.textInverse
-      ),
-    [colors.primary, colors.textPrimary, colors.textInverse]
-  );
 
   const themePresets = React.useMemo(() => {
     const byId = new Map<string, { id: string; name: string }>();
@@ -130,325 +43,230 @@ export default function TeacherAppearanceSettingsScreen() {
     return Array.from(byId.values());
   }, []);
 
+  const modeOptions: Array<{ id: 'light' | 'dark' | 'system'; title: string; icon: string }> = [
+    { id: 'light', title: 'Light', icon: 'sunny' },
+    { id: 'dark', title: 'Dark', icon: 'moon' },
+    { id: 'system', title: 'System', icon: 'phone-portrait' },
+  ];
+
   return (
     <AnimatedBackground>
-      <View style={styles.container}>
-        <BlurView
-          intensity={canUseBlur ? 80 : 0}
-          tint={blurTint}
-          style={[
-            styles.headerBlur,
-            {
-              paddingTop: insets.top + 10,
-              backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
-            },
-          ]}
-        >
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={[
-                styles.backBtn,
-                {
-                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
-                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
-                  borderWidth: colors.borderWidth,
-                },
-              ]}
-            >
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <Text style={[styles.title, { color: colors.textPrimary }]}>Appearance</Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Customize theme and animations
-              </Text>
-            </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: insets.bottom + 110, paddingHorizontal: 20 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View entering={FadeInDown.duration(250)} style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            activeOpacity={0.85}
+            style={[
+              styles.backBtn,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Appearance</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Customize theme and animations</Text>
           </View>
-        </BlurView>
+        </Animated.View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={{ paddingTop: insets.top + 100, paddingBottom: insets.bottom + 100 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View entering={FadeInDown.delay(100).duration(400)}>
-            <BlurView
-              intensity={canUseBlur ? 60 : 0}
-              tint={blurTint}
-              style={[
-                styles.section,
-                {
-                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
-                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
-                },
-              ]}
-            >
-              <View style={styles.sectionHeader}>
-                <Ionicons name="color-palette" size={24} color={colors.primary} />
+        <Animated.View entering={FadeInDown.delay(80).duration(260)}>
+          <Card style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <IconBadge family="ion" name="color-palette" tone="primary" size={18} />
+              <View style={{ flex: 1 }}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Theme Mode</Text>
+                <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>Light, Dark, or System</Text>
               </View>
-              <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>
-                Choose between light, dark, or system theme
-              </Text>
+            </View>
 
-              <View style={styles.modeButtons}>
-                {(['light', 'dark', 'system'] as const).map((themeMode) => (
+            <View style={{ height: 10 }} />
+
+            <Card noPadding animated={false}>
+              {modeOptions.map((opt, idx) => {
+                const selected = mode === opt.id;
+                return (
                   <TouchableOpacity
-                    key={themeMode}
-                    onPress={() => setMode(themeMode)}
+                    key={opt.id}
+                    activeOpacity={0.85}
+                    onPress={() => setMode(opt.id)}
                     style={[
-                      styles.modeButton,
+                      styles.row,
                       {
-                        backgroundColor: mode === themeMode ? colors.primary : colors.cardBackground,
-                        borderColor:
-                          mode === themeMode
-                            ? colors.primary
-                            : isGlassTheme
-                              ? colors.glassBorder
-                              : colors.cardBorder,
+                        backgroundColor: selected ? colors.inputBackground : 'transparent',
+                        borderBottomColor: colors.cardBorder,
+                        borderBottomWidth: idx === modeOptions.length - 1 ? 0 : colors.borderWidth,
                       },
                     ]}
-                    activeOpacity={0.7}
                   >
+                    <View style={styles.rowLeft}>
+                      <Ionicons name={opt.icon as any} size={18} color={selected ? colors.primary : colors.textMuted} />
+                      <Text style={[styles.rowTitle, { color: colors.textPrimary }]}>{opt.title}</Text>
+                    </View>
                     <Ionicons
-                      name={
-                        themeMode === 'light'
-                          ? 'sunny'
-                          : themeMode === 'dark'
-                          ? 'moon'
-                          : 'phone-portrait'
-                      }
-                      size={24}
-                      color={mode === themeMode ? onSelectedColor : colors.textSecondary}
+                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={20}
+                      color={selected ? colors.primary : colors.textMuted}
                     />
-                    <Text
-                      style={[
-                        styles.modeText,
-                        { color: mode === themeMode ? onSelectedColor : colors.textPrimary },
-                      ]}
-                    >
-                      {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
-                    </Text>
-                    {mode === themeMode && (
-                      <View
-                        style={[
-                          styles.checkmark,
-                          {
-                            backgroundColor: colors.cardBackground,
-                            borderColor: onSelectedColor,
-                            borderWidth: 1,
-                          },
-                        ]}
-                      >
-                        <Ionicons name="checkmark" size={16} color={onSelectedColor} />
-                      </View>
-                    )}
                   </TouchableOpacity>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
+                );
+              })}
+            </Card>
+          </Card>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-            <BlurView
-              intensity={canUseBlur ? 60 : 0}
-              tint={blurTint}
-              style={[
-                styles.section,
-                {
-                  borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
-                  backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
-                },
-              ]}
-            >
-              <View style={styles.sectionHeader}>
-                <Ionicons name="layers" size={24} color={colors.primary} />
+        <Animated.View entering={FadeInDown.delay(140).duration(260)}>
+          <Card style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <IconBadge family="ion" name="layers" tone="primary" size={18} />
+              <View style={{ flex: 1 }}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Theme Preset</Text>
+                <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>Choose a preset</Text>
               </View>
-              <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>
-                Choose between available theme presets
-              </Text>
+            </View>
 
-              <View style={styles.modeButtons}>
-                {themePresets.map((preset) => (
+            <View style={{ height: 10 }} />
+
+            <Card noPadding animated={false}>
+              {themePresets.map((preset, idx) => {
+                const selected = activeThemeId === preset.id;
+                return (
                   <TouchableOpacity
                     key={preset.id}
+                    activeOpacity={0.85}
                     onPress={() => setActiveThemeId(preset.id)}
                     style={[
-                      styles.modeButton,
+                      styles.row,
                       {
-                        backgroundColor: activeThemeId === preset.id ? colors.primary : colors.cardBackground,
-                        borderColor:
-                          activeThemeId === preset.id
-                            ? colors.primary
-                            : isGlassTheme
-                              ? colors.glassBorder
-                              : colors.cardBorder,
+                        backgroundColor: selected ? colors.inputBackground : 'transparent',
+                        borderBottomColor: colors.cardBorder,
+                        borderBottomWidth: idx === themePresets.length - 1 ? 0 : colors.borderWidth,
                       },
                     ]}
-                    activeOpacity={0.7}
                   >
+                    <View style={styles.rowLeft}>
+                      <Ionicons
+                        name={selected ? 'radio-button-on' : 'radio-button-off'}
+                        size={18}
+                        color={selected ? colors.primary : colors.textMuted}
+                      />
+                      <Text style={[styles.rowTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                        {preset.name}
+                      </Text>
+                    </View>
                     <Ionicons
-                      name={activeThemeId === preset.id ? 'radio-button-on' : 'radio-button-off'}
-                      size={24}
-                      color={activeThemeId === preset.id ? onSelectedColor : colors.textSecondary}
+                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={20}
+                      color={selected ? colors.primary : colors.textMuted}
                     />
-                    <Text
-                      style={[
-                        styles.modeText,
-                        { color: activeThemeId === preset.id ? onSelectedColor : colors.textPrimary },
-                      ]}
-                    >
-                      {preset.name}
-                    </Text>
-                    {activeThemeId === preset.id && (
-                      <View
-                        style={[
-                          styles.checkmark,
-                          {
-                            backgroundColor: colors.cardBackground,
-                            borderColor: onSelectedColor,
-                            borderWidth: 1,
-                          },
-                        ]}
-                      >
-                        <Ionicons name="checkmark" size={16} color={onSelectedColor} />
-                      </View>
-                    )}
                   </TouchableOpacity>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
+                );
+              })}
+            </Card>
+          </Card>
+        </Animated.View>
 
-          {showAnimations && (
-            <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-              <BlurView
-                intensity={canUseBlur ? 60 : 0}
-                tint={blurTint}
+        {showAnimations ? (
+          <Animated.View entering={FadeInDown.delay(200).duration(260)}>
+            <Card style={styles.sectionCard}>
+              <View style={styles.sectionHeader}>
+                <IconBadge family="ion" name="sparkles" tone="primary" size={18} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Animations</Text>
+                  <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>Enable UI effects</Text>
+                </View>
+              </View>
+
+              <View style={{ height: 10 }} />
+
+              <View
                 style={[
-                  styles.section,
+                  styles.toggleRow,
                   {
-                    borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
-                    backgroundColor: isGlassTheme ? colors.glassBackground : colors.cardBackground,
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.cardBorder,
+                    borderWidth: colors.borderWidth,
                   },
                 ]}
               >
-                <View style={styles.sectionHeader}>
-                  <Ionicons name="sparkles" size={24} color={colors.primary} />
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Animations</Text>
+                <View style={styles.toggleLeft}>
+                  <Text style={[styles.toggleTitle, { color: colors.textPrimary }]}>Enable animations</Text>
+                  <Text style={[styles.toggleSubtitle, { color: colors.textSecondary }]}>Recommended</Text>
                 </View>
-                <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>
-                  Enable or disable UI animations and effects
-                </Text>
-
-                <TouchableOpacity
-                  onPress={toggleAnimations}
-                  style={[
-                    styles.toggleRow,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.toggleLeft}>
-                    <Ionicons
-                      name={animationsEnabled ? 'toggle' : 'toggle-outline'}
-                      size={28}
-                      color={animationsEnabled ? colors.success : colors.textMuted}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.toggleTitle, { color: colors.textPrimary }]}>Enable Animations</Text>
-                      <Text style={[styles.toggleSubtitle, { color: colors.textSecondary }]}>Recommended for best experience</Text>
-                    </View>
-                  </View>
-                  <View
-                    style={[
-                      styles.togglePill,
-                      {
-                        backgroundColor: animationsEnabled ? colors.success : colors.inputBackground,
-                        borderColor: isGlassTheme ? colors.glassBorder : colors.cardBorder,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.togglePillText,
-                        { color: animationsEnabled ? colors.textInverse : colors.textSecondary },
-                      ]}
-                    >
-                      {animationsEnabled ? 'ON' : 'OFF'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </BlurView>
-            </Animated.View>
-          )}
-        </ScrollView>
-      </View>
+                <Switch
+                  value={animationsEnabled}
+                  onValueChange={toggleAnimations}
+                  trackColor={{ false: colors.inputBorder, true: colors.primary }}
+                  thumbColor={animationsEnabled ? colors.primary : colors.cardBackground}
+                />
+              </View>
+            </Card>
+          </Animated.View>
+        ) : null}
+      </ScrollView>
     </AnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerBlur: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  backBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  headerContent: { flex: 1 },
-  title: { fontSize: 20, fontWeight: '800' },
-  subtitle: { marginTop: 2, fontSize: 13 },
-  scrollView: { flex: 1, paddingHorizontal: 20 },
-  section: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 14, overflow: 'hidden' },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: '800' },
-  sectionDesc: { marginTop: 6, fontSize: 13, lineHeight: 18 },
-  modeButtons: { marginTop: 12, gap: 10 },
-  modeButton: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    position: 'relative',
+    gap: 12,
+    marginBottom: 16,
   },
-  modeText: { fontSize: 14, fontWeight: '700', flex: 1 },
-  checkmark: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerContent: { flex: 1 },
+  title: { fontSize: 22, fontWeight: '800' },
+  subtitle: { marginTop: 3, fontSize: 13, fontWeight: '600' },
+
+  sectionCard: { marginBottom: 14 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sectionTitle: { fontSize: 16, fontWeight: '800' },
+  sectionDesc: { marginTop: 2, fontSize: 12, fontWeight: '600' },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  rowTitle: { fontSize: 14, fontWeight: '700', flex: 1 },
+
   toggleRow: {
-    marginTop: 12,
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderRadius: 14,
-    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  toggleLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  toggleLeft: { flex: 1 },
   toggleTitle: { fontSize: 14, fontWeight: '800' },
-  toggleSubtitle: { marginTop: 2, fontSize: 12 },
-  togglePill: {
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  togglePillText: { fontSize: 12, fontWeight: '900', letterSpacing: 0.6 },
+  toggleSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '600' },
 });

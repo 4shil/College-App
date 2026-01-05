@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -9,6 +9,7 @@ import { AnimatedBackground, Card, LoadingIndicator, ThemeToggle } from '../../c
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useTeacherDashboardSummary } from '../../hooks/useTeacherDashboardSummary';
+import { useAuthStore } from '../../store/authStore';
 
 function titleCaseScope(scope: string) {
   if (!scope) return '';
@@ -22,7 +23,19 @@ export default function TeacherDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+  const { profile } = useAuthStore();
   const { summary, loading, refreshing, refresh } = useTeacherDashboardSummary();
+
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const photoUrl = profile?.photo_url || '';
 
   const alert = summary?.criticalAlert || null;
   const showAlert = Boolean(alert);
@@ -62,12 +75,11 @@ export default function TeacherDashboard() {
   const contentTopPadding = insets.top + 12;
 
   const hero = useMemo(() => {
-    const now = new Date();
     const hour = now.getHours();
     const greetingText = hour < 12 ? 'Good Morning!' : hour < 17 ? 'Good Afternoon!' : 'Good Evening!';
     const timeText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return { greetingText, timeText };
-  }, []);
+  }, [now]);
 
   return (
     <AnimatedBackground>
@@ -94,7 +106,11 @@ export default function TeacherDashboard() {
                 onPress={() => router.push('/(teacher)/profile' as any)}
                 style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
               >
-                <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
+                {photoUrl ? (
+                  <Image source={{ uri: photoUrl }} style={styles.heroAvatarImage} />
+                ) : (
+                  <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -278,25 +294,11 @@ export default function TeacherDashboard() {
           ) : summary?.todayClasses?.length ? (
             <View style={styles.tileGrid}>
               {summary.todayClasses.slice(0, 4).map((c, idx) => {
-                const chipBg =
-                  c.status === 'Attendance Pending'
-                    ? withAlpha(colors.error, isDark ? 0.22 : 0.12)
-                    : c.status === 'Ongoing'
-                      ? withAlpha(colors.warning, isDark ? 0.22 : 0.12)
-                      : c.status === 'Completed'
-                        ? withAlpha(colors.success, isDark ? 0.22 : 0.12)
-                        : isDark
-                          ? withAlpha(colors.textInverse, 0.08)
-                          : withAlpha(colors.shadowColor, 0.06);
-
-                const chipText =
-                  c.status === 'Attendance Pending'
-                    ? colors.error
-                    : c.status === 'Ongoing'
-                      ? colors.warning
-                      : c.status === 'Completed'
-                        ? colors.success
-                        : colors.textMuted;
+                const isWarningStatus = c.status === 'Attendance Pending';
+                const chipText = isWarningStatus ? colors.warning : colors.primary;
+                const chipBg = isWarningStatus
+                  ? withAlpha(colors.warning, isDark ? 0.22 : 0.12)
+                  : withAlpha(colors.primary, isDark ? 0.18 : 0.1);
 
                 return (
                   <Animated.View
@@ -309,11 +311,6 @@ export default function TeacherDashboard() {
                         <Text style={[styles.classTileTime, { color: colors.textMuted }]} numberOfLines={1}>
                           {c.timeLabel}
                         </Text>
-                        <View style={[styles.miniChip, { backgroundColor: chipBg, borderColor: withAlpha(chipText, 0.35) }]}>
-                          <Text style={[styles.miniChipText, { color: chipText }]} numberOfLines={1}>
-                            {c.status}
-                          </Text>
-                        </View>
                       </View>
                       <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                         {c.subjectLabel}
@@ -322,6 +319,14 @@ export default function TeacherDashboard() {
                         {c.classLabel}
                         {c.roomLabel ? ` • ${c.roomLabel}` : ''}
                       </Text>
+
+                      <View style={styles.classNotifierRow}>
+                        <View style={[styles.miniChip, { backgroundColor: chipBg, borderColor: withAlpha(chipText, 0.35) }]}>
+                          <Text style={[styles.miniChipText, { color: chipText }]} numberOfLines={1}>
+                            {c.status}
+                          </Text>
+                        </View>
+                      </View>
 
                       {c.status === 'Attendance Pending' && c.routeParams ? (
                         <TouchableOpacity
@@ -481,6 +486,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  heroAvatarImage: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    resizeMode: 'cover',
+  },
   alertStrip: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -592,13 +603,18 @@ const styles = StyleSheet.create({
   classTileTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
+    justifyContent: 'flex-start',
     marginBottom: 10,
+  },
+  classNotifierRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   classTileTime: {
     fontSize: 12,
     fontWeight: '800',
+    flexShrink: 1,
   },
   miniChip: {
     paddingHorizontal: 10,
@@ -606,6 +622,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     alignSelf: 'flex-start',
+    flexShrink: 0,
   },
   miniChipText: {
     fontSize: 11,
