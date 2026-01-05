@@ -45,7 +45,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   size = 'large',
   style,
   textStyle,
-  glowing = true,
+  glowing = false,
   icon,
 }) => {
   const { colors, animationsEnabled, isDark, canAnimateBackground } = useThemeStore();
@@ -93,9 +93,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     };
   });
 
-  const glowStyle = useAnimatedStyle(() => ({
-    shadowOpacity: glowOpacity.value,
-  }));
+  const accent = variant === 'secondary' ? colors.secondary : colors.primary;
+  const surfaceBg = withAlpha(accent, isDark ? 0.18 : 0.1);
+  const surfaceBorder = withAlpha(accent, isDark ? 0.35 : 0.3);
 
   const heights = {
     small: 42,
@@ -111,25 +111,12 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   const getGradientColors = (): [string, string, string] => {
     if (variant === 'primary') {
-      if (canAnimateBackground) {
-        return [
-          withAlpha(colors.primaryLight, isDark ? 0.72 : 0.86),
-          withAlpha(colors.primary, isDark ? 0.72 : 0.86),
-          withAlpha(colors.primaryDark, isDark ? 0.72 : 0.86),
-        ];
-      }
-      return [colors.primaryLight, colors.primary, colors.primaryDark];
+      const c = canAnimateBackground ? withAlpha(colors.primary, isDark ? 0.22 : 0.14) : withAlpha(colors.primary, isDark ? 0.18 : 0.12);
+      return [c, c, c];
     }
     if (variant === 'secondary') {
-      // No dedicated secondaryDark token in legacy surface; keep a stable 3-stop gradient.
-      if (canAnimateBackground) {
-        return [
-          withAlpha(colors.secondaryLight, isDark ? 0.72 : 0.86),
-          withAlpha(colors.secondary, isDark ? 0.72 : 0.86),
-          withAlpha(colors.secondary, isDark ? 0.72 : 0.86),
-        ];
-      }
-      return [colors.secondaryLight, colors.secondary, colors.secondary];
+      const c = canAnimateBackground ? withAlpha(colors.secondary, isDark ? 0.22 : 0.14) : withAlpha(colors.secondary, isDark ? 0.18 : 0.12);
+      return [c, c, c];
     }
     return ['transparent', 'transparent', 'transparent'];
   };
@@ -188,16 +175,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   }
 
   return (
-    <Animated.View
-      style={[
-        styles.wrapper,
-        {
-          shadowColor: colors.primary,
-        },
-        glowStyle,
-        animatedStyle,
-      ]}
-    >
+    <Animated.View style={animatedStyle}>
       <TouchableOpacity
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -213,29 +191,17 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
               height: heights[size],
               borderRadius: colors.borderRadius,
               opacity: disabled ? 0.5 : 1,
-              borderWidth: canAnimateBackground ? colors.borderWidth : 0,
-              borderColor: canAnimateBackground
-                ? withAlpha(colors.glassBorder, isDark ? 0.45 : 0.55)
-                : 'transparent',
+              borderWidth: colors.borderWidth,
+              borderColor: surfaceBorder,
+              backgroundColor: surfaceBg,
             },
             style,
           ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          {/* Top inner highlight for depth */}
-          <LinearGradient
-            colors={[withAlpha(colors.glassBackgroundStrong, 0.28), withAlpha(colors.glassBackgroundStrong, 0.08), 'transparent']}
-            style={styles.innerHighlight}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          />
-          
-          {/* Bottom edge shadow */}
-          <View style={[styles.bottomShadow, { backgroundColor: withAlpha(colors.shadowColor, 0.15) }]} />
-          
           {loading ? (
-            <TriangleLoader size={16} color={colors.textInverse} />
+            <TriangleLoader size={16} color={accent} />
           ) : (
             <>
               {icon}
@@ -245,7 +211,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                   { 
                     fontSize: fontSizes[size],
                     marginLeft: icon ? 8 : 0,
-                    color: colors.textInverse,
+                    color: accent,
                   }, 
                   textStyle
                 ]}
@@ -261,39 +227,13 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-        shadowOpacity: 0.35,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
+  wrapper: {},
   gradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 26,
     overflow: 'hidden',
-  },
-  innerHighlight: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '55%',
-  },
-  bottomShadow: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    // NOTE: backgroundColor is applied at runtime to use theme colors.
   },
   text: {
     fontWeight: '700',

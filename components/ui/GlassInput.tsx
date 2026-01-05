@@ -80,7 +80,9 @@ export const GlassInput: React.FC<GlassInputProps> = ({
     !!capabilities?.supportsBlur &&
     blurAmount > 0;
 
-  const baseBackground = isGlassTheme ? colors.glassBackground : colors.inputBackground;
+  // For inputs we prefer the dedicated input surface tokens even on glass themes.
+  // This avoids milky/white fields in light mode while keeping the glass blur feel.
+  const baseBackground = colors.inputBackground;
 
   // Only tint non-glass themes when an animated background is enabled; do not override
   // alpha for already-translucent glass themes.
@@ -109,7 +111,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
             <BlurView
               pointerEvents="none"
               intensity={blurAmount}
-              tint={isDark ? 'dark' : 'light'}
+              tint="default"
               style={StyleSheet.absoluteFillObject}
             />
             <View

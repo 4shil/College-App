@@ -5,6 +5,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { TriangleLoader } from '../components/ui/TriangleLoader';
+import { ThemedAlertProvider } from '../components/ui';
+import { installThemedAlertShim } from '../lib/themedAlert';
 
 // Prevent splash auto-hide on native only
 if (Platform.OS !== 'web') {
@@ -50,24 +52,30 @@ function RootLayoutNav() {
   const { useThemeStore } = require('../store/themeStore');
   const { isDark, colors } = useThemeStore();
 
+  useEffect(() => {
+    installThemedAlertShim();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-          contentStyle: {
-            backgroundColor: colors.background,
-          },
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-        <Stack.Screen name="(teacher)" options={{ headerShown: false }} />
-        <Stack.Screen name="(student)" options={{ headerShown: false }} />
-      </Stack>
+      <ThemedAlertProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+          <Stack.Screen name="(teacher)" options={{ headerShown: false }} />
+          <Stack.Screen name="(student)" options={{ headerShown: false }} />
+        </Stack>
+      </ThemedAlertProvider>
     </GestureHandlerRootView>
   );
 }
