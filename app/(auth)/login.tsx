@@ -104,10 +104,11 @@ export default function LoginScreen() {
           setAuthUser(authUser);
           
           // Navigate based on actual roles from database
-          if (authUser.isAdmin) {
-            router.replace('/(admin)/dashboard');
-          } else if (authUser.isTeacher) {
+          // Teacher-capable roles (including HOD) should default into Teacher module.
+          if (authUser.isTeacher) {
             router.replace('/(teacher)/dashboard');
+          } else if (authUser.isAdmin) {
+            router.replace('/(admin)/dashboard');
           } else {
             router.replace('/(student)/dashboard');
           }

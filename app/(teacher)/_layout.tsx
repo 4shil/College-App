@@ -169,9 +169,6 @@ export default function TeacherLayout() {
   const dockNavItems: DockNavItem[] = isCoordinatorOnly
     ? [
         { id: 'coordinator', title: 'Coordinator', icon: 'swap-horizontal-outline', route: '/(teacher)/coordinator', nestedRoutes: ['coordinator'] },
-        ...(roles.includes('principal')
-          ? [{ id: 'principal', title: 'Principal', icon: 'school-outline', route: '/(teacher)/principal', nestedRoutes: ['principal'] }]
-          : []),
         { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
       ]
     : [
@@ -202,7 +199,6 @@ export default function TeacherLayout() {
         { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
       ];
 
-  const isPrincipal = roles.includes('principal');
   const isTeacherCapable = roles.some((r) =>
     ['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod'].includes(r)
   );
@@ -211,19 +207,11 @@ export default function TeacherLayout() {
   useEffect(() => {
     if (!isCoordinatorOnly) return;
 
-    // Allow principal-only screen if present (principal module is read-only).
-    const allowed = pathname.includes('/coordinator') || pathname.includes('/settings') || pathname.includes('/change-password') || pathname.includes('/principal');
+    const allowed = pathname.includes('/coordinator') || pathname.includes('/settings') || pathname.includes('/change-password');
     if (!allowed) {
       router.replace('/(teacher)/coordinator' as any);
     }
   }, [isCoordinatorOnly, pathname, router]);
-
-  // If the user is principal-only, route them to the principal module by default.
-  useEffect(() => {
-    if (isPrincipal && !isTeacherCapable && !pathname.includes('/principal')) {
-      router.replace('/(teacher)/principal' as any);
-    }
-  }, [isPrincipal, isTeacherCapable, pathname, router]);
 
   const handleNavigate = (route: string) => {
     router.replace(route as any);
@@ -231,7 +219,7 @@ export default function TeacherLayout() {
 
   return (
     <Restricted
-      roles={['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod', 'principal']}
+      roles={['subject_teacher', 'class_teacher', 'mentor', 'coordinator', 'hod']}
       showDeniedMessage
       deniedMessage="Teacher access required."
     >
@@ -276,7 +264,6 @@ export default function TeacherLayout() {
           <Stack.Screen name="mentor/index" />
           <Stack.Screen name="coordinator/index" />
           <Stack.Screen name="department/index" />
-          <Stack.Screen name="principal/index" />
         </Stack>
         <GlassDock activeRoute={pathname} onNavigate={handleNavigate} navItems={dockNavItems} />
       </View>

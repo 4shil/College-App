@@ -51,6 +51,7 @@ export const useAuth = () => {
     userRole,
     primaryRole,
     profile,
+    roles,
     setSession,
     setProfile,
     setRoles,
@@ -238,6 +239,12 @@ export const useAuth = () => {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
       // Redirect to appropriate dashboard based on role
+      // Teacher-capable roles (including HOD) should default into Teacher module.
+      const shouldDefaultToTeacher = roles.some((r) => TEACHER_ROLES.includes(r)) || roles.includes('hod');
+      if (shouldDefaultToTeacher) {
+        router.replace('/(teacher)/dashboard');
+        return;
+      }
       if (userRole === 'admin') {
         router.replace('/(admin)/dashboard');
       } else if (userRole === 'teacher') {
@@ -262,7 +269,7 @@ export const useAuth = () => {
         router.replace('/(student)/dashboard');
       }
     }
-  }, [isAuthenticated, segments, isLoading, userRole, router]);
+  }, [isAuthenticated, segments, isLoading, userRole, roles, router]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

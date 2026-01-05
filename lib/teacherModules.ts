@@ -15,8 +15,7 @@ export type TeacherModuleId =
   | 'class_tools'
   | 'mentor'
   | 'coordinator'
-  | 'department'
-  | 'principal';
+  | 'department';
 
 export type TeacherNavItem = {
   id: TeacherModuleId;
@@ -73,7 +72,6 @@ export function canAccessTeacherModule(item: TeacherNavItem, roles: RoleName[]):
   if (coordinatorOnly) {
     if (item.id === 'coordinator') return true;
     if (item.id === 'profile' || item.id === 'settings') return true;
-    if (roles.includes('principal') && item.id === 'principal') return true;
     return false;
   }
 
@@ -193,16 +191,6 @@ export function getTeacherNavItems(): TeacherNavItem[] {
       nestedRoutes: ['department'],
       implemented: true,
       requiresAnyRole: ['hod'],
-    },
-
-    {
-      id: 'principal',
-      title: 'Principal',
-      icon: 'school-outline',
-      route: '/(teacher)/principal',
-      nestedRoutes: ['principal'],
-      implemented: true,
-      requiresAnyRole: ['principal'],
     },
   ];
 }
