@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card, PrimaryButton, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, PrimaryButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -24,14 +24,6 @@ export default function StudentDashboard() {
 
   return (
     <AnimatedBackground>
-      {/* Theme Toggle */}
-      <Animated.View
-        entering={FadeInDown.delay(100).duration(400)}
-        style={[styles.themeToggleContainer, { top: insets.top + 10 }]}
-      >
-        <ThemeToggle />
-      </Animated.View>
-
       <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}>
         <Animated.View
           entering={FadeInDown.delay(200).duration(500)}
@@ -71,11 +63,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-  },
-  themeToggleContainer: {
-    position: 'absolute',
-    right: 20,
-    zIndex: 100,
   },
   cardContainer: {
     width: '100%',

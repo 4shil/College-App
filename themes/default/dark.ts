@@ -11,13 +11,13 @@ export const defaultDarkTokens: ThemeTokensNormalized = {
 
   surface: {
     glass: {
-      background: 'rgba(255, 255, 255, 0.06)',
-      backgroundStrong: 'rgba(255, 255, 255, 0.1)',
-      border: 'rgba(255, 255, 255, 0.1)',
+      background: 'rgba(255, 255, 255, 0.03)',
+      backgroundStrong: 'rgba(255, 255, 255, 0.06)',
+      border: 'rgba(255, 255, 255, 0.12)',
     },
     card: {
-      background: 'rgba(255, 255, 255, 0.06)',
-      border: 'rgba(255, 255, 255, 0.1)',
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: 'rgba(255, 255, 255, 0.12)',
     },
   },
 
@@ -57,7 +57,7 @@ export const defaultDarkTokens: ThemeTokensNormalized = {
   effects: {
     shadowColor: '#8B5CF6',
     shadowIntensity: 0.3,
-    blurIntensity: 20,
+    blurIntensity: 30,
   },
 
   geometry: {

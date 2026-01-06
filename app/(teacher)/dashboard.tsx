@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, LoadingIndicator, ThemeToggle } from '../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useTeacherDashboardSummary } from '../../hooks/useTeacherDashboardSummary';
@@ -137,8 +137,6 @@ export default function TeacherDashboard() {
               <Ionicons name="notifications-outline" size={18} color={colors.textPrimary} />
               <Text style={[styles.heroActionText, { color: colors.textPrimary }]}>Notices</Text>
             </TouchableOpacity>
-            <View style={styles.heroSpacer} />
-            <ThemeToggle />
           </View>
 
           <Text style={[styles.lastUpdated, { color: colors.textMuted }]} numberOfLines={1}>

@@ -18,7 +18,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   AnimatedBackground,
-  ThemeToggle,
 } from '../../components/ui';
 import { GlassInput } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
@@ -135,14 +134,6 @@ export default function LoginScreen() {
 
   return (
     <AnimatedBackground>
-      {/* Theme Toggle */}
-      <Animated.View
-        entering={FadeInDown.delay(100).duration(500).springify()}
-        style={[styles.themeToggleContainer, { top: insets.top + 12 }]}
-      >
-        <ThemeToggle />
-      </Animated.View>
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -345,11 +336,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
-  },
-  themeToggleContainer: {
-    position: 'absolute',
-    right: 20,
-    zIndex: 100,
   },
   contentContainer: {
     width: '100%',

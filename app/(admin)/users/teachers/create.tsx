@@ -199,7 +199,7 @@ export default function CreateTeacherScreen() {
           >
             {/* Personal Info Section */}
             <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-              <GlassCard intensity={35} style={styles.formSection}>
+              <GlassCard intensity={20} style={styles.formSection}>
                 <View
                   style={[
                     styles.sectionHeader,
@@ -265,7 +265,7 @@ export default function CreateTeacherScreen() {
 
             {/* Professional Info Section */}
             <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-              <GlassCard intensity={35} style={styles.formSection}>
+              <GlassCard intensity={20} style={styles.formSection}>
                 <View
                   style={[
                     styles.sectionHeader,

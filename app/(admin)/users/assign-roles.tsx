@@ -305,7 +305,7 @@ export default function AssignRolesScreen() {
         </View>
 
         {/* Search and Filter */}
-        <GlassCard intensity={35} style={styles.filterCard}>
+          <GlassCard intensity={20} style={styles.filterCard}>
           <View style={styles.searchContainer}>
             <FontAwesome5 name="search" size={16} color={colors.textSecondary} style={styles.searchIcon} />
             <View style={{ flex: 1 }}>
@@ -336,17 +336,17 @@ export default function AssignRolesScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <GlassCard intensity={35} style={styles.statCard}>
+          <GlassCard intensity={20} style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.primary }]}>{users.length}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Users</Text>
           </GlassCard>
-          <GlassCard intensity={35} style={styles.statCard}>
+          <GlassCard intensity={20} style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>
               {users.filter(u => u.user_roles.length > 0).length}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>With Roles</Text>
           </GlassCard>
-          <GlassCard intensity={35} style={styles.statCard}>
+          <GlassCard intensity={20} style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>
               {users.filter(u => u.user_roles.length === 0).length}
             </Text>
@@ -356,7 +356,7 @@ export default function AssignRolesScreen() {
 
         {/* User List */}
         {filteredUsers.length === 0 ? (
-          <GlassCard intensity={35} style={styles.emptyCard}>
+          <GlassCard intensity={20} style={styles.emptyCard}>
             <FontAwesome5 name="users" size={48} color={colors.textSecondary} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {searchQuery ? 'No users found' : 'No users available'}
@@ -368,7 +368,7 @@ export default function AssignRolesScreen() {
               key={user.id}
               entering={FadeInDown.delay(index * 50).springify()}
             >
-              <GlassCard intensity={35} style={styles.userCard}>
+              <GlassCard intensity={20} style={styles.userCard}>
                 <View style={styles.userHeader}>
                   <View style={styles.userInfo}>
                     <Text style={[styles.userName, { color: colors.textPrimary }]}>
@@ -456,7 +456,7 @@ export default function AssignRolesScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
-          <GlassCard intensity={40} noPadding style={styles.modalContent}>
+          <GlassCard intensity={20} noPadding style={styles.modalContent}>
             <View style={styles.modalInner}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
@@ -504,6 +504,7 @@ export default function AssignRolesScreen() {
                   onPress={handleAssignRole}
                   loading={saving}
                   disabled={saving || !selectedRoleId}
+                  size="large"
                   style={styles.saveButton}
                 />
               </View>
@@ -557,6 +558,5 @@ const styles = StyleSheet.create({
   modalUserName: { fontSize: 20, fontWeight: '600', marginBottom: 4 },
   modalUserEmail: { fontSize: 14, marginBottom: 20 },
   inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 16 },
-  saveButton: { marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
-  saveButtonText: { fontSize: 16, fontWeight: '600' },
+  saveButton: { marginTop: 20 },
 });

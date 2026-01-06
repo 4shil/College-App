@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
-import { withAlpha } from '../../theme/colorUtils';
+import { GlassSurface } from './GlassSurface';
 
 export const ThemeToggle: React.FC = () => {
   const { isDark, toggleTheme, colors, canAnimateBackground } = useThemeStore();
@@ -25,23 +25,26 @@ export const ThemeToggle: React.FC = () => {
   return (
     <TouchableOpacity
       onPress={handlePress}
-      style={[
-        styles.container,
-        {
-          backgroundColor: canAnimateBackground
-            ? withAlpha(colors.glassBackground, isDark ? 0.72 : 0.86)
-            : colors.glassBackground,
-        },
-      ]}
+      style={styles.container}
       activeOpacity={0.7}
     >
-      <Animated.View style={animatedStyle}>
-        <Ionicons
-          name={isDark ? 'sunny' : 'moon'}
-          size={22}
-          color={colors.primary}
-        />
-      </Animated.View>
+      <GlassSurface
+        variant="pill"
+        borderRadius={22}
+        borderWidth={colors.borderWidth}
+        borderColor={colors.glassBorder}
+        backgroundColor={isDark ? colors.glassBackground : (canAnimateBackground ? colors.glassBackgroundStrong : colors.glassBackground)}
+        blurIntensity={Math.max(0, Math.round(colors.blurIntensity * (isDark ? 0.7 : 1)))}
+        style={styles.surface}
+      >
+        <Animated.View style={animatedStyle}>
+          <Ionicons
+            name={isDark ? 'sunny' : 'moon'}
+            size={22}
+            color={colors.primary}
+          />
+        </Animated.View>
+      </GlassSurface>
     </TouchableOpacity>
   );
 };
@@ -51,6 +54,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    overflow: 'hidden',
+  },
+  surface: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

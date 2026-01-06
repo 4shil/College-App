@@ -171,7 +171,7 @@ export default function RoleBasedDashboard() {
 
         {/* Role Badge */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
-          <GlassCard intensity={35}>
+          <GlassCard intensity={20}>
             <View style={styles.roleBadgeContent}>
               <View style={[styles.roleIconContainer, { 
                 backgroundColor: colors.inputBackground,
@@ -201,7 +201,7 @@ export default function RoleBasedDashboard() {
                 onPress={() => router.push(module.route as any)}
                 activeOpacity={0.7}
               >
-                <GlassCard intensity={35} noPadding>
+                <GlassCard intensity={20} noPadding>
                   <View style={styles.moduleButton}>
                     <View style={[styles.moduleIconContainer, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
                       <FontAwesome5 name={module.icon} size={18} color={colors.primary} />
@@ -219,7 +219,7 @@ export default function RoleBasedDashboard() {
         {/* No Access Message */}
         {userModules.length === 0 && (
           <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <GlassCard intensity={35} style={[styles.noAccessCard, { borderColor: colors.warning, borderWidth: colors.borderWidth }]}>
+            <GlassCard intensity={20} style={[styles.noAccessCard, { borderColor: colors.warning, borderWidth: colors.borderWidth }]}>
               <FontAwesome5 name="exclamation-triangle" size={48} color={colors.warning} />
               <Text style={[styles.noAccessText, { color: colors.textPrimary }]}>
                 No modules available for your role

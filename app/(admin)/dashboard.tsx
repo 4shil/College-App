@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, GlassCard, IconBadge, StatCard, ThemeToggle, LoadingIndicator } from '../../components/ui';
+import { AnimatedBackground, Card, GlassCard, IconBadge, StatCard, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -394,7 +394,7 @@ export default function AdminDashboard() {
           onPress={() => router.push(action.route as any)}
           activeOpacity={0.7}
         >
-          <GlassCard intensity={35} noPadding style={styles.actionButton}>
+          <GlassCard intensity={20} noPadding style={styles.actionButton}>
             <View style={styles.actionButtonInner}>
               <IconBadge
                 family={action.iconType}
@@ -450,7 +450,6 @@ export default function AdminDashboard() {
             )}
           </View>
           <View style={styles.headerRight}>
-            <ThemeToggle />
             <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={22} color={colors.textMuted} />
             </TouchableOpacity>
@@ -710,8 +709,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   statCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
+    borderRadius: 16,
   },
   alertCard: {
     marginBottom: 28,

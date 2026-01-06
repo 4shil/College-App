@@ -445,7 +445,7 @@ export default function CreateStudentScreen() {
 
   const renderManualForm = () => (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.formScroll}>
-      <GlassCard intensity={35} style={styles.formSection}>
+      <GlassCard intensity={20} style={styles.formSection}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           <FontAwesome5 name="user" size={14} color={colors.primary} /> Personal Info
         </Text>
@@ -492,7 +492,7 @@ export default function CreateStudentScreen() {
         </View>
       </GlassCard>
 
-      <GlassCard intensity={35} style={styles.formSection}>
+      <GlassCard intensity={20} style={styles.formSection}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           <FontAwesome5 name="graduation-cap" size={14} color={colors.primary} /> Academic Info
         </Text>
@@ -609,7 +609,7 @@ export default function CreateStudentScreen() {
 
   const renderBulkImport = () => (
     <View style={styles.bulkContainer}>
-      <GlassCard intensity={35} style={styles.bulkCard}>
+      <GlassCard intensity={20} style={styles.bulkCard}>
         <FontAwesome5 name="file-csv" size={48} color={colors.primary} style={styles.bulkIcon} />
         <Text style={[styles.bulkTitle, { color: colors.textPrimary }]}>Bulk Import Students</Text>
         <Text style={[styles.bulkSubtitle, { color: colors.textSecondary }]}>

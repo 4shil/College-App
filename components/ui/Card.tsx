@@ -168,12 +168,12 @@ export const Card: React.FC<CardProps> = ({
       {shouldBlur ? (
         <BlurView
           intensity={blurAmount}
-          tint={isDark ? 'dark' : 'light'}
+          tint={isGlassTheme ? 'default' : (isDark ? 'dark' : 'light')}
           style={[
             styles.blur,
             {
               backgroundColor:
-                (shouldLightGlassWhileAnimated || isGlassLightMode)
+                (isGlassTheme || shouldLightGlassWhileAnimated || isGlassLightMode)
                   ? 'transparent'
                   : withAlpha(colors.cardBackground, isDark ? 0.55 : 0.7),
               borderRadius: colors.borderRadius,

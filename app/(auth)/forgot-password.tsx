@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AnimatedBackground, Card, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator, SolidButton } from '../../components/ui';
+  AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { sendOTP, verifyOTP, updateUserPassword } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
@@ -431,14 +431,6 @@ export default function ForgotPasswordScreen() {
 
   return (
     <AnimatedBackground>
-      {/* Theme Toggle */}
-      <Animated.View
-        entering={FadeInDown.delay(100).duration(400)}
-        style={[styles.themeToggleContainer, { top: insets.top + 10 }]}
-      >
-        <ThemeToggle />
-      </Animated.View>
-
       {/* Back Button */}
       <Animated.View
         entering={FadeInDown.delay(100).duration(400)}
@@ -527,11 +519,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-  },
-  themeToggleContainer: {
-    position: 'absolute',
-    right: 20,
-    zIndex: 100,
   },
   backButtonContainer: {
     position: 'absolute',

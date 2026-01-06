@@ -3,6 +3,7 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
+  StyleProp,
   ViewStyle,
   TextStyle,
   View,
@@ -30,7 +31,7 @@ interface PrimaryButtonProps {
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'small' | 'medium' | 'large';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
   glowing?: boolean;
   icon?: React.ReactNode;
@@ -53,6 +54,21 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   const glowOpacity = useSharedValue(0.25);
   const pressProgress = useSharedValue(0);
   const shimmer = useSharedValue(0);
+
+  const flattenedStyle = StyleSheet.flatten(style) ?? {};
+  const {
+    height: _ignoredHeight,
+    minHeight: _ignoredMinHeight,
+    maxHeight: _ignoredMaxHeight,
+    padding: _ignoredPadding,
+    paddingHorizontal: _ignoredPaddingHorizontal,
+    paddingVertical: _ignoredPaddingVertical,
+    paddingTop: _ignoredPaddingTop,
+    paddingBottom: _ignoredPaddingBottom,
+    paddingLeft: _ignoredPaddingLeft,
+    paddingRight: _ignoredPaddingRight,
+    ...safeStyle
+  } = flattenedStyle;
 
   useEffect(() => {
     if (animationsEnabled && glowing && variant === 'primary' && !disabled) {
@@ -146,7 +162,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 : 'transparent',
               opacity: disabled ? 0.5 : 1,
             },
-            style,
+            safeStyle,
           ]}
         >
           {loading ? (
@@ -195,7 +211,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
               borderColor: surfaceBorder,
               backgroundColor: surfaceBg,
             },
-            style,
+            safeStyle,
           ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}

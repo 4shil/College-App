@@ -37,9 +37,11 @@ export const GlassSurface: React.FC<GlassSurfaceProps> = ({
     !!capabilities?.supportsBlur &&
     resolvedBlurIntensity > 0;
 
-  const overlayColors: readonly [string, string, ...string[]] = isDark
-    ? [withAlpha(colors.secondary, 0.06), 'transparent', withAlpha(colors.primary, 0.04)]
-    : [withAlpha(colors.secondary, 0.025), 'transparent', withAlpha(colors.primary, 0.02)];
+  const overlayColors: readonly [string, string, ...string[]] = (isDark && variant === 'pill')
+    ? [withAlpha(colors.glassBackgroundStrong, 0.08), 'transparent', withAlpha(colors.glassBackgroundStrong, 0.04)]
+    : (isDark
+        ? [withAlpha(colors.secondary, 0.06), 'transparent', withAlpha(colors.primary, 0.04)]
+        : [withAlpha(colors.secondary, 0.025), 'transparent', withAlpha(colors.primary, 0.02)]);
 
   const content = (
     <View
@@ -59,7 +61,9 @@ export const GlassSurface: React.FC<GlassSurfaceProps> = ({
         pointerEvents="none"
         colors={
           isDark
-            ? [withAlpha(colors.glassBackgroundStrong, 0.15), withAlpha(colors.glassBackgroundStrong, 0.03), 'transparent']
+            ? (variant === 'pill'
+                ? [withAlpha(colors.glassBackgroundStrong, 0.1), withAlpha(colors.glassBackgroundStrong, 0.02), 'transparent']
+                : [withAlpha(colors.glassBackgroundStrong, 0.15), withAlpha(colors.glassBackgroundStrong, 0.03), 'transparent'])
             : [withAlpha(colors.glassBackgroundStrong, 0.18), withAlpha(colors.glassBackgroundStrong, 0.06), 'transparent']
         }
         style={[

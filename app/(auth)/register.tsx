@@ -8,7 +8,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AnimatedBackground, GlassInput, PrimaryButton, ThemeToggle, LoadingIndicator, SolidButton } from '../../components/ui';
+  AnimatedBackground, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, sendOTP } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
@@ -956,7 +956,6 @@ export default function RegisterScreen() {
         <TouchableOpacity onPress={prevStep} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <ThemeToggle />
       </Animated.View>
 
       <KeyboardAvoidingView

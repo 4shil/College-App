@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Alert, Modal, TextInput, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
@@ -44,8 +44,11 @@ interface Role {
 export default function UsersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const { colors, isDark } = useThemeStore();
   const modalBackdropColor = isDark ? withAlpha(colors.background, 0.75) : withAlpha(colors.textPrimary, 0.5);
+  const modalGlassIntensity = isDark ? 48 : 22;
+  const modalGlassIntensitySoft = isDark ? 40 : 20;
   const profile = useAuthStore(s => s.profile);
   const { hasPermission, loading: rbacLoading } = useRBAC();
 
@@ -84,6 +87,57 @@ export default function UsersScreen() {
     }
 
     return false;
+  };
+
+  const isCompactFormActions = width < 380;
+
+  type FormButtonsProps = {
+    cancelText?: string;
+    confirmText: string;
+    onCancel: () => void;
+    onConfirm: () => void;
+    confirmDisabled?: boolean;
+    confirmLoading?: boolean;
+    cancelDisabled?: boolean;
+    style?: any;
+  };
+
+  const FormButtons = ({
+    cancelText = 'Cancel',
+    confirmText,
+    onCancel,
+    onConfirm,
+    confirmDisabled,
+    confirmLoading,
+    cancelDisabled,
+    style,
+  }: FormButtonsProps) => {
+    return (
+      <View
+        style={[
+          styles.formButtons,
+          isCompactFormActions ? styles.formButtonsStack : styles.formButtonsRow,
+          style,
+        ]}
+      >
+        <PrimaryButton
+          title={cancelText}
+          onPress={onCancel}
+          disabled={cancelDisabled || confirmLoading}
+          variant="outline"
+          size="large"
+          style={[styles.formButton, isCompactFormActions ? styles.formButtonFull : null]}
+        />
+        <PrimaryButton
+          title={confirmText}
+          onPress={onConfirm}
+          loading={confirmLoading}
+          disabled={confirmDisabled || confirmLoading}
+          size="large"
+          style={[styles.formButton, isCompactFormActions ? styles.formButtonFull : null]}
+        />
+      </View>
+    );
   };
 
   const [activeTab, setActiveTab] = useState<UserTab>('teachers');
@@ -710,7 +764,7 @@ export default function UsersScreen() {
   const renderRoleModal = () => (
     <Modal visible={showRoleModal} transparent animationType="fade">
       <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
-        <GlassCard intensity={40} style={styles.modalContent}>
+        <GlassCard intensity={modalGlassIntensitySoft} style={styles.modalContent}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Change Role for {selectedUser?.full_name}
           </Text>
@@ -738,23 +792,17 @@ export default function UsersScreen() {
             </Picker>
           </View>
 
-          <View style={styles.modalActions}>
-            <PrimaryButton
-              title="Cancel"
-              onPress={() => { setShowRoleModal(false); setSelectedUser(null); }}
-              variant="outline"
-              size="medium"
-              style={{ flex: 1 }}
-            />
-            <PrimaryButton
-              title="Save"
-              onPress={() => selectedUser && handleChangeRole(selectedUser.id, formRole)}
-              loading={saving}
-              disabled={saving || !formRole}
-              size="medium"
-              style={{ flex: 1 }}
-            />
-          </View>
+          <FormButtons
+            cancelText="Cancel"
+            confirmText="Save"
+            onCancel={() => {
+              setShowRoleModal(false);
+              setSelectedUser(null);
+            }}
+            onConfirm={() => selectedUser && handleChangeRole(selectedUser.id, formRole)}
+            confirmLoading={saving}
+            confirmDisabled={saving || !formRole}
+          />
         </GlassCard>
       </View>
     </Modal>
@@ -916,10 +964,10 @@ export default function UsersScreen() {
         {/* Add User Modal */}
         <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
           <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
-            <GlassCard intensity={40} style={styles.modalContent}>
+            <GlassCard intensity={modalGlassIntensity} style={styles.modalContent}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create New User</Text>
               
-              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 520 }}>
                 <View style={{ gap: 16 }}>
                   <View>
                     <Text style={[{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }]}>Full Name *</Text>
@@ -1019,23 +1067,15 @@ export default function UsersScreen() {
                 </View>
               </ScrollView>
 
-              <View style={styles.modalActions}>
-                <PrimaryButton
-                  title="Cancel"
-                  onPress={() => setShowAddModal(false)}
-                  variant="outline"
-                  size="medium"
-                  style={{ flex: 1 }}
-                />
-                <PrimaryButton
-                  title="Create"
-                  onPress={handleCreateUser}
-                  loading={saving}
-                  disabled={saving}
-                  size="medium"
-                  style={{ flex: 1 }}
-                />
-              </View>
+              <FormButtons
+                style={{ marginTop: 16 }}
+                cancelText="Cancel"
+                confirmText="Create"
+                onCancel={() => setShowAddModal(false)}
+                onConfirm={handleCreateUser}
+                confirmLoading={saving}
+                confirmDisabled={saving}
+              />
             </GlassCard>
           </View>
         </Modal>
@@ -1090,11 +1130,15 @@ const styles = StyleSheet.create({
   errorSubtitle: { marginTop: 8, fontSize: 13, lineHeight: 18 },
   retryBtn: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 12, gap: 8 },
   retryText: { fontSize: 14, fontWeight: '700' },
-  modalOverlay: { flex: 1, justifyContent: 'center', padding: 24 },
+  modalOverlay: { flex: 1, justifyContent: 'center', padding: 16 },
   modalContent: { padding: 24 },
   modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
   pickerContainer: { borderRadius: 12, marginBottom: 20, overflow: 'hidden' },
-  modalActions: { flexDirection: 'row', gap: 12 },
+  formButtons: { width: '100%', marginTop: 16, gap: 12 },
+  formButtonsRow: { flexDirection: 'row' },
+  formButtonsStack: { flexDirection: 'column' },
+  formButton: { flex: 1 },
+  formButtonFull: { width: '100%' },
   modalBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   modalBtnText: { fontSize: 15, fontWeight: '600' },
 });

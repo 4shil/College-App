@@ -20,7 +20,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   AnimatedBackground,
   Card,
-  ThemeToggle,
   LoadingIndicator,
   SolidButton,
 } from '../../components/ui';
@@ -240,7 +239,6 @@ export default function VerifyOTPScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <ThemeToggle />
       </Animated.View>
 
       <KeyboardAvoidingView

@@ -69,7 +69,8 @@ export function ThemedAlertProvider({ children }: { children: React.ReactNode })
     cancel?.onPress?.();
   };
 
-  const overlayScrim = withAlpha(colors.background, isDark ? 0.7 : 0.45);
+  const overlayScrim = withAlpha(colors.background, isDark ? 0.88 : 0.68);
+  const backdropBlurIntensity = animationsEnabled ? (isDark ? 78 : 62) : (isDark ? 62 : 48);
 
   return (
     <>
@@ -82,7 +83,7 @@ export function ThemedAlertProvider({ children }: { children: React.ReactNode })
       >
         <View style={styles.modalRoot}>
           <BlurView
-            intensity={animationsEnabled ? 18 : 0}
+            intensity={backdropBlurIntensity}
             tint="default"
             style={StyleSheet.absoluteFillObject}
           />
