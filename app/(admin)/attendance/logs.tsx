@@ -76,6 +76,7 @@ export default function AttendanceLogsScreen() {
   // UI states
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
@@ -88,6 +89,8 @@ export default function AttendanceLogsScreen() {
     if (!isSuperAdmin) return;
 
     try {
+      setErrorText(null);
+      if (reset) setLoading(true);
       const currentPage = reset ? 0 : page;
 
       let query = supabase
@@ -126,6 +129,12 @@ export default function AttendanceLogsScreen() {
       if (reset) setPage(0);
     } catch (error) {
       console.error('Error fetching logs:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load logs. Please try again.');
+      if (reset) {
+        setLogs([]);
+        setHasMore(false);
+        setPage(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -331,6 +340,20 @@ export default function AttendanceLogsScreen() {
           }}
           scrollEventThrottle={400}
         >
+          {errorText ? (
+            <Card style={{ borderColor: colors.cardBorder, borderWidth: colors.borderWidth, backgroundColor: colors.cardBackground }}>
+              <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '700' }}>Unable to load logs</Text>
+              <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>{errorText}</Text>
+              <View style={{ height: 12 }} />
+              <SolidButton
+                style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+                onPress={() => fetchLogs(true)}
+              >
+                <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+              </SolidButton>
+            </Card>
+          ) : null}
+
           {/* Date Filter */}
           <Animated.View entering={FadeInDown.delay(150).duration(400)}>
             <TouchableOpacity

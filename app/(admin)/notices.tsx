@@ -78,6 +78,8 @@ export default function NoticesScreen() {
   const [loading, setLoading] = useState(true);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [tableMissing, setTableMissing] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -112,6 +114,8 @@ export default function NoticesScreen() {
 
   const fetchNotices = async () => {
     try {
+      setErrorText(null);
+      setTableMissing(false);
       let query = supabase
         .from('notices')
         .select(`
@@ -139,6 +143,7 @@ export default function NoticesScreen() {
         // Table might not exist yet - show empty state
         if (error.code === 'PGRST205') {
           console.log('Notices table not found - showing empty state');
+          setTableMissing(true);
           setNotices([]);
           return;
         }
@@ -148,6 +153,7 @@ export default function NoticesScreen() {
     } catch (error) {
       console.error('Error fetching notices:', error);
       setNotices([]);
+      setErrorText('Unable to load notices. Pull to refresh or retry.');
     }
   };
 
@@ -163,6 +169,7 @@ export default function NoticesScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText(null);
     await fetchNotices();
     setRefreshing(false);
   };
@@ -468,6 +475,39 @@ export default function NoticesScreen() {
             <View style={styles.loadingContainer}>
               <LoadingIndicator size="large" color={colors.primary} />
             </View>
+          ) : errorText ? (
+            <Card style={styles.stateCard}>
+              <View style={styles.stateHeader}>
+                <Ionicons name="warning-outline" size={18} color={colors.warning} />
+                <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Couldn’t load notices</Text>
+              </View>
+              <Text style={[styles.stateBody, { color: colors.textSecondary }]}>{errorText}</Text>
+              <SolidButton
+                style={[styles.stateAction, { backgroundColor: colors.primary }]}
+                onPress={async () => {
+                  setLoading(true);
+                  try {
+                    await fetchNotices();
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                <Ionicons name="refresh" size={18} color={colors.textInverse} />
+                <Text style={[styles.stateActionText, { color: colors.textInverse }]}>Retry</Text>
+              </SolidButton>
+            </Card>
+          ) : tableMissing ? (
+            <Card style={styles.stateCard}>
+              <View style={styles.stateHeader}>
+                <Ionicons name="information-circle-outline" size={18} color={colors.info} />
+                <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Notices table not found</Text>
+              </View>
+              <Text style={[styles.stateBody, { color: colors.textSecondary }]}
+              >
+                The database table `notices` is missing (or not exposed). Create/apply migrations then refresh.
+              </Text>
+            </Card>
           ) : notices.length > 0 ? (
             notices.map((n, i) => renderNoticeCard(n, i))
           ) : (
@@ -794,6 +834,37 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 13,
     marginTop: 4,
+  },
+  stateCard: {
+    padding: 16,
+    marginTop: 12,
+  },
+  stateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stateTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  stateBody: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  stateAction: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  stateActionText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,

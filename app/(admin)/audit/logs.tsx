@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AnimatedBackground, GlassCard, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, GlassCard, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { exportAuditLogs } from '../../../lib/export';
@@ -50,6 +50,7 @@ export default function AuditLogsScreen() {
 
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAction, setSelectedAction] = useState('ALL');
   const [selectedEntity, setSelectedEntity] = useState('ALL');
@@ -64,6 +65,7 @@ export default function AuditLogsScreen() {
   const fetchAuditLogs = async () => {
     try {
       setLoading(true);
+      setErrorText(null);
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
@@ -71,12 +73,12 @@ export default function AuditLogsScreen() {
         .limit(100);
 
       if (error) {
-        setLogs([]);
-        return;
+        throw error;
       }
       setLogs(data || []);
     } catch {
       setLogs([]);
+      setErrorText('Failed to load audit logs. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -116,7 +118,7 @@ export default function AuditLogsScreen() {
         style={styles.container}
         contentContainerStyle={{
           paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 24,
+          paddingBottom: insets.bottom + 110,
           paddingHorizontal: 20,
         }}
       >
@@ -242,6 +244,20 @@ export default function AuditLogsScreen() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           Activity Log ({filteredLogs.length})
         </Text>
+
+        {errorText && !loading ? (
+          <GlassCard style={{ marginTop: 8, padding: 16 }}>
+            <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '700' }}>Unable to load logs</Text>
+            <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>{errorText}</Text>
+            <View style={{ height: 12 }} />
+            <SolidButton
+              style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+              onPress={fetchAuditLogs}
+            >
+              <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+            </SolidButton>
+          </GlassCard>
+        ) : null}
 
         {loading ? (
           <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />

@@ -46,8 +46,10 @@ export default function EventsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [tableMissing, setTableMissing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   const fetchEvents = useCallback(async () => {
+    setErrorText(null);
     setTableMissing(false);
     try {
       const { data, error } = await supabase
@@ -69,6 +71,7 @@ export default function EventsScreen() {
     } catch (err) {
       console.error('Error fetching events:', err);
       setEvents([]);
+      setErrorText('Unable to load events. Pull to refresh or retry.');
     }
   }, []);
 
@@ -123,6 +126,12 @@ export default function EventsScreen() {
               <LoadingIndicator size="small" color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading events…</Text>
             </View>
+          ) : errorText ? (
+            <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Couldn’t load events</Text>
+              <Text style={[styles.cardBody, { color: colors.textSecondary }]}>{errorText}</Text>
+              <PrimaryButton title="Retry" onPress={fetchEvents} size="medium" style={{ marginTop: 12 }} />
+            </GlassCard>
           ) : tableMissing ? (
             <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Events table not found</Text>

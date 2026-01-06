@@ -456,7 +456,7 @@ export default function AnalyticsScreen() {
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 110 }]}
       >
         {/* Header */}
         <View style={styles.header}>

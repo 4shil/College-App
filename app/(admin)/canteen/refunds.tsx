@@ -183,7 +183,7 @@ export default function RefundsScreen() {
         {/* Refunds List */}
         <ScrollView
           style={styles.content}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
           showsVerticalScrollIndicator={false}
         >
           {loading ? (

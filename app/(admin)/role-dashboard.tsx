@@ -4,9 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AnimatedBackground, GlassCard } from '../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
+import { withAlpha } from '../../theme/colorUtils';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
@@ -139,9 +140,10 @@ export default function RoleBasedDashboard() {
   if (loading) {
     return (
       <AnimatedBackground>
-        <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
+        <View style={[styles.container, { paddingTop: insets.top + 20, paddingHorizontal: 20 }]}>
           <View style={styles.center}>
-            <Text style={[styles.loadingText, { color: colors.textPrimary }]}>Loading...</Text>
+            <LoadingIndicator size="small" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading…</Text>
           </View>
         </View>
       </AnimatedBackground>
@@ -152,19 +154,24 @@ export default function RoleBasedDashboard() {
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom + 110, paddingHorizontal: 20 }}
+        showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View entering={FadeInDown.delay(80).duration(450).springify()} style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Welcome back,</Text>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>{roleDisplayName}</Text>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Modules</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Your workspace</Text>
+            <View style={[styles.roleTag, { backgroundColor: withAlpha(colors.primary, isDark ? 0.15 : 0.1) }]}>
+              <FontAwesome5 name="shield-alt" size={10} color={colors.primary} />
+              <Text style={[styles.roleText, { color: colors.primary }]}>{roleDisplayName}</Text>
+            </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Role Badge */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
-          <GlassCard>
+          <Card>
             <View style={styles.roleBadgeContent}>
               <View style={[styles.roleIconContainer, { 
                 backgroundColor: colors.inputBackground,
@@ -178,7 +185,7 @@ export default function RoleBasedDashboard() {
                 <Text style={[styles.roleName, { color: colors.primary }]}>{roleDisplayName}</Text>
               </View>
             </View>
-          </GlassCard>
+          </Card>
         </Animated.View>
 
         {/* Modules Grid */}
@@ -194,21 +201,16 @@ export default function RoleBasedDashboard() {
                 onPress={() => router.push(module.route as any)}
                 activeOpacity={0.7}
               >
-                <GlassCard style={styles.moduleCard}>
+                <Card style={styles.moduleCard}>
                   <View style={styles.moduleCardContent}>
-                    <View style={[styles.iconContainer, { 
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.primary,
-                      borderWidth: colors.borderWidth,
-                      shadowColor: colors.shadowColor,
-                    }]}>
-                      <FontAwesome5 name={module.icon} size={24} color={colors.primary} />
+                    <View style={[styles.iconContainer, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
+                      <FontAwesome5 name={module.icon} size={20} color={colors.primary} />
                     </View>
                     <Text style={[styles.moduleTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                       {module.title}
                     </Text>
                   </View>
-                </GlassCard>
+                </Card>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -217,7 +219,7 @@ export default function RoleBasedDashboard() {
         {/* No Access Message */}
         {userModules.length === 0 && (
           <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <GlassCard style={[styles.noAccessCard, { borderColor: colors.warning }]}>
+            <Card style={[styles.noAccessCard, { borderColor: colors.warning, borderWidth: colors.borderWidth }]}>
               <FontAwesome5 name="exclamation-triangle" size={48} color={colors.warning} />
               <Text style={[styles.noAccessText, { color: colors.textPrimary }]}>
                 No modules available for your role
@@ -225,7 +227,7 @@ export default function RoleBasedDashboard() {
               <Text style={[styles.noAccessSubtext, { color: colors.textSecondary }]}>
                 Contact your administrator for access
               </Text>
-            </GlassCard>
+            </Card>
           </Animated.View>
         )}
       </ScrollView>
@@ -235,12 +237,13 @@ export default function RoleBasedDashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 20 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { fontSize: 16 },
-  header: { marginBottom: 24 },
-  greeting: { fontSize: 16, marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: 'bold' },
+  center: { paddingVertical: 40, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { fontSize: 14, marginTop: 10, fontWeight: '600' },
+  header: { marginBottom: 18 },
+  greeting: { fontSize: 14, fontWeight: '600' },
+  title: { fontSize: 26, fontWeight: '800', marginTop: 6, letterSpacing: -0.3 },
+  roleTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, alignSelf: 'flex-start' },
+  roleText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.3 },
   roleBadgeContainer: {
     marginBottom: 28,
   },
@@ -258,14 +261,14 @@ const styles = StyleSheet.create({
   roleInfo: { marginLeft: 16, flex: 1 },
   roleLabel: { fontSize: 12, marginBottom: 4, fontWeight: '500' },
   roleName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
+  sectionTitle: { fontSize: 19, fontWeight: '800', marginBottom: 16, letterSpacing: -0.2 },
   modulesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 14,
   },
   moduleCard: {
-    height: 150,
+    height: 140,
   },
   moduleCardContent: {
     flex: 1,
@@ -273,28 +276,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
   },
   moduleTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
     letterSpacing: -0.2,
   },
   noAccessCard: {
     padding: 32,
     alignItems: 'center',
-    borderWidth: 2,
   },
   noAccessText: {
     fontSize: 18,

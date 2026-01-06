@@ -64,6 +64,9 @@ export default function AdminDashboard() {
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [activitiesError, setActivitiesError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   const quickActions: QuickAction[] = [
     {
@@ -196,7 +199,7 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      console.log('Fetching dashboard stats...');
+      setStatsError(null);
       
       // Run ALL queries in parallel for faster loading
       const [
@@ -221,8 +224,6 @@ export default function AdminDashboard() {
       const finalStudentsCount = Math.max(studentsResult.count || 0, studentProfilesResult.count || 0);
       const finalTeachersCount = Math.max(teachersResult.count || 0, teacherProfilesResult.count || 0);
 
-      console.log('Final counts - Students:', finalStudentsCount, 'Teachers:', finalTeachersCount, 'Depts:', deptsResult.count, 'Courses:', coursesResult.count);
-
       setStats({
         totalStudents: finalStudentsCount,
         totalTeachers: finalTeachersCount,
@@ -231,10 +232,9 @@ export default function AdminDashboard() {
         pendingApprovals: pendingResult.count || 0,
         todayAttendance: 85, // Placeholder
       });
-      
-      console.log('Stats updated successfully');
     } catch (error) {
       console.error('Error fetching stats:', error);
+      setStatsError('Unable to load overview stats. Pull to refresh or retry.');
     } finally {
       setLoading(false);
     }
@@ -242,6 +242,7 @@ export default function AdminDashboard() {
 
   const fetchRecentActivities = async () => {
     try {
+      setActivitiesError(null);
       setActivitiesLoading(true);
       const { data, error } = await supabase
         .from('audit_logs')
@@ -287,14 +288,14 @@ export default function AdminDashboard() {
       setRecentActivities(activities);
     } catch (error) {
       console.error('Error fetching recent activities:', error);
+      setActivitiesError('Unable to load recent activity.');
     } finally {
       setActivitiesLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStats();
-    fetchRecentActivities();
+    Promise.all([fetchStats(), fetchRecentActivities()]).finally(() => setLastUpdatedAt(new Date()));
 
     // Set up real-time subscription for audit logs
     const channel = supabase
@@ -320,6 +321,7 @@ export default function AdminDashboard() {
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([fetchStats(), fetchRecentActivities()]);
+    setLastUpdatedAt(new Date());
     setRefreshing(false);
   };
 
@@ -445,6 +447,11 @@ export default function AdminDashboard() {
                 {primaryRole?.replace('_', ' ').toUpperCase() || 'ADMIN'}
               </Text>
             </View>
+            {lastUpdatedAt && (
+              <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>
+                Updated {getTimeAgo(lastUpdatedAt.toISOString())}
+              </Text>
+            )}
           </View>
           <View style={styles.headerRight}>
             <ThemeToggle />
@@ -458,6 +465,26 @@ export default function AdminDashboard() {
         {canAccessModule('users') && (
           <Animated.View entering={FadeInDown.delay(150).duration(500).springify()} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
+            {!!statsError && (
+              <Card
+                style={[
+                  styles.inlineErrorCard,
+                  {
+                    backgroundColor: withAlpha(colors.warning, isDark ? 0.12 : 0.08),
+                    borderColor: withAlpha(colors.warning, isDark ? 0.2 : 0.16),
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
+                <View style={styles.inlineErrorRow}>
+                  <Ionicons name="warning-outline" size={18} color={colors.warning} />
+                  <Text style={[styles.inlineErrorText, { color: colors.textPrimary }]}>{statsError}</Text>
+                </View>
+                <TouchableOpacity style={styles.inlineErrorAction} onPress={onRefresh} activeOpacity={0.75}>
+                  <Text style={[styles.inlineErrorActionText, { color: colors.primary }]}>Retry</Text>
+                </TouchableOpacity>
+              </Card>
+            )}
             <View style={styles.statsGrid}>
               {renderStatCard('Students', stats.totalStudents, 'user-graduate', 200, '/(admin)/users?tab=students')}
               {renderStatCard('Teachers', stats.totalTeachers, 'chalkboard-teacher', 260, '/(admin)/users?tab=teachers')}
@@ -520,6 +547,16 @@ export default function AdminDashboard() {
               {activitiesLoading ? (
                 <View style={{ padding: 20, alignItems: 'center' }}>
                   <LoadingIndicator size="small" color={colors.primary} />
+                </View>
+              ) : activitiesError ? (
+                <View style={{ padding: 16 }}>
+                  <View style={styles.inlineErrorRow}>
+                    <Ionicons name="warning-outline" size={18} color={colors.warning} />
+                    <Text style={[styles.inlineErrorText, { color: colors.textPrimary }]}>{activitiesError}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.inlineErrorAction} onPress={fetchRecentActivities} activeOpacity={0.75}>
+                    <Text style={[styles.inlineErrorActionText, { color: colors.primary }]}>Retry</Text>
+                  </TouchableOpacity>
                 </View>
               ) : recentActivities.length === 0 ? (
                 <View style={styles.activityItem}>
@@ -594,6 +631,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  lastUpdated: {
+    marginTop: 10,
+    fontSize: 12,
+    fontWeight: '500',
+  },
   userName: {
     fontSize: 26,
     fontWeight: '800',
@@ -625,6 +667,30 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 28,
+  },
+  inlineErrorCard: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  inlineErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  inlineErrorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
+  inlineErrorAction: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+  },
+  inlineErrorActionText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   sectionHeader: {
     flexDirection: 'row',

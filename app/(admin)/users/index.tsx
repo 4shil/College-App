@@ -93,6 +93,7 @@ export default function UsersScreen() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [errorText, setErrorText] = useState<string | null>(null);
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -128,6 +129,7 @@ export default function UsersScreen() {
 
   const fetchData = useCallback(async () => {
     try {
+      setErrorText(null);
       if (rbacLoading) return;
       if (viewerScope === 'none') {
         setUsers([]);
@@ -229,6 +231,8 @@ export default function UsersScreen() {
 
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsers([]);
+      setErrorText('Unable to load users right now. Pull to refresh or retry.');
     }
   }, [activeTab, searchQuery, rbacLoading, viewerScope, viewerDepartmentId]);
 
@@ -866,12 +870,42 @@ export default function UsersScreen() {
         >
           {loading ? (
             <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+          ) : errorText ? (
+            <Card style={styles.errorCard}>
+              <View style={styles.errorHeader}>
+                <Ionicons name="warning-outline" size={18} color={colors.warning} />
+                <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>Couldn’t load users</Text>
+              </View>
+              <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>{errorText}</Text>
+              <SolidButton
+                style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+                onPress={async () => {
+                  setLoading(true);
+                  try {
+                    await fetchData();
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                <Ionicons name="refresh" size={18} color={colors.textInverse} />
+                <Text style={[styles.retryText, { color: colors.textInverse }]}>Retry</Text>
+              </SolidButton>
+            </Card>
           ) : users.length === 0 ? (
             <View style={styles.emptyState}>
               <IconBadge family="fa5" name="users-slash" tone="primary" size={34} style={styles.emptyIcon} />
               <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No Users Found</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-                {searchQuery ? 'Try a different search term' : 'No users in this category yet'}
+                {viewerScope === 'none'
+                  ? 'You do not have access to view users.'
+                  : viewerScope === 'department' && !viewerDepartmentId
+                    ? 'Your profile is missing a department. Set a department then retry.'
+                    : searchQuery
+                      ? 'Try a different search term.'
+                      : activeTab === 'pending'
+                        ? 'No pending approvals.'
+                        : 'No users in this category yet.'}
               </Text>
             </View>
           ) : (
@@ -1054,6 +1088,12 @@ const styles = StyleSheet.create({
   emptyIcon: { width: 72, height: 72, borderRadius: 18 },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptySubtitle: { fontSize: 13, marginTop: 4 },
+  errorCard: { marginTop: 18 },
+  errorHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  errorTitle: { fontSize: 16, fontWeight: '700' },
+  errorSubtitle: { marginTop: 8, fontSize: 13, lineHeight: 18 },
+  retryBtn: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 12, gap: 8 },
+  retryText: { fontSize: 14, fontWeight: '700' },
   modalOverlay: { flex: 1, justifyContent: 'center', padding: 24 },
   modalContent: { padding: 24 },
   modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 20, textAlign: 'center' },

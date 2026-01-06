@@ -587,7 +587,7 @@ export default function CollegeInfoScreen() {
             style={[
               styles.footer,
               {
-                paddingBottom: insets.bottom + 20,
+                paddingBottom: insets.bottom + 110,
                 backgroundColor: withAlpha(colors.cardBackground, 0.8),
                 borderTopColor: colors.cardBorder,
                 borderTopWidth: colors.borderWidth,

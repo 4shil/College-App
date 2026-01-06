@@ -337,7 +337,7 @@ export default function StudentsListScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + 20 },
+            { paddingBottom: insets.bottom + 110 },
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={

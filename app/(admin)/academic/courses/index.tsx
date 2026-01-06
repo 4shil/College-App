@@ -46,6 +46,7 @@ export default function CoursesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,7 @@ export default function CoursesScreen() {
 
   const fetchData = async () => {
     try {
+      setErrorText(null);
       const [coursesRes, deptsRes] = await Promise.all([
         supabase
           .from('courses')
@@ -81,7 +83,8 @@ export default function CoursesScreen() {
       setDepartments(deptsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to fetch programmes');
+      setCourses([]);
+      setErrorText('Unable to load programmes. Pull to refresh or retry.');
     }
   };
 
@@ -380,7 +383,7 @@ export default function CoursesScreen() {
         {/* Content */}
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 110 }]}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         >
@@ -388,13 +391,25 @@ export default function CoursesScreen() {
             <View style={styles.loadingContainer}>
               <LoadingIndicator size="large" color={colors.primary} />
             </View>
+          ) : errorText ? (
+            <Card style={styles.errorCard}>
+              <View style={styles.errorHeader}>
+                <Ionicons name="warning-outline" size={18} color={colors.warning} />
+                <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>Couldn’t load programmes</Text>
+              </View>
+              <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>{errorText}</Text>
+              <SolidButton style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={loadData}>
+                <Ionicons name="refresh" size={18} color={colors.textInverse} />
+                <Text style={[styles.retryText, { color: colors.textInverse }]}>Retry</Text>
+              </SolidButton>
+            </Card>
           ) : courses.length > 0 ? (
             courses.map((course, index) => renderCourseCard(course, index))
           ) : (
             <View style={styles.emptyState}>
               <FontAwesome5 name="graduation-cap" size={48} color={colors.textMuted} />
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Programmes</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Add your first programme</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>No programmes found for the current setup.</Text>
             </View>
           )}
         </ScrollView>
@@ -493,6 +508,12 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 10 },
   loadingContainer: { alignItems: 'center', paddingTop: 60 },
+  errorCard: { marginTop: 12 },
+  errorHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  errorTitle: { fontSize: 16, fontWeight: '700' },
+  errorSubtitle: { marginTop: 8, fontSize: 13, lineHeight: 18 },
+  retryBtn: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 12, gap: 8 },
+  retryText: { fontSize: 14, fontWeight: '700' },
   cardWrapper: { marginBottom: 14 },
   courseCard: { padding: 16 },
   cardHeader: { flexDirection: 'row' },

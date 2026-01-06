@@ -36,6 +36,7 @@ export default function AttendanceIndexScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [stats, setStats] = useState<AttendanceStats>({
     todayMarked: 0,
     todayPending: 0,
@@ -47,51 +48,57 @@ export default function AttendanceIndexScreen() {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
 
   const fetchStats = useCallback(async () => {
+    setErrorText(null);
     try {
       const today = new Date().toISOString().split('T')[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
       // Fetch today's attendance sessions count
-      const { count: todayMarked } = await supabase
+      const { count: todayMarked, error: todayMarkedError } = await supabase
         .from('attendance')
         .select('*', { count: 'exact', head: true })
         .eq('date', today);
+      if (todayMarkedError) throw todayMarkedError;
 
       // Fetch today's late count from attendance_records
-      const { data: todayAttendance } = await supabase
+      const { data: todayAttendance, error: todayAttendanceError } = await supabase
         .from('attendance')
         .select('id')
         .eq('date', today);
+      if (todayAttendanceError) throw todayAttendanceError;
 
       let todayLate = 0;
       if (todayAttendance && todayAttendance.length > 0) {
         const attendanceIds = (todayAttendance as Array<{ id: string }>).map(a => a.id);
-        const { count } = await supabase
+        const { count, error: lateCountError } = await supabase
           .from('attendance_records')
           .select('*', { count: 'exact', head: true })
           .in('attendance_id', attendanceIds)
           .eq('status', 'late');
+        if (lateCountError) throw lateCountError;
         todayLate = count || 0;
       }
 
       // Fetch upcoming holidays
-      const { count: upcomingHolidays } = await supabase
+      const { count: upcomingHolidays, error: holidaysError } = await supabase
         .from('holidays')
         .select('*', { count: 'exact', head: true })
         .gte('date', today);
+      if (holidaysError) throw holidaysError;
 
       // Fetch low attendance students (below 65%)
       // This would need the view, simplified for now
       const lowAttendanceCount = 0;
 
       // Calculate pending (total expected - marked)
-      const { count: totalTimetableEntries } = await supabase
+      const { count: totalTimetableEntries, error: timetableCountError } = await supabase
         .from('timetable_entries')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
+      if (timetableCountError) throw timetableCountError;
 
       // Fetch recent activity logs
-      const { data: logs } = await supabase
+      const { data: logs, error: logsError } = await supabase
         .from('attendance_logs')
         .select(`
           id,
@@ -103,6 +110,7 @@ export default function AttendanceIndexScreen() {
         `)
         .order('created_at', { ascending: false })
         .limit(5);
+      if (logsError) throw logsError;
 
       const activities: RecentActivity[] = ((logs || []) as Array<any>).map(log => ({
         id: log.id,
@@ -124,6 +132,18 @@ export default function AttendanceIndexScreen() {
       setRecentActivities(activities);
     } catch (error) {
       console.error('Error fetching attendance stats:', error);
+      setErrorText(
+        error instanceof Error ? error.message : 'Failed to load attendance overview. Please try again.'
+      );
+      setStats({
+        todayMarked: 0,
+        todayPending: 0,
+        weekAverage: 0,
+        lowAttendanceCount: 0,
+        todayLateCount: 0,
+        upcomingHolidays: 0,
+      });
+      setRecentActivities([]);
     } finally {
       setLoading(false);
     }
@@ -261,6 +281,75 @@ export default function AttendanceIndexScreen() {
               <LoadingIndicator size="large" color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading...</Text>
             </View>
+          ) : errorText ? (
+            <>
+              <Card
+                style={{
+                  borderColor: colors.cardBorder,
+                  borderWidth: colors.borderWidth,
+                  backgroundColor: colors.cardBackground,
+                }}
+              >
+                <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '700' }}>
+                  Unable to load attendance
+                </Text>
+                <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>
+                  {errorText}
+                </Text>
+                <View style={{ height: 12 }} />
+                <SolidButton
+                  style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+                  onPress={() => {
+                    setLoading(true);
+                    fetchStats();
+                  }}
+                >
+                  <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+                </SolidButton>
+              </Card>
+
+              <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
+                <View style={styles.actionsGrid}>
+                  {quickActions.map((action, index) => (
+                    <Animated.View
+                      key={action.id}
+                      entering={FadeInRight.delay(250 + index * 50).duration(300)}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.actionCard,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.cardBorder,
+                            borderWidth: colors.borderWidth,
+                          },
+                        ]}
+                        onPress={() => router.push(action.route as any)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.actionIcon, { backgroundColor: withAlpha(action.color, 0.082) }]}>
+                          <FontAwesome5 name={action.icon} size={22} color={action.color} />
+                        </View>
+                        <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
+                          {action.title}
+                        </Text>
+                        <Text style={[styles.actionSubtitle, { color: colors.textMuted }]}>
+                          {action.subtitle}
+                        </Text>
+                        {action.badge !== undefined && action.badge > 0 && (
+                          <View style={[styles.actionBadge, { backgroundColor: action.color }]}>
+                            <Text style={[styles.actionBadgeText, { color: colors.textInverse }]}>
+                              {action.badge}
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
+                </View>
+              </Animated.View>
+            </>
           ) : (
             <>
               {/* Stats Grid */}

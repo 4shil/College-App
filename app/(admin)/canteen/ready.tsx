@@ -232,7 +232,7 @@ export default function ReadyOrdersScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={[
               styles.listContent,
-              { paddingBottom: insets.bottom + 20 }
+              { paddingBottom: insets.bottom + 110 }
             ]}
             showsVerticalScrollIndicator={false}
             refreshControl={

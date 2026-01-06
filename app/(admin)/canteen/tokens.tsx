@@ -190,7 +190,7 @@ export default function CanteenTokensScreen() {
         {/* Tokens List */}
         <ScrollView
           style={styles.content}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />

@@ -44,6 +44,7 @@ export default function HolidaysScreen() {
   // UI states
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -65,6 +66,7 @@ export default function HolidaysScreen() {
 
   const fetchHolidays = useCallback(async () => {
     try {
+      setErrorText(null);
       let query = supabase
         .from('holidays')
         .select(`
@@ -85,6 +87,8 @@ export default function HolidaysScreen() {
       setHolidays(data || []);
     } catch (error) {
       console.error('Error fetching holidays:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load holidays. Please try again.');
+      setHolidays([]);
     } finally {
       setLoading(false);
     }
@@ -575,6 +579,32 @@ export default function HolidaysScreen() {
             <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : (
             <>
+              {errorText ? (
+                <Card
+                  style={{
+                    borderColor: colors.cardBorder,
+                    borderWidth: colors.borderWidth,
+                    backgroundColor: colors.cardBackground,
+                    marginBottom: 14,
+                  }}
+                >
+                  <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '700' }}>
+                    Unable to load holidays
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>{errorText}</Text>
+                  <View style={{ height: 12 }} />
+                  <SolidButton
+                    style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+                    onPress={() => {
+                      setLoading(true);
+                      fetchHolidays();
+                    }}
+                  >
+                    <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+                  </SolidButton>
+                </Card>
+              ) : null}
+
               {/* Filter Tabs */}
               <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.filterTabs}>
                 <TouchableOpacity

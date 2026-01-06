@@ -247,7 +247,7 @@ export default function AcademicIndexScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + 20 },
+            { paddingBottom: insets.bottom + 110 },
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={

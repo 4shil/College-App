@@ -44,12 +44,17 @@ export default function PlannerDiaryScreen() {
   const [plannerTableMissing, setPlannerTableMissing] = useState(false);
   const [diaryTableMissing, setDiaryTableMissing] = useState(false);
 
+  const [plannerErrorText, setPlannerErrorText] = useState<string | null>(null);
+  const [diaryErrorText, setDiaryErrorText] = useState<string | null>(null);
+
   const [recentPlanners, setRecentPlanners] = useState<PlannerRow[]>([]);
   const [recentDiaries, setRecentDiaries] = useState<DiaryRow[]>([]);
 
   const fetchData = useCallback(async () => {
     setPlannerTableMissing(false);
     setDiaryTableMissing(false);
+    setPlannerErrorText(null);
+    setDiaryErrorText(null);
 
     const [planners, diaries] = await Promise.all([
       supabase
@@ -70,6 +75,7 @@ export default function PlannerDiaryScreen() {
         setRecentPlanners([]);
       } else {
         console.error('Error fetching lesson planners:', planners.error);
+        setPlannerErrorText(planners.error.message);
         setRecentPlanners([]);
       }
     } else {
@@ -82,6 +88,7 @@ export default function PlannerDiaryScreen() {
         setRecentDiaries([]);
       } else {
         console.error('Error fetching work diaries:', diaries.error);
+        setDiaryErrorText(diaries.error.message);
         setRecentDiaries([]);
       }
     } else {
@@ -153,6 +160,13 @@ export default function PlannerDiaryScreen() {
               <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}
               >
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Lesson Planners</Text>
+                {plannerErrorText ? (
+                  <>
+                    <Text style={[styles.cardBody, { color: colors.error }]}>{plannerErrorText}</Text>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton title="Retry" size="small" onPress={onRefresh} style={{ alignSelf: 'flex-start' }} />
+                  </>
+                ) : null}
                 {plannerTableMissing ? (
                   <Text style={[styles.cardBody, { color: colors.textSecondary }]}
                   >
@@ -184,6 +198,13 @@ export default function PlannerDiaryScreen() {
               <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}
               >
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Work Diaries</Text>
+                {diaryErrorText ? (
+                  <>
+                    <Text style={[styles.cardBody, { color: colors.error }]}>{diaryErrorText}</Text>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton title="Retry" size="small" onPress={onRefresh} style={{ alignSelf: 'flex-start' }} />
+                  </>
+                ) : null}
                 {diaryTableMissing ? (
                   <Text style={[styles.cardBody, { color: colors.textSecondary }]}
                   >

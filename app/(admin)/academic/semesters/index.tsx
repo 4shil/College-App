@@ -386,7 +386,7 @@ export default function SemestersScreen() {
         {/* Content */}
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 110 }]}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         >

@@ -711,7 +711,7 @@ export default function CreateTimetableScreen() {
         {/* Save Button */}
         <Animated.View
           entering={FadeInDown.delay(300).duration(400)}
-          style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}
+          style={[styles.footer, { paddingBottom: insets.bottom + 110 }]}
         >
           <PrimaryButton
             title={saving ? 'Saving...' : 'Save Timetable'}

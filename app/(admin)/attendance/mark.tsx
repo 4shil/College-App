@@ -102,6 +102,7 @@ export default function ViewAttendanceScreen() {
   // UI states
   const [loading, setLoading] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'view' | 'delegate'>('view');
   
@@ -119,6 +120,7 @@ export default function ViewAttendanceScreen() {
 
   const fetchInitialData = useCallback(async () => {
     try {
+      setErrorText(null);
       const [coursesRes, yearsRes, teachersRes, delegationsRes] = await Promise.all([
         // Fetch courses that have program_type (these are degree programs like BCA, BBA)
         supabase.from('courses').select('id, name, code, short_name').not('program_type', 'is', null).eq('is_active', true).order('code'),
@@ -134,12 +136,22 @@ export default function ViewAttendanceScreen() {
           .gte('valid_until', new Date().toISOString()),
       ]);
 
+      if (coursesRes.error) throw coursesRes.error;
+      if (yearsRes.error) throw yearsRes.error;
+      if (teachersRes.error) throw teachersRes.error;
+      if (delegationsRes.error) throw delegationsRes.error;
+
       setCourses(coursesRes.data || []);
       setYears(((yearsRes.data || []) as Array<{ year_number: number; id: string; name: string }>).filter(y => y.year_number <= 3));
       setTeachers((teachersRes.data || []) as Teacher[]);
       setDelegations((delegationsRes.data || []) as Delegation[]);
     } catch (error) {
       console.error('Error fetching initial data:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load attendance module. Please try again.');
+      setCourses([]);
+      setYears([]);
+      setTeachers([]);
+      setDelegations([]);
     } finally {
       setLoading(false);
     }
@@ -664,6 +676,32 @@ export default function ViewAttendanceScreen() {
           ) : activeTab === 'view' ? (
             // ===== VIEW TAB =====
             <>
+              {errorText ? (
+                <Card
+                  style={{
+                    borderColor: colors.cardBorder,
+                    borderWidth: colors.borderWidth,
+                    backgroundColor: colors.cardBackground,
+                    marginBottom: 14,
+                  }}
+                >
+                  <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '700' }}>
+                    Unable to load attendance
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>{errorText}</Text>
+                  <View style={{ height: 12 }} />
+                  <SolidButton
+                    style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+                    onPress={() => {
+                      setLoading(true);
+                      fetchInitialData();
+                    }}
+                  >
+                    <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+                  </SolidButton>
+                </Card>
+              ) : null}
+
               {/* Info Banner */}
               <Animated.View 
                 entering={FadeIn.delay(100).duration(300)}

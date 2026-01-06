@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
@@ -78,6 +78,7 @@ export default function AttendanceReportsScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingReport, setLoadingReport] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   // Stats
   const [classAverage, setClassAverage] = useState(0);
@@ -85,16 +86,23 @@ export default function AttendanceReportsScreen() {
 
   const fetchInitialData = useCallback(async () => {
     try {
+      setErrorText(null);
       const [degreesRes, yearsRes] = await Promise.all([
         // Fetch courses that have program_type (these are degree programs like BCA, BBA)
         supabase.from('courses').select('id, name, code, short_name').not('program_type', 'is', null).eq('is_active', true).order('code'),
         supabase.from('years').select('id, year_number, name').order('year_number'),
       ]);
 
+      if (degreesRes.error) throw degreesRes.error;
+      if (yearsRes.error) throw yearsRes.error;
+
       setDegreePrograms(degreesRes.data || []);
       setYears(((yearsRes.data || []) as Array<{ year_number: number; id: string; name: string }>).filter(y => y.year_number <= 3));
     } catch (error) {
       console.error('Error fetching initial data:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load reports setup. Please try again.');
+      setDegreePrograms([]);
+      setYears([]);
     } finally {
       setLoading(false);
     }
@@ -107,6 +115,7 @@ export default function AttendanceReportsScreen() {
     }
 
     try {
+      setErrorText(null);
       const { data: academicYear } = await supabase
         .from('academic_years')
         .select('id')
@@ -136,6 +145,8 @@ export default function AttendanceReportsScreen() {
       setCourses(uniqueCourses);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load course list. Please try again.');
+      setCourses([]);
     }
   }, [selectedDegree, selectedYear]);
 
@@ -144,6 +155,7 @@ export default function AttendanceReportsScreen() {
 
     setLoadingReport(true);
     try {
+      setErrorText(null);
       // Get course's department first
       const { data: courseData } = await supabase
         .from('courses')
@@ -253,6 +265,8 @@ export default function AttendanceReportsScreen() {
       }
     } catch (error) {
       console.error('Error fetching student report:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load student report. Please try again.');
+      setStudentData([]);
     } finally {
       setLoadingReport(false);
     }
@@ -263,6 +277,7 @@ export default function AttendanceReportsScreen() {
 
     setLoadingReport(true);
     try {
+      setErrorText(null);
       const { data: academicYear } = await supabase
         .from('academic_years')
         .select('id')
@@ -363,6 +378,8 @@ export default function AttendanceReportsScreen() {
       setSubjectData(summaries.sort((a, b) => a.avg_attendance - b.avg_attendance));
     } catch (error) {
       console.error('Error fetching subject report:', error);
+      setErrorText(error instanceof Error ? error.message : 'Failed to load subject report. Please try again.');
+      setSubjectData([]);
     } finally {
       setLoadingReport(false);
     }
@@ -529,6 +546,40 @@ export default function AttendanceReportsScreen() {
             <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : (
             <>
+              {errorText ? (
+                <Card
+                  style={{
+                    borderColor: colors.cardBorder,
+                    borderWidth: colors.borderWidth,
+                    backgroundColor: colors.cardBackground,
+                    marginBottom: 14,
+                  }}
+                >
+                  <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '700' }}>
+                    Unable to load reports
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>{errorText}</Text>
+                  <View style={{ height: 12 }} />
+                  <SolidButton
+                    style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+                    onPress={() => {
+                      if (!selectedDegree || !selectedYear) {
+                        setLoading(true);
+                        fetchInitialData();
+                        return;
+                      }
+                      if (reportType === 'student') {
+                        fetchStudentReport();
+                      } else {
+                        fetchSubjectReport();
+                      }
+                    }}
+                  >
+                    <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+                  </SolidButton>
+                </Card>
+              ) : null}
+
               {/* Report Type Tabs */}
               <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.tabsRow}>
                 <TouchableOpacity

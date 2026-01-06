@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card } from '../../../components/ui';
+import { AnimatedBackground, Card, SolidButton } from '../../../components/ui';
 import { Restricted } from '../../../components/Restricted';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
@@ -106,6 +106,13 @@ export default function TodaysLogsScreen() {
           {error ? (
             <Card>
               <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+              <View style={{ height: 12 }} />
+              <SolidButton
+                style={{ backgroundColor: colors.primary, alignSelf: 'flex-start', paddingHorizontal: 16 }}
+                onPress={load}
+              >
+                <Text style={{ color: colors.textInverse, fontWeight: '700', fontSize: 12 }}>Retry</Text>
+              </SolidButton>
             </Card>
           ) : null}
 

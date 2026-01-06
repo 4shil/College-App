@@ -89,14 +89,18 @@ export default function PlannerDiaryApprovalsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [planners, setPlanners] = useState<PlannerListRow[]>([]);
+  const [plannersErrorText, setPlannersErrorText] = useState<string | null>(null);
   const [plannerSelectedId, setPlannerSelectedId] = useState<string | null>(null);
   const [plannerDetail, setPlannerDetail] = useState<PlannerDetailRow | null>(null);
   const [plannerDetailLoading, setPlannerDetailLoading] = useState(false);
+  const [plannerDetailErrorText, setPlannerDetailErrorText] = useState<string | null>(null);
 
   const [diaries, setDiaries] = useState<DiaryListRow[]>([]);
+  const [diariesErrorText, setDiariesErrorText] = useState<string | null>(null);
   const [diarySelectedId, setDiarySelectedId] = useState<string | null>(null);
   const [diaryDetail, setDiaryDetail] = useState<DiaryDetailRow | null>(null);
   const [diaryDetailLoading, setDiaryDetailLoading] = useState(false);
+  const [diaryDetailErrorText, setDiaryDetailErrorText] = useState<string | null>(null);
 
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -111,8 +115,11 @@ export default function PlannerDiaryApprovalsScreen() {
   const fetchPlanners = useCallback(async () => {
     if (!canApprovePlanner) {
       setPlanners([]);
+      setPlannersErrorText(null);
       return;
     }
+
+    setPlannersErrorText(null);
 
     const { data, error } = await supabase
       .from('lesson_planners')
@@ -123,6 +130,7 @@ export default function PlannerDiaryApprovalsScreen() {
 
     if (error) {
       console.error('Error fetching submitted planners:', error);
+      setPlannersErrorText(error.message);
       setPlanners([]);
       return;
     }
@@ -133,6 +141,7 @@ export default function PlannerDiaryApprovalsScreen() {
   const fetchPlannerDetail = useCallback(async (id: string) => {
     setPlannerDetailLoading(true);
     setPlannerDetail(null);
+    setPlannerDetailErrorText(null);
 
     const { data, error } = await supabase
       .from('lesson_planners')
@@ -145,6 +154,7 @@ export default function PlannerDiaryApprovalsScreen() {
     if (error) {
       console.error('Error fetching planner detail:', error);
       setPlannerDetail(null);
+      setPlannerDetailErrorText(error.message);
       setPlannerDetailLoading(false);
       return;
     }
@@ -156,8 +166,11 @@ export default function PlannerDiaryApprovalsScreen() {
   const fetchDiaries = useCallback(async () => {
     if (diaryPendingStatuses.length === 0) {
       setDiaries([]);
+      setDiariesErrorText(null);
       return;
     }
+
+    setDiariesErrorText(null);
 
     const { data, error } = await supabase
       .from('work_diaries')
@@ -168,6 +181,7 @@ export default function PlannerDiaryApprovalsScreen() {
 
     if (error) {
       console.error('Error fetching pending diaries:', error);
+      setDiariesErrorText(error.message);
       setDiaries([]);
       return;
     }
@@ -178,6 +192,7 @@ export default function PlannerDiaryApprovalsScreen() {
   const fetchDiaryDetail = useCallback(async (id: string) => {
     setDiaryDetailLoading(true);
     setDiaryDetail(null);
+    setDiaryDetailErrorText(null);
 
     const { data, error } = await supabase
       .from('work_diaries')
@@ -190,6 +205,7 @@ export default function PlannerDiaryApprovalsScreen() {
     if (error) {
       console.error('Error fetching diary detail:', error);
       setDiaryDetail(null);
+      setDiaryDetailErrorText(error.message);
       setDiaryDetailLoading(false);
       return;
     }
@@ -383,6 +399,21 @@ export default function PlannerDiaryApprovalsScreen() {
             <View style={styles.sections}>
               <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Submitted planners</Text>
+                {plannersErrorText ? (
+                  <>
+                    <Text style={[styles.cardBody, { color: colors.error }]}>{plannersErrorText}</Text>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton
+                      title="Retry"
+                      size="small"
+                      variant="outline"
+                      glowing={false}
+                      onPress={fetchPlanners}
+                      style={{ alignSelf: 'flex-start' }}
+                    />
+                    <View style={{ height: 10 }} />
+                  </>
+                ) : null}
                 {!canApprovePlanner ? (
                   <Text style={[styles.cardBody, { color: colors.textSecondary }]}>You can’t approve planners.</Text>
                 ) : planners.length === 0 ? (
@@ -421,6 +452,22 @@ export default function PlannerDiaryApprovalsScreen() {
 
               <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Planner details</Text>
+
+                {plannerSelectedId && plannerDetailErrorText ? (
+                  <>
+                    <Text style={[styles.cardBody, { color: colors.error }]}>{plannerDetailErrorText}</Text>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton
+                      title="Retry"
+                      size="small"
+                      variant="outline"
+                      glowing={false}
+                      onPress={() => fetchPlannerDetail(plannerSelectedId)}
+                      style={{ alignSelf: 'flex-start' }}
+                    />
+                    <View style={{ height: 10 }} />
+                  </>
+                ) : null}
 
                 {!plannerSelectedId ? (
                   <Text style={[styles.cardBody, { color: colors.textSecondary }]}>Select a planner to review.</Text>
@@ -495,6 +542,21 @@ export default function PlannerDiaryApprovalsScreen() {
             <View style={styles.sections}>
               <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Pending diaries</Text>
+                {diariesErrorText ? (
+                  <>
+                    <Text style={[styles.cardBody, { color: colors.error }]}>{diariesErrorText}</Text>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton
+                      title="Retry"
+                      size="small"
+                      variant="outline"
+                      glowing={false}
+                      onPress={fetchDiaries}
+                      style={{ alignSelf: 'flex-start' }}
+                    />
+                    <View style={{ height: 10 }} />
+                  </>
+                ) : null}
                 {diaryPendingStatuses.length === 0 ? (
                   <Text style={[styles.cardBody, { color: colors.textSecondary }]}>You can’t approve diaries.</Text>
                 ) : diaries.length === 0 ? (
@@ -533,6 +595,22 @@ export default function PlannerDiaryApprovalsScreen() {
 
               <GlassCard style={[styles.card, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Diary details</Text>
+
+                {diarySelectedId && diaryDetailErrorText ? (
+                  <>
+                    <Text style={[styles.cardBody, { color: colors.error }]}>{diaryDetailErrorText}</Text>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton
+                      title="Retry"
+                      size="small"
+                      variant="outline"
+                      glowing={false}
+                      onPress={() => fetchDiaryDetail(diarySelectedId)}
+                      style={{ alignSelf: 'flex-start' }}
+                    />
+                    <View style={{ height: 10 }} />
+                  </>
+                ) : null}
 
                 {!diarySelectedId ? (
                   <Text style={[styles.cardBody, { color: colors.textSecondary }]}>Select a diary to review.</Text>

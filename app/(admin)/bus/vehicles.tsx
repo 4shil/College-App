@@ -188,7 +188,7 @@ export default function VehiclesScreen() {
         {/* Vehicles List */}
         <ScrollView
           style={styles.content}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
           showsVerticalScrollIndicator={false}
         >
           {loading ? (

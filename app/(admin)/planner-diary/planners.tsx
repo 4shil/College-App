@@ -228,9 +228,18 @@ export default function AdminPlannersMonitoringScreen() {
             </View>
 
             {errorMessage ? (
-              <Text style={[styles.errorText, { color: colors.textSecondary }]}>
-                {errorMessage}
-              </Text>
+              <>
+                <Text style={[styles.errorText, { color: colors.error }]}>{errorMessage}</Text>
+                <View style={{ height: 10 }} />
+                <PrimaryButton
+                  title="Retry"
+                  size="small"
+                  variant="outline"
+                  glowing={false}
+                  onPress={fetchRows}
+                  style={{ alignSelf: 'flex-start' }}
+                />
+              </>
             ) : null}
           </GlassCard>
 
@@ -296,7 +305,22 @@ export default function AdminPlannersMonitoringScreen() {
                 <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading detail…</Text>
               </View>
             ) : !detail ? (
-              <Text style={[styles.cardBody, { color: colors.textSecondary }]}>No detail found.</Text>
+              <>
+                <Text style={[styles.cardBody, { color: colors.textSecondary }]}>No detail found.</Text>
+                {errorMessage ? (
+                  <>
+                    <View style={{ height: 10 }} />
+                    <PrimaryButton
+                      title="Retry"
+                      size="small"
+                      variant="outline"
+                      glowing={false}
+                      onPress={() => fetchDetail(selectedId)}
+                      style={{ alignSelf: 'flex-start' }}
+                    />
+                  </>
+                ) : null}
+              </>
             ) : (
               <View style={{ gap: 10 }}>
                 <Text style={[styles.detailLine, { color: colors.textSecondary }]}>

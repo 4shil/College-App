@@ -118,7 +118,7 @@ export default function GradeScreen() {
   return (
     <Restricted permissions={PERMISSIONS.GRADE_ASSIGNMENTS} showDeniedMessage={true}>
     <AnimatedBackground>
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 }]}
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 110 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Grade Assignments</Text>
         

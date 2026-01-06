@@ -106,7 +106,7 @@ export default function LibraryReservationsScreen() {
   return (
     <Restricted permissions={PERMISSIONS.MANAGE_LIBRARY} showDeniedMessage={true}>
     <AnimatedBackground>
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 }]}
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 110 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
         <View style={styles.header}>
           <View><Text style={[styles.title, { color: colors.textPrimary }]}>Reservations</Text>

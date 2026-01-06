@@ -86,9 +86,11 @@ export default function TimetableScreen() {
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
   const [todaySubstitutions, setTodaySubstitutions] = useState<Substitution[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   const fetchInitialData = useCallback(async () => {
     try {
+      setErrorText(null);
       const [coursesRes, yearsRes] = await Promise.all([
         supabase.from('courses').select('id, name, code, short_name, department_id, departments(name, code)').not('program_type', 'is', null).eq('is_active', true).order('code'),
         supabase.from('years').select('id, year_number, name').order('year_number'),
@@ -108,6 +110,7 @@ export default function TimetableScreen() {
       }
     } catch (error) {
       console.error('Error fetching initial data:', error);
+      setErrorText('Unable to load course and year options. Pull to refresh or retry.');
     }
   }, []);
 
@@ -115,6 +118,7 @@ export default function TimetableScreen() {
     if (!selectedCourse || !selectedYear) return;
 
     try {
+      setErrorText(null);
       // Get current academic year
       const { data: academicYear } = await supabase
         .from('academic_years')
@@ -122,7 +126,12 @@ export default function TimetableScreen() {
         .eq('is_current', true)
         .single();
 
-      if (!academicYear) return;
+      if (!academicYear) {
+        setErrorText('Unable to determine the current academic year.');
+        setTimetableEntries([]);
+        setTodaySubstitutions([]);
+        return;
+      }
 
       // Fetch timetable entries for a degree programme + year
       const { data, error } = await supabase
@@ -149,7 +158,9 @@ export default function TimetableScreen() {
 
       if (error) {
         console.log('Timetable query error:', error.message);
+        setErrorText('Unable to load timetable. Pull to refresh or retry.');
         setTimetableEntries([]);
+        setTodaySubstitutions([]);
         return;
       }
 
@@ -170,7 +181,9 @@ export default function TimetableScreen() {
       }
     } catch (error) {
       console.error('Error fetching timetable:', error);
+      setErrorText('Unable to load timetable. Pull to refresh or retry.');
       setTimetableEntries([]);
+      setTodaySubstitutions([]);
     }
   }, [selectedCourse, selectedYear]);
 
@@ -187,6 +200,7 @@ export default function TimetableScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText(null);
     await fetchTimetable();
     setRefreshing(false);
   };
@@ -473,6 +487,31 @@ export default function TimetableScreen() {
               <LoadingIndicator size="large" color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading timetable...</Text>
             </View>
+          ) : errorText ? (
+            <Card style={styles.errorCard}>
+              <View style={styles.errorHeader}>
+                <Ionicons name="warning-outline" size={18} color={colors.warning} />
+                <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>Couldn’t load timetable</Text>
+              </View>
+              <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>{errorText}</Text>
+              <SolidButton
+                style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+                onPress={async () => {
+                  setLoading(true);
+                  try {
+                    if (degreePrograms.length === 0 || years.length === 0) {
+                      await fetchInitialData();
+                    }
+                    await fetchTimetable();
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                <Ionicons name="refresh" size={18} color={colors.textInverse} />
+                <Text style={[styles.retryText, { color: colors.textInverse }]}>Retry</Text>
+              </SolidButton>
+            </Card>
           ) : timetableEntries.length > 0 ? (
             <Animated.View entering={FadeInRight.delay(250).duration(400)}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -615,6 +654,36 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
+  },
+  errorCard: {
+    marginTop: 12,
+  },
+  errorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  errorSubtitle: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  retryBtn: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   // Grid Styles
   gridContainer: {
