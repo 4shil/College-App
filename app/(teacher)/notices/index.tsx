@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -47,13 +47,18 @@ export default function TeacherNoticesScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [sections, setSections] = useState<TeacherSection[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
-    const { data: teacher } = await supabase.from('teachers').select('id').eq('user_id', user.id).single();
+    const { data: teacher, error } = await supabase.from('teachers').select('id').eq('user_id', user.id).single();
+    if (error) {
+      console.log('Teacher notices teacher id error:', error.message);
+      return null;
+    }
     return teacher?.id || null;
   }, [user?.id]);
 
@@ -70,6 +75,7 @@ export default function TeacherNoticesScreen() {
 
     if (error) {
       console.log('Teacher notices sections error:', error.message);
+      setErrorText('Some notice scopes could not be loaded. Pull to refresh or retry.');
       return [];
     }
 
@@ -87,9 +93,12 @@ export default function TeacherNoticesScreen() {
   const fetchNotices = useCallback(async () => {
     if (!user?.id) return;
 
+    let hadAnyError = false;
+
     // Load teacher id + sections first
     const tId = teacherId || (await fetchTeacherId());
     if (!tId) {
+      setErrorText('Unable to load teacher profile.');
       setTeacherId(null);
       setSections([]);
       setNotices([]);
@@ -113,7 +122,12 @@ export default function TeacherNoticesScreen() {
       .order('created_at', { ascending: false })
       .limit(25);
 
-    if (!collegeErr) rows.push(...((collegeNotices || []) as Notice[]));
+    if (collegeErr) {
+      hadAnyError = true;
+      console.log('Teacher notices college error:', collegeErr.message);
+    } else {
+      rows.push(...((collegeNotices || []) as Notice[]));
+    }
 
     if (profile?.department_id) {
       const { data: deptNotices, error: deptErr } = await supabase
@@ -125,7 +139,12 @@ export default function TeacherNoticesScreen() {
         .order('created_at', { ascending: false })
         .limit(25);
 
-      if (!deptErr) rows.push(...((deptNotices || []) as Notice[]));
+      if (deptErr) {
+        hadAnyError = true;
+        console.log('Teacher notices department error:', deptErr.message);
+      } else {
+        rows.push(...((deptNotices || []) as Notice[]));
+      }
     }
 
     if (sectionIds.length > 0) {
@@ -138,7 +157,12 @@ export default function TeacherNoticesScreen() {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (!classErr) rows.push(...((classNotices || []) as Notice[]));
+      if (classErr) {
+        hadAnyError = true;
+        console.log('Teacher notices class error:', classErr.message);
+      } else {
+        rows.push(...((classNotices || []) as Notice[]));
+      }
     }
 
     // Deduplicate + sort
@@ -150,11 +174,13 @@ export default function TeacherNoticesScreen() {
     );
 
     setNotices(merged);
+    setErrorText(hadAnyError ? 'Some notices could not be loaded. Pull to refresh or retry.' : null);
   }, [fetchTeacherId, fetchTeacherSections, profile?.department_id, teacherId, user?.id]);
 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
+      setErrorText(null);
       await fetchNotices();
       setLoading(false);
     };
@@ -163,8 +189,24 @@ export default function TeacherNoticesScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText(null);
     await fetchNotices();
     setRefreshing(false);
+  };
+
+  const openAttachment = async (url: string) => {
+    if (!url) return;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+        Alert.alert('Cannot open', 'This attachment link cannot be opened on your device.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (e: any) {
+      console.log('Open notice attachment error:', e?.message || e);
+      Alert.alert('Error', 'Failed to open attachment');
+    }
   };
 
   const sectionNameById = useMemo(() => {
@@ -218,13 +260,14 @@ export default function TeacherNoticesScreen() {
           {n.attachment_url ? (
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push({ pathname: '/(teacher)/notices/create', params: { viewUrl: n.attachment_url } } as any)}
+              onPress={() => openAttachment(n.attachment_url!)}
               style={[styles.attachmentRow, { backgroundColor: withAlpha(colors.primary, isDark ? 0.16 : 0.08) }]}
             >
               <Ionicons name="attach" size={18} color={colors.primary} />
               <Text style={[styles.attachmentText, { color: colors.primary }]} numberOfLines={1}>
-                Attachment
+                Open attachment
               </Text>
+              <Ionicons name="open-outline" size={16} color={colors.primary} />
             </TouchableOpacity>
           ) : null}
         </Card>
@@ -260,6 +303,18 @@ export default function TeacherNoticesScreen() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             showsVerticalScrollIndicator={false}
           >
+            {errorText ? (
+              <View style={{ marginBottom: 12 }}>
+                <Card>
+                  <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Some data didn’t load</Text>
+                  <Text style={[styles.emptySub, { color: colors.textMuted }]}>{errorText}</Text>
+                  <View style={{ marginTop: 12 }}>
+                    <PrimaryButton title="Retry" onPress={fetchNotices} variant="outline" />
+                  </View>
+                </Card>
+              </View>
+            ) : null}
+
             {notices.length === 0 ? (
               <Card>
                 <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No notices</Text>

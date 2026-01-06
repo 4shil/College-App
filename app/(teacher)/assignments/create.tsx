@@ -40,6 +40,7 @@ export default function TeacherCreateAssignmentScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
   const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
@@ -137,9 +138,28 @@ export default function TeacherCreateAssignmentScreen() {
     return `${c.short_name || c.code} • ${c.name}`;
   }, [courseId, courseOptions]);
 
+  const validationMessage = useMemo(() => {
+    if (!teacherId) return 'Teacher profile not found';
+    if (!courseId) return 'Select a course';
+    if (title.trim().length === 0) return 'Title is required';
+
+    const mm = Number(maxMarks.trim() || '10');
+    if (Number.isNaN(mm) || mm <= 0) return 'Max marks must be a positive number';
+
+    if (Platform.OS === 'web') {
+      const iso = dueIsoText.trim();
+      if (!iso || Number.isNaN(Date.parse(iso))) return 'Due date must be a valid ISO date/time';
+    } else {
+      const iso = toIsoOrNull(dueDate);
+      if (!iso) return 'Due date is invalid';
+    }
+
+    return null;
+  }, [courseId, dueDate, dueIsoText, maxMarks, teacherId, title]);
+
   const canSave = useMemo(() => {
-    return !!teacherId && !!courseId && title.trim().length > 0 && !saving && !uploading;
-  }, [teacherId, courseId, title, saving, uploading]);
+    return validationMessage == null && !saving && !uploading;
+  }, [saving, uploading, validationMessage]);
 
   const addAttachment = async () => {
     if (!user?.id) {
@@ -190,26 +210,13 @@ export default function TeacherCreateAssignmentScreen() {
   });
 
   const save = async () => {
-    if (!teacherId) {
-      Alert.alert('Error', 'Teacher profile not found');
-      return;
-    }
-    if (!courseId) {
-      Alert.alert('Error', 'Select a course');
+    if (validationMessage != null) {
+      setShowValidation(true);
       return;
     }
 
     const mm = Number(maxMarks.trim() || '10');
-    if (Number.isNaN(mm) || mm <= 0) {
-      Alert.alert('Error', 'Max marks must be a positive number');
-      return;
-    }
-
-    const dueIso = Platform.OS === 'web' ? dueIsoText.trim() : toIsoOrNull(dueDate);
-    if (!dueIso) {
-      Alert.alert('Error', 'Invalid due date');
-      return;
-    }
+    const dueIso = Platform.OS === 'web' ? dueIsoText.trim() : (toIsoOrNull(dueDate) || '');
 
     try {
       setSaving(true);
@@ -408,6 +415,9 @@ export default function TeacherCreateAssignmentScreen() {
 
             <View style={{ marginTop: 6 }}>
               <PrimaryButton title={saving ? 'Saving...' : 'Create'} onPress={save} disabled={!canSave} />
+              {showValidation && validationMessage ? (
+                <Text style={[styles.validationText, { color: colors.error }]}>{validationMessage}</Text>
+              ) : null}
             </View>
           </ScrollView>
         )}
@@ -503,5 +513,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  validationText: {
+    marginTop: 10,
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

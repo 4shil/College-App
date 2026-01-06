@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -32,16 +32,22 @@ export default function TeacherMaterialsIndex() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [materials, setMaterials] = useState<MaterialRow[]>([]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
-    const { data: teacher } = await supabase
+    const { data: teacher, error } = await supabase
       .from('teachers')
       .select('id')
       .eq('user_id', user.id)
       .single();
+    if (error) {
+      console.log('Teacher materials teacher id error:', error.message);
+      setErrorText('Unable to load teacher profile');
+      return null;
+    }
     return teacher?.id || null;
   }, [user?.id]);
 
@@ -69,16 +75,19 @@ export default function TeacherMaterialsIndex() {
 
     if (error) {
       console.log('Teacher materials error:', error.message);
+      setErrorText('Unable to load materials. Pull to refresh or try again.');
       setMaterials([]);
       return;
     }
 
+    setErrorText(null);
     setMaterials((data || []) as MaterialRow[]);
   }, [teacherId]);
 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
+      setErrorText(null);
       const tId = await fetchTeacherId();
       setTeacherId(tId);
       setLoading(false);
@@ -93,8 +102,24 @@ export default function TeacherMaterialsIndex() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText(null);
     await fetchMaterials();
     setRefreshing(false);
+  };
+
+  const openMaterial = async (url: string) => {
+    if (!url) return;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+        Alert.alert('Cannot open', 'This link cannot be opened on your device.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (e: any) {
+      console.log('Open material error:', e?.message || e);
+      Alert.alert('Error', 'Failed to open link');
+    }
   };
 
   const subtitle = useMemo(() => {
@@ -164,6 +189,17 @@ export default function TeacherMaterialsIndex() {
               <View style={[styles.chip, { backgroundColor: chipBg }]}> 
                 <Text style={[styles.chipText, { color: chipText }]}>{m.is_active ? 'Active' : 'Hidden'}</Text>
               </View>
+
+              {m.file_url ? (
+                <TouchableOpacity
+                  onPress={() => openMaterial(m.file_url)}
+                  style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="open-outline" size={18} color={colors.primary} />
+                </TouchableOpacity>
+              ) : null}
+
               <TouchableOpacity
                 onPress={() => toggleActive(m)}
                 style={[styles.iconBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}
@@ -207,6 +243,18 @@ export default function TeacherMaterialsIndex() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             showsVerticalScrollIndicator={false}
           >
+            {errorText ? (
+              <View style={{ marginBottom: 12 }}>
+                <Card>
+                  <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Couldn’t load materials</Text>
+                  <Text style={[styles.emptySub, { color: colors.textMuted }]}>{errorText}</Text>
+                  <View style={{ marginTop: 12 }}>
+                    <PrimaryButton title="Retry" onPress={fetchMaterials} variant="outline" />
+                  </View>
+                </Card>
+              </View>
+            ) : null}
+
             {materials.length === 0 ? (
               <Card>
                 <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No materials</Text>

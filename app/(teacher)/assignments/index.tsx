@@ -40,16 +40,22 @@ export default function TeacherAssignmentsIndex() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<AssignmentRow[]>([]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
-    const { data: teacher } = await supabase
+    const { data: teacher, error } = await supabase
       .from('teachers')
       .select('id')
       .eq('user_id', user.id)
       .single();
+    if (error) {
+      console.log('Teacher assignments teacher id error:', error.message);
+      setErrorText('Unable to load teacher profile');
+      return null;
+    }
     return teacher?.id || null;
   }, [user?.id]);
 
@@ -75,16 +81,19 @@ export default function TeacherAssignmentsIndex() {
 
     if (error) {
       console.log('Teacher assignments error:', error.message);
+      setErrorText('Unable to load assignments. Pull to refresh or try again.');
       setAssignments([]);
       return;
     }
 
+    setErrorText(null);
     setAssignments((data || []) as AssignmentRow[]);
   }, [teacherId]);
 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
+      setErrorText(null);
       const tId = await fetchTeacherId();
       setTeacherId(tId);
       setLoading(false);
@@ -99,6 +108,7 @@ export default function TeacherAssignmentsIndex() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText(null);
     await fetchAssignments();
     setRefreshing(false);
   };
@@ -226,6 +236,18 @@ export default function TeacherAssignmentsIndex() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             showsVerticalScrollIndicator={false}
           >
+            {errorText ? (
+              <View style={{ marginBottom: 12 }}>
+                <Card>
+                  <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Couldn’t load assignments</Text>
+                  <Text style={[styles.emptySub, { color: colors.textMuted }]}>{errorText}</Text>
+                  <View style={{ marginTop: 12 }}>
+                    <PrimaryButton title="Retry" onPress={fetchAssignments} variant="outline" />
+                  </View>
+                </Card>
+              </View>
+            ) : null}
+
             {assignments.length === 0 ? (
               <Card>
                 <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No assignments</Text>
