@@ -161,6 +161,36 @@ export default function TeacherCreateAssignmentScreen() {
     return validationMessage == null && !saving && !uploading;
   }, [saving, uploading, validationMessage]);
 
+  const titleHasError = showValidation && title.trim().length === 0;
+
+  const marksHasError = useMemo(() => {
+    if (!showValidation) return false;
+    const mm = Number(maxMarks.trim() || '10');
+    return Number.isNaN(mm) || mm <= 0;
+  }, [maxMarks, showValidation]);
+
+  const dueHasError = useMemo(() => {
+    if (!showValidation) return false;
+    if (Platform.OS === 'web') {
+      const iso = dueIsoText.trim();
+      return !iso || Number.isNaN(Date.parse(iso));
+    }
+    const iso = toIsoOrNull(dueDate);
+    return !iso;
+  }, [dueDate, dueIsoText, showValidation]);
+
+  const attachmentLabel = (url: string) => {
+    try {
+      const safe = url.split('?')[0];
+      const parts = safe.split('/').filter(Boolean);
+      const last = parts[parts.length - 1] || url;
+      const decoded = decodeURIComponent(last);
+      return decoded.length > 42 ? `${decoded.slice(0, 39)}…` : decoded;
+    } catch {
+      return url.length > 42 ? `${url.slice(0, 39)}…` : url;
+    }
+  };
+
   const addAttachment = async () => {
     if (!user?.id) {
       Alert.alert('Error', 'Not signed in');
@@ -318,6 +348,9 @@ export default function TeacherCreateAssignmentScreen() {
                   value={title}
                   onChangeText={setTitle}
                 />
+                {titleHasError ? (
+                  <Text style={[styles.inlineError, { color: colors.error }]}>Title is required</Text>
+                ) : null}
                 <View style={{ height: 10 }} />
                 <GlassInput
                   icon="chatbox-ellipses-outline"
@@ -333,6 +366,9 @@ export default function TeacherCreateAssignmentScreen() {
                   onChangeText={setMaxMarks}
                   keyboardType="numeric"
                 />
+                {marksHasError ? (
+                  <Text style={[styles.inlineError, { color: colors.error }]}>Max marks must be a positive number</Text>
+                ) : null}
               </Card>
             </Animated.View>
 
@@ -358,7 +394,7 @@ export default function TeacherCreateAssignmentScreen() {
                       <View key={u + idx} style={[styles.attachmentRow, { borderColor: withAlpha(colors.cardBorder, 0.7) }]}
                       >
                         <Text style={[styles.attachmentText, { color: colors.textSecondary }]} numberOfLines={1}>
-                          {u}
+                          {attachmentLabel(u)}
                         </Text>
                         <TouchableOpacity
                           onPress={() => setAttachmentUrls((prev) => prev.filter((_, i) => i !== idx))}
@@ -410,6 +446,10 @@ export default function TeacherCreateAssignmentScreen() {
                     ) : null}
                   </>
                 )}
+
+                {dueHasError ? (
+                  <Text style={[styles.inlineError, { color: colors.error, marginTop: 10 }]}>Select a valid due date</Text>
+                ) : null}
               </Card>
             </Animated.View>
 
@@ -519,5 +559,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  inlineError: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
