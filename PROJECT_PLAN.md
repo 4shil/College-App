@@ -78,22 +78,9 @@ supabase link --project-ref celwfcflcofejjpkpgcq
 supabase init
 ```
 
-### Hasura CLI Installation & Setup
+### Hasura (Removed)
 
-```powershell
-# Install Hasura CLI (Windows)
-npm install -g hasura-cli
-
-# OR using curl (Linux/Mac)
-# curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
-
-# Initialize Hasura in project
-hasura init hasura --endpoint https://your-hasura-endpoint.hasura.app
-
-# Set admin secret
-cd hasura
-# Create .env file with HASURA_GRAPHQL_ADMIN_SECRET=your-secret
-```
+Hasura is no longer used by this app. The data layer is Supabase (Postgres + RLS) accessed via `@supabase/supabase-js`.
 
 ---
 
@@ -5068,11 +5055,6 @@ supabase migration new NAME    # Create new migration
 supabase db push               # Deploy to production
 supabase db pull               # Pull remote changes
 
-# === HASURA ===
-hasura console                 # Visual editor + auto migrations
-hasura migrate apply           # Apply migrations
-hasura metadata apply          # Apply permissions/relationships
-
 # === TYPE SAFETY ===
 supabase gen types typescript --project-id celwfcflcofejjpkpgcq > types/supabase.ts
 ```
@@ -5083,15 +5065,13 @@ supabase gen types typescript --project-id celwfcflcofejjpkpgcq > types/supabase
 # .env.local
 EXPO_PUBLIC_SUPABASE_URL=https://celwfcflcofejjpkpgcq.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_HASURA_ENDPOINT=https://your-project.hasura.app/v1/graphql
-HASURA_GRAPHQL_ADMIN_SECRET=your-hasura-admin-secret
 ```
 
 ### CLI Installation One-Liner
 
 ```powershell
 # Windows (run as admin)
-npm install -g supabase hasura-cli && supabase login
+npm install -g supabase && supabase login
 ```
 
 ---

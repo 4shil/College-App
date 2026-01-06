@@ -71,6 +71,7 @@ export default function TeacherResultsIndex() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string>('');
 
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [academicYears, setAcademicYears] = useState<AcademicYearRow[]>([]);
@@ -104,9 +105,12 @@ export default function TeacherResultsIndex() {
 
     if (error) {
       console.log('Teacher results academic years error:', error.message);
+      setErrorText('Failed to load academic years.');
       setAcademicYears([]);
       return;
     }
+
+    setErrorText('');
 
     const list = (data || []) as AcademicYearRow[];
     setAcademicYears(list);
@@ -136,9 +140,12 @@ export default function TeacherResultsIndex() {
 
     if (error) {
       console.log('Teacher results timetable error:', error.message);
+      setErrorText('Failed to load your timetable subjects.');
       setTeacherTimetable([]);
       return;
     }
+
+    setErrorText('');
 
     setTeacherTimetable((data || []) as TeacherTimetableRow[]);
   }, [teacherId, selectedAcademicYearId]);
@@ -156,9 +163,12 @@ export default function TeacherResultsIndex() {
 
     if (error) {
       console.log('Teacher results exams error:', error.message);
+      setErrorText('Failed to load exams.');
       setExams([]);
       return;
     }
+
+    setErrorText('');
 
     const list = (data || []) as ExamRow[];
     setExams(list);
@@ -200,9 +210,12 @@ export default function TeacherResultsIndex() {
 
     if (error) {
       console.log('Teacher results schedules error:', error.message);
+      setErrorText('Failed to load exam schedules.');
       setSchedules([]);
       return;
     }
+
+    setErrorText('');
 
     const list = ((data || []) as ExamScheduleRow[]).filter((s) => teacherCourseIds.includes(s.course_id));
     setSchedules(list);
@@ -271,6 +284,7 @@ export default function TeacherResultsIndex() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText('');
     await fetchAcademicYears();
     await fetchTeacherTimetable();
     await fetchExams();
@@ -334,10 +348,22 @@ export default function TeacherResultsIndex() {
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
         </Animated.View>
 
+        {errorText ? (
+          <Animated.View entering={FadeInDown.delay(40).duration(350)} style={{ marginBottom: 12 }}>
+            <Card style={styles.card}>
+              <Text style={[styles.helper, { color: colors.textPrimary, fontWeight: '700' }]}>Something went wrong</Text>
+              <Text style={[styles.helper, { color: colors.textSecondary, marginTop: 6 }]}>{errorText}</Text>
+              <View style={{ marginTop: 12 }}>
+                <PrimaryButton title={refreshing ? 'Refreshing...' : 'Retry'} onPress={onRefresh} variant="outline" size="small" />
+              </View>
+            </Card>
+          </Animated.View>
+        ) : null}
+
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
           <Card style={styles.card}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Academic year</Text>
-            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}> 
+            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}>
               <Picker
                 selectedValue={selectedAcademicYearId}
                 onValueChange={(v) => {
@@ -354,13 +380,11 @@ export default function TeacherResultsIndex() {
                 ))}
               </Picker>
             </View>
-          </Card>
-        </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(140).duration(450)}>
-          <Card style={styles.card}>
+            <View style={{ height: 12 }} />
+
             <Text style={[styles.label, { color: colors.textSecondary }]}>Exam</Text>
-            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}> 
+            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}>
               <Picker
                 selectedValue={selectedExamId}
                 onValueChange={(v) => {
@@ -373,25 +397,20 @@ export default function TeacherResultsIndex() {
                 enabled={exams.length > 0}
               >
                 {exams.length === 0 ? (
-                  <Picker.Item label="No exams" value="" />
+                  <Picker.Item label="No published internal/model exams" value="" />
                 ) : (
-                  exams.map((e) => (
-                    <Picker.Item
-                      key={e.id}
-                      label={`${e.name} (${e.exam_type})`}
-                      value={e.id}
-                    />
-                  ))
+                  [
+                    ...(exams.length > 1 ? [{ id: '', label: 'Select exam' }] : []),
+                    ...exams.map((e) => ({ id: e.id, label: `${e.name} (${e.exam_type})` })),
+                  ].map((opt) => <Picker.Item key={opt.id || 'none'} label={opt.label} value={opt.id} />)
                 )}
               </Picker>
             </View>
-          </Card>
-        </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(200).duration(450)}>
-          <Card style={styles.card}>
+            <View style={{ height: 12 }} />
+
             <Text style={[styles.label, { color: colors.textSecondary }]}>Subject</Text>
-            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}> 
+            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}>
               <Picker
                 selectedValue={selectedScheduleId}
                 onValueChange={(v) => {
@@ -403,25 +422,20 @@ export default function TeacherResultsIndex() {
                 enabled={schedules.length > 0}
               >
                 {schedules.length === 0 ? (
-                  <Picker.Item label="No schedules" value="" />
+                  <Picker.Item label={selectedExamId ? 'No schedules for your subjects' : 'Select an exam first'} value="" />
                 ) : (
-                  schedules.map((s) => (
-                    <Picker.Item
-                      key={s.id}
-                      label={`${labelCourse(s.courses)} — ${s.date}`}
-                      value={s.id}
-                    />
-                  ))
+                  [
+                    ...(schedules.length > 1 ? [{ id: '', label: 'Select subject' }] : []),
+                    ...schedules.map((s) => ({ id: s.id, label: `${labelCourse(s.courses)} — ${s.date}` })),
+                  ].map((opt) => <Picker.Item key={opt.id || 'none'} label={opt.label} value={opt.id} />)
                 )}
               </Picker>
             </View>
-          </Card>
-        </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(260).duration(450)}>
-          <Card style={styles.card}>
+            <View style={{ height: 12 }} />
+
             <Text style={[styles.label, { color: colors.textSecondary }]}>Class</Text>
-            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}> 
+            <View style={[styles.pickerWrap, { borderColor: colors.cardBorder }]}>
               <Picker
                 selectedValue={selectedSectionId}
                 onValueChange={(v) => setSelectedSectionId(v)}
@@ -430,25 +444,21 @@ export default function TeacherResultsIndex() {
                 enabled={availableSectionsForSelectedCourse.length > 0}
               >
                 {availableSectionsForSelectedCourse.length === 0 ? (
-                  <Picker.Item label="No class found" value="" />
+                  <Picker.Item label={selectedScheduleId ? 'No class found for this subject' : 'Select a subject first'} value="" />
                 ) : (
                   [
                     ...(availableSectionsForSelectedCourse.length > 1 ? [{ id: '', label: 'Select class' }] : []),
-                    ...availableSectionsForSelectedCourse.map((s) => ({
-                      id: s.id,
-                      label: `${s.section.name}`,
-                    })),
-                  ].map((opt) => (
-                    <Picker.Item key={opt.id || 'none'} label={opt.label} value={opt.id} />
-                  ))
+                    ...availableSectionsForSelectedCourse.map((s) => ({ id: s.id, label: `${s.section.name}` })),
+                  ].map((opt) => <Picker.Item key={opt.id || 'none'} label={opt.label} value={opt.id} />)
                 )}
               </Picker>
             </View>
-            {selectedSchedule && selectedExam && (
+
+            {selectedSchedule && selectedExam ? (
               <Text style={[styles.helper, { color: colors.textSecondary }]}>
                 Max marks: {selectedSchedule.max_marks ?? 100}
               </Text>
-            )}
+            ) : null}
           </Card>
         </Animated.View>
 

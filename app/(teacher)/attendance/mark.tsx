@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
 import { AnimatedBackground, Card, LoadingIndicator, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
@@ -66,6 +67,28 @@ export default function TeacherMarkAttendanceScreen() {
   const [entry, setEntry] = useState<TimetableEntry | null>(null);
   const [attendanceId, setAttendanceId] = useState<string | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
+
+  const initialSnapshotRef = useRef<string>('');
+  const [dirty, setDirty] = useState(false);
+
+  const snapshotStudents = useCallback((list: StudentRow[]) => {
+    return list
+      .map((s) => `${s.id}:${s.status}`)
+      .sort()
+      .join('|');
+  }, []);
+
+  const confirmDiscardAndGoBack = useCallback(() => {
+    if (!dirty || saving) {
+      router.back();
+      return;
+    }
+
+    Alert.alert('Discard changes?', 'You have unsaved attendance changes.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
+    ]);
+  }, [dirty, router, saving]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
@@ -221,6 +244,8 @@ export default function TeacherMarkAttendanceScreen() {
 
       if (!aId) {
         setStudents(baseStudents);
+        initialSnapshotRef.current = snapshotStudents(baseStudents);
+        setDirty(false);
         return;
       }
 
@@ -238,6 +263,8 @@ export default function TeacherMarkAttendanceScreen() {
       });
 
       setStudents(merged);
+      initialSnapshotRef.current = snapshotStudents(merged);
+      setDirty(false);
     } catch (e) {
       console.error('Teacher mark attendance load error:', e);
       Alert.alert('Error', 'Failed to load attendance');
@@ -251,7 +278,12 @@ export default function TeacherMarkAttendanceScreen() {
   }, [fetchData]);
 
   const setStatus = (studentId: string, status: AttendanceStatus) => {
-    setStudents((prev) => prev.map((s) => (s.id === studentId ? { ...s, status } : s)));
+    setStudents((prev) => {
+      const next = prev.map((s) => (s.id === studentId ? { ...s, status } : s));
+      const nextSnapshot = snapshotStudents(next);
+      setDirty(nextSnapshot !== initialSnapshotRef.current);
+      return next;
+    });
   };
 
   const saveAttendance = async () => {
@@ -292,6 +324,8 @@ export default function TeacherMarkAttendanceScreen() {
       }
 
       Alert.alert('Saved', 'Attendance saved successfully');
+      initialSnapshotRef.current = snapshotStudents(students);
+      setDirty(false);
       router.back();
     } catch (e) {
       console.error('Save attendance error:', e);
@@ -314,14 +348,30 @@ export default function TeacherMarkAttendanceScreen() {
     borderColor: active ? withAlpha(colors.primary, 0.6) : withAlpha(colors.cardBorder, 0.55),
   });
 
+  const bottomBarBg = withAlpha(colors.background, isDark ? 0.92 : 0.96);
+  const bottomBarBorder = withAlpha(colors.cardBorder, 0.55);
+  const bottomBarHeight = 92;
+
   return (
     <AnimatedBackground>
-      <View style={[styles.container, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 110 }]}>
+      <View style={[styles.container, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + bottomBarHeight + 18 }]}>
         <Animated.View entering={FadeInRight.duration(350)} style={{ marginBottom: 12 }}>
-          <Text style={[styles.header, { color: colors.textPrimary }]}>Mark Attendance</Text>
-          <Text style={[styles.headerSub, { color: colors.textMuted }]}>
-            {entry?.courses?.name || params.courseName || 'Class'} • P{periodNum} • {dateStr}
-          </Text>
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              onPress={confirmDiscardAndGoBack}
+              activeOpacity={0.85}
+              style={[styles.backBtn, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}
+            >
+              <Ionicons name="chevron-back" size={20} color={colors.primary} />
+            </TouchableOpacity>
+
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.header, { color: colors.textPrimary }]}>Mark Attendance</Text>
+              <Text style={[styles.headerSub, { color: colors.textMuted }]}>
+                {entry?.courses?.name || params.courseName || 'Class'} • P{periodNum} • {dateStr}
+              </Text>
+            </View>
+          </View>
         </Animated.View>
 
         {loading ? (
@@ -332,18 +382,7 @@ export default function TeacherMarkAttendanceScreen() {
             </Text>
           </View>
         ) : (
-          <>
-            <Animated.View entering={FadeInDown.duration(350)} style={{ marginBottom: 12 }}>
-              <Card>
-                <View style={styles.statsRow}>
-                  <Text style={[styles.stat, { color: colors.textPrimary }]}>Present: {presentCount}</Text>
-                  <Text style={[styles.stat, { color: colors.textPrimary }]}>Absent: {absentCount}</Text>
-                  <Text style={[styles.stat, { color: colors.textPrimary }]}>Late: {lateCount}</Text>
-                </View>
-              </Card>
-            </Animated.View>
-
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 12 }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 12 }}>
               {students.map((s, idx) => (
                 <Animated.View key={s.id} entering={FadeInDown.delay(idx * 20).duration(250)} style={{ marginBottom: 10 }}>
                   <Card>
@@ -385,12 +424,36 @@ export default function TeacherMarkAttendanceScreen() {
                 </Animated.View>
               ))}
             </ScrollView>
-
-            <View style={{ marginTop: 6 }}>
-              <PrimaryButton title={saving ? 'Saving...' : 'Save Attendance'} onPress={saveAttendance} disabled={saving} />
-            </View>
-          </>
         )}
+
+        {!loading ? (
+          <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
+            <Card style={[styles.bottomBarCard, { backgroundColor: bottomBarBg, borderColor: bottomBarBorder }] as any}>
+              <View style={styles.bottomBarRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.bottomCounts, { color: colors.textPrimary }]} numberOfLines={1}>
+                    Present {presentCount} • Absent {absentCount} • Late {lateCount}
+                  </Text>
+                  {dirty ? (
+                    <Text style={[styles.bottomHint, { color: colors.textMuted }]} numberOfLines={1}>
+                      Unsaved changes
+                    </Text>
+                  ) : (
+                    <Text style={[styles.bottomHint, { color: colors.textMuted }]} numberOfLines={1}>
+                      All changes saved
+                    </Text>
+                  )}
+                </View>
+                <PrimaryButton
+                  title={saving ? 'Saving...' : 'Save'}
+                  onPress={saveAttendance}
+                  disabled={saving || !dirty}
+                  size="small"
+                />
+              </View>
+            </Card>
+          </View>
+        ) : null}
       </View>
     </AnimatedBackground>
   );
@@ -401,6 +464,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   header: {
     fontSize: 22,
     fontWeight: '700',
@@ -408,14 +483,6 @@ const styles = StyleSheet.create({
   headerSub: {
     marginTop: 4,
     fontSize: 13,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  stat: {
-    fontSize: 13,
-    fontWeight: '600',
   },
   studentRow: {
     flexDirection: 'row',
@@ -445,5 +512,30 @@ const styles = StyleSheet.create({
   pillText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  bottomBarCard: {
+    padding: 14,
+  },
+  bottomBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  bottomCounts: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  bottomHint: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

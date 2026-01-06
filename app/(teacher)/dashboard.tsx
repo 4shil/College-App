@@ -26,6 +26,8 @@ export default function TeacherDashboard() {
   const { profile } = useAuthStore();
   const { summary, loading, refreshing, refresh } = useTeacherDashboardSummary();
 
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -42,6 +44,11 @@ export default function TeacherDashboard() {
 
   // Hero is always first; the alert banner (if present) is the second child.
   const stickyHeaderIndices = useMemo(() => (showAlert ? [1] : undefined), [showAlert]);
+
+  const handleRefresh = async () => {
+    await refresh();
+    setLastUpdatedAt(new Date());
+  };
 
   const handleAlertCta = () => {
     if (!alert) return;
@@ -86,7 +93,8 @@ export default function TeacherDashboard() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ paddingTop: contentTopPadding, paddingBottom: insets.bottom + 128 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        stickyHeaderIndices={stickyHeaderIndices}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero (Inspired) */}
@@ -132,6 +140,10 @@ export default function TeacherDashboard() {
             <View style={styles.heroSpacer} />
             <ThemeToggle />
           </View>
+
+          <Text style={[styles.lastUpdated, { color: colors.textMuted }]} numberOfLines={1}>
+            {lastUpdatedAt ? `Last updated: ${lastUpdatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Pull to refresh'}
+          </Text>
         </View>
 
         {/* Critical Alert Strip (Conditional + Sticky) */}
@@ -493,6 +505,11 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   alertStrip: {
+  lastUpdated: {
+    marginTop: 10,
+    fontSize: 12,
+    fontWeight: '600',
+  },
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 18,

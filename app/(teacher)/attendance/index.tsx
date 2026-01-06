@@ -53,6 +53,7 @@ export default function TeacherAttendanceIndex() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
+  const [noClassesMessage, setNoClassesMessage] = useState<string>('');
   const [stats, setStats] = useState<AttendanceStats>({
     todayClasses: 0,
     completedClasses: 0,
@@ -78,6 +79,7 @@ export default function TeacherAttendanceIndex() {
     if (!teacherId) return;
 
     try {
+      setNoClassesMessage('');
       // Get day of week (1 = Monday, 5 = Friday)
       const today = new Date();
       let dayOfWeek = today.getDay();
@@ -86,6 +88,13 @@ export default function TeacherAttendanceIndex() {
       // Weekend check
       if (dayOfWeek > 5) {
         setTodayClasses([]);
+        setStats({
+          todayClasses: 0,
+          completedClasses: 0,
+          totalStudentsMarked: 0,
+          avgAttendancePercent: 0,
+        });
+        setNoClassesMessage('No classes today (Weekend).');
         return;
       }
 
@@ -100,6 +109,13 @@ export default function TeacherAttendanceIndex() {
 
       if (holiday) {
         setTodayClasses([]);
+        setStats({
+          todayClasses: 0,
+          completedClasses: 0,
+          totalStudentsMarked: 0,
+          avgAttendancePercent: 0,
+        });
+        setNoClassesMessage(`Holiday${holiday.title ? `: ${holiday.title}` : ''}`);
         return;
       }
 
@@ -133,8 +149,17 @@ export default function TeacherAttendanceIndex() {
 
       if (!entries || entries.length === 0) {
         setTodayClasses([]);
+        setStats({
+          todayClasses: 0,
+          completedClasses: 0,
+          totalStudentsMarked: 0,
+          avgAttendancePercent: 0,
+        });
+        setNoClassesMessage('No classes scheduled today.');
         return;
       }
+
+      setNoClassesMessage('');
 
       // For each entry, get attendance status
       const classesWithStatus: TodayClass[] = await Promise.all(
@@ -275,6 +300,12 @@ export default function TeacherAttendanceIndex() {
       ? (classItem.markedCount / classItem.studentCount) * 100 
       : 0;
 
+    const statusLabel = classItem.isCompleted
+      ? 'Completed'
+      : classItem.markedCount > 0
+        ? 'In progress'
+        : 'Not started';
+
     return (
       <Animated.View
         key={classItem.id}
@@ -324,6 +355,10 @@ export default function TeacherAttendanceIndex() {
             </Text>
             <Text style={[styles.courseCode, { color: colors.textSecondary }]}>
               {classItem.courseCode} • {classItem.yearName}
+            </Text>
+
+            <Text style={[styles.statusText, { color: classItem.isCompleted ? colors.success : isCurrent ? colors.primary : colors.textMuted }]}>
+              {statusLabel}
             </Text>
 
             {/* Progress Bar */}
@@ -451,12 +486,12 @@ export default function TeacherAttendanceIndex() {
               </Animated.View>
 
               {todayClasses.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <FontAwesome5 name="calendar-times" size={48} color={colors.textMuted} />
-                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    No classes scheduled today
+                <Card>
+                  <Text style={[styles.emptyText, { color: colors.textPrimary }]}>No classes</Text>
+                  <Text style={[styles.emptySubtext, { color: colors.textMuted, marginTop: 6 }]}>
+                    {noClassesMessage || 'No timetable entries found for today.'}
                   </Text>
-                </View>
+                </Card>
               ) : (
                 todayClasses.map((classItem, index) => renderClassCard(classItem, index))
               )}
@@ -532,6 +567,7 @@ const styles = StyleSheet.create({
   classInfo: { flex: 1 },
   courseName: { fontSize: 15, fontWeight: '600' },
   courseCode: { fontSize: 11, marginTop: 2 },
+  statusText: { fontSize: 11, fontWeight: '700', marginTop: 6 },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,7 +1,0 @@
-version: 3
-endpoint: https://college-app.hasura.app
-admin_secret: HVT25ZPcgXcv0z2U0O7DCnFUwnZKaAofseki4rvNRCDF02xEi9j2EgGwZj9QEFKb
-metadata_directory: metadata
-actions:
-  kind: synchronous
-  handler_webhook_baseurl: http://localhost:3000
