@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
+import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 import { Restricted } from '../../../components/Restricted';
@@ -281,7 +281,7 @@ export default function AssignRolesScreen() {
   if (loading) {
     return (
       <AnimatedBackground>
-        <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
+        <View style={[styles.container, { paddingTop: insets.top + 20, paddingHorizontal: 20 }]}>
           <LoadingIndicator size="large" color={colors.primary} />
         </View>
       </AnimatedBackground>
@@ -293,7 +293,7 @@ export default function AssignRolesScreen() {
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 110 }]}
+        contentContainerStyle={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom + 110, paddingHorizontal: 20 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         showsVerticalScrollIndicator={false}
       >
@@ -305,16 +305,17 @@ export default function AssignRolesScreen() {
         </View>
 
         {/* Search and Filter */}
-        <Card style={styles.filterCard}>
+        <GlassCard intensity={35} style={styles.filterCard}>
           <View style={styles.searchContainer}>
             <FontAwesome5 name="search" size={16} color={colors.textSecondary} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.textPrimary }]}
-              placeholder="Search by name or email..."
-              placeholderTextColor={colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+            <View style={{ flex: 1 }}>
+              <GlassInput
+                placeholder="Search by name or email…"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+              />
+            </View>
           </View>
 
           <View style={[styles.pickerContainer, { borderColor: colors.glassBorder }]}>
@@ -331,43 +332,43 @@ export default function AssignRolesScreen() {
               ))}
             </Picker>
           </View>
-        </Card>
+        </GlassCard>
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <Card style={styles.statCard}>
+          <GlassCard intensity={35} style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.primary }]}>{users.length}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Users</Text>
-          </Card>
-          <Card style={styles.statCard}>
+          </GlassCard>
+          <GlassCard intensity={35} style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>
               {users.filter(u => u.user_roles.length > 0).length}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>With Roles</Text>
-          </Card>
-          <Card style={styles.statCard}>
+          </GlassCard>
+          <GlassCard intensity={35} style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>
               {users.filter(u => u.user_roles.length === 0).length}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>No Roles</Text>
-          </Card>
+          </GlassCard>
         </View>
 
         {/* User List */}
         {filteredUsers.length === 0 ? (
-          <Card style={styles.emptyCard}>
+          <GlassCard intensity={35} style={styles.emptyCard}>
             <FontAwesome5 name="users" size={48} color={colors.textSecondary} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {searchQuery ? 'No users found' : 'No users available'}
             </Text>
-          </Card>
+          </GlassCard>
         ) : (
           filteredUsers.map((user, index) => (
             <Animated.View
               key={user.id}
               entering={FadeInDown.delay(index * 50).springify()}
             >
-              <Card style={styles.userCard}>
+              <GlassCard intensity={35} style={styles.userCard}>
                 <View style={styles.userHeader}>
                   <View style={styles.userInfo}>
                     <Text style={[styles.userName, { color: colors.textPrimary }]}>
@@ -441,7 +442,7 @@ export default function AssignRolesScreen() {
                     </View>
                   </View>
                 )}
-              </Card>
+              </GlassCard>
             </Animated.View>
           ))
         )}
@@ -455,7 +456,8 @@ export default function AssignRolesScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={[styles.modalContainer, { backgroundColor: modalBackdropColor }]}>
-          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+          <GlassCard intensity={40} noPadding style={styles.modalContent}>
+            <View style={styles.modalInner}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                 Assign Role
@@ -497,22 +499,17 @@ export default function AssignRolesScreen() {
                   </Picker>
                 </View>
 
-                <TouchableOpacity
+                <PrimaryButton
+                  title="Assign Role"
                   onPress={handleAssignRole}
-                  style={[
-                    styles.saveButton,
-                    { backgroundColor: colors.primary },
-                    (saving || !selectedRoleId) && { opacity: 0.5 }
-                  ]}
+                  loading={saving}
                   disabled={saving || !selectedRoleId}
-                >
-                  <Text style={[styles.saveButtonText, { color: colors.textInverse }]}>
-                    {saving ? 'Assigning...' : 'Assign Role'}
-                  </Text>
-                </TouchableOpacity>
+                  style={styles.saveButton}
+                />
               </View>
             )}
-          </View>
+            </View>
+          </GlassCard>
         </View>
       </Modal>
     </AnimatedBackground>
@@ -522,14 +519,12 @@ export default function AssignRolesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 20 },
   header: { marginBottom: 24 },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { fontSize: 16 },
   filterCard: { padding: 16, marginBottom: 16 },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 10 },
   searchIcon: { marginRight: 12 },
-  searchInput: { flex: 1, fontSize: 16, paddingVertical: 8 },
   pickerContainer: { borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
   picker: { height: 50 },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
@@ -554,7 +549,8 @@ const styles = StyleSheet.create({
   emptyCard: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 16, marginTop: 12 },
   modalContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
-  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '80%' },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '80%' },
+  modalInner: { padding: 20 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold' },
   modalBody: { paddingBottom: 20 },

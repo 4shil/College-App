@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -199,7 +199,7 @@ export default function CreateTeacherScreen() {
           >
             {/* Personal Info Section */}
             <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-              <Card style={styles.formSection}>
+              <GlassCard intensity={35} style={styles.formSection}>
                 <View
                   style={[
                     styles.sectionHeader,
@@ -260,12 +260,12 @@ export default function CreateTeacherScreen() {
                     secureTextEntry
                   />
                 </View>
-              </Card>
+              </GlassCard>
             </Animated.View>
 
             {/* Professional Info Section */}
             <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-              <Card style={styles.formSection}>
+              <GlassCard intensity={35} style={styles.formSection}>
                 <View
                   style={[
                     styles.sectionHeader,
@@ -345,14 +345,15 @@ export default function CreateTeacherScreen() {
                     autoCapitalize="words"
                   />
                 </View>
-              </Card>
+              </GlassCard>
             </Animated.View>
 
             {/* Submit Button */}
             <Animated.View entering={FadeInDown.delay(250).duration(400)}>
               <PrimaryButton
-                title={loading ? 'Creating...' : 'Create Teacher'}
+                title="Create Teacher"
                 onPress={handleCreateTeacher}
+                loading={loading}
                 disabled={loading}
                 style={styles.submitBtn}
               />

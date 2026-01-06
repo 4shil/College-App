@@ -172,7 +172,10 @@ export const Card: React.FC<CardProps> = ({
           style={[
             styles.blur,
             {
-              backgroundColor: (shouldLightGlassWhileAnimated || isGlassLightMode) ? 'transparent' : colors.cardBackground,
+              backgroundColor:
+                (shouldLightGlassWhileAnimated || isGlassLightMode)
+                  ? 'transparent'
+                  : withAlpha(colors.cardBackground, isDark ? 0.55 : 0.7),
               borderRadius: colors.borderRadius,
             },
           ]}

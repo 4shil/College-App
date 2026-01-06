@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
 
-import { AnimatedBackground, Card, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
+import { AnimatedBackground, GlassCard, GlassInput, PrimaryButton, LoadingIndicator } from '../../../../components/ui';
 import { useThemeStore } from '../../../../store/themeStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -445,7 +445,7 @@ export default function CreateStudentScreen() {
 
   const renderManualForm = () => (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.formScroll}>
-      <View style={styles.formSection}>
+      <GlassCard intensity={35} style={styles.formSection}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           <FontAwesome5 name="user" size={14} color={colors.primary} /> Personal Info
         </Text>
@@ -490,9 +490,9 @@ export default function CreateStudentScreen() {
             secureTextEntry
           />
         </View>
-      </View>
+      </GlassCard>
 
-      <View style={styles.formSection}>
+      <GlassCard intensity={35} style={styles.formSection}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           <FontAwesome5 name="graduation-cap" size={14} color={colors.primary} /> Academic Info
         </Text>
@@ -594,12 +594,13 @@ export default function CreateStudentScreen() {
             />
           </View>
         </View>
-      </View>
+      </GlassCard>
 
       <View style={styles.buttonContainer}>
         <PrimaryButton
-          title={loading ? 'Creating...' : 'Create Student'}
+          title="Create Student"
           onPress={handleCreateStudent}
+          loading={loading}
           disabled={loading}
         />
       </View>
@@ -608,7 +609,7 @@ export default function CreateStudentScreen() {
 
   const renderBulkImport = () => (
     <View style={styles.bulkContainer}>
-      <Card style={styles.bulkCard}>
+      <GlassCard intensity={35} style={styles.bulkCard}>
         <FontAwesome5 name="file-csv" size={48} color={colors.primary} style={styles.bulkIcon} />
         <Text style={[styles.bulkTitle, { color: colors.textPrimary }]}>Bulk Import Students</Text>
         <Text style={[styles.bulkSubtitle, { color: colors.textSecondary }]}>
@@ -731,7 +732,7 @@ export default function CreateStudentScreen() {
             style={styles.uploadBtn}
           />
         )}
-      </Card>
+      </GlassCard>
     </View>
   );
 

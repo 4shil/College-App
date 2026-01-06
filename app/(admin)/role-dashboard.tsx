@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
+import { AnimatedBackground, GlassCard, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useRBAC, PERMISSIONS } from '../../hooks/useRBAC';
 import { withAlpha } from '../../theme/colorUtils';
@@ -171,7 +171,7 @@ export default function RoleBasedDashboard() {
 
         {/* Role Badge */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.roleBadgeContainer}>
-          <Card>
+          <GlassCard intensity={35}>
             <View style={styles.roleBadgeContent}>
               <View style={[styles.roleIconContainer, { 
                 backgroundColor: colors.inputBackground,
@@ -185,7 +185,7 @@ export default function RoleBasedDashboard() {
                 <Text style={[styles.roleName, { color: colors.primary }]}>{roleDisplayName}</Text>
               </View>
             </View>
-          </Card>
+          </GlassCard>
         </Animated.View>
 
         {/* Modules Grid */}
@@ -201,16 +201,16 @@ export default function RoleBasedDashboard() {
                 onPress={() => router.push(module.route as any)}
                 activeOpacity={0.7}
               >
-                <Card style={styles.moduleCard}>
-                  <View style={styles.moduleCardContent}>
-                    <View style={[styles.iconContainer, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
-                      <FontAwesome5 name={module.icon} size={20} color={colors.primary} />
+                <GlassCard intensity={35} noPadding>
+                  <View style={styles.moduleButton}>
+                    <View style={[styles.moduleIconContainer, { backgroundColor: withAlpha(colors.primary, 0.125) }]}>
+                      <FontAwesome5 name={module.icon} size={18} color={colors.primary} />
                     </View>
                     <Text style={[styles.moduleTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                       {module.title}
                     </Text>
                   </View>
-                </Card>
+                </GlassCard>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -219,7 +219,7 @@ export default function RoleBasedDashboard() {
         {/* No Access Message */}
         {userModules.length === 0 && (
           <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <Card style={[styles.noAccessCard, { borderColor: colors.warning, borderWidth: colors.borderWidth }]}>
+            <GlassCard intensity={35} style={[styles.noAccessCard, { borderColor: colors.warning, borderWidth: colors.borderWidth }]}>
               <FontAwesome5 name="exclamation-triangle" size={48} color={colors.warning} />
               <Text style={[styles.noAccessText, { color: colors.textPrimary }]}>
                 No modules available for your role
@@ -227,7 +227,7 @@ export default function RoleBasedDashboard() {
               <Text style={[styles.noAccessSubtext, { color: colors.textSecondary }]}>
                 Contact your administrator for access
               </Text>
-            </Card>
+            </GlassCard>
           </Animated.View>
         )}
       </ScrollView>
@@ -267,26 +267,25 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 14,
   },
-  moduleCard: {
-    height: 140,
+  moduleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    minHeight: 76,
   },
-  moduleCardContent: {
-    flex: 1,
+  moduleIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 14,
+    marginRight: 14,
   },
   moduleTitle: {
+    flex: 1,
     fontSize: 13,
     fontWeight: '800',
-    textAlign: 'center',
     letterSpacing: -0.2,
   },
   noAccessCard: {

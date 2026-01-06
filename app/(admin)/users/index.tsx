@@ -6,7 +6,7 @@ import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-re
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 
-import { AnimatedBackground, Card, GlassInput, IconBadge, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
+import { AnimatedBackground, Card, GlassCard, GlassInput, IconBadge, PrimaryButton, LoadingIndicator, SolidButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -710,7 +710,7 @@ export default function UsersScreen() {
   const renderRoleModal = () => (
     <Modal visible={showRoleModal} transparent animationType="fade">
       <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
-        <Card style={styles.modalContent}>
+        <GlassCard intensity={40} style={styles.modalContent}>
           <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
             Change Role for {selectedUser?.full_name}
           </Text>
@@ -739,25 +739,23 @@ export default function UsersScreen() {
           </View>
 
           <View style={styles.modalActions}>
-            <TouchableOpacity
-              style={[styles.modalBtn, { backgroundColor: colors.glassBackground }]}
+            <PrimaryButton
+              title="Cancel"
               onPress={() => { setShowRoleModal(false); setSelectedUser(null); }}
-            >
-              <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
-            </TouchableOpacity>
-            <SolidButton
-              style={[styles.modalBtn, { backgroundColor: colors.primary }]}
+              variant="outline"
+              size="medium"
+              style={{ flex: 1 }}
+            />
+            <PrimaryButton
+              title="Save"
               onPress={() => selectedUser && handleChangeRole(selectedUser.id, formRole)}
+              loading={saving}
               disabled={saving || !formRole}
-            >
-              {saving ? (
-                <LoadingIndicator size="small" color={colors.textInverse} />
-              ) : (
-                <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Save</Text>
-              )}
-            </SolidButton>
+              size="medium"
+              style={{ flex: 1 }}
+            />
           </View>
-        </Card>
+        </GlassCard>
       </View>
     </Modal>
   );
@@ -918,7 +916,7 @@ export default function UsersScreen() {
         {/* Add User Modal */}
         <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
           <View style={[styles.modalOverlay, { backgroundColor: modalBackdropColor }]}>
-            <Card style={styles.modalContent}>
+            <GlassCard intensity={40} style={styles.modalContent}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create New User</Text>
               
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
@@ -1022,25 +1020,23 @@ export default function UsersScreen() {
               </ScrollView>
 
               <View style={styles.modalActions}>
-                <SolidButton
-                  style={[styles.modalBtn, { backgroundColor: colors.glassBackground }]}
+                <PrimaryButton
+                  title="Cancel"
                   onPress={() => setShowAddModal(false)}
-                >
-                  <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
-                </SolidButton>
-                <SolidButton
-                  style={[styles.modalBtn, { backgroundColor: colors.primary }]}
+                  variant="outline"
+                  size="medium"
+                  style={{ flex: 1 }}
+                />
+                <PrimaryButton
+                  title="Create"
                   onPress={handleCreateUser}
+                  loading={saving}
                   disabled={saving}
-                >
-                  {saving ? (
-                    <LoadingIndicator size="small" color={colors.textInverse} />
-                  ) : (
-                    <Text style={[styles.modalBtnText, { color: colors.textInverse }]}>Create</Text>
-                  )}
-                </SolidButton>
+                  size="medium"
+                  style={{ flex: 1 }}
+                />
               </View>
-            </Card>
+            </GlassCard>
           </View>
         </Modal>
       </View>

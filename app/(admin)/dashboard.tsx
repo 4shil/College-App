@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import Animated, { FadeInDown, FadeInRight, SlideInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, IconBadge, StatCard, ThemeToggle, LoadingIndicator } from '../../components/ui';
+import { AnimatedBackground, Card, GlassCard, IconBadge, StatCard, ThemeToggle, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { signOut } from '../../lib/supabase';
@@ -391,31 +391,27 @@ export default function AdminDashboard() {
         entering={SlideInRight.delay(300 + index * 60).duration(400).springify().damping(18)}
       >
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.cardBorder,
-              borderWidth: colors.borderWidth,
-            },
-          ]}
           onPress={() => router.push(action.route as any)}
           activeOpacity={0.7}
         >
-          <IconBadge
-            family={action.iconType}
-            name={action.icon}
-            tone="primary"
-            style={styles.actionIconContainer}
-          />
-          <Text style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-            {action.title}
-          </Text>
-          {action.badge && action.badge > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.error }]}>
-              <Text style={[styles.badgeText, { color: colors.textInverse }]}>{action.badge}</Text>
+          <GlassCard intensity={35} noPadding style={styles.actionButton}>
+            <View style={styles.actionButtonInner}>
+              <IconBadge
+                family={action.iconType}
+                name={action.icon}
+                tone="primary"
+                style={styles.actionIconContainer}
+              />
+              <Text style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                {action.title}
+              </Text>
+              {action.badge && action.badge > 0 && (
+                <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                  <Text style={[styles.badgeText, { color: colors.textInverse }]}>{action.badge}</Text>
+                </View>
+              )}
             </View>
-          )}
+          </GlassCard>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -757,11 +753,11 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: cardWidth,
+  },
+  actionButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
   },
   actionIconContainer: {
     width: 44,
