@@ -504,12 +504,12 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     resizeMode: 'cover',
   },
-  alertStrip: {
   lastUpdated: {
     marginTop: 10,
     fontSize: 12,
     fontWeight: '600',
   },
+  alertStrip: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 18,

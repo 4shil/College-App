@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, PrimaryButton } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -48,6 +48,7 @@ export default function TeacherTimetableScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorText, setErrorText] = useState<string>('');
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [entries, setEntries] = useState<TimetableEntry[]>([]);
 
@@ -70,6 +71,7 @@ export default function TeacherTimetableScreen() {
 
   const fetchTimetable = useCallback(async () => {
     if (!teacherId) return;
+    setErrorText('');
 
     const { data: academicYear } = await supabase
       .from('academic_years')
@@ -79,6 +81,7 @@ export default function TeacherTimetableScreen() {
 
     if (!academicYear?.id) {
       setEntries([]);
+      setErrorText('No current academic year found.');
       return;
     }
 
@@ -108,6 +111,7 @@ export default function TeacherTimetableScreen() {
     if (error) {
       console.log('Teacher timetable error:', error.message);
       setEntries([]);
+      setErrorText('Failed to load timetable.');
       return;
     }
 
@@ -131,6 +135,7 @@ export default function TeacherTimetableScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrorText('');
     await fetchTimetable();
     setRefreshing(false);
   };
@@ -207,7 +212,18 @@ export default function TeacherTimetableScreen() {
         <Animated.View entering={FadeInRight.duration(350)} style={{ marginBottom: 16 }}>
           <Text style={[styles.header, { color: colors.textPrimary }]}>Timetable</Text>
           <Text style={[styles.headerSub, { color: colors.textMuted }]}>Your assigned periods</Text>
+          <Text style={[styles.headerHint, { color: colors.textMuted }]}>Showing current academic year</Text>
         </Animated.View>
+
+        {errorText ? (
+          <Card>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Unable to load</Text>
+            <Text style={[styles.emptySub, { color: colors.textMuted }]}>{errorText}</Text>
+            <View style={{ marginTop: 12 }}>
+              <PrimaryButton title={refreshing ? 'Refreshing...' : 'Retry'} onPress={onRefresh} variant="outline" size="small" />
+            </View>
+          </Card>
+        ) : null}
 
         {loading ? (
           <View style={{ alignItems: 'center', marginTop: 16 }}>
@@ -249,6 +265,11 @@ const styles = StyleSheet.create({
   headerSub: {
     marginTop: 4,
     fontSize: 13,
+  },
+  headerHint: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '600',
   },
   rowBetween: {
     flexDirection: 'row',
