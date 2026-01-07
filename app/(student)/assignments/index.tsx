@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,10 +21,11 @@ export default function AssignmentsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [submissionsByAssignmentId, setSubmissionsByAssignmentId] = useState<Record<string, any>>({});
   const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -38,16 +39,46 @@ export default function AssignmentsScreen() {
       const { data, error: fetchError } = await supabase
         .from('assignments')
         .select(`
-          *,
-          courses(name, code),
-          assignment_submissions(status)
+          id,
+          title,
+          description,
+          due_date,
+          max_marks,
+          attachment_urls,
+          courses:courses(name, code)
         `)
         .eq('section_id', student.section_id)
+        .eq('is_active', true)
         .order('due_date', { ascending: true });
 
       if (fetchError) throw fetchError;
 
-      setAssignments(data || []);
+      const rows = data || [];
+      setAssignments(rows);
+
+      const assignmentIds = rows.map((r: any) => r.id).filter(Boolean);
+      if (assignmentIds.length === 0) {
+        setSubmissionsByAssignmentId({});
+        return;
+      }
+
+      const { data: subs, error: subError } = await supabase
+        .from('assignment_submissions')
+        .select('id, assignment_id, submitted_at, is_late, marks_obtained, graded_at')
+        .eq('student_id', student.id)
+        .in('assignment_id', assignmentIds);
+
+      if (subError) {
+        console.log('Student submissions error:', subError.message);
+        setSubmissionsByAssignmentId({});
+        return;
+      }
+
+      const map: Record<string, any> = {};
+      (subs || []).forEach((s: any) => {
+        map[s.assignment_id] = s;
+      });
+      setSubmissionsByAssignmentId(map);
     } catch (err) {
       console.error('Error fetching assignments:', err);
       setError(err instanceof Error ? err.message : 'Failed to load assignments');
@@ -55,21 +86,32 @@ export default function AssignmentsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchAssignments();
-  }, [user]);
+  }, [fetchAssignments]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchAssignments();
   };
 
-  const filteredAssignments = assignments.filter((a) => {
+  const computedAssignments = useMemo(() => {
+    return assignments.map((a: any) => {
+      const sub = submissionsByAssignmentId[a.id];
+      const status: 'pending' | 'submitted' | 'graded' = !sub
+        ? 'pending'
+        : sub.graded_at || sub.marks_obtained != null
+          ? 'graded'
+          : 'submitted';
+      return { ...a, _submission: sub, _status: status };
+    });
+  }, [assignments, submissionsByAssignmentId]);
+
+  const filteredAssignments = computedAssignments.filter((a: any) => {
     if (filter === 'all') return true;
-    const status = a.assignment_submissions?.[0]?.status || 'pending';
-    return status === filter;
+    return a._status === filter;
   });
 
   if (loading) {

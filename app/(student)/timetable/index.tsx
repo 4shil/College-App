@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,10 +21,15 @@ export default function TimetableScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [timetableData, setTimetableData] = useState<any[]>([]);
-  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+  const [selectedDay, setSelectedDay] = useState<number>(() => {
+    const d = new Date();
+    let day = d.getDay();
+    if (day === 0) day = 7;
+    return day;
+  });
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTimetableData = async () => {
+  const fetchTimetableData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -35,28 +40,37 @@ export default function TimetableScreen() {
         return;
       }
 
-      // Fetch this week's timetable
-      const today = new Date();
-      const weekStart = new Date(today);
-      weekStart.setDate(today.getDate() - today.getDay());
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
+      const { data: academicYear } = await supabase
+        .from('academic_years')
+        .select('id')
+        .eq('is_current', true)
+        .single();
+
+      if (!academicYear?.id) {
+        setTimetableData([]);
+        setError('No current academic year found.');
+        return;
+      }
 
       const { data, error: fetchError } = await supabase
         .from('timetable_entries')
-        .select(`
-          *,
-          courses(*),
-          teachers(full_name),
-          rooms(room_number)
-        `)
-        .eq('department_id', student.department_id)
-        .eq('year_id', student.year_id)
+        .select(
+          `
+            id,
+            day_of_week,
+            period,
+            start_time,
+            end_time,
+            room,
+            is_break,
+            courses:courses!timetable_entries_course_id_fkey(code, name, short_name)
+          `
+        )
         .eq('section_id', student.section_id)
-        .gte('date', weekStart.toISOString().split('T')[0])
-        .lte('date', weekEnd.toISOString().split('T')[0])
-        .order('date', { ascending: true })
-        .order('period', { ascending: true });
+        .eq('academic_year_id', academicYear.id)
+        .eq('is_active', true)
+        .order('day_of_week')
+        .order('period');
 
       if (fetchError) throw fetchError;
 
@@ -68,26 +82,34 @@ export default function TimetableScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchTimetableData();
-  }, [user]);
+  }, [fetchTimetableData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchTimetableData();
   };
 
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const getTodayClasses = () => {
-    const today = new Date();
-    today.setDate(today.getDate() - today.getDay() + selectedDay);
-    const dateStr = today.toISOString().split('T')[0];
-    return timetableData.filter((entry: any) => entry.date === dateStr);
-  };
+  const days = useMemo(
+    () => [
+      { id: 1, label: 'Mon' },
+      { id: 2, label: 'Tue' },
+      { id: 3, label: 'Wed' },
+      { id: 4, label: 'Thu' },
+      { id: 5, label: 'Fri' },
+      { id: 6, label: 'Sat' },
+      { id: 7, label: 'Sun' },
+    ],
+    []
+  );
 
-  const todayClasses = getTodayClasses();
+  const todayClasses = useMemo(
+    () => timetableData.filter((entry: any) => entry.day_of_week === selectedDay),
+    [selectedDay, timetableData]
+  );
 
   if (loading) {
     return (
@@ -123,14 +145,14 @@ export default function TimetableScreen() {
         {/* Day Selector */}
         <Animated.View entering={FadeInDown.delay(100).duration(500)}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daySelector}>
-            {days.map((day, index) => (
+            {days.map((day) => (
               <TouchableOpacity
-                key={day}
-                onPress={() => setSelectedDay(index)}
+                key={day.id}
+                onPress={() => setSelectedDay(day.id)}
                 style={[
                   styles.dayButton,
                   {
-                    backgroundColor: selectedDay === index ? colors.primary : withAlpha(colors.primary, 0.1),
+                    backgroundColor: selectedDay === day.id ? colors.primary : withAlpha(colors.primary, 0.1),
                   },
                 ]}
               >
@@ -138,12 +160,12 @@ export default function TimetableScreen() {
                   style={[
                     styles.dayButtonText,
                     {
-                      color: selectedDay === index ? colors.background : colors.primary,
-                      fontWeight: selectedDay === index ? '700' : '600',
+                      color: selectedDay === day.id ? colors.background : colors.primary,
+                      fontWeight: selectedDay === day.id ? '700' : '600',
                     },
                   ]}
                 >
-                  {day}
+                  {day.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -164,13 +186,10 @@ export default function TimetableScreen() {
                   </View>
                   <View style={styles.classInfo}>
                     <Text style={[styles.courseName, { color: colors.textPrimary }]}>
-                      {entry.courses?.name || 'Unknown'}
+                      {entry.is_break ? 'Break' : (entry.courses?.short_name || entry.courses?.name || 'Class')}
                     </Text>
                     <Text style={[styles.courseCode, { color: colors.textSecondary }]}>
-                      {entry.courses?.code || ''} • {entry.rooms?.room_number || 'Room TBA'}
-                    </Text>
-                    <Text style={[styles.teacher, { color: colors.textMuted }]}>
-                      {entry.teachers?.full_name || 'Teacher TBA'}
+                      {entry.start_time}–{entry.end_time} • {entry.room || 'Room TBA'}
                     </Text>
                   </View>
                 </View>

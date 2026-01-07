@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,13 +19,8 @@ export default function StudentDashboard() {
   const { summary, loading, refreshing, refresh } = useStudentDashboard();
 
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
-  const [now, setNow] = useState(() => new Date());
-
   useEffect(() => {
-    const id = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-    return () => clearInterval(id);
+    // Intentionally minimal: keep parity with teacher dashboard refresh cadence
   }, []);
 
   const photoUrl = profile?.photo_url || '';
@@ -108,7 +103,7 @@ export default function StudentDashboard() {
             <Card>
               {summary.todayTimetable.slice(0, 3).map((entry, index) => (
                 <View key={entry.entryId} style={[styles.timetableEntry, { borderBottomColor: colors.border }, index < 2 && { borderBottomWidth: 1 }]}>
-                  <View style={styles.periodBadge}>
+                  <View style={[styles.periodBadge, { backgroundColor: colors.primary }]}>
                     <Text style={[styles.periodText, { color: colors.background }]}>
                       P{entry.period}
                     </Text>
@@ -146,7 +141,7 @@ export default function StudentDashboard() {
             <TouchableOpacity onPress={() => handleNavigate('/(student)/attendance')} activeOpacity={0.8}>
               <Card>
                 <View style={styles.attendanceContent}>
-                  <View style={styles.attendanceCircle}>
+                  <View style={[styles.attendanceCircle, { backgroundColor: withAlpha(colors.primary, 0.08) }] }>
                     <Text style={[styles.attendancePercentage, { color: colors.primary }]}>
                       {summary.attendanceSummary.percentage}%
                     </Text>
@@ -245,10 +240,10 @@ export default function StudentDashboard() {
                       styles.assignmentDueTag,
                       {
                         backgroundColor: assignment.isOverdue
-                          ? withAlpha(colors.danger || '#ff4444', 0.1)
+                          ? withAlpha(colors.error, 0.1)
                           : assignment.daysLeft <= 3
-                          ? withAlpha(colors.warning || '#ffaa00', 0.1)
-                          : withAlpha(colors.success || '#44ff44', 0.1),
+                          ? withAlpha(colors.warning, 0.1)
+                          : withAlpha(colors.success, 0.1),
                       },
                     ]}
                   >
@@ -257,10 +252,10 @@ export default function StudentDashboard() {
                         styles.dueTagText,
                         {
                           color: assignment.isOverdue
-                            ? colors.danger || '#ff4444'
+                            ? colors.error
                             : assignment.daysLeft <= 3
-                            ? colors.warning || '#ffaa00'
-                            : colors.success || '#44ff44',
+                            ? colors.warning
+                            : colors.success,
                         },
                       ]}
                     >
@@ -392,7 +387,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#6366f1',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -431,7 +425,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    backgroundColor: '#f3f4f6',
   },
   attendancePercentage: {
     fontSize: 32,
@@ -465,7 +458,6 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#e5e7eb',
     marginHorizontal: 4,
   },
   marksContent: {

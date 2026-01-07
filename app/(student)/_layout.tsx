@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Stack, usePathname, useRouter } from 'expo-router';
-import { View, StyleSheet, Platform, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { Restricted } from '../../components/Restricted';
 
 type DockNavItem = {
   id: string;
@@ -15,7 +16,6 @@ type DockNavItem = {
   nestedRoutes?: string[];
 };
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_SIZE = 60;
 const GAP = 10;
 const DOCK_PADDING = 10;
@@ -226,84 +226,84 @@ export default function StudentLayout() {
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animationEnabled: true,
-          contentStyle: {
-            backgroundColor: colors.background,
-          },
-        }}
-      >
-        <Stack.Screen name="dashboard" />
-        <Stack.Screen name="attendance" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="timetable" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="materials" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="marks" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="assignments" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="profile" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="library" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="notices" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="canteen" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="bus" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="fees" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="events" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="feedback" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="honors" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="support" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-      </Stack>
-
-      <GlassDock
-        activeRoute={pathname}
-        onNavigate={(route) => router.push(route as any)}
-        navItems={studentNavItems}
-      />
-    </View>
+    <Restricted roles={['student']}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animationEnabled: true,
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
+          }}
+        >
+          <Stack.Screen name="dashboard" />
+          <Stack.Screen name="attendance" />
+          <Stack.Screen name="timetable" />
+          <Stack.Screen name="materials" />
+          <Stack.Screen name="marks" />
+          <Stack.Screen name="assignments" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="library" />
+          <Stack.Screen name="notices" />
+          <Stack.Screen name="canteen" />
+          <Stack.Screen name="bus" />
+          <Stack.Screen name="fees" />
+          <Stack.Screen name="events" />
+          <Stack.Screen name="feedback" />
+          <Stack.Screen name="honors" />
+          <Stack.Screen name="support" />
+          <Stack.Screen name="settings" />
+        </Stack>
+        <GlassDock activeRoute={pathname} onNavigate={(route) => router.push(route as any)} navItems={studentNavItems} />
+      </View>
+    </Restricted>
   );
 }
 
 const styles = StyleSheet.create({
   dockWrapper: {
     position: 'absolute',
-    bottom: 16,
-    right: 16,
-    zIndex: 1000,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    alignItems: 'center',
+    zIndex: 9999,
+    elevation: 9999,
   },
   dockContainer: {
-    paddingVertical: DOCK_PADDING,
-    paddingHorizontal: DOCK_PADDING,
-    backgroundColor: 'transparent',
+    height: ITEM_SIZE + DOCK_PADDING * 2,
     overflow: 'hidden',
-    borderWidth: 1,
+    padding: DOCK_PADDING,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   dockBorder: {
+    ...StyleSheet.absoluteFillObject,
     borderWidth: 1,
-    position: 'absolute',
+    borderTopWidth: 1.5,
   },
   dockItemsRow: {
     flexDirection: 'row',
-    gap: GAP,
     alignItems: 'center',
+    gap: GAP,
   },
   dockItem: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   dockItemInner: {
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   activeDot: {
     position: 'absolute',
-    bottom: 6,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    bottom: 8,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
 });
