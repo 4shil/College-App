@@ -21,6 +21,11 @@ export default function BusScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [subscription, setSubscription] = useState<any | null>(null);
   const [routes, setRoutes] = useState<any[]>([]);
+  const [stops, setStops] = useState<any[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!user?.id) return;
@@ -29,21 +34,22 @@ export default function BusScreen() {
     if (!student?.id) {
       setSubscription(null);
       setRoutes([]);
+      setStops([]);
+      setSelectedRouteId(null);
+      setSelectedStopId(null);
       return;
     }
 
-    const { data: academicYear } = await supabase
-      .from('academic_years')
-      .select('id')
-      .eq('is_current', true)
-      .single();
+    const ayId = student.academic_year_id
+      ? student.academic_year_id
+      : (await supabase.from('academic_years').select('id').eq('is_current', true).single()).data?.id;
 
-    if (academicYear?.id) {
+    if (ayId) {
       const { data: sub } = await supabase
         .from('bus_subscriptions')
         .select('id, approval_status, route_id, stop_id, created_at, routes:bus_routes(route_number, route_name), stops:bus_stops(stop_name)')
         .eq('student_id', student.id)
-        .eq('academic_year_id', academicYear.id)
+        .eq('academic_year_id', ayId)
         .maybeSingle();
 
       setSubscription(sub || null);
@@ -57,6 +63,13 @@ export default function BusScreen() {
       .eq('is_active', true)
       .order('route_number');
     setRoutes(routeRows || []);
+
+    // Auto-select route/stop from existing subscription.
+    const currentRouteId = (subscription?.route_id as string | undefined) || null;
+    if (currentRouteId) {
+      setSelectedRouteId(currentRouteId);
+      setSelectedStopId((subscription?.stop_id as string | undefined) || null);
+    }
   }, [user?.id]);
 
   useEffect(() => {
@@ -73,6 +86,74 @@ export default function BusScreen() {
     await fetchAll();
     setRefreshing(false);
   };
+
+  const fetchStops = useCallback(async (routeId: string) => {
+    const { data } = await supabase
+      .from('bus_stops')
+      .select('id, route_id, stop_name, stop_order, pickup_time, drop_time')
+      .eq('route_id', routeId)
+      .order('stop_order', { ascending: true });
+    setStops(data || []);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedRouteId) {
+      setStops([]);
+      setSelectedStopId(null);
+      return;
+    }
+    fetchStops(selectedRouteId);
+  }, [fetchStops, selectedRouteId]);
+
+  const requestSubscription = useCallback(async () => {
+    if (!user?.id) return;
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      const student = await getStudentByUserId(user.id);
+      if (!student?.id) {
+        setMessage('Student record not found');
+        return;
+      }
+
+      const ayId = student.academic_year_id
+        ? student.academic_year_id
+        : (await supabase.from('academic_years').select('id').eq('is_current', true).single()).data?.id;
+
+      if (!ayId) {
+        setMessage('No academic year found');
+        return;
+      }
+
+      if (!selectedRouteId) {
+        setMessage('Select a route');
+        return;
+      }
+
+      if (!selectedStopId) {
+        setMessage('Select a stop');
+        return;
+      }
+
+      const { error } = await supabase.from('bus_subscriptions').insert({
+        student_id: student.id,
+        academic_year_id: ayId,
+        route_id: selectedRouteId,
+        stop_id: selectedStopId,
+        approval_status: 'pending',
+      } as any);
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      setMessage('Request submitted');
+      await fetchAll();
+    } finally {
+      setSubmitting(false);
+    }
+  }, [fetchAll, selectedRouteId, selectedStopId, user?.id]);
 
   const status = useMemo(() => String(subscription?.approval_status || 'none'), [subscription?.approval_status]);
   const statusBg = status === 'approved' ? withAlpha(colors.success, 0.12) : status === 'rejected' ? withAlpha(colors.error, 0.12) : withAlpha(colors.warning, 0.12);
@@ -122,10 +203,93 @@ export default function BusScreen() {
               ) : (
                 <>
                   <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No subscription</Text>
-                  <Text style={[styles.emptySub, { color: colors.textMuted }]}>You can request a route from admin.</Text>
+                  <Text style={[styles.emptySub, { color: colors.textMuted }]}>Select a route and stop to request approval.</Text>
                 </>
               )}
             </Card>
+
+            {!subscription && (
+              <>
+                {message ? (
+                  <Card style={{ marginTop: 12 }}>
+                    <Text style={{ color: message === 'Request submitted' ? colors.success : colors.warning, fontWeight: '800' }}>
+                      {message}
+                    </Text>
+                  </Card>
+                ) : null}
+
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 18 }]}>Request Subscription</Text>
+
+                <Card>
+                  <Text style={[styles.pickLabel, { color: colors.textSecondary }]}>Route</Text>
+                  <View style={{ marginTop: 8, gap: 10 }}>
+                    {routes.slice(0, 20).map((r: any) => {
+                      const active = selectedRouteId === r.id;
+                      return (
+                        <TouchableOpacity
+                          key={r.id}
+                          onPress={() => setSelectedRouteId(r.id)}
+                          style={[
+                            styles.pickRow,
+                            {
+                              borderColor: active ? withAlpha(colors.primary, 0.45) : colors.cardBorder,
+                              backgroundColor: active ? withAlpha(colors.primary, 0.08) : 'transparent',
+                            },
+                          ]}
+                        >
+                          <Text style={[styles.pickTitle, { color: colors.textPrimary }]}>
+                            {r.route_number} • {r.route_name}
+                          </Text>
+                          {active ? <Ionicons name="checkmark-circle" size={18} color={colors.primary} /> : null}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.pickLabel, { color: colors.textSecondary, marginTop: 16 }]}>Stop</Text>
+                  {selectedRouteId ? (
+                    stops.length === 0 ? (
+                      <Text style={[styles.emptySub, { color: colors.textMuted, marginTop: 8 }]}>No stops for this route.</Text>
+                    ) : (
+                      <View style={{ marginTop: 8, gap: 10 }}>
+                        {stops.map((s: any) => {
+                          const active = selectedStopId === s.id;
+                          return (
+                            <TouchableOpacity
+                              key={s.id}
+                              onPress={() => setSelectedStopId(s.id)}
+                              style={[
+                                styles.pickRow,
+                                {
+                                  borderColor: active ? withAlpha(colors.primary, 0.45) : colors.cardBorder,
+                                  backgroundColor: active ? withAlpha(colors.primary, 0.08) : 'transparent',
+                                },
+                              ]}
+                            >
+                              <Text style={[styles.pickTitle, { color: colors.textPrimary }]}>{s.stop_name}</Text>
+                              {active ? <Ionicons name="checkmark-circle" size={18} color={colors.primary} /> : null}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    )
+                  ) : (
+                    <Text style={[styles.emptySub, { color: colors.textMuted, marginTop: 8 }]}>Select a route first.</Text>
+                  )}
+
+                  <TouchableOpacity
+                    onPress={requestSubscription}
+                    disabled={submitting}
+                    activeOpacity={0.85}
+                    style={[styles.requestBtn, { backgroundColor: withAlpha(colors.primary, 0.14) }]}
+                  >
+                    <Text style={[styles.requestText, { color: colors.primary }]}>
+                      {submitting ? 'Submitting…' : 'Request'}
+                    </Text>
+                  </TouchableOpacity>
+                </Card>
+              </>
+            )}
 
             <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 18 }]}>Routes</Text>
             {routes.length === 0 ? (
@@ -215,5 +379,34 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 12,
     fontWeight: '700',
+  },
+  pickLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  pickRow: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  pickTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    flex: 1,
+  },
+  requestBtn: {
+    marginTop: 16,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  requestText: {
+    fontSize: 13,
+    fontWeight: '900',
   },
 });

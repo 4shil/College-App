@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { Linking, View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -82,6 +82,16 @@ export default function FeesScreen() {
 
   const dueTotal = useMemo(() => fees.reduce((sum: number, f: any) => sum + Number(f.amount_due || 0) - Number(f.amount_paid || 0), 0), [fees]);
 
+  const openReceipt = useCallback(async (url: string) => {
+    try {
+      const ok = await Linking.canOpenURL(url);
+      if (!ok) return;
+      await Linking.openURL(url);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   return (
     <AnimatedBackground>
       <View style={[styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 110 }]}>
@@ -123,7 +133,7 @@ export default function FeesScreen() {
                   const bg = status === 'paid' ? withAlpha(colors.success, 0.12) : status === 'overdue' ? withAlpha(colors.error, 0.12) : withAlpha(colors.warning, 0.12);
                   const fg = status === 'paid' ? colors.success : status === 'overdue' ? colors.error : colors.warning;
                   return (
-                    <View key={f.id} style={[styles.feeRow, idx < fees.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }] }>
+                    <View key={f.id} style={[styles.feeRow, idx < fees.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder }] }>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.feeTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                           {f.fee_structures?.name || 'Fee'}
@@ -152,19 +162,32 @@ export default function FeesScreen() {
               </Card>
             ) : (
               <Card>
-                {payments.map((p: any, idx: number) => (
-                  <View key={p.id} style={[styles.payRow, idx < payments.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }] }>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.payTitle, { color: colors.textPrimary }]}>
-                        ₹{Number(p.amount || 0).toFixed(2)}
-                      </Text>
-                      <Text style={[styles.payMeta, { color: colors.textMuted }]}>
-                        {String(p.payment_date)}{p.payment_method ? ` • ${String(p.payment_method).toUpperCase()}` : ''}
-                      </Text>
-                    </View>
-                    <Ionicons name={p.receipt_url ? 'document-text-outline' : 'cash-outline'} size={18} color={colors.textMuted} />
-                  </View>
-                ))}
+                {payments.map((p: any, idx: number) => {
+                  const hasReceipt = Boolean(p.receipt_url);
+                  const Row: any = hasReceipt ? TouchableOpacity : View;
+
+                  return (
+                    <Row
+                      key={p.id}
+                      onPress={hasReceipt ? () => openReceipt(String(p.receipt_url)) : undefined}
+                      activeOpacity={hasReceipt ? 0.85 : 1}
+                      style={[styles.payRow, idx < payments.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder }] }
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.payTitle, { color: colors.textPrimary }]}>
+                          ₹{Number(p.amount || 0).toFixed(2)}
+                        </Text>
+                        <Text style={[styles.payMeta, { color: colors.textMuted }]}>
+                          {String(p.payment_date)}{p.payment_method ? ` • ${String(p.payment_method).toUpperCase()}` : ''}
+                        </Text>
+                        {hasReceipt ? (
+                          <Text style={[styles.payMeta, { color: colors.primary, marginTop: 4 }]}>Open receipt</Text>
+                        ) : null}
+                      </View>
+                      <Ionicons name={hasReceipt ? 'document-text-outline' : 'cash-outline'} size={18} color={hasReceipt ? colors.primary : colors.textMuted} />
+                    </Row>
+                  );
+                })}
               </Card>
             )}
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { Linking, View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 export default function AssignmentsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
+  const { colors, isDark } = useThemeStore();
   const { user } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
@@ -180,45 +180,122 @@ export default function AssignmentsScreen() {
           <Animated.View entering={FadeInDown.delay(200).duration(500)}>
             <Card style={{ marginTop: 16 }}>
               {filteredAssignments.map((assignment: any, index) => {
-                const dueDate = new Date(assignment.due_date);
+                const dueDate = assignment.due_date ? new Date(assignment.due_date) : null;
                 const now = new Date();
-                const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                const isOverdue = daysLeft < 0;
+                const hasValidDue = !!dueDate && !Number.isNaN(dueDate.getTime());
+                const daysLeft = hasValidDue
+                  ? Math.ceil(((dueDate as Date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                  : null;
+                const isOverdue = hasValidDue ? (daysLeft as number) < 0 : false;
+
+                const status = assignment._status as 'pending' | 'submitted' | 'graded';
+                const statusAccent =
+                  status === 'graded'
+                    ? colors.success
+                    : status === 'submitted'
+                      ? colors.warning
+                      : colors.textMuted;
+                const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
 
                 return (
                   <TouchableOpacity
                     key={assignment.id}
-                    style={[styles.assignmentItem, { borderBottomColor: colors.border }, index < filteredAssignments.length - 1 && { borderBottomWidth: 1 }]}
+                    style={[styles.assignmentItem, { borderBottomColor: colors.cardBorder }, index < filteredAssignments.length - 1 && { borderBottomWidth: 1 }]}
+                    activeOpacity={0.9}
+                    onPress={() => router.push(`/(student)/assignments/${assignment.id}`)}
                   >
                     <View style={styles.assignmentContent}>
                       <Text style={[styles.assignmentTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                         {assignment.title}
                       </Text>
                       <Text style={[styles.assignmentCourse, { color: colors.textSecondary }]}>
-                        {assignment.courses?.name} • Due {assignment.due_date}
+                        {assignment.courses?.name || 'Course'}
+                        {assignment.due_date ? ` • Due ${assignment.due_date}` : ''}
                       </Text>
                       <Text style={[styles.assignmentDescription, { color: colors.textMuted }]} numberOfLines={1}>
                         {assignment.description || 'No description'}
                       </Text>
+
+                      {!!assignment.attachment_urls?.length && (
+                        <View style={{ marginTop: 8, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                          {assignment.attachment_urls.slice(0, 2).map((u: string) => (
+                            <TouchableOpacity
+                              key={u}
+                              onPress={(e) => {
+                                e.stopPropagation?.();
+                                Linking.openURL(u);
+                              }}
+                              style={[
+                                styles.attachmentChip,
+                                {
+                                  backgroundColor: withAlpha(colors.primary, isDark ? 0.16 : 0.1),
+                                  borderColor: withAlpha(colors.primary, 0.35),
+                                },
+                              ]}
+                            >
+                              <Ionicons name="attach-outline" size={14} color={colors.primary} />
+                              <Text style={[styles.attachmentText, { color: colors.primary }]} numberOfLines={1}>
+                                Open
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+
+                          {assignment.attachment_urls.length > 2 && (
+                            <View
+                              style={[
+                                styles.attachmentChip,
+                                {
+                                  backgroundColor: withAlpha(colors.textMuted, isDark ? 0.18 : 0.1),
+                                  borderColor: withAlpha(colors.textMuted, 0.35),
+                                },
+                              ]}
+                            >
+                              <Text style={[styles.attachmentText, { color: colors.textSecondary }]}>
+                                +{assignment.attachment_urls.length - 2}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
                     </View>
-                    <View
-                      style={[
-                        styles.dueBadge,
-                        {
-                          backgroundColor: isOverdue ? withAlpha(colors.danger || '#ef4444', 0.1) : withAlpha(colors.warning || '#f59e0b', 0.1),
-                        },
-                      ]}
-                    >
-                      <Text
+
+                    <View style={{ alignItems: 'flex-end', gap: 8 }}>
+                      <View
                         style={[
-                          styles.dueBadgeText,
+                          styles.statusChip,
                           {
-                            color: isOverdue ? colors.danger || '#ef4444' : colors.warning || '#f59e0b',
+                            backgroundColor: withAlpha(statusAccent, isDark ? 0.22 : 0.12),
+                            borderColor: withAlpha(statusAccent, 0.35),
                           },
                         ]}
                       >
-                        {isOverdue ? 'Overdue' : `${daysLeft}d`}
-                      </Text>
+                        <Text style={[styles.statusChipText, { color: statusAccent }]}>{statusLabel}</Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.dueBadge,
+                          {
+                            backgroundColor: isOverdue
+                              ? withAlpha(colors.error, 0.12)
+                              : withAlpha(colors.warning, 0.12),
+                            borderColor: isOverdue
+                              ? withAlpha(colors.error, 0.35)
+                              : withAlpha(colors.warning, 0.35),
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.dueBadgeText,
+                            {
+                              color: isOverdue ? colors.error : colors.warning,
+                            },
+                          ]}
+                        >
+                          {hasValidDue ? (isOverdue ? 'Overdue' : `${daysLeft}d`) : 'No due'}
+                        </Text>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 );
@@ -235,8 +312,8 @@ export default function AssignmentsScreen() {
         )}
 
         {error && (
-          <Card style={{ marginTop: 16, backgroundColor: withAlpha(colors.danger || '#ef4444', 0.1) }}>
-            <Text style={{ color: colors.danger || '#ef4444', fontSize: 14 }}>{error}</Text>
+          <Card style={{ marginTop: 16, backgroundColor: withAlpha(colors.error, 0.12) }}>
+            <Text style={{ color: colors.error, fontSize: 14 }}>{error}</Text>
           </Card>
         )}
       </ScrollView>
@@ -299,10 +376,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 6,
+    borderWidth: 1,
   },
   dueBadgeText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  statusChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  statusChipText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  attachmentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    maxWidth: 110,
+  },
+  attachmentText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   noText: {
     fontSize: 14,
