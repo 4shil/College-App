@@ -83,6 +83,8 @@ export default function RegisterScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [degreePrograms, setDegreePrograms] = useState<DegreeProgram[]>([]);
+  const [programsLoading, setProgramsLoading] = useState(false);
+  const [programsError, setProgramsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [verifyingApaar, setVerifyingApaar] = useState(false);
   const [apaarVerified, setApaarVerified] = useState(false);
@@ -94,19 +96,98 @@ export default function RegisterScreen() {
     fetchPrograms();
   }, []);
 
-  const fetchPrograms = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*, department:departments(name, code)')
-        .not('program_type', 'is', null)
-        .eq('is_active', true)
-        .order('name');
+  // Also refetch when user reaches Academic Info step (helps if first fetch ran offline)
+  useEffect(() => {
+    if (currentStep === 3 && !programsLoading && degreePrograms.length === 0) {
+      fetchPrograms();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep]);
 
+  const fetchPrograms = async () => {
+    setProgramsLoading(true);
+    setProgramsError(null);
+
+    // Registration runs as `anon` (not logged in). RLS blocks direct reads on `courses`,
+    // so prefer the SECURITY DEFINER RPC if present.
+    try {
+      const { data, error } = await supabase.rpc('get_programmes', { dept_id: null });
       if (error) throw error;
-      setDegreePrograms(data || []);
+
+      const mapped: DegreeProgram[] = (data || []).map((row: any) => {
+        const rawLevel = (row.program_type ?? row.program_level ?? '').toString().toLowerCase().trim();
+        const normalizedType: ProgramType =
+          rawLevel.includes('postgraduate') || rawLevel === 'pg' || rawLevel.includes('phd') || rawLevel.includes('master')
+            ? 'postgraduate'
+            : 'undergraduate';
+
+        return {
+        id: String(row.id),
+        code: String(row.code ?? ''),
+        name: String(row.name ?? ''),
+        short_name: String(row.short_name ?? ''),
+        program_type: normalizedType,
+        department_id: String(row.department_id ?? ''),
+        duration_years: Number(row.duration_years ?? 0),
+        total_semesters: Number(row.total_semesters ?? 0),
+        department: row.department_name
+          ? { name: String(row.department_name), code: String(row.department_code ?? '') }
+          : undefined,
+        };
+      });
+
+      setDegreePrograms(mapped);
+
+      if (mapped.length === 0) {
+        setProgramsError('No programmes available. Please check database policies.');
+      }
+      return;
     } catch (err) {
-      console.error('Error fetching programs:', err);
+      // Fallback: try direct query (works for authenticated/dev setups)
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select(
+            'id, code, name, short_name, program_type, program_level, department_id, duration_years, total_semesters, is_degree_program'
+          )
+          .eq('is_active', true)
+          .or('program_type.not.is.null,program_level.not.is.null,is_degree_program.eq.true')
+          .order('code');
+
+        if (error) throw error;
+
+        const mapped: DegreeProgram[] = (data || []).map((row: any) => {
+          const rawLevel = (row.program_type ?? row.program_level ?? '').toString().toLowerCase().trim();
+          const normalizedType: ProgramType =
+            rawLevel.includes('postgraduate') || rawLevel === 'pg' || rawLevel.includes('phd') || rawLevel.includes('master')
+              ? 'postgraduate'
+              : 'undergraduate';
+
+          return {
+            id: String(row.id),
+            code: String(row.code ?? ''),
+            name: String(row.name ?? ''),
+            short_name: String(row.short_name ?? ''),
+            program_type: normalizedType,
+            department_id: String(row.department_id ?? ''),
+            duration_years: Number(row.duration_years ?? 0),
+            total_semesters: Number(row.total_semesters ?? 0),
+          };
+        });
+
+        setDegreePrograms(mapped);
+
+        if (mapped.length === 0) {
+          setProgramsError('No programmes available. Please check database policies.');
+        }
+        return;
+      } catch (err2) {
+        console.error('Error fetching programs:', err2);
+        setProgramsError('Unable to load programmes. Please try again.');
+        setDegreePrograms([]);
+      }
+    } finally {
+      setProgramsLoading(false);
     }
   };
 
@@ -419,6 +500,26 @@ export default function RegisterScreen() {
                 APAAR ID is provided by the college administration. If you don't have one, please contact the college office.
               </Text>
             </View>
+
+            <View style={styles.stepButtonContainer}>
+              <SolidButton
+                onPress={nextStep}
+                disabled={!apaarVerified}
+                style={[
+                  styles.stepButton,
+                  { 
+                    backgroundColor: isDark ? withAlpha(colors.primary, 0.15) : colors.primary,
+                    borderColor: colors.primary,
+                  },
+                  !apaarVerified && { opacity: 0.5 },
+                ]}
+              >
+                <Text style={[styles.stepButtonText, { color: isDark ? colors.primary : colors.textInverse }]}>
+                  Continue
+                </Text>
+                <Ionicons name="arrow-forward" size={18} color={isDark ? colors.primary : colors.textInverse} />
+              </SolidButton>
+            </View>
           </Animated.View>
         );
 
@@ -603,6 +704,24 @@ export default function RegisterScreen() {
                 ))}
               </View>
             </View>
+
+            <View style={styles.stepButtonContainer}>
+              <SolidButton
+                onPress={nextStep}
+                style={[
+                  styles.stepButton,
+                  { 
+                    backgroundColor: isDark ? withAlpha(colors.primary, 0.15) : colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
+              >
+                <Text style={[styles.stepButtonText, { color: isDark ? colors.primary : colors.textInverse }]}>
+                  Continue
+                </Text>
+                <Ionicons name="arrow-forward" size={18} color={isDark ? colors.primary : colors.textInverse} />
+              </SolidButton>
+            </View>
           </Animated.View>
         );
 
@@ -725,12 +844,16 @@ export default function RegisterScreen() {
               </View>
               {filteredPrograms.length === 0 && (
                 <Text style={[styles.noProgramsText, { color: colors.textMuted }]}>
-                  No programs found. Please check database.
+                  {programsLoading
+                    ? 'Loading programmes…'
+                    : programsError || 'No programmes found. Please check database.'}
                 </Text>
               )}
               {formData.program_id && selectedProgram && (
                 <Text style={[styles.selectedProgram, { color: colors.textSecondary }]}>
-                  {selectedProgram.name} • {selectedProgram.department?.name}
+                  {selectedProgram.department?.name
+                    ? `${selectedProgram.name} • ${selectedProgram.department.name}`
+                    : selectedProgram.name}
                 </Text>
               )}
             </View>
@@ -750,7 +873,9 @@ export default function RegisterScreen() {
                           backgroundColor:
                             formData.year === y
                               ? colors.primary
-                              : 'transparent',
+                              : isDark
+                              ? withAlpha(colors.textInverse, 0.05)
+                              : withAlpha(colors.shadowColor, 0.02),
                           borderColor:
                             formData.year === y ? colors.primary : colors.glassBorder,
                         },
@@ -793,7 +918,9 @@ export default function RegisterScreen() {
                             backgroundColor:
                               formData.semester === s
                                 ? colors.primary
-                                : 'transparent',
+                                : isDark
+                                ? withAlpha(colors.textInverse, 0.05)
+                                : withAlpha(colors.shadowColor, 0.02),
                             borderColor:
                               formData.semester === s
                                 ? colors.primary
@@ -841,6 +968,24 @@ export default function RegisterScreen() {
                 value={formData.admission_no}
                 onChangeText={(v) => updateFormData('admission_no', v)}
               />
+            </View>
+
+            <View style={styles.stepButtonContainer}>
+              <SolidButton
+                onPress={nextStep}
+                style={[
+                  styles.stepButton,
+                  { 
+                    backgroundColor: isDark ? withAlpha(colors.primary, 0.15) : colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
+              >
+                <Text style={[styles.stepButtonText, { color: isDark ? colors.primary : colors.textInverse }]}>
+                  Continue
+                </Text>
+                <Ionicons name="arrow-forward" size={18} color={isDark ? colors.primary : colors.textInverse} />
+              </SolidButton>
             </View>
           </Animated.View>
         );
@@ -938,6 +1083,32 @@ export default function RegisterScreen() {
                 An OTP will be sent to {formData.email} for verification.
               </Text>
             </View>
+
+            <View style={styles.stepButtonContainer}>
+              <SolidButton
+                onPress={handleSubmit}
+                disabled={loading}
+                style={[
+                  styles.stepButton,
+                  { 
+                    backgroundColor: isDark ? withAlpha(colors.primary, 0.15) : colors.primary,
+                    borderColor: colors.primary,
+                  },
+                  loading && { opacity: 0.5 },
+                ]}
+              >
+                {loading ? (
+                  <LoadingIndicator color={isDark ? colors.primary : colors.textInverse} size="small" />
+                ) : (
+                  <>
+                    <Text style={[styles.stepButtonText, { color: isDark ? colors.primary : colors.textInverse }]}>
+                      Complete Registration
+                    </Text>
+                    <Ionicons name="checkmark-circle" size={18} color={isDark ? colors.primary : colors.textInverse} />
+                  </>
+                )}
+              </SolidButton>
+            </View>
           </Animated.View>
         );
 
@@ -948,16 +1119,6 @@ export default function RegisterScreen() {
 
   return (
     <AnimatedBackground>
-      {/* Header */}
-      <Animated.View
-        entering={FadeInDown.delay(100).duration(400)}
-        style={[styles.header, { paddingTop: insets.top + 10 }]}
-      >
-        <TouchableOpacity onPress={prevStep} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-      </Animated.View>
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -965,7 +1126,7 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + 70, paddingBottom: insets.bottom + 100 },
+            { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -993,50 +1154,42 @@ export default function RegisterScreen() {
           </Animated.View>
         </ScrollView>
 
-        {/* Bottom Navigation */}
+        {/* Continue Button - Bottom Left */}
         <Animated.View
           entering={FadeInUp.delay(300).duration(400)}
           style={[
-            styles.bottomNav,
-            {
-              paddingBottom: insets.bottom + 20,
-              backgroundColor: withAlpha(colors.background, 0.9),
+            styles.continueButtonContainer,
+            { 
+              paddingLeft: 20,
+              paddingBottom: insets.bottom + 16,
             },
           ]}
         >
-          {currentStep > 1 && (
-            <TouchableOpacity
-              style={[styles.navButton, styles.prevButton, { borderColor: colors.glassBorder }]}
-              onPress={prevStep}
-            >
-              <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-              <Text style={[styles.navButtonText, { color: colors.textPrimary }]}>
-                Back
-              </Text>
-            </TouchableOpacity>
-          )}
-
           <SolidButton
             onPress={nextStep}
             disabled={(currentStep === 1 && !apaarVerified) || loading}
             style={[
-              styles.navButton,
-              styles.nextButton,
-              { backgroundColor: colors.primary },
-              currentStep === 1 && !apaarVerified && { opacity: 0.5 },
+              styles.continueButton,
+              { 
+                backgroundColor: isDark
+                  ? withAlpha(colors.primary, 0.15)
+                  : colors.primary,
+                borderColor: colors.primary,
+              },
+              (currentStep === 1 && !apaarVerified) && { opacity: 0.5 },
             ]}
           >
             {loading ? (
-              <LoadingIndicator color={colors.textInverse} size="small" />
+              <LoadingIndicator color={isDark ? colors.primary : colors.textInverse} size="small" />
             ) : (
               <>
-                <Text style={[styles.nextButtonText, { color: colors.textInverse }]}>
+                <Text style={[styles.continueButtonText, { color: isDark ? colors.primary : colors.textInverse }]}>
                   {currentStep === TOTAL_STEPS ? 'Register' : 'Continue'}
                 </Text>
                 <Ionicons
-                  name={currentStep === TOTAL_STEPS ? 'checkmark' : 'arrow-forward'}
+                  name={currentStep === TOTAL_STEPS ? 'checkmark-circle' : 'arrow-forward'}
                   size={20}
-                  color={colors.textInverse}
+                  color={isDark ? colors.primary : colors.textInverse}
                 />
               </>
             )}
@@ -1054,20 +1207,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-  },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    zIndex: 100,
-  },
-  backButton: {
-    padding: 8,
   },
   contentContainer: {
     width: '100%',
@@ -1288,36 +1427,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
   },
-  bottomNav: {
+  continueButtonContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
-    right: 0,
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    zIndex: 100,
   },
-  navButton: {
+  continueButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 12,
+    borderWidth: 1.5,
+    minWidth: 130,
   },
-  prevButton: {
-    borderWidth: 1,
-  },
-  nextButton: {
-    flex: 1,
-  },
-  navButtonText: {
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  nextButtonText: {
+  continueButtonText: {
     fontWeight: '600',
     fontSize: 15,
   },
