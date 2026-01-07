@@ -231,7 +231,6 @@ export default function StudentLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            animationEnabled: true,
             contentStyle: {
               backgroundColor: colors.background,
             },

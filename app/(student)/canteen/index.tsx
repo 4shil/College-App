@@ -125,7 +125,7 @@ export default function CanteenScreen() {
                   const chipText = soldOut ? colors.error : colors.success;
 
                   return (
-                    <View key={m.id} style={[styles.menuRow, idx < menu.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }] }>
+                    <View key={m.id} style={[styles.menuRow, idx < menu.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder }] }>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.menuTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                           {item?.name || 'Item'}
@@ -153,7 +153,7 @@ export default function CanteenScreen() {
             ) : (
               <Card>
                 {tokens.map((t: any, idx: number) => (
-                  <View key={t.id} style={[styles.tokenRow, idx < tokens.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }] }>
+                  <View key={t.id} style={[styles.tokenRow, idx < tokens.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder }] }>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.tokenTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                         Token {t.token_number}

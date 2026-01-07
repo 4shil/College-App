@@ -9,3 +9,4 @@ export { PrimaryButton } from './PrimaryButton';
 export { SolidButton } from './SolidButton';
 export { StatCard } from './StatCard';
 export { ThemedAlertProvider } from './ThemedAlertProvider';
+export { ThemeToggle } from './ThemeToggle';

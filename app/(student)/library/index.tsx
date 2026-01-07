@@ -108,7 +108,7 @@ export default function LibraryScreen() {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           >
-            <View style={[styles.searchBar, { borderColor: colors.border, backgroundColor: withAlpha(colors.textPrimary, 0.05) }]}>
+            <View style={[styles.searchBar, { borderColor: colors.glassBorder, backgroundColor: withAlpha(colors.textPrimary, 0.05) }]}>
               <Ionicons name="search" size={18} color={colors.textSecondary} />
               <TextInput
                 value={search}
@@ -128,7 +128,7 @@ export default function LibraryScreen() {
             ) : (
               <Card>
                 {myIssues.map((i: any, idx: number) => (
-                  <View key={i.id} style={[styles.issueRow, idx < myIssues.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }] }>
+                  <View key={i.id} style={[styles.issueRow, idx < myIssues.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.glassBorder }] }>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.issueTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                         {i.books?.title || 'Book'}

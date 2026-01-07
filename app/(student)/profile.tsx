@@ -95,7 +95,7 @@ export default function StudentProfileScreen() {
                     {studentDetails.roll_number || 'N/A'}
                   </Text>
                 </View>
-                <View style={[styles.detailDivider, { backgroundColor: colors.border }]} />
+                <View style={[styles.detailDivider, { backgroundColor: colors.cardBorder }]} />
                 <View style={styles.detailItem}>
                   <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Department</Text>
                   <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
@@ -132,7 +132,7 @@ export default function StudentProfileScreen() {
           </Text>
           <Card>
             <TouchableOpacity
-              style={[styles.settingItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+              style={[styles.settingItem, { borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}
               onPress={() => router.push('/(student)/settings' as any)}
             >
               <Ionicons name="settings" size={20} color={colors.primary} />
@@ -141,7 +141,7 @@ export default function StudentProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.settingItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+              style={[styles.settingItem, { borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}
               onPress={() => router.push('/(student)/support' as any)}
             >
               <Ionicons name="help-circle" size={20} color={colors.primary} />
@@ -153,9 +153,9 @@ export default function StudentProfileScreen() {
               style={styles.settingItem}
               onPress={handleLogout}
             >
-              <Ionicons name="log-out" size={20} color={colors.danger || '#ef4444'} />
-              <Text style={[styles.settingText, { color: colors.danger || '#ef4444' }]}>Sign Out</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.danger || '#ef4444'} />
+              <Ionicons name="log-out" size={20} color={colors.error} />
+              <Text style={[styles.settingText, { color: colors.error }]}>Sign Out</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.error} />
             </TouchableOpacity>
           </Card>
         </Animated.View>

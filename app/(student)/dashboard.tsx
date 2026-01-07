@@ -102,7 +102,7 @@ export default function StudentDashboard() {
             </Text>
             <Card>
               {summary.todayTimetable.slice(0, 3).map((entry, index) => (
-                <View key={entry.entryId} style={[styles.timetableEntry, { borderBottomColor: colors.border }, index < 2 && { borderBottomWidth: 1 }]}>
+                <View key={entry.entryId} style={[styles.timetableEntry, { borderBottomColor: colors.cardBorder }, index < 2 && { borderBottomWidth: 1 }]}>
                   <View style={[styles.periodBadge, { backgroundColor: colors.primary }]}>
                     <Text style={[styles.periodText, { color: colors.background }]}>
                       P{entry.period}
@@ -113,7 +113,7 @@ export default function StudentDashboard() {
                       {entry.courseName}
                     </Text>
                     <Text style={[styles.courseDetails, { color: colors.textSecondary }]}>
-                      {entry.timeLabel} • {entry.roomLabel || 'Room TBA'}
+                      {String(entry.startTime || '').slice(0, 5)} – {String(entry.endTime || '').slice(0, 5)} • {entry.roomLabel || 'Room TBA'}
                     </Text>
                   </View>
                 </View>
@@ -225,7 +225,7 @@ export default function StudentDashboard() {
                 <TouchableOpacity
                   key={assignment.id}
                   onPress={() => handleNavigate(`/(student)/assignments`)}
-                  style={[styles.assignmentItem, { borderBottomColor: colors.border }, index < 2 && { borderBottomWidth: 1 }]}
+                  style={[styles.assignmentItem, { borderBottomColor: colors.cardBorder }, index < 2 && { borderBottomWidth: 1 }]}
                 >
                   <View style={styles.assignmentLeft}>
                     <Text style={[styles.assignmentCourse, { color: colors.textSecondary }]}>
@@ -545,40 +545,5 @@ const styles = StyleSheet.create({
   },
   lastUpdatedText: {
     fontSize: 12,
-  },
-});
-
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  cardContainer: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  iconContainer: {
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  placeholder: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    marginTop: 10,
   },
 });
