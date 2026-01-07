@@ -3227,6 +3227,8 @@ interface FAQ {
 
 ### 📱 Student Module - Screen Architecture
 
+Detailed master plan + implementation audit: [STUDENT_MODULE_PLAN.md](STUDENT_MODULE_PLAN.md)
+
 ```
 app/(student)/
 ├── _layout.tsx                    ✅ Built

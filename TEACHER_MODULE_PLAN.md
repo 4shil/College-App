@@ -1,6 +1,6 @@
 ## Teacher Module Plan — Implementation Audit (MVP → Full)
 
-Date: 2026-01-04
+Date: 2026-01-07
 
 This document is an audit of **what is actually implemented in the repo** vs **what is not implemented / partially implemented**.
 
@@ -24,14 +24,14 @@ This document is an audit of **what is actually implemented in the repo** vs **w
 - Mentor (`mentor`/`hod`): mentee list + mentoring session notes
 - Coordinator (`coordinator`/`hod`): substitution request creation + list
 - Department (`hod`): substitution approve/reject + simple teacher list
-- Principal (`principal`): read-only monitoring screen
+- Principal screen exists (read-only monitoring), but see **Known gaps** (currently gated off)
 
 ### Not implemented / gaps (still remaining)
-- Push notifications (materials/assignments/notices/marks/planner/diary)
+- Push notifications (device registration + delivery). Current “Push Notifications” setting is UI-only.
 - Offline-first mode + sync
 - Teacher-side Planner/Diary approval UI (approvals currently stay in Admin)
 - Substitution extras: auto-expire, richer audit timeline, escalation rules
-- **“Coordinator-only strict mode”** (see “Known gaps” below)
+- Department/timetable schema drift areas (see below)
 
 ---
 
@@ -68,8 +68,9 @@ Role expansion modules:
 ## Access control (how it is gated today)
 
 - Layout-level gating: all `/(teacher)` routes are wrapped by `Restricted` and require one of:
-  `subject_teacher`, `class_teacher`, `mentor`, `coordinator`, `hod`, `principal`.
+  `subject_teacher`, `class_teacher`, `mentor`, `coordinator`, `hod`.
 - Navigation unlocks are role-aware via `lib/teacherModules.ts` (module list + `requiresAnyRole`).
+- **Coordinator-only strict mode is enforced** (UI/nav): coordinator-only users are forced to `/coordinator` and only see Coordinator + Settings.
 - **Important:** security is still expected to be enforced by **Postgres RLS**. UI gating is convenience, not a security boundary.
 
 ---
@@ -105,15 +106,16 @@ Role expansion modules:
 
 ## Known gaps / mismatches (doc vs current code)
 
-1) **Coordinator-only strict mode is not enforced**
-- The earlier spec says: “If an account is coordinator-only, it should have no other teacher permissions beyond substitution workflow.”
-- Current implementation treats `coordinator` as “teacher-capable” (it unlocks base teacher modules in navigation logic via role implications).
-- If you want coordinator-only restriction, it needs explicit enforcement in:
-  - nav unlock logic, and/or
-  - RLS policies (preferred), and/or
-  - teacher layout routing.
+1) **Principal route exists but is currently not reachable**
+- `app/(teacher)/principal` exists.
+- But `app/(teacher)/_layout.tsx`’s `Restricted` roles do **not** include `principal`, and the dock/nav logic also doesn’t expose Principal.
+- If Principal should use teacher flows, add `principal` to the `Restricted` role list and decide which modules they can see (read-only vs full).
 
-2) Timetable schema drift is still visible in code
+2) **Push notifications are not implemented (UI-only toggle)**
+- Teacher Settings has a “Push Notifications” toggle, but it only flips local state.
+- There is no `expo-notifications` registration/token storage and no server-side send pipeline in the app code.
+
+3) Timetable schema drift is still visible in code
 - Some screens assume `timetable_entries.section_id`, others have fallbacks around `program_id`.
 - This can produce “works in some places, breaks in others” if DB schema/data is not consistent.
 
@@ -153,14 +155,13 @@ P0 — correctness/security
     - Substitution filtering in Department screen can be done without fallback logic
     - No screen needs to guess between `section_id` and `program_id`
 
-- Decide how to enforce “coordinator-only strict mode” (if still required)
-  - Problem: current role logic treats `coordinator` as teacher-capable (so it unlocks core teacher modules).
-  - Option A (recommended): enforce in Postgres RLS (real security)
-    - Make “coordinator-only” accounts able to access only `substitutions` and read minimal timetable context needed for substitutions.
-    - Block `attendance`, `exam_marks`, `lesson_planners`, `work_diaries`, etc for coordinator-only via policies.
-  - Option B: enforce in UI + nav (convenience) *and* RLS (security)
-    - UI/nav: if roles === [`coordinator`] only, show only Coordinator module in `/(teacher)/modules` and dock.
-    - Still keep RLS as the enforcement boundary.
+- Coordinator-only strict mode (status + remaining work)
+  - ✅ UI/nav enforcement is implemented:
+    - `app/(teacher)/_layout.tsx` forces coordinator-only users to `/coordinator` and limits dock items.
+    - `lib/teacherModules.ts` hides non-coordinator modules for coordinator-only users.
+  - Remaining (security): ensure Postgres RLS enforces the same boundary.
+    - Coordinator-only accounts should be able to access only `substitutions` + minimum timetable context needed.
+    - Coordinator-only accounts must be blocked from `attendance`, `exam_marks`, `lesson_planners`, `work_diaries`, etc.
   - Acceptance checks (P0 done when true):
     - A coordinator-only user cannot mark attendance or enter marks (even via direct API calls)
     - A coordinator+teacher user retains normal teacher permissions (stacked roles)
