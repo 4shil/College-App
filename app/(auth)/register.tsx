@@ -91,6 +91,56 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const inferProgramType = (row: any): ProgramType => {
+    const toStr = (v: any) => (v ?? '').toString().toLowerCase();
+    const text = [
+      toStr(row.program_type),
+      toStr(row.program_level),
+      toStr(row.name),
+      toStr(row.short_name),
+      toStr(row.code),
+    ].join(' ');
+
+    const pgPatterns = [
+      /post[\s-]?graduate/,
+      /\bpg\b/,
+      /\bphd\b|\bph\.d\b/,
+      /\bmaster\b/,
+      /\bm\.?sc\b|\bmsc\b/,
+      /\bmca\b/,
+      /\bm\.?tech\b|\bmtech\b/,
+      /\bmba\b/,
+      /\bm\.?com\b|\bmcom\b/,
+      /\bm\.?ed\b|\bmed\b/,
+      /\bmp?harm\b/,
+      /\bmp?hil\b/,
+      /\bmd\b/,
+    ];
+
+    for (const rx of pgPatterns) {
+      if (rx.test(text)) return 'postgraduate';
+    }
+
+    const ugPatterns = [
+      /under[\s-]?graduate/,
+      /\bug\b/,
+      /\bb\.?sc\b|\bbsc\b/,
+      /\bbca\b/,
+      /\bb\.?tech\b|\bbtech\b/,
+      /\bba\b/,
+      /\bbba\b/,
+      /\bb\.?com\b|\bbcom\b/,
+      /\bb\.?ed\b|\bbed\b/,
+      /\bbp?harm\b/,
+    ];
+
+    for (const rx of ugPatterns) {
+      if (rx.test(text)) return 'undergraduate';
+    }
+
+    return 'undergraduate';
+  };
+
   // Fetch programs on mount
   useEffect(() => {
     fetchPrograms();
@@ -115,24 +165,19 @@ export default function RegisterScreen() {
       if (error) throw error;
 
       const mapped: DegreeProgram[] = (data || []).map((row: any) => {
-        const rawLevel = (row.program_type ?? row.program_level ?? '').toString().toLowerCase().trim();
-        const normalizedType: ProgramType =
-          rawLevel.includes('postgraduate') || rawLevel === 'pg' || rawLevel.includes('phd') || rawLevel.includes('master')
-            ? 'postgraduate'
-            : 'undergraduate';
-
+        const normalizedType = inferProgramType(row);
         return {
-        id: String(row.id),
-        code: String(row.code ?? ''),
-        name: String(row.name ?? ''),
-        short_name: String(row.short_name ?? ''),
-        program_type: normalizedType,
-        department_id: String(row.department_id ?? ''),
-        duration_years: Number(row.duration_years ?? 0),
-        total_semesters: Number(row.total_semesters ?? 0),
-        department: row.department_name
-          ? { name: String(row.department_name), code: String(row.department_code ?? '') }
-          : undefined,
+          id: String(row.id),
+          code: String(row.code ?? ''),
+          name: String(row.name ?? ''),
+          short_name: String(row.short_name ?? ''),
+          program_type: normalizedType,
+          department_id: String(row.department_id ?? ''),
+          duration_years: Number(row.duration_years ?? 0),
+          total_semesters: Number(row.total_semesters ?? 0),
+          department: row.department_name
+            ? { name: String(row.department_name), code: String(row.department_code ?? '') }
+            : undefined,
         };
       });
 
@@ -157,12 +202,7 @@ export default function RegisterScreen() {
         if (error) throw error;
 
         const mapped: DegreeProgram[] = (data || []).map((row: any) => {
-          const rawLevel = (row.program_type ?? row.program_level ?? '').toString().toLowerCase().trim();
-          const normalizedType: ProgramType =
-            rawLevel.includes('postgraduate') || rawLevel === 'pg' || rawLevel.includes('phd') || rawLevel.includes('master')
-              ? 'postgraduate'
-              : 'undergraduate';
-
+          const normalizedType = inferProgramType(row);
           return {
             id: String(row.id),
             code: String(row.code ?? ''),
@@ -1153,48 +1193,6 @@ export default function RegisterScreen() {
             )}
           </Animated.View>
         </ScrollView>
-
-        {/* Continue Button - Bottom Left */}
-        <Animated.View
-          entering={FadeInUp.delay(300).duration(400)}
-          style={[
-            styles.continueButtonContainer,
-            { 
-              paddingLeft: 20,
-              paddingBottom: insets.bottom + 16,
-            },
-          ]}
-        >
-          <SolidButton
-            onPress={nextStep}
-            disabled={(currentStep === 1 && !apaarVerified) || loading}
-            style={[
-              styles.continueButton,
-              { 
-                backgroundColor: isDark
-                  ? withAlpha(colors.primary, 0.15)
-                  : colors.primary,
-                borderColor: colors.primary,
-              },
-              (currentStep === 1 && !apaarVerified) && { opacity: 0.5 },
-            ]}
-          >
-            {loading ? (
-              <LoadingIndicator color={isDark ? colors.primary : colors.textInverse} size="small" />
-            ) : (
-              <>
-                <Text style={[styles.continueButtonText, { color: isDark ? colors.primary : colors.textInverse }]}>
-                  {currentStep === TOTAL_STEPS ? 'Register' : 'Continue'}
-                </Text>
-                <Ionicons
-                  name={currentStep === TOTAL_STEPS ? 'checkmark-circle' : 'arrow-forward'}
-                  size={20}
-                  color={isDark ? colors.primary : colors.textInverse}
-                />
-              </>
-            )}
-          </SolidButton>
-        </Animated.View>
       </KeyboardAvoidingView>
     </AnimatedBackground>
   );
@@ -1427,24 +1425,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
   },
-  continueButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    zIndex: 100,
+  stepButtonContainer: {
+    marginTop: 24,
+    alignItems: 'flex-end',
   },
-  continueButton: {
+  stepButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    minWidth: 130,
+    minWidth: 140,
   },
-  continueButtonText: {
+  stepButtonText: {
     fontWeight: '600',
     fontSize: 15,
   },
