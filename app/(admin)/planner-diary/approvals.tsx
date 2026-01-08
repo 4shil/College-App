@@ -71,6 +71,55 @@ function safeJsonPreview(value: unknown) {
   }
 }
 
+function PlannedTopicsGrid({ topics, colors }: { topics: any[]; colors: any }) {
+  if (!Array.isArray(topics) || topics.length === 0) {
+    return <Text style={{ color: colors.textSecondary, fontSize: 13 }}>No planned topics provided.</Text>;
+  }
+
+  return (
+    <View style={{ gap: 8 }}>
+      {topics.map((t, idx) => (
+        <View
+          key={idx}
+          style={{
+            padding: 10,
+            borderRadius: 12,
+            borderWidth: colors.borderWidth,
+            borderColor: colors.cardBorder,
+            backgroundColor: colors.cardBackground,
+            gap: 6,
+          }}
+        >
+          <Text style={{ color: colors.textPrimary, fontWeight: '700', fontSize: 13 }}>
+            Day {t.day || idx + 1}{t.date ? ` • ${t.date}` : ''}
+          </Text>
+          {t.topic ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Topic: {t.topic}</Text>
+          ) : null}
+          {t.objectives ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Objectives: {t.objectives}</Text>
+          ) : null}
+          {t.methods ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Methods: {t.methods}</Text>
+          ) : null}
+          {t.assessment ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Assessment: {t.assessment}</Text>
+          ) : null}
+          {t.resources ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Resources: {t.resources}</Text>
+          ) : null}
+          {t.notes ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Notes: {t.notes}</Text>
+          ) : null}
+          {t.weekly_outcome ? (
+            <Text style={{ color: colors.textMuted, fontSize: 12 }}>Outcome: {t.weekly_outcome}</Text>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function PlannerDiaryApprovalsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -487,9 +536,9 @@ export default function PlannerDiaryApprovalsScreen() {
                       Week: {plannerDetail.week_start_date} → {plannerDetail.week_end_date}
                     </Text>
 
-                    <View style={{ marginTop: 4 }}>
-                      <Text style={[styles.detailHeading, { color: colors.textPrimary }]}>Planned topics (JSON)</Text>
-                      <Text style={[styles.mono, { color: colors.textSecondary }]}>{safeJsonPreview(plannerDetail.planned_topics)}</Text>
+                    <View style={{ marginTop: 4, gap: 8 }}>
+                      <Text style={[styles.detailHeading, { color: colors.textPrimary }]}>Planned topics</Text>
+                      <PlannedTopicsGrid topics={plannerDetail.planned_topics || []} colors={colors} />
                     </View>
 
                     <Text style={[styles.label, { color: colors.textSecondary }]}>Rejection reason (optional)</Text>

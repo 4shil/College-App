@@ -80,23 +80,11 @@ async function testDatabase() {
       // Try calling with invalid params to see if function exists
       const { error } = await supabase
         .rpc('approve_lesson_planner', {
-          planner_id: '00000000-0000-0000-0000-000000000000',
-          approver_user_id: '00000000-0000-0000-0000-000000000000'
+          p_planner_id: '00000000-0000-0000-0000-000000000000',
+          p_decision: 'approve',
+          p_reason: null
         });
       // Function exists if error is NOT "function not found"
-      return !error || !error.message.includes('Could not find the function');
-    }
-  });
-
-  tests.push({
-    name: 'reject_lesson_planner RPC exists',
-    test: async () => {
-      const { error } = await supabase
-        .rpc('reject_lesson_planner', {
-          planner_id: '00000000-0000-0000-0000-000000000000',
-          rejector_user_id: '00000000-0000-0000-0000-000000000000',
-          reason: 'test'
-        });
       return !error || !error.message.includes('Could not find the function');
     }
   });

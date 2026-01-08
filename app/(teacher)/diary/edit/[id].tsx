@@ -13,10 +13,22 @@ import { withAlpha } from '../../../../theme/colorUtils';
 
 type DiaryStatus = 'draft' | 'submitted' | 'hod_approved' | 'principal_approved' | 'rejected';
 
+type DayStatus = 'W' | 'H' | 'L';
+
+type PeriodSlots = 'spl_am' | 'p1' | 'p2' | 'p3' | 'p4' | 'p5' | 'spl_eve';
+
 type DailyEntry = {
-  date?: string;
-  periods?: any[];
-  summary?: string;
+  date: string;
+  day_status: DayStatus;
+  remarks: string;
+  periods: Record<PeriodSlots, string | null>;
+  tasks: {
+    unit_ii_hours: number;
+    unit_iii_hours: number;
+    unit_iv_hours: number;
+    unit_v_hours: number;
+    unit_vi_hours: number;
+  };
 };
 
 type DiaryDetail = {
@@ -32,6 +44,36 @@ type DiaryDetail = {
   principal_approved_at: string | null;
   rejection_reason: string | null;
 };
+
+const DEFAULT_PERIODS: Record<PeriodSlots, string | null> = {
+  spl_am: null,
+  p1: null,
+  p2: null,
+  p3: null,
+  p4: null,
+  p5: null,
+  spl_eve: null,
+};
+
+const EMPTY_TASKS = {
+  unit_ii_hours: 0,
+  unit_iii_hours: 0,
+  unit_iv_hours: 0,
+  unit_v_hours: 0,
+  unit_vi_hours: 0,
+};
+
+function clampHours(v: number) {
+  if (Number.isNaN(v)) return 0;
+  return Math.min(5, Math.max(0, v));
+}
+
+function countClasses(periods: Record<PeriodSlots, string | null>) {
+  const values = Object.values(periods).filter(Boolean) as string[];
+  const pg = values.filter((v) => v.startsWith('M_')).length;
+  const ug = values.filter((v) => v.startsWith('D_')).length;
+  return { pg, ug };
+}
 
 function monthLabel(month: number, year: number) {
   const date = new Date(year, Math.max(0, month - 1), 1);
@@ -65,7 +107,7 @@ export default function TeacherEditDiaryScreen() {
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [detail, setDetail] = useState<DiaryDetail | null>(null);
 
-  const [todaySummary, setTodaySummary] = useState('');
+  const [entries, setEntries] = useState<DailyEntry[]>([]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
@@ -107,8 +149,23 @@ export default function TeacherEditDiaryScreen() {
       const d = await fetchDetail(tId, diaryId);
       setDetail(d);
 
-      const firstSummary = (d?.daily_entries || [])?.[0]?.summary;
-      setTodaySummary((firstSummary || '').trim());
+      const normalized = (d?.daily_entries || []).map((row: any) => ({
+        date: row?.date || toDateOnlyISO(new Date()),
+        day_status: (row?.day_status as DayStatus) || 'W',
+        remarks: row?.remarks || '',
+        periods: {
+          ...DEFAULT_PERIODS,
+          ...(Array.isArray(row?.periods) ? {} : row?.periods || {}),
+        },
+        tasks: {
+          ...EMPTY_TASKS,
+          ...(row?.tasks || {}),
+        },
+      }));
+
+      setEntries(normalized.length > 0
+        ? normalized
+        : [{ date: toDateOnlyISO(new Date()), day_status: 'W', remarks: '', periods: { ...DEFAULT_PERIODS }, tasks: { ...EMPTY_TASKS } }]);
 
       setLoading(false);
     };
@@ -119,37 +176,38 @@ export default function TeacherEditDiaryScreen() {
   const canSave = useMemo(() => {
     if (!detail || !teacherId || !diaryId) return false;
     if (saving || submitting) return false;
-    if (todaySummary.trim().length === 0) return false;
+    if (entries.length === 0) return false;
     return detail.status === 'draft' || detail.status === 'rejected';
-  }, [detail, diaryId, teacherId, saving, submitting, todaySummary]);
+  }, [detail, diaryId, teacherId, saving, submitting, entries.length]);
 
-  const buildDailyEntries = () => {
-    const existing = Array.isArray(detail?.daily_entries) ? [...detail!.daily_entries!] : [];
+  const updateEntry = (idx: number, updater: (prev: DailyEntry) => DailyEntry) => {
+    setEntries((prev) => prev.map((e, i) => (i === idx ? updater(e) : e)));
+  };
 
-    if (existing.length === 0) {
-      existing.push({ date: toDateOnlyISO(new Date()), periods: [], summary: todaySummary.trim() });
-      return existing;
-    }
+  const addEntry = () => {
+    const last = entries[entries.length - 1];
+    const nextDate = new Date(last.date);
+    nextDate.setDate(nextDate.getDate() + 1);
+    setEntries((prev) => [
+      ...prev,
+      {
+        date: toDateOnlyISO(nextDate),
+        day_status: 'W',
+        remarks: '',
+        periods: { ...DEFAULT_PERIODS },
+        tasks: { ...EMPTY_TASKS },
+      },
+    ]);
+  };
 
-    existing[0] = {
-      ...existing[0],
-      date: existing[0]?.date || toDateOnlyISO(new Date()),
-      periods: Array.isArray(existing[0]?.periods) ? existing[0]!.periods : [],
-      summary: todaySummary.trim(),
-    };
-
-    return existing;
+  const removeEntry = (idx: number) => {
+    setEntries((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx)));
   };
 
   const saveChanges = async () => {
     if (!teacherId || !diaryId || !detail) return;
 
-    if (todaySummary.trim().length === 0) {
-      Alert.alert('Error', 'Today summary is required');
-      return;
-    }
-
-    const daily_entries = buildDailyEntries();
+    const daily_entries = entries;
 
     try {
       setSaving(true);
@@ -176,13 +234,8 @@ export default function TeacherEditDiaryScreen() {
     if (!teacherId || !diaryId || !detail) return;
     if (detail.status !== 'rejected') return;
 
-    if (todaySummary.trim().length === 0) {
-      Alert.alert('Error', 'Today summary is required');
-      return;
-    }
-
     const nowIso = new Date().toISOString();
-    const daily_entries = buildDailyEntries();
+    const daily_entries = entries;
 
     try {
       setSubmitting(true);
@@ -261,6 +314,127 @@ export default function TeacherEditDiaryScreen() {
               </Animated.View>
             ) : null}
 
+            {entries.map((entry, idx) => {
+              const totals = countClasses(entry.periods);
+              return (
+                <Animated.View key={idx} entering={FadeInDown.delay(40 * idx).duration(280)} style={{ marginBottom: 12 }}>
+                  <Card>
+                    <View style={styles.entryHeader}>
+                      <Text style={[styles.label, { color: colors.textMuted }]}>Day {idx + 1}</Text>
+                      <View style={styles.totalsRow}>
+                        <Text style={[styles.helper, { color: colors.textSecondary }]}>PG: {totals.pg} • UG: {totals.ug}</Text>
+                        {entries.length > 1 && (detail.status === 'draft' || detail.status === 'rejected') ? (
+                          <TouchableOpacity onPress={() => removeEntry(idx)} activeOpacity={0.85}>
+                            <Text style={[styles.helper, { color: colors.error }]}>Remove</Text>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    </View>
+
+                    <View style={styles.rowGap}>
+                      <GlassInput
+                        icon="calendar-outline"
+                        placeholder="Date (YYYY-MM-DD)"
+                        value={entry.date}
+                        onChangeText={(v) => updateEntry(idx, (e) => ({ ...e, date: v.trim() }))}
+                        editable={detail.status === 'draft' || detail.status === 'rejected'}
+                      />
+
+                      <View style={styles.statusRow}>
+                        {(['W', 'H', 'L'] as DayStatus[]).map((s) => (
+                          <TouchableOpacity
+                            key={s}
+                            activeOpacity={0.85}
+                            onPress={() => updateEntry(idx, (e) => ({ ...e, day_status: s }))}
+                            disabled={detail.status !== 'draft' && detail.status !== 'rejected'}
+                            style={[
+                              styles.statusChip,
+                              {
+                                backgroundColor:
+                                  entry.day_status === s
+                                    ? withAlpha(colors.primary, isDark ? 0.2 : 0.12)
+                                    : withAlpha(colors.shadowColor, 0.05),
+                                borderColor: entry.day_status === s ? colors.primary : colors.cardBorder,
+                                opacity: detail.status === 'draft' || detail.status === 'rejected' ? 1 : 0.5,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.statusText,
+                                { color: entry.day_status === s ? colors.primary : colors.textMuted },
+                              ]}
+                            >
+                              {s}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={[styles.label, { color: colors.textMuted, marginTop: 8 }]}>Unit I - Class codes</Text>
+                      {(['spl_am', 'p1', 'p2', 'p3', 'p4', 'p5', 'spl_eve'] as PeriodSlots[]).map((slot) => (
+                        <GlassInput
+                          key={slot}
+                          icon="book-outline"
+                          placeholder={`${slot.toUpperCase()} (e.g., D_1, M_2)`}
+                          value={entry.periods[slot] || ''}
+                          editable={detail.status === 'draft' || detail.status === 'rejected'}
+                          onChangeText={(v) => updateEntry(idx, (e) => ({
+                            ...e,
+                            periods: { ...e.periods, [slot]: v.trim() || null },
+                          }))}
+                        />
+                      ))}
+
+                      <Text style={[styles.label, { color: colors.textMuted, marginTop: 8 }]}>Units II–VI (hours 0-5)</Text>
+                      {[
+                        { key: 'unit_ii_hours', label: 'Unit II (Tutorial)' },
+                        { key: 'unit_iii_hours', label: 'Unit III (Examination)' },
+                        { key: 'unit_iv_hours', label: 'Unit IV (Research)' },
+                        { key: 'unit_v_hours', label: 'Unit V (Preparation)' },
+                        { key: 'unit_vi_hours', label: 'Unit VI (Extension)' },
+                      ].map(({ key, label }) => (
+                        <GlassInput
+                          key={key}
+                          icon="time-outline"
+                          placeholder={`${label} hours (0-5)`}
+                          value={String(entry.tasks[key as keyof typeof entry.tasks] ?? 0)}
+                          editable={detail.status === 'draft' || detail.status === 'rejected'}
+                          keyboardType="numeric"
+                          onChangeText={(v) => updateEntry(idx, (e) => ({
+                            ...e,
+                            tasks: {
+                              ...e.tasks,
+                              [key]: clampHours(Number(v)),
+                            },
+                          }))}
+                        />
+                      ))}
+
+                      <Text style={[styles.label, { color: colors.textMuted, marginTop: 8 }]}>Remarks</Text>
+                      <GlassInput
+                        icon="chatbubble-ellipses-outline"
+                        placeholder="Holiday/Leave reason or notes"
+                        value={entry.remarks}
+                        editable={detail.status === 'draft' || detail.status === 'rejected'}
+                        onChangeText={(v) => updateEntry(idx, (e) => ({ ...e, remarks: v }))}
+                      />
+                    </View>
+                  </Card>
+                </Animated.View>
+              );
+            })}
+
+            {(detail.status === 'draft' || detail.status === 'rejected') ? (
+              <TouchableOpacity
+                onPress={addEntry}
+                activeOpacity={0.85}
+                style={[styles.addBtn, { borderColor: withAlpha(colors.primary, 0.4) }]}
+              >
+                <Text style={[styles.addBtnText, { color: colors.primary }]}>+ Add another day</Text>
+              </TouchableOpacity>
+            ) : null}
+
             <Animated.View entering={FadeInDown.duration(280)} style={{ marginBottom: 12 }}>
               <Card>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Today summary</Text>
@@ -334,6 +508,46 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
     fontWeight: '600',
+  entryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  totalsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  rowGap: {
+    gap: 8,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statusChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  statusText: {
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  addBtn: {
+    marginTop: 4,
+    marginBottom: 4,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  addBtnText: {
+    fontWeight: '700',
+    fontSize: 14,
+  },
     lineHeight: 18,
   },
   emptyTitle: {

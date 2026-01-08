@@ -104,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_syllabus_units_year ON syllabus_units(academic_ye
 CREATE TABLE IF NOT EXISTS lesson_planner_audit_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     planner_id UUID NOT NULL REFERENCES lesson_planners(id) ON DELETE CASCADE,
-    changed_by UUID NOT NULL REFERENCES profiles(id) ON DELETE SET NULL,
+    changed_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ DEFAULT NOW(),
     change_type VARCHAR(50) NOT NULL CHECK (change_type IN (
         'created', 'drafted', 'edited', 'submitted', 'approved', 'rejected',
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS lesson_planner_comments (
     comment_type VARCHAR(20) DEFAULT 'general' CHECK (comment_type IN (
         'general', 'suggestion', 'concern', 'approval_note', 'rejection_note'
     )),
-    created_by UUID NOT NULL REFERENCES profiles(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     parent_comment_id UUID REFERENCES lesson_planner_comments(id) ON DELETE CASCADE,
     is_resolved BOOLEAN DEFAULT false,
@@ -210,122 +210,81 @@ CREATE TRIGGER trigger_update_planner_metrics
     EXECUTE FUNCTION update_planner_metrics();
 
 -- ==============================================
--- PART 5: APPROVAL RPC FUNCTIONS
+-- PART 5: APPROVAL RPC (keep existing signature)
 -- ==============================================
 
--- Approve lesson planner
-CREATE OR REPLACE FUNCTION approve_lesson_planner(
-    planner_id UUID,
-    approver_user_id UUID
+-- The app already uses public.approve_lesson_planner(UUID, TEXT, TEXT).
+-- We keep that exact signature and add audit logging.
+CREATE OR REPLACE FUNCTION public.approve_lesson_planner(
+    p_planner_id UUID,
+    p_decision TEXT,
+    p_reason TEXT DEFAULT NULL
 )
-RETURNS TABLE(success BOOLEAN, message TEXT) AS $$
+RETURNS TABLE(success BOOLEAN, message TEXT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 DECLARE
-    planner_status VARCHAR(20);
-    teacher_dept_id UUID;
-    approver_dept_id UUID;
+    v_status TEXT;
 BEGIN
-    SELECT lp.status, t.department_id INTO planner_status, teacher_dept_id
-    FROM lesson_planners lp
-    JOIN teachers t ON lp.teacher_id = t.id
-    WHERE lp.id = planner_id;
-    
-    IF planner_status IS NULL THEN
-        RETURN QUERY SELECT false, 'Planner not found.';
+    IF NOT (
+        has_permission(auth.uid(), 'approve_planner_level_1')
+        OR has_permission(auth.uid(), 'approve_planner_final')
+    ) THEN
+        RETURN QUERY SELECT false, 'Not authorized.';
         RETURN;
     END IF;
-    
-    IF planner_status != 'submitted' THEN
-        RETURN QUERY SELECT false, 'Planner must be in submitted status to approve.';
-        RETURN;
-    END IF;
-    
-    SELECT d.id INTO approver_dept_id
-    FROM departments d
-    WHERE d.hod_user_id = approver_user_id
-    AND d.id = teacher_dept_id;
-    
-    IF approver_dept_id IS NULL THEN
-        RETURN QUERY SELECT false, 'You are not authorized to approve this planner.';
-        RETURN;
-    END IF;
-    
-    UPDATE lesson_planners
-    SET status = 'approved',
-        approved_by = (SELECT id FROM profiles WHERE user_id = approver_user_id),
-        approved_at = NOW(),
-        rejection_reason = NULL
-    WHERE id = planner_id;
-    
-    INSERT INTO lesson_planner_audit_log (planner_id, changed_by, change_type, old_status, new_status)
-    VALUES (
-        planner_id,
-        (SELECT id FROM profiles WHERE user_id = approver_user_id),
-        'approved',
-        'submitted',
-        'approved'
-    );
-    
-    RETURN QUERY SELECT true, 'Planner approved successfully.';
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Reject lesson planner
-CREATE OR REPLACE FUNCTION reject_lesson_planner(
-    planner_id UUID,
-    rejector_user_id UUID,
-    reason TEXT
-)
-RETURNS TABLE(success BOOLEAN, message TEXT) AS $$
-DECLARE
-    planner_status VARCHAR(20);
-    teacher_dept_id UUID;
-    rejector_dept_id UUID;
-BEGIN
-    SELECT lp.status, t.department_id INTO planner_status, teacher_dept_id
-    FROM lesson_planners lp
-    JOIN teachers t ON lp.teacher_id = t.id
-    WHERE lp.id = planner_id;
-    
-    IF planner_status IS NULL THEN
-        RETURN QUERY SELECT false, 'Planner not found.';
+    SELECT status INTO v_status
+    FROM public.lesson_planners
+    WHERE id = p_planner_id
+    LIMIT 1;
+
+    IF v_status IS NULL THEN
+        RETURN QUERY SELECT false, 'Lesson planner not found.';
         RETURN;
     END IF;
-    
-    IF planner_status != 'submitted' THEN
-        RETURN QUERY SELECT false, 'Planner must be in submitted status to reject.';
+
+    IF v_status <> 'submitted' THEN
+        RETURN QUERY SELECT false, 'Planner is not in submitted status.';
         RETURN;
     END IF;
-    
-    SELECT d.id INTO rejector_dept_id
-    FROM departments d
-    WHERE d.hod_user_id = rejector_user_id
-    AND d.id = teacher_dept_id;
-    
-    IF rejector_dept_id IS NULL THEN
-        RETURN QUERY SELECT false, 'You are not authorized to reject this planner.';
+
+    IF p_decision = 'approve' THEN
+        UPDATE public.lesson_planners
+        SET status = 'approved',
+                approved_by = auth.uid(),
+                approved_at = NOW(),
+                rejection_reason = NULL,
+                updated_at = NOW()
+        WHERE id = p_planner_id;
+
+        INSERT INTO public.lesson_planner_audit_log (planner_id, changed_by, change_type, old_status, new_status)
+        VALUES (p_planner_id, auth.uid(), 'approved', 'submitted', 'approved');
+
+        RETURN QUERY SELECT true, 'Planner approved.';
+        RETURN;
+    ELSIF p_decision = 'reject' THEN
+        UPDATE public.lesson_planners
+        SET status = 'rejected',
+                approved_by = NULL,
+                approved_at = NULL,
+                rejection_reason = NULLIF(btrim(p_reason), ''),
+                updated_at = NOW()
+        WHERE id = p_planner_id;
+
+        INSERT INTO public.lesson_planner_audit_log (planner_id, changed_by, change_type, old_status, new_status, rejection_reason)
+        VALUES (p_planner_id, auth.uid(), 'rejected', 'submitted', 'rejected', NULLIF(btrim(p_reason), ''));
+
+        RETURN QUERY SELECT true, 'Planner rejected.';
         RETURN;
     END IF;
-    
-    UPDATE lesson_planners
-    SET status = 'rejected',
-        rejection_reason = reason,
-        approved_by = NULL,
-        approved_at = NULL
-    WHERE id = planner_id;
-    
-    INSERT INTO lesson_planner_audit_log (planner_id, changed_by, change_type, old_status, new_status, rejection_reason)
-    VALUES (
-        planner_id,
-        (SELECT id FROM profiles WHERE user_id = rejector_user_id),
-        'rejected',
-        'submitted',
-        'rejected',
-        reason
-    );
-    
-    RETURN QUERY SELECT true, 'Planner rejected with reason.';
+
+    RETURN QUERY SELECT false, 'Invalid decision. Use approve|reject.';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.approve_lesson_planner(UUID, TEXT, TEXT) TO authenticated;
 
 -- ==============================================
 -- PART 6: RLS POLICIES
@@ -391,6 +350,12 @@ CREATE POLICY "Users can comment on planners" ON lesson_planner_comments
             WHERE d.hod_user_id = auth.uid()
         )
     );
+
+-- Audit log insertable by self (enables inserts when called in SECURITY DEFINER RPC)
+DROP POLICY IF EXISTS "Audit log insertable by self" ON lesson_planner_audit_log;
+CREATE POLICY "Audit log insertable by self" ON lesson_planner_audit_log
+    FOR INSERT TO authenticated
+    WITH CHECK (changed_by = auth.uid());
 
 -- ==============================================
 -- VERIFICATION QUERIES

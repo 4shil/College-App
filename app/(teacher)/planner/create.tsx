@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -17,6 +17,17 @@ type CourseOption = {
   code: string;
   name: string;
   short_name: string | null;
+};
+
+type DayPlan = {
+  dayNumber: number;
+  dateLabel: string;
+  topic: string;
+  objectives: string;
+  methods: string;
+  assessment: string;
+  resources: string;
+  notes: string;
 };
 
 function addDays(date: Date, days: number) {
@@ -39,6 +50,23 @@ function parseDateOnlyISO(value: string): Date | null {
   const dt = new Date(yy, mm - 1, dd);
   if (Number.isNaN(dt.getTime())) return null;
   return dt;
+}
+
+function buildWeekPlan(start: Date, existing?: DayPlan[]): DayPlan[] {
+  return Array.from({ length: Math.max(existing?.length || 0, 5) }).map((_, idx) => {
+    const base = existing?.[idx];
+    const date = addDays(start, idx);
+    return {
+      dayNumber: idx + 1,
+      dateLabel: date.toLocaleDateString(),
+      topic: base?.topic || '',
+      objectives: base?.objectives || '',
+      methods: base?.methods || '',
+      assessment: base?.assessment || '',
+      resources: base?.resources || '',
+      notes: base?.notes || '',
+    };
+  });
 }
 
 export default function TeacherCreatePlannerScreen() {
@@ -65,6 +93,8 @@ export default function TeacherCreatePlannerScreen() {
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
   const [summaryTopic, setSummaryTopic] = useState('');
+  const [weeklyOutcome, setWeeklyOutcome] = useState('');
+  const [dayPlans, setDayPlans] = useState<DayPlan[]>(() => buildWeekPlan(weekStart));
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
@@ -132,6 +162,7 @@ export default function TeacherCreatePlannerScreen() {
 
   useEffect(() => {
     setWeekStartText(toDateOnlyISO(weekStart));
+    setDayPlans((prev) => buildWeekPlan(weekStart, prev));
   }, [weekStart]);
 
   const selectedCourseLabel = useMemo(() => {
@@ -141,8 +172,9 @@ export default function TeacherCreatePlannerScreen() {
   }, [courseId, courseOptions]);
 
   const canSave = useMemo(() => {
-    return !!teacherId && !!courseId && summaryTopic.trim().length > 0 && !saving;
-  }, [teacherId, courseId, summaryTopic, saving]);
+    const hasAtLeastOneTopic = dayPlans.some((d) => d.topic.trim().length > 0);
+    return !!teacherId && !!courseId && summaryTopic.trim().length > 0 && hasAtLeastOneTopic && !saving;
+  }, [teacherId, courseId, summaryTopic, saving, dayPlans]);
 
   const pillStyle = (active: boolean) => ({
     backgroundColor: active
@@ -152,6 +184,38 @@ export default function TeacherCreatePlannerScreen() {
         : withAlpha(colors.shadowColor, 0.05),
     borderColor: active ? withAlpha(colors.primary, 0.6) : withAlpha(colors.cardBorder, 0.55),
   });
+
+  const updateDayPlan = (idx: number, key: keyof DayPlan, value: string) => {
+    setDayPlans((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [key]: value } as DayPlan;
+      return next;
+    });
+  };
+
+  const addDay = () => {
+    setDayPlans((prev) => {
+      if (prev.length >= 7) return prev;
+      const date = addDays(weekStart, prev.length);
+      return [
+        ...prev,
+        {
+          dayNumber: prev.length + 1,
+          dateLabel: date.toLocaleDateString(),
+          topic: '',
+          objectives: '',
+          methods: '',
+          assessment: '',
+          resources: '',
+          notes: '',
+        },
+      ];
+    });
+  };
+
+  const removeDay = (idx: number) => {
+    setDayPlans((prev) => prev.filter((_, i) => i !== idx).map((d, i) => ({ ...d, dayNumber: i + 1 })));
+  };
 
   const save = async () => {
     if (!teacherId) {
@@ -182,13 +246,17 @@ export default function TeacherCreatePlannerScreen() {
       return;
     }
 
-    const plannedTopics = [
-      {
-        day: 1,
-        topic: summaryTopic.trim(),
-        objectives: null,
-      },
-    ];
+    const plannedTopics = dayPlans.map((d) => ({
+      day: d.dayNumber,
+      date: d.dateLabel,
+      topic: d.topic.trim() || summaryTopic.trim(),
+      objectives: d.objectives.trim() || null,
+      methods: d.methods.trim() || null,
+      assessment: d.assessment.trim() || null,
+      resources: d.resources.trim() || null,
+      notes: d.notes.trim() || null,
+      weekly_outcome: weeklyOutcome.trim() || null,
+    }));
 
     try {
       setSaving(true);
@@ -322,7 +390,7 @@ export default function TeacherCreatePlannerScreen() {
 
             <Animated.View entering={FadeInDown.delay(100).duration(300)} style={{ marginBottom: 12 }}>
               <Card>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Planned topics</Text>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Weekly focus</Text>
                 <View style={{ height: 10 }} />
                 <GlassInput
                   icon="create-outline"
@@ -330,9 +398,104 @@ export default function TeacherCreatePlannerScreen() {
                   value={summaryTopic}
                   onChangeText={setSummaryTopic}
                 />
-                <Text style={[styles.helper, { color: colors.textMuted }]}>
-                  You can expand to day-wise topics later.
-                </Text>
+                <View style={{ height: 10 }} />
+                <GlassInput
+                  icon="flag-outline"
+                  placeholder="Expected outcome / goal (optional)"
+                  value={weeklyOutcome}
+                  onChangeText={setWeeklyOutcome}
+                />
+                <Text style={[styles.helper, { color: colors.textMuted }]}>Capture weekly goal and day-wise plan with methods and assessments.</Text>
+              </Card>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(140).duration(300)} style={{ marginBottom: 12 }}>
+              <Card>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Day-wise plan</Text>
+                <View style={{ height: 12 }} />
+
+                {dayPlans.map((d, idx) => (
+                  <View key={d.dayNumber} style={[styles.dayCard, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}> 
+                    <View style={styles.dayHeader}>
+                      <Text style={[styles.dayTitle, { color: colors.textPrimary }]}>Day {d.dayNumber}</Text>
+                      <Text style={[styles.dayDate, { color: colors.textSecondary }]}>{d.dateLabel}</Text>
+                      {dayPlans.length > 5 ? (
+                        <TouchableOpacity onPress={() => removeDay(idx)} style={[styles.removeBtn, { borderColor: colors.cardBorder }]}> 
+                          <Ionicons name="close" size={16} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+
+                    <GlassInput
+                      icon="book-outline"
+                      placeholder="Topic / chapter"
+                      value={d.topic}
+                      onChangeText={(v) => updateDayPlan(idx, 'topic', v)}
+                    />
+
+                    <TextInput
+                      placeholder="Objectives (learning outcomes)"
+                      placeholderTextColor={colors.placeholder}
+                      value={d.objectives}
+                      onChangeText={(v) => updateDayPlan(idx, 'objectives', v)}
+                      multiline
+                      style={[styles.textArea, {
+                        backgroundColor: colors.inputBackground,
+                        color: colors.textPrimary,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                        borderRadius: colors.borderRadius,
+                      }]}
+                    />
+
+                    <GlassInput
+                      icon="rocket-outline"
+                      placeholder="Methods / pedagogy (e.g., lecture, demo, flipped)"
+                      value={d.methods}
+                      onChangeText={(v) => updateDayPlan(idx, 'methods', v)}
+                    />
+
+                    <GlassInput
+                      icon="bar-chart-outline"
+                      placeholder="Assessment plan (quiz, viva, worksheet)"
+                      value={d.assessment}
+                      onChangeText={(v) => updateDayPlan(idx, 'assessment', v)}
+                    />
+
+                    <GlassInput
+                      icon="folder-open-outline"
+                      placeholder="Resources (slides, lab, refs)"
+                      value={d.resources}
+                      onChangeText={(v) => updateDayPlan(idx, 'resources', v)}
+                    />
+
+                    <TextInput
+                      placeholder="Notes / differentiation"
+                      placeholderTextColor={colors.placeholder}
+                      value={d.notes}
+                      onChangeText={(v) => updateDayPlan(idx, 'notes', v)}
+                      multiline
+                      style={[styles.textArea, {
+                        backgroundColor: colors.inputBackground,
+                        color: colors.textPrimary,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                        borderRadius: colors.borderRadius,
+                      }]}
+                    />
+                  </View>
+                ))}
+
+                {dayPlans.length < 7 ? (
+                  <PrimaryButton
+                    title="Add day"
+                    variant="outline"
+                    glowing={false}
+                    size="small"
+                    onPress={addDay}
+                    style={{ marginTop: 12, alignSelf: 'flex-start' }}
+                  />
+                ) : null}
               </Card>
             </Animated.View>
 
@@ -386,6 +549,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
   },
+  textArea: {
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    minHeight: 90,
+    textAlignVertical: 'top',
+  },
   courseList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -412,5 +583,33 @@ const styles = StyleSheet.create({
   dateBtnText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  dayCard: {
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 14,
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  dayTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    flex: 1,
+  },
+  dayDate: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  removeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
 });

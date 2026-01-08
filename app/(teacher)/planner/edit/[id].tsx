@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -17,6 +17,12 @@ type PlannedTopic = {
   day?: number;
   topic?: string;
   objectives?: string | null;
+  methods?: string | null;
+  assessment?: string | null;
+  resources?: string | null;
+  notes?: string | null;
+  date?: string | null;
+  weekly_outcome?: string | null;
 };
 
 type PlannerDetail = {
@@ -33,8 +39,57 @@ type PlannerDetail = {
   courses?: { code: string; name: string; short_name: string | null } | null;
 };
 
+type DayPlan = {
+  dayNumber: number;
+  dateLabel: string;
+  topic: string;
+  objectives: string;
+  methods: string;
+  assessment: string;
+  resources: string;
+  notes: string;
+  weeklyOutcome: string;
+};
+
 function formatDateRange(start: string, end: string) {
   return `${start} → ${end}`;
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function reindexPlans(plans: DayPlan[], start: Date): DayPlan[] {
+  return plans.map((p, idx) => ({
+    ...p,
+    dayNumber: idx + 1,
+    dateLabel: addDays(start, idx).toLocaleDateString(),
+  }));
+}
+
+function hydrateDayPlans(detail?: PlannerDetail): DayPlan[] {
+  const start = detail?.week_start_date ? new Date(detail.week_start_date) : new Date();
+  const base = (detail?.planned_topics || []) as PlannedTopic[];
+
+  const maxLen = Math.max(base.length || 0, 5);
+  return Array.from({ length: maxLen }).map((_, idx) => {
+    const src = base[idx];
+    const date = addDays(start, idx);
+
+    return {
+      dayNumber: idx + 1,
+      dateLabel: src?.date || date.toLocaleDateString(),
+      topic: (src?.topic || '').toString(),
+      objectives: src?.objectives || '',
+      methods: src?.methods || '',
+      assessment: src?.assessment || '',
+      resources: src?.resources || '',
+      notes: src?.notes || '',
+      weeklyOutcome: src?.weekly_outcome || '',
+    };
+  });
 }
 
 export default function TeacherEditPlannerScreen() {
@@ -58,6 +113,9 @@ export default function TeacherEditPlannerScreen() {
   const [detail, setDetail] = useState<PlannerDetail | null>(null);
 
   const [summaryTopic, setSummaryTopic] = useState('');
+  const [dayPlans, setDayPlans] = useState<DayPlan[]>([]);
+
+  const baseStartDate = useMemo(() => (detail?.week_start_date ? new Date(detail.week_start_date) : new Date()), [detail?.week_start_date]);
 
   const fetchTeacherId = useCallback(async () => {
     if (!user?.id) return null;
@@ -116,6 +174,7 @@ export default function TeacherEditPlannerScreen() {
 
       const firstTopic = (d?.planned_topics || [])?.[0]?.topic;
       setSummaryTopic((firstTopic || '').trim());
+      setDayPlans(reindexPlans(hydrateDayPlans(d), d?.week_start_date ? new Date(d.week_start_date) : new Date()));
 
       setLoading(false);
     };
@@ -127,8 +186,43 @@ export default function TeacherEditPlannerScreen() {
     if (!detail || !teacherId || !plannerId) return false;
     if (saving || submitting) return false;
     if (summaryTopic.trim().length === 0) return false;
+    const hasDayTopic = dayPlans.some((d) => d.topic.trim().length > 0);
+    if (!hasDayTopic) return false;
     return detail.status === 'draft' || detail.status === 'rejected';
-  }, [detail, teacherId, plannerId, saving, submitting, summaryTopic]);
+  }, [detail, teacherId, plannerId, saving, submitting, summaryTopic, dayPlans]);
+
+  const updateDayPlan = (idx: number, key: keyof DayPlan, value: string) => {
+    setDayPlans((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [key]: value } as DayPlan;
+      return next;
+    });
+  };
+
+  const addDay = () => {
+    setDayPlans((prev) => {
+      if (prev.length >= 7) return prev;
+      const next: DayPlan[] = [
+        ...prev,
+        {
+          dayNumber: prev.length + 1,
+          dateLabel: addDays(baseStartDate, prev.length).toLocaleDateString(),
+          topic: '',
+          objectives: '',
+          methods: '',
+          assessment: '',
+          resources: '',
+          notes: '',
+          weeklyOutcome: prev[0]?.weeklyOutcome || '',
+        },
+      ];
+      return reindexPlans(next, baseStartDate);
+    });
+  };
+
+  const removeDay = (idx: number) => {
+    setDayPlans((prev) => reindexPlans(prev.filter((_, i) => i !== idx), baseStartDate));
+  };
 
   const saveChanges = async () => {
     if (!teacherId || !plannerId || !detail) return;
@@ -137,7 +231,17 @@ export default function TeacherEditPlannerScreen() {
       return;
     }
 
-    const planned_topics: PlannedTopic[] = [{ day: 1, topic: summaryTopic.trim(), objectives: null }];
+    const planned_topics: PlannedTopic[] = dayPlans.map((d) => ({
+      day: d.dayNumber,
+      date: d.dateLabel,
+      topic: d.topic.trim() || summaryTopic.trim(),
+      objectives: d.objectives.trim() || null,
+      methods: d.methods.trim() || null,
+      assessment: d.assessment.trim() || null,
+      resources: d.resources.trim() || null,
+      notes: d.notes.trim() || null,
+      weekly_outcome: d.weeklyOutcome.trim() || null,
+    }));
 
     try {
       setSaving(true);
@@ -170,7 +274,17 @@ export default function TeacherEditPlannerScreen() {
     }
 
     const nowIso = new Date().toISOString();
-    const planned_topics: PlannedTopic[] = [{ day: 1, topic: summaryTopic.trim(), objectives: null }];
+    const planned_topics: PlannedTopic[] = dayPlans.map((d) => ({
+      day: d.dayNumber,
+      date: d.dateLabel,
+      topic: d.topic.trim() || summaryTopic.trim(),
+      objectives: d.objectives.trim() || null,
+      methods: d.methods.trim() || null,
+      assessment: d.assessment.trim() || null,
+      resources: d.resources.trim() || null,
+      notes: d.notes.trim() || null,
+      weekly_outcome: d.weeklyOutcome.trim() || null,
+    }));
 
     try {
       setSubmitting(true);
@@ -243,7 +357,7 @@ export default function TeacherEditPlannerScreen() {
 
             <Animated.View entering={FadeInDown.duration(280)} style={{ marginBottom: 12 }}>
               <Card>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Planned topics</Text>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Weekly focus</Text>
                 <View style={{ height: 10 }} />
                 <GlassInput
                   icon="create-outline"
@@ -251,7 +365,104 @@ export default function TeacherEditPlannerScreen() {
                   value={summaryTopic}
                   onChangeText={setSummaryTopic}
                 />
-                <Text style={[styles.helper, { color: colors.textMuted }]}>This updates the planner JSON.</Text>
+                <View style={{ height: 10 }} />
+                <GlassInput
+                  icon="flag-outline"
+                  placeholder="Expected outcome / goal (optional)"
+                  value={dayPlans[0]?.weeklyOutcome || ''}
+                  onChangeText={(v) => updateDayPlan(0, 'weeklyOutcome', v)}
+                />
+                <Text style={[styles.helper, { color: colors.textMuted }]}>Align with pedagogy, assessment, and resources per day.</Text>
+              </Card>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(60).duration(280)} style={{ marginBottom: 12 }}>
+              <Card>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Day-wise plan</Text>
+                <View style={{ height: 12 }} />
+
+                {dayPlans.map((d, idx) => (
+                  <View key={d.dayNumber} style={[styles.dayCard, { borderColor: colors.cardBorder, borderWidth: colors.borderWidth }]}> 
+                    <View style={styles.dayHeader}>
+                      <Text style={[styles.dayTitle, { color: colors.textPrimary }]}>Day {d.dayNumber}</Text>
+                      <Text style={[styles.dayDate, { color: colors.textSecondary }]}>{d.dateLabel}</Text>
+                      {dayPlans.length > 5 ? (
+                        <TouchableOpacity onPress={() => removeDay(idx)} style={[styles.removeBtn, { borderColor: colors.cardBorder }]}> 
+                          <Ionicons name="close" size={16} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+
+                    <GlassInput
+                      icon="book-outline"
+                      placeholder="Topic / chapter"
+                      value={d.topic}
+                      onChangeText={(v) => updateDayPlan(idx, 'topic', v)}
+                    />
+
+                    <TextInput
+                      placeholder="Objectives (learning outcomes)"
+                      placeholderTextColor={colors.placeholder}
+                      value={d.objectives}
+                      onChangeText={(v) => updateDayPlan(idx, 'objectives', v)}
+                      multiline
+                      style={[styles.textArea, {
+                        backgroundColor: colors.inputBackground,
+                        color: colors.textPrimary,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                        borderRadius: colors.borderRadius,
+                      }]}
+                    />
+
+                    <GlassInput
+                      icon="rocket-outline"
+                      placeholder="Methods / pedagogy"
+                      value={d.methods}
+                      onChangeText={(v) => updateDayPlan(idx, 'methods', v)}
+                    />
+
+                    <GlassInput
+                      icon="bar-chart-outline"
+                      placeholder="Assessment plan"
+                      value={d.assessment}
+                      onChangeText={(v) => updateDayPlan(idx, 'assessment', v)}
+                    />
+
+                    <GlassInput
+                      icon="folder-open-outline"
+                      placeholder="Resources"
+                      value={d.resources}
+                      onChangeText={(v) => updateDayPlan(idx, 'resources', v)}
+                    />
+
+                    <TextInput
+                      placeholder="Notes / differentiation"
+                      placeholderTextColor={colors.placeholder}
+                      value={d.notes}
+                      onChangeText={(v) => updateDayPlan(idx, 'notes', v)}
+                      multiline
+                      style={[styles.textArea, {
+                        backgroundColor: colors.inputBackground,
+                        color: colors.textPrimary,
+                        borderColor: colors.inputBorder,
+                        borderWidth: colors.borderWidth,
+                        borderRadius: colors.borderRadius,
+                      }]}
+                    />
+                  </View>
+                ))}
+
+                {dayPlans.length < 7 ? (
+                  <PrimaryButton
+                    title="Add day"
+                    variant="outline"
+                    glowing={false}
+                    size="small"
+                    onPress={addDay}
+                    style={{ marginTop: 12, alignSelf: 'flex-start' }}
+                  />
+                ) : null}
               </Card>
             </Animated.View>
 
@@ -305,10 +516,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   label: {
-    fontSize: 12,
+  textArea: {
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    minHeight: 90,
+    textAlignVertical: 'top',
+  },
+  dayCard: {
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 14,
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  dayTitle: {
+    fontSize: 15,
     fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    flex: 1,
+  },
+  dayDate: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  removeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
   helper: {
     marginTop: 8,

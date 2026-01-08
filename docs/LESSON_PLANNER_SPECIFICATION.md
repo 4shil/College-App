@@ -604,8 +604,7 @@ CREATE POLICY "HOD approves department planners" ON lesson_planners
 - [ ] Full workflow: create → submit → approve → mark complete
 - [ ] Rejection workflow: create → submit → reject → edit → resubmit → approve
 - [ ] RLS enforcement: Teacher A cannot view Teacher B's planners
-- [ ] HOD can only approve planners from their department
-
+- [ ] HOD can only approve planners from their department 
 ---
 
 **Status:** Ready for Implementation  

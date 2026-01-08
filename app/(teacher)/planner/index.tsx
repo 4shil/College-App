@@ -24,6 +24,7 @@ type PlannerRow = {
   approved_at: string | null;
   rejection_reason: string | null;
   created_at: string;
+  planned_topics?: any;
   courses?: { code: string; name: string; short_name: string | null } | null;
 };
 
@@ -76,6 +77,7 @@ export default function TeacherPlannerIndex() {
           approved_at,
           rejection_reason,
           created_at,
+          planned_topics,
           courses(code, name, short_name)
         `
       )
@@ -174,6 +176,8 @@ export default function TeacherPlannerIndex() {
 
   const renderRow = (p: PlannerRow, index: number) => {
     const chip = statusChip(p.status);
+    const firstTopic = Array.isArray(p.planned_topics) ? p.planned_topics?.[0]?.topic : null;
+    const outcome = Array.isArray(p.planned_topics) ? p.planned_topics?.[0]?.weekly_outcome : null;
 
     return (
       <Animated.View key={p.id} entering={FadeInDown.delay(index * 30).duration(280)} style={{ marginBottom: 12 }}>
@@ -186,6 +190,16 @@ export default function TeacherPlannerIndex() {
               <Text style={[styles.sub, { color: colors.textSecondary }]} numberOfLines={1}>
                 Week: {formatDateRange(p.week_start_date, p.week_end_date)}
               </Text>
+              {firstTopic ? (
+                <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={2}>
+                  Plan: {firstTopic}
+                </Text>
+              ) : null}
+              {outcome ? (
+                <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={2}>
+                  Outcome: {outcome}
+                </Text>
+              ) : null}
               {p.status === 'submitted' && p.submitted_at ? (
                 <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
                   Submitted: {new Date(p.submitted_at).toLocaleString()}

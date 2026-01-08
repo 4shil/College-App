@@ -4,8 +4,8 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = 'https://celwfcflcofejjpkpgcq.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY;
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlbHdmY2ZsY29mZWpqcGtwZ2NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjEzNTQsImV4cCI6MjA3OTgzNzM1NH0.hDdQIjIy5fkmdXV2GjWlATujnXgVcXZD932_k1KvLwA';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || null;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -115,28 +115,19 @@ async function runSchemaTests() {
 async function runRPCTests() {
   const suite = new TestSuite('RPC Functions');
 
-  suite.add('approve_lesson_planner function exists', async () => {
+  suite.add('approve_lesson_planner function exists (signature check)', async () => {
     const { error } = await supabase.rpc('approve_lesson_planner', {
-      planner_id: '00000000-0000-0000-0000-000000000000',
-      approver_user_id: '00000000-0000-0000-0000-000000000000',
+      p_planner_id: '00000000-0000-0000-0000-000000000000',
+      p_decision: 'approve',
+      p_reason: null,
     });
-    const exists = !error || !error.message.includes('Could not find the function');
-    return {
-      success: exists,
-      message: exists ? 'Function callable' : error?.message,
-    };
-  });
 
-  suite.add('reject_lesson_planner function exists', async () => {
-    const { error } = await supabase.rpc('reject_lesson_planner', {
-      planner_id: '00000000-0000-0000-0000-000000000000',
-      rejector_user_id: '00000000-0000-0000-0000-000000000000',
-      reason: 'test',
-    });
-    const exists = !error || !error.message.includes('Could not find the function');
+    // If the function exists, this should return a normal "Not authorized" response or similar.
+    // Missing-function errors look like: "Could not find the function ...".
+    const missing = !!error && /Could not find the function/i.test(error.message || '');
     return {
-      success: exists,
-      message: exists ? 'Function callable' : error?.message,
+      success: !missing,
+      message: missing ? error?.message : (error ? `Callable (got: ${error.message})` : 'Callable'),
     };
   });
 
@@ -236,10 +227,10 @@ async function runPermissionTests() {
   suite.add('Can read syllabus_units without auth', async () => {
     const { error } = await supabase.from('syllabus_units').select('*').limit(1);
 
-    // Should work for authenticated users
+    // Policy is authenticated-only, so anon should be blocked.
     return {
-      success: !error || error.message.includes('JWT'),
-      message: !error ? 'Readable' : 'Auth required (expected)',
+      success: !!error,
+      message: error ? 'Correctly blocked (auth required)' : 'WARNING: syllabus_units readable to anon',
     };
   });
 
