@@ -303,16 +303,22 @@ export default function TeacherCreateDiaryScreen() {
                             </Text>
                           </TouchableOpacity>
                         ))}
-                        {[
-                          { key: 'unit_ii_hours', label: 'Unit II (Tutorial)' },
-                          { key: 'unit_iii_hours', label: 'Unit III (Examination)' },
-                          { key: 'unit_iv_hours', label: 'Unit IV (Research)' },
-                          { key: 'unit_v_hours', label: 'Unit V (Preparation)' },
-                          { key: 'unit_vi_hours', label: 'Unit VI (Extension)' },
-                        ].map(({ key, label }) => (
+                      </View>
+
+                      <Text style={[styles.label, { color: colors.textMuted, marginTop: 8 }]}>Unit I (Classes)</Text>
+                      {(['spl_am', 'p1', 'p2', 'p3', 'p4', 'p5', 'spl_eve'] as PeriodSlots[]).map((slot) => (
+                        <GlassInput
+                          key={slot}
+                          icon="book-outline"
                           placeholder={`${slot.toUpperCase()} (e.g., D_1, M_2)`}
                           value={entry.periods[slot] || ''}
-                          onChangeText={(v) => updateEntry(idx, (e) => ({ ...e, periods: { ...e.periods, [slot]: v.trim() || null } }))}
+                          autoCapitalize="characters"
+                          onChangeText={(v) =>
+                            updateEntry(idx, (e) => ({
+                              ...e,
+                              periods: { ...e.periods, [slot]: v.trim() || null },
+                            }))
+                          }
                         />
                       ))}
 

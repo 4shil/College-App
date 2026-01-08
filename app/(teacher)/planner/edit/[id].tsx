@@ -516,6 +516,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   label: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
   textArea: {
     marginTop: 12,
     paddingHorizontal: 14,
