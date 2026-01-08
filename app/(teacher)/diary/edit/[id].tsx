@@ -376,7 +376,7 @@ export default function TeacherEditDiaryScreen() {
                         <GlassInput
                           key={slot}
                           icon="book-outline"
-                          placeholder={`${slot.toUpperCase()} (e.g., D_1, M_2)`}
+                          placeholder={slot.toUpperCase() + ' (e.g., D_1, M_2)'}
                           value={entry.periods[slot] || ''}
                           editable={detail.status === 'draft' || detail.status === 'rejected'}
                           onChangeText={(v) => updateEntry(idx, (e) => ({

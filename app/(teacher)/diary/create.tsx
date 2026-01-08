@@ -310,7 +310,7 @@ export default function TeacherCreateDiaryScreen() {
                         <GlassInput
                           key={slot}
                           icon="book-outline"
-                          placeholder={`${slot.toUpperCase()} (e.g., D_1, M_2)`}
+                          placeholder={slot.toUpperCase() + ' (e.g., D_1, M_2)'}
                           value={entry.periods[slot] || ''}
                           autoCapitalize="characters"
                           onChangeText={(v) =>

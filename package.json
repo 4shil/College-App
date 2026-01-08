@@ -7,7 +7,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "seed:full": "node scripts/seed-full-testing-data.js",
+    "seed:verify": "node scripts/verify-full-testing-seed.js",
+    "seed:full:check": "npm run seed:full && npm run seed:verify"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.5",
