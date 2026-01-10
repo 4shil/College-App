@@ -285,7 +285,6 @@ export default function StudentDashboard() {
           </Text>
           <View style={styles.quickLinksGrid}>
             {[
-              { icon: 'apps', label: 'Modules', route: '/(student)/modules' },
               { icon: 'document-text', label: 'Materials', route: '/(student)/materials' },
               { icon: 'library', label: 'Library', route: '/(student)/library' },
               { icon: 'restaurant', label: 'Canteen', route: '/(student)/canteen' },

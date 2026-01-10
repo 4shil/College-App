@@ -237,7 +237,6 @@ export default function StudentLayout() {
           }}
         >
           <Stack.Screen name="dashboard" />
-          <Stack.Screen name="modules" />
           <Stack.Screen name="attendance" />
           <Stack.Screen name="timetable" />
           <Stack.Screen name="materials" />
@@ -246,8 +245,6 @@ export default function StudentLayout() {
           <Stack.Screen name="profile" />
           <Stack.Screen name="library" />
           <Stack.Screen name="notices" />
-          <Stack.Screen name="exams" />
-          <Stack.Screen name="results" />
           <Stack.Screen name="canteen" />
           <Stack.Screen name="bus" />
           <Stack.Screen name="fees" />
