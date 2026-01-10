@@ -174,7 +174,7 @@ export default function TeacherEditPlannerScreen() {
 
       const firstTopic = (d?.planned_topics || [])?.[0]?.topic;
       setSummaryTopic((firstTopic || '').trim());
-      setDayPlans(reindexPlans(hydrateDayPlans(d), d?.week_start_date ? new Date(d.week_start_date) : new Date()));
+      setDayPlans(reindexPlans(hydrateDayPlans(d ?? undefined), d?.week_start_date ? new Date(d.week_start_date) : new Date()));
 
       setLoading(false);
     };

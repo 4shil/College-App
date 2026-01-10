@@ -74,6 +74,33 @@ export const useStudentDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const computeNextClass = useCallback((entries: TodayTimetableEntry[]) => {
+    if (!entries || entries.length === 0) return null;
+
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const parseMinutes = (time: string) => {
+      const parts = String(time || '').split(':');
+      const h = Number(parts[0] || 0);
+      const m = Number(parts[1] || 0);
+      if (Number.isNaN(h) || Number.isNaN(m)) return null;
+      return h * 60 + m;
+    };
+
+    let best: { courseName: string; startsInMinutes: number } | null = null;
+    for (const e of entries) {
+      const start = parseMinutes(e.startTime);
+      if (start == null) continue;
+      const diff = start - nowMinutes;
+      if (diff <= 0) continue;
+      if (!best || diff < best.startsInMinutes) {
+        best = { courseName: e.courseName, startsInMinutes: diff };
+      }
+    }
+    return best;
+  }, []);
+
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
 
@@ -132,6 +159,8 @@ export const useStudentDashboard = () => {
         });
       }
 
+      const nextClass = computeNextClass(todayTimetable);
+
       const start = new Date();
       start.setDate(1);
       const end = new Date();
@@ -180,8 +209,37 @@ export const useStudentDashboard = () => {
         });
       }
 
-      const quickNoticesCount = 0;
-      const unreadNoticesCount = 0;
+      // Notice counters (kept aligned with app/(student)/notices query semantics)
+      let quickNoticesCount = 0;
+      let unreadNoticesCount = 0;
+
+      if (student.section_id || student.department_id) {
+        const { data: noticeRows } = await supabase
+          .from('notices')
+          .select('id')
+          .eq('is_active', true)
+          .or(`section_id.eq.${student.section_id},department_id.eq.${student.department_id},scope.eq.college`)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        const noticeIds: string[] = (noticeRows || []).map((n: any) => String(n.id)).filter(Boolean);
+        quickNoticesCount = noticeIds.length;
+
+        if (noticeIds.length > 0 && user?.id) {
+          const { data: reads } = await supabase
+            .from('notice_reads')
+            .select('notice_id')
+            .eq('user_id', user.id)
+            .in('notice_id', noticeIds);
+
+          const readSet = new Set<string>();
+          (reads || []).forEach((r: any) => {
+            if (r?.notice_id) readSet.add(String(r.notice_id));
+          });
+
+          unreadNoticesCount = noticeIds.filter((id: string) => !readSet.has(String(id))).length;
+        }
+      }
 
       // Minimal marks preview: if student has at least one internal mark, show latest.
       let marksSnapshot: InternalMarksPreview | null = null;
@@ -209,7 +267,7 @@ export const useStudentDashboard = () => {
         studentRollNumber: student.roll_number || 'N/A',
         departmentName: student.departments?.name || 'Unknown',
         todayTimetable,
-        nextClass: null,
+        nextClass,
         attendanceSummary,
         marksSnapshot,
         upcomingAssignments,

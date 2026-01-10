@@ -222,6 +222,7 @@ export default function StudentLayout() {
     { id: 'assignments', title: 'Tasks', icon: 'clipboard', route: '/(student)/assignments', nestedRoutes: ['assignments'] },
     { id: 'library', title: 'Library', icon: 'library', route: '/(student)/library', nestedRoutes: ['library'] },
     { id: 'notices', title: 'Updates', icon: 'notifications', route: '/(student)/notices', nestedRoutes: ['notices'] },
+    { id: 'modules', title: 'Modules', icon: 'grid', route: '/(student)/modules', nestedRoutes: ['modules'] },
     { id: 'profile', title: 'Profile', icon: 'person', route: '/(student)/profile' },
   ];
 
@@ -245,6 +246,7 @@ export default function StudentLayout() {
           <Stack.Screen name="profile" />
           <Stack.Screen name="library" />
           <Stack.Screen name="notices" />
+          <Stack.Screen name="modules" />
           <Stack.Screen name="canteen" />
           <Stack.Screen name="bus" />
           <Stack.Screen name="fees" />

@@ -435,20 +435,6 @@ export default function TeacherEditDiaryScreen() {
               </TouchableOpacity>
             ) : null}
 
-            <Animated.View entering={FadeInDown.duration(280)} style={{ marginBottom: 12 }}>
-              <Card>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Today summary</Text>
-                <View style={{ height: 10 }} />
-                <GlassInput
-                  icon="create-outline"
-                  placeholder="What was covered today? (required)"
-                  value={todaySummary}
-                  onChangeText={setTodaySummary}
-                />
-                <Text style={[styles.helper, { color: colors.textMuted }]}>This updates the diary JSON.</Text>
-              </Card>
-            </Animated.View>
-
             <View style={{ marginTop: 6 }}>
               <PrimaryButton title={saving ? 'Saving...' : 'Save Changes'} onPress={saveChanges} disabled={!canSave} />
             </View>
@@ -508,6 +494,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
     fontWeight: '600',
+    lineHeight: 18,
+  },
   entryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -547,8 +535,6 @@ const styles = StyleSheet.create({
   addBtnText: {
     fontWeight: '700',
     fontSize: 14,
-  },
-    lineHeight: 18,
   },
   emptyTitle: {
     fontSize: 16,
