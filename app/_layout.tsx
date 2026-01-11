@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, Platform } from 'react-native';
+import { View, Platform, useColorScheme } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { TriangleLoader } from '../components/ui/TriangleLoader';
 import { ThemedAlertProvider } from '../components/ui';
@@ -51,10 +51,22 @@ function RootLayoutNav() {
   // Import theme store here AFTER initial render
   const { useThemeStore } = require('../store/themeStore');
   const { isDark, colors } = useThemeStore();
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     installThemedAlertShim();
   }, []);
+
+  useEffect(() => {
+    // Keep system theme in sync when mode === 'system'.
+    // The theme store preserves the last-known system value.
+    try {
+      const systemIsDark = colorScheme === 'dark';
+      useThemeStore.getState?.().setSystemTheme?.(systemIsDark);
+    } catch {
+      // no-op
+    }
+  }, [colorScheme]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>

@@ -1,22 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { AnimatedBackground, Card, PrimaryButton, ThemeToggle } from '../../../components/ui';
+import {
+  AnimatedBackground,
+  Card,
+  SettingsHeader,
+  SettingsRow,
+  SettingsSection,
+} from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
-import { withAlpha } from '../../../theme/colorUtils';
+import { useAppSettingsStore } from '../../../store/appSettingsStore';
 
 export default function StudentSettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors, isDark, animationsEnabled, toggleAnimations, activeThemeName } = useThemeStore();
+  const { colors, activeThemeName, mode } = useThemeStore();
   const { user, profile, logout } = useAuthStore();
+  const { pushNotificationsEnabled } = useAppSettingsStore();
+
+  const version = Constants.expoConfig?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? '1.0.0';
 
   const doLogout = async () => {
     try {
@@ -42,77 +51,91 @@ export default function StudentSettingsScreen() {
 
   return (
     <AnimatedBackground>
-      <View style={[styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 100 }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={28} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Settings</Text>
-          <ThemeToggle />
-        </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: insets.bottom + 110, paddingHorizontal: 18 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <SettingsHeader title="Settings" subtitle="Preferences and account" onBack={() => router.back()} />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Animated.View entering={FadeInRight.duration(300)}>
-            <Card style={{ marginBottom: 12 }}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Account</Text>
-              <Text style={[styles.sectionSub, { color: colors.textMuted }]}>Signed in as</Text>
+        <Animated.View entering={FadeInDown.duration(220)}>
+          <Card style={styles.profileCard}>
+            <Text style={[styles.profileName, { color: colors.textPrimary }]} numberOfLines={1}>
+              {profile?.full_name || user?.email || 'Student'}
+            </Text>
+            <Text style={[styles.profileEmail, { color: colors.textSecondary }]} numberOfLines={1}>
+              {user?.email || profile?.email || 'Not available'}
+            </Text>
+            <View style={styles.profileMetaRow}>
+              <Text style={[styles.profileMeta, { color: colors.textMuted }]}>Theme: {activeThemeName}</Text>
+              <Text style={[styles.profileMeta, { color: colors.textMuted }]}>Mode: {mode}</Text>
+            </View>
+          </Card>
+        </Animated.View>
 
-              <View style={{ marginTop: 10 }}>
-                <Text style={[styles.rowTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-                  {profile?.full_name || user?.email || 'Student'}
-                </Text>
-                <Text style={[styles.rowMeta, { color: colors.textMuted }]} numberOfLines={1}>
-                  {user?.email || profile?.email || 'Not available'}
-                </Text>
-              </View>
+        <Animated.View entering={FadeInDown.delay(50).duration(220)}>
+          <SettingsSection title="Account">
+            <SettingsRow
+              title="Profile"
+              subtitle="View your details"
+              icon="person"
+              onPress={() => router.push('/(student)/profile' as any)}
+            />
+            <SettingsRow
+              title="Sign out"
+              subtitle="Log out from this device"
+              icon="log-out-outline"
+              destructive
+              onPress={confirmLogout}
+              disabled={!user}
+            />
+          </SettingsSection>
+        </Animated.View>
 
-              <View style={{ marginTop: 12 }}>
-                <PrimaryButton
-                  title="Open Profile"
-                  onPress={() => router.push('/(student)/profile')}
-                  variant="outline"
-                  size="medium"
-                />
-              </View>
-            </Card>
+        <Animated.View entering={FadeInDown.delay(90).duration(220)}>
+          <SettingsSection title="Appearance">
+            <SettingsRow
+              title="Theme & effects"
+              subtitle="Mode, preset, animations"
+              icon="color-palette"
+              onPress={() => router.push('/(student)/settings/appearance' as any)}
+            />
+          </SettingsSection>
+        </Animated.View>
 
-            <Card style={{ marginBottom: 12 }}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Appearance</Text>
-              <Text style={[styles.sectionSub, { color: colors.textMuted }]}>
-                Theme: {activeThemeName}
-              </Text>
+        <Animated.View entering={FadeInDown.delay(130).duration(220)}>
+          <SettingsSection title="Notifications">
+            <SettingsRow
+              title="Notifications"
+              subtitle={pushNotificationsEnabled ? 'Enabled' : 'Disabled'}
+              icon="notifications"
+              onPress={() => router.push('/(student)/settings/notifications' as any)}
+            />
+          </SettingsSection>
+        </Animated.View>
 
-              <View style={styles.switchRow}>
-                <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>Animations</Text>
-                <Switch
-                  value={animationsEnabled}
-                  onValueChange={toggleAnimations}
-                  trackColor={{ false: withAlpha(colors.textMuted, 0.25), true: withAlpha(colors.primary, 0.35) }}
-                  thumbColor={animationsEnabled ? colors.primary : colors.textMuted}
-                />
-              </View>
+        <Animated.View entering={FadeInDown.delay(170).duration(220)}>
+          <SettingsSection title="Privacy">
+            <SettingsRow
+              title="Privacy & security"
+              subtitle="Data saver, analytics, lock"
+              icon="shield-checkmark"
+              onPress={() => router.push('/(student)/settings/privacy' as any)}
+            />
+          </SettingsSection>
+        </Animated.View>
 
-              <Text style={[styles.hint, { color: colors.textMuted }]}>Use the moon/sun button to toggle dark mode.</Text>
-            </Card>
-
-            <Card>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Security</Text>
-              <Text style={[styles.sectionSub, { color: colors.textMuted }]}>
-                Sign out from this device
-              </Text>
-              <View style={{ marginTop: 12 }}>
-                <PrimaryButton
-                  title="Sign out"
-                  onPress={confirmLogout}
-                  variant="outline"
-                  size="medium"
-                  disabled={!user}
-                />
-              </View>
-            </Card>
-          </Animated.View>
-        </ScrollView>
-      </View>
+        <Animated.View entering={FadeInDown.delay(210).duration(220)}>
+          <SettingsSection title="About">
+            <SettingsRow
+              title="About this app"
+              subtitle={`Version ${String(version)}`}
+              icon="information-circle"
+              onPress={() => router.push('/(student)/settings/about' as any)}
+            />
+          </SettingsSection>
+        </Animated.View>
+      </ScrollView>
     </AnimatedBackground>
   );
 }
@@ -120,41 +143,28 @@ export default function StudentSettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+  profileCard: {
+    marginTop: 6,
+    marginBottom: 8,
+    padding: 16,
   },
-  headerTitle: {
+  profileName: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '900',
   },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  sectionSub: {
+  profileEmail: {
+    marginTop: 3,
     fontSize: 12,
-    marginTop: 4,
+    fontWeight: '600',
   },
-  rowTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  rowMeta: {
-    fontSize: 12,
-  },
-  switchRow: {
-    marginTop: 12,
+  profileMetaRow: {
+    marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  hint: {
-    marginTop: 8,
+  profileMeta: {
     fontSize: 11,
+    fontWeight: '700',
   },
 });
