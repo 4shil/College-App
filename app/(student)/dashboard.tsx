@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator, StatCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
@@ -19,11 +20,24 @@ export default function StudentDashboard() {
   const { summary, loading, refreshing, refresh } = useStudentDashboard();
 
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
-  useEffect(() => {
-    // Intentionally minimal: keep parity with teacher dashboard refresh cadence
-  }, []);
-
   const photoUrl = profile?.photo_url || '';
+
+  const displayName = useMemo(() => {
+    return summary?.studentName || profile?.full_name || 'Student';
+  }, [summary?.studentName, profile?.full_name]);
+
+  const firstName = useMemo(() => {
+    const n = String(displayName || 'Student').trim();
+    return n.split(/\s+/)[0] || 'Student';
+  }, [displayName]);
+
+  const attendanceTone = useMemo(() => {
+    const status = summary?.attendanceSummary?.status;
+    if (status === 'good') return { color: colors.success, bg: withAlpha(colors.success, isDark ? 0.18 : 0.12) };
+    if (status === 'warning') return { color: colors.warning, bg: withAlpha(colors.warning, isDark ? 0.18 : 0.12) };
+    if (status === 'critical') return { color: colors.error, bg: withAlpha(colors.error, isDark ? 0.18 : 0.12) };
+    return { color: colors.primary, bg: withAlpha(colors.primary, isDark ? 0.18 : 0.12) };
+  }, [summary?.attendanceSummary?.status, colors, isDark]);
 
   const handleRefresh = async () => {
     await refresh();
@@ -33,6 +47,63 @@ export default function StudentDashboard() {
   const handleNavigate = (path: string) => {
     router.push(path as any);
   };
+
+  const formatRelative = (d: Date) => {
+    const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+    if (s < 60) return `${s}s ago`;
+    const m = Math.round(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.round(m / 60);
+    return `${h}h ago`;
+  };
+
+  const safePct = (n: number | undefined | null) => {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return 0;
+    return Math.max(0, Math.min(100, v));
+  };
+
+  const SectionHeader: React.FC<{ title: string; actionText?: string; onPress?: () => void }> = ({
+    title,
+    actionText,
+    onPress,
+  }) => (
+    <View style={styles.sectionHeaderRow}>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
+      {!!actionText && !!onPress && (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.sectionAction}>
+          <Text style={[styles.sectionActionText, { color: colors.primary }]}>{actionText}</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const ActionTile: React.FC<{ icon: string; label: string; subtitle?: string; onPress: () => void }> = ({
+    icon,
+    label,
+    subtitle,
+    onPress,
+  }) => (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.82} style={{ flexBasis: '48%' }}>
+      <Card animated={false} style={styles.actionTile}>
+        <View style={[styles.actionIcon, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
+          <Ionicons name={icon as any} size={20} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.actionLabel, { color: colors.textPrimary }]} numberOfLines={1}>
+            {label}
+          </Text>
+          {!!subtitle && (
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={withAlpha(colors.textPrimary, 0.4)} />
+      </Card>
+    </TouchableOpacity>
+  );
 
   if (loading && !summary) {
     return (
@@ -47,7 +118,11 @@ export default function StudentDashboard() {
   return (
     <AnimatedBackground>
       <ScrollView
-        style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100 }]}
+        style={styles.container}
+        contentContainerStyle={{
+          paddingTop: insets.top + 14,
+          paddingBottom: insets.bottom + 120,
+        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -57,256 +132,356 @@ export default function StudentDashboard() {
           />
         }
       >
-        {/* Hero Section */}
-        <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.heroSection}>
-          <Card>
-            <View style={styles.heroContent}>
-              <View style={styles.heroLeft}>
-                {photoUrl ? (
-                  <Image
-                    source={{ uri: photoUrl }}
-                    style={styles.profilePhoto}
-                  />
-                ) : (
-                  <View style={[styles.profilePhoto, { backgroundColor: colors.primary }]}>
-                    <Ionicons name="person" size={32} color={colors.background} />
+        {/* Overview / Hero */}
+        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
+          <Card noPadding style={styles.heroCard}>
+            <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+              <LinearGradient
+                colors={[
+                  withAlpha(colors.primary, isDark ? 0.22 : 0.18),
+                  withAlpha(colors.secondary, isDark ? 0.18 : 0.14),
+                  withAlpha(colors.background, 0),
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+            </View>
+
+            <View style={styles.heroInner}>
+              <View style={styles.heroTopRow}>
+                <View style={styles.heroLeft}>
+                  {photoUrl ? (
+                    <Image source={{ uri: photoUrl }} style={styles.profilePhoto} />
+                  ) : (
+                    <View style={[styles.profilePhoto, { backgroundColor: colors.primary }]}>
+                      <Ionicons name="person" size={22} color={colors.background} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.heroKicker, { color: colors.textSecondary }]}>Have a good day!</Text>
+                    <Text style={[styles.heroName, { color: colors.textPrimary }]} numberOfLines={1}>
+                      {firstName}
+                    </Text>
+                    <View style={styles.heroMetaRow}>
+                      {!!summary?.studentRollNumber && (
+                        <View style={[styles.metaPill, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) }]}>
+                          <Ionicons name="id-card" size={14} color={withAlpha(colors.textPrimary, 0.7)} />
+                          <Text style={[styles.metaPillText, { color: colors.textPrimary }]} numberOfLines={1}>
+                            {summary.studentRollNumber}
+                          </Text>
+                        </View>
+                      )}
+                      {!!summary?.departmentName && (
+                        <View style={[styles.metaPill, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) }]}>
+                          <Ionicons name="school" size={14} color={withAlpha(colors.textPrimary, 0.7)} />
+                          <Text style={[styles.metaPillText, { color: colors.textPrimary }]} numberOfLines={1}>
+                            {summary.departmentName}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                )}
-                <View style={styles.heroTextContent}>
-                  <Text style={[styles.heroName, { color: colors.textPrimary }]}>
-                    {summary?.studentName || profile?.full_name || 'Student'}
-                  </Text>
-                  <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-                    {summary?.studentRollNumber}
-                  </Text>
-                  <Text style={[styles.heroDept, { color: colors.textMuted }]}>
-                    {summary?.departmentName}
-                  </Text>
+                </View>
+
+                <View style={styles.heroIconRow}>
+                  <TouchableOpacity
+                    onPress={() => handleNavigate('/(student)/notices')}
+                    activeOpacity={0.85}
+                    style={[styles.heroIconButton, { backgroundColor: withAlpha(colors.background, isDark ? 0.18 : 0.45) }]}
+                  >
+                    <Ionicons name="notifications" size={18} color={colors.textPrimary} />
+                    {!!summary?.unreadNoticesCount && summary.unreadNoticesCount > 0 && (
+                      <View style={[styles.badgeDot, { backgroundColor: colors.primary }]} />
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleNavigate('/(student)/profile')}
+                    activeOpacity={0.85}
+                    style={[styles.heroIconButton, { backgroundColor: withAlpha(colors.background, isDark ? 0.18 : 0.45) }]}
+                  >
+                    <Ionicons name="settings" size={18} color={colors.textPrimary} />
+                  </TouchableOpacity>
                 </View>
               </View>
-              <TouchableOpacity
-                onPress={() => handleNavigate('/(student)/profile')}
-                style={[styles.editButton, { borderColor: colors.primary }]}
-              >
-                <Ionicons name="pencil" size={16} color={colors.primary} />
-              </TouchableOpacity>
+
+              <View style={styles.heroStatsRow}>
+                <StatCard
+                  title="Attendance"
+                  value={`${safePct(summary?.attendanceSummary?.percentage).toFixed(0)}%`}
+                  icon={{ family: 'ion', name: 'checkmark-circle' }}
+                  tone={summary?.attendanceSummary?.status === 'good' ? 'success' : summary?.attendanceSummary?.status === 'warning' ? 'warning' : summary?.attendanceSummary?.status === 'critical' ? 'error' : 'primary'}
+                  onPress={() => handleNavigate('/(student)/attendance')}
+                  style={styles.statCard}
+                />
+                <StatCard
+                  title="Marks"
+                  value={summary?.marksSnapshot ? `${safePct(summary.marksSnapshot.percentage).toFixed(0)}%` : '—'}
+                  icon={{ family: 'ion', name: 'stats-chart' }}
+                  tone="info"
+                  onPress={() => handleNavigate('/(student)/marks')}
+                  style={styles.statCard}
+                />
+              </View>
             </View>
           </Card>
         </Animated.View>
 
-        {/* Today's Classes */}
-        {summary?.todayTimetable && summary.todayTimetable.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
-              Today's Schedule
-            </Text>
-            <Card>
-              {summary.todayTimetable.slice(0, 3).map((entry, index) => (
-                <View key={entry.entryId} style={[styles.timetableEntry, { borderBottomColor: colors.cardBorder }, index < 2 && { borderBottomWidth: 1 }]}>
-                  <View style={[styles.periodBadge, { backgroundColor: colors.primary }]}>
-                    <Text style={[styles.periodText, { color: colors.background }]}>
-                      P{entry.period}
-                    </Text>
-                  </View>
-                  <View style={styles.timetableInfo}>
-                    <Text style={[styles.courseNameSmall, { color: colors.textPrimary }]}>
-                      {entry.courseName}
-                    </Text>
-                    <Text style={[styles.courseDetails, { color: colors.textSecondary }]}>
-                      {String(entry.startTime || '').slice(0, 5)} – {String(entry.endTime || '').slice(0, 5)} • {entry.roomLabel || 'Room TBA'}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-              {summary.todayTimetable.length > 3 && (
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/(student)/timetable')}
-                  style={styles.viewMoreLink}
-                >
-                  <Text style={[styles.viewMoreText, { color: colors.primary }]}>
-                    View Full Schedule →
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </Card>
-          </Animated.View>
-        )}
+        {/* Next class + month attendance */}
+        <Animated.View entering={FadeInDown.delay(170).duration(450)} style={{ marginTop: 14 }}>
+          <Card>
+            <View style={styles.overviewRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.overviewTitle, { color: colors.textPrimary }]}>Today Overview</Text>
+                <Text style={[styles.overviewSubtitle, { color: colors.textSecondary }]}>
+                  {summary?.nextClass
+                    ? `Next: ${summary.nextClass.courseName} · ${summary.nextClass.startsInMinutes} min`
+                    : 'No upcoming class right now'}
+                </Text>
+              </View>
+              <View style={[styles.overviewChip, { backgroundColor: attendanceTone.bg }]}
+              >
+                <Text style={[styles.overviewChipValue, { color: attendanceTone.color }]}>
+                  {safePct(summary?.attendanceSummary?.percentage).toFixed(0)}%
+                </Text>
+                <Text style={[styles.overviewChipLabel, { color: withAlpha(attendanceTone.color, 0.85) }]}>
+                  This month
+                </Text>
+              </View>
+            </View>
 
-        {/* Attendance Summary */}
-        {summary?.attendanceSummary && (
-          <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
-              Attendance
-            </Text>
-            <TouchableOpacity onPress={() => handleNavigate('/(student)/attendance')} activeOpacity={0.8}>
-              <Card>
-                <View style={styles.attendanceContent}>
-                  <View style={[styles.attendanceCircle, { backgroundColor: withAlpha(colors.primary, 0.08) }] }>
-                    <Text style={[styles.attendancePercentage, { color: colors.primary }]}>
-                      {summary.attendanceSummary.percentage}%
-                    </Text>
-                  </View>
-                  <View style={styles.attendanceStats}>
-                    <Text style={[styles.attendanceLabel, { color: colors.textPrimary }]}>
-                      Attendance Status
-                    </Text>
-                    <View style={styles.statsRow}>
-                      <View style={styles.statItem}>
-                        <Text style={[styles.statValue, { color: colors.primary }]}>
-                          {summary.attendanceSummary.present}
-                        </Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                          Present
-                        </Text>
-                      </View>
-                      <View style={styles.statDivider} />
-                      <View style={styles.statItem}>
-                        <Text style={[styles.statValue, { color: colors.textMuted }]}>
-                          {summary.attendanceSummary.total - summary.attendanceSummary.present}
-                        </Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                          Absent
-                        </Text>
-                      </View>
-                      <View style={styles.statDivider} />
-                      <View style={styles.statItem}>
-                        <Text style={[styles.statValue, { color: colors.textMuted }]}>
-                          {summary.attendanceSummary.total}
-                        </Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                          Total
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </Card>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+            <View style={[styles.progressTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${safePct(summary?.attendanceSummary?.percentage)}%`,
+                    backgroundColor: attendanceTone.color,
+                  },
+                ]}
+              />
+            </View>
 
-        {/* Internal Marks Preview */}
-        {summary?.marksSnapshot && (
-          <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
-              Latest Marks
-            </Text>
-            <TouchableOpacity onPress={() => handleNavigate('/(student)/marks')} activeOpacity={0.8}>
-              <Card>
-                <View style={styles.marksContent}>
-                  <View style={styles.marksLeft}>
-                    <Text style={[styles.marksValue, { color: colors.primary }]}>
-                      {summary.marksSnapshot.percentage.toFixed(1)}%
-                    </Text>
-                    <Text style={[styles.marksLabel, { color: colors.textSecondary }]}>
-                      {summary.marksSnapshot.obtainedMarks}/{summary.marksSnapshot.totalMarks}
-                    </Text>
-                  </View>
-                  <View style={[styles.marksRight, { backgroundColor: withAlpha(colors.primary, 0.1) }]}>
-                    <Ionicons name="bar-chart" size={24} color={colors.primary} />
-                    <Text style={[styles.marksUpdate, { color: colors.textSecondary }]}>
-                      Updated
-                    </Text>
-                  </View>
-                </View>
-              </Card>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+            <View style={styles.overviewFooterRow}>
+              <View style={styles.overviewFooterItem}>
+                <Text style={[styles.overviewFooterValue, { color: colors.textPrimary }]}>
+                  {summary?.attendanceSummary ? summary.attendanceSummary.present : '—'}
+                </Text>
+                <Text style={[styles.overviewFooterLabel, { color: colors.textSecondary }]}>Present</Text>
+              </View>
+              <View style={[styles.overviewFooterDivider, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1) }]} />
+              <View style={styles.overviewFooterItem}>
+                <Text style={[styles.overviewFooterValue, { color: colors.textPrimary }]}>
+                  {summary?.attendanceSummary ? summary.attendanceSummary.total : '—'}
+                </Text>
+                <Text style={[styles.overviewFooterLabel, { color: colors.textSecondary }]}>Total</Text>
+              </View>
+              <View style={[styles.overviewFooterDivider, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1) }]} />
+              <View style={styles.overviewFooterItem}>
+                <Text style={[styles.overviewFooterValue, { color: colors.textPrimary }]}>
+                  {summary ? summary.unreadNoticesCount : '—'}
+                </Text>
+                <Text style={[styles.overviewFooterLabel, { color: colors.textSecondary }]}>Unread</Text>
+              </View>
+            </View>
+          </Card>
+        </Animated.View>
 
-        {/* Upcoming Assignments */}
-        {summary?.upcomingAssignments && summary.upcomingAssignments.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
-              Pending Tasks
-            </Text>
-            <Card>
-              {summary.upcomingAssignments.slice(0, 3).map((assignment, index) => (
-                <TouchableOpacity
-                  key={assignment.id}
-                  onPress={() => handleNavigate(`/(student)/assignments`)}
-                  style={[styles.assignmentItem, { borderBottomColor: colors.cardBorder }, index < 2 && { borderBottomWidth: 1 }]}
-                >
-                  <View style={styles.assignmentLeft}>
-                    <Text style={[styles.assignmentCourse, { color: colors.textSecondary }]}>
-                      {assignment.courseName}
-                    </Text>
-                    <Text style={[styles.assignmentTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-                      {assignment.title}
-                    </Text>
-                  </View>
+        {/* Today's classes */}
+        <Animated.View entering={FadeInDown.delay(240).duration(450)} style={{ marginTop: 16 }}>
+          <SectionHeader
+            title="Today's Schedule"
+            actionText="View all"
+            onPress={() => handleNavigate('/(student)/timetable')}
+          />
+          <Card>
+            {summary?.todayTimetable && summary.todayTimetable.length > 0 ? (
+              <>
+                {summary.todayTimetable.slice(0, 4).map((entry, index) => (
                   <View
+                    key={entry.entryId}
                     style={[
-                      styles.assignmentDueTag,
-                      {
-                        backgroundColor: assignment.isOverdue
-                          ? withAlpha(colors.error, 0.1)
-                          : assignment.daysLeft <= 3
-                          ? withAlpha(colors.warning, 0.1)
-                          : withAlpha(colors.success, 0.1),
+                      styles.scheduleRow,
+                      index < Math.min(3, summary.todayTimetable.length - 1) && {
+                        borderBottomWidth: 1,
+                        borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1),
                       },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.dueTagText,
-                        {
-                          color: assignment.isOverdue
-                            ? colors.error
-                            : assignment.daysLeft <= 3
-                            ? colors.warning
-                            : colors.success,
-                        },
-                      ]}
-                    >
-                      {assignment.isOverdue ? 'Overdue' : `${assignment.daysLeft}d`}
-                    </Text>
+                    <View style={[styles.scheduleTime, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
+                      <Text style={[styles.scheduleTimeText, { color: colors.primary }]}>
+                        {String(entry.startTime || '').slice(0, 5)}
+                      </Text>
+                      <Text style={[styles.scheduleTimeSub, { color: withAlpha(colors.textPrimary, 0.55) }]}>
+                        P{entry.period}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.scheduleTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                        {entry.courseName}
+                      </Text>
+                      <Text style={[styles.scheduleSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {String(entry.endTime || '').slice(0, 5)} · {entry.roomLabel || 'Room TBA'}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={withAlpha(colors.textPrimary, 0.4)} />
                   </View>
-                </TouchableOpacity>
-              ))}
-              {summary.upcomingAssignments.length > 3 && (
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/(student)/assignments')}
-                  style={styles.viewMoreLink}
-                >
-                  <Text style={[styles.viewMoreText, { color: colors.primary }]}>
-                    View All Tasks ({summary.upcomingAssignments.length}) →
-                  </Text>
-                </TouchableOpacity>
-              )}
+                ))}
+              </>
+            ) : (
+              <View style={{ paddingVertical: 10 }}>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No classes scheduled for today.</Text>
+              </View>
+            )}
+          </Card>
+        </Animated.View>
+
+        {/* Spotlight cards */}
+        <Animated.View entering={FadeInDown.delay(310).duration(450)} style={{ marginTop: 16 }}>
+          <SectionHeader title="Highlights" />
+          <View style={styles.twoColRow}>
+            <TouchableOpacity onPress={() => handleNavigate('/(student)/attendance')} activeOpacity={0.85} style={{ flex: 1 }}>
+              <Card animated={false} style={styles.halfCard}>
+                <Text style={[styles.halfTitle, { color: colors.textSecondary }]}>Attendance</Text>
+                <Text style={[styles.halfValue, { color: attendanceTone.color }]}>
+                  {safePct(summary?.attendanceSummary?.percentage).toFixed(0)}%
+                </Text>
+                <Text style={[styles.halfSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.attendanceSummary
+                    ? `${summary.attendanceSummary.present}/${summary.attendanceSummary.total} present`
+                    : '—'}
+                </Text>
+                <View style={[styles.miniTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
+                  <View
+                    style={{
+                      height: '100%',
+                      width: `${safePct(summary?.attendanceSummary?.percentage)}%`,
+                      borderRadius: 999,
+                      backgroundColor: attendanceTone.color,
+                    }}
+                  />
+                </View>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => handleNavigate('/(student)/marks')} activeOpacity={0.85} style={{ flex: 1 }}>
+              <Card animated={false} style={styles.halfCard}>
+                <Text style={[styles.halfTitle, { color: colors.textSecondary }]}>Marks</Text>
+                <Text style={[styles.halfValue, { color: colors.primary }]}>
+                  {summary?.marksSnapshot ? `${safePct(summary.marksSnapshot.percentage).toFixed(0)}%` : '—'}
+                </Text>
+                <Text style={[styles.halfSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.marksSnapshot
+                    ? `${summary.marksSnapshot.obtainedMarks}/${summary.marksSnapshot.totalMarks} · ${summary.marksSnapshot.lastUpdated}`
+                    : 'No marks published yet'}
+                </Text>
+                <View style={[styles.miniTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
+                  <View
+                    style={{
+                      height: '100%',
+                      width: `${safePct(summary?.marksSnapshot?.percentage)}%`,
+                      borderRadius: 999,
+                      backgroundColor: colors.primary,
+                    }}
+                  />
+                </View>
+              </Card>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* Upcoming Assignments */}
+        {summary?.upcomingAssignments && summary.upcomingAssignments.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(380).duration(450)} style={{ marginTop: 16 }}>
+            <SectionHeader
+              title="Pending Tasks"
+              actionText="View all"
+              onPress={() => handleNavigate('/(student)/assignments')}
+            />
+            <Card>
+              {summary.upcomingAssignments.slice(0, 3).map((assignment, index) => {
+                const toneColor = assignment.isOverdue
+                  ? colors.error
+                  : assignment.daysLeft <= 3
+                  ? colors.warning
+                  : colors.success;
+                return (
+                  <TouchableOpacity
+                    key={assignment.id}
+                    onPress={() => handleNavigate('/(student)/assignments')}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.taskRow,
+                      index < Math.min(2, summary.upcomingAssignments.length - 1) && {
+                        borderBottomWidth: 1,
+                        borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1),
+                      },
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.taskCourse, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {assignment.courseName}
+                      </Text>
+                      <Text style={[styles.taskTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                        {assignment.title}
+                      </Text>
+                      <Text style={[styles.taskSub, { color: colors.textMuted }]} numberOfLines={1}>
+                        Due {assignment.dueDate}
+                      </Text>
+                    </View>
+                    <View style={[styles.taskChip, { backgroundColor: withAlpha(toneColor, isDark ? 0.18 : 0.12) }]}>
+                      <Text style={[styles.taskChipText, { color: toneColor }]}>
+                        {assignment.isOverdue ? 'Overdue' : `${assignment.daysLeft}d`}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </Card>
           </Animated.View>
         )}
 
-        {/* Quick Links */}
-        <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
-            Quick Access
-          </Text>
-          <View style={styles.quickLinksGrid}>
-            {[
-              { icon: 'document-text', label: 'Materials', route: '/(student)/materials' },
-              { icon: 'library', label: 'Library', route: '/(student)/library' },
-              { icon: 'restaurant', label: 'Canteen', route: '/(student)/canteen' },
-              { icon: 'bus', label: 'Bus', route: '/(student)/bus' },
-              { icon: 'receipt', label: 'Fees', route: '/(student)/fees' },
-              { icon: 'settings', label: 'Settings', route: '/(student)/settings' },
-            ].map((link) => (
-              <TouchableOpacity
-                key={link.label}
-                onPress={() => handleNavigate(link.route)}
-                activeOpacity={0.7}
-              >
-                <Card style={styles.quickLinkCard}>
-                  <View style={[styles.quickLinkIcon, { backgroundColor: withAlpha(colors.primary, 0.1) }]}>
-                    <Ionicons name={link.icon as any} size={24} color={colors.primary} />
-                  </View>
-                  <Text style={[styles.quickLinkLabel, { color: colors.textPrimary }]} numberOfLines={1}>
-                    {link.label}
-                  </Text>
-                </Card>
-              </TouchableOpacity>
-            ))}
+        {/* Quick access */}
+        <Animated.View entering={FadeInDown.delay(450).duration(450)} style={{ marginTop: 16 }}>
+          <SectionHeader title="Quick Access" />
+          <View style={styles.actionsGrid}>
+            <ActionTile
+              icon="calendar"
+              label="Timetable"
+              subtitle={summary?.todayTimetable?.length ? `${summary.todayTimetable.length} periods today` : 'View schedule'}
+              onPress={() => handleNavigate('/(student)/timetable')}
+            />
+            <ActionTile
+              icon="clipboard"
+              label="Assignments"
+              subtitle={summary?.upcomingAssignments?.length ? `${summary.upcomingAssignments.length} upcoming` : 'View tasks'}
+              onPress={() => handleNavigate('/(student)/assignments')}
+            />
+            <ActionTile
+              icon="book"
+              label="Materials"
+              subtitle="Notes & downloads"
+              onPress={() => handleNavigate('/(student)/materials')}
+            />
+            <ActionTile
+              icon="notifications"
+              label="Notices"
+              subtitle={summary ? `${summary.unreadNoticesCount} unread` : 'Updates'}
+              onPress={() => handleNavigate('/(student)/notices')}
+            />
+            <ActionTile
+              icon="library"
+              label="Library"
+              subtitle="Books & issues"
+              onPress={() => handleNavigate('/(student)/library')}
+            />
+            <ActionTile
+              icon="grid"
+              label="All Modules"
+              subtitle="Browse everything"
+              onPress={() => handleNavigate('/(student)/modules')}
+            />
           </View>
         </Animated.View>
 
@@ -314,7 +489,7 @@ export default function StudentDashboard() {
         {lastUpdatedAt && (
           <View style={styles.lastUpdatedContainer}>
             <Text style={[styles.lastUpdatedText, { color: colors.textMuted }]}>
-              Updated {Math.round((Date.now() - lastUpdatedAt.getTime()) / 1000)}s ago
+              Updated {formatRelative(lastUpdatedAt)}
             </Text>
           </View>
         )}
@@ -328,217 +503,307 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-  heroSection: {
-    marginBottom: 16,
+  heroCard: {
+    overflow: 'hidden',
   },
-  heroContent: {
+  heroInner: {
+    padding: 18,
+    gap: 14,
+  },
+  heroTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   heroLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     flex: 1,
   },
   profilePhoto: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginRight: 12,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  heroTextContent: {
-    flex: 1,
-  },
-  heroName: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  heroSubtitle: {
-    fontSize: 13,
-    fontWeight: '500',
+  heroKicker: {
+    fontSize: 12,
+    fontWeight: '600',
     marginBottom: 2,
   },
-  heroDept: {
-    fontSize: 12,
+  heroName: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
-  editButton: {
+  heroMetaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  metaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  metaPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: -0.1,
+  },
+  heroIconRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  heroIconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    borderWidth: 1.5,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeDot: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  heroStatsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+  },
+
+  overviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  overviewTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  overviewSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  overviewChip: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  overviewChipValue: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  overviewChipLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  progressTrack: {
+    height: 10,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 14,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+  },
+  overviewFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+  },
+  overviewFooterItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  overviewFooterDivider: {
+    width: 1,
+    height: 28,
+  },
+  overviewFooterValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  overviewFooterLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
+    fontWeight: '900',
+    letterSpacing: -0.2,
   },
-  timetableEntry: {
+  sectionAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-  },
-  periodBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  periodText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  timetableInfo: {
-    flex: 1,
-  },
-  courseNameSmall: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  courseDetails: {
-    fontSize: 12,
-  },
-  viewMoreLink: {
-    paddingVertical: 12,
-    justifyContent: 'center',
-  },
-  viewMoreText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  attendanceContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  attendanceCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  attendancePercentage: {
-    fontSize: 32,
-    fontWeight: '700',
-  },
-  attendanceStats: {
-    flex: 1,
-  },
-  attendanceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    marginHorizontal: 4,
-  },
-  marksContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  marksLeft: {
-    flex: 1,
-  },
-  marksValue: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  marksLabel: {
-    fontSize: 13,
-  },
-  marksRight: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  marksUpdate: {
-    fontSize: 11,
-    marginTop: 4,
-  },
-  assignmentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  assignmentLeft: {
-    flex: 1,
-  },
-  assignmentCourse: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  assignmentTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  assignmentDueTag: {
+    gap: 2,
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: 6,
-    marginLeft: 12,
+    borderRadius: 999,
   },
-  dueTagText: {
+  sectionActionText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  scheduleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 12,
+  },
+  scheduleTime: {
+    width: 64,
+    borderRadius: 14,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scheduleTimeText: {
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: -0.2,
+  },
+  scheduleTimeSub: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  scheduleTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: -0.1,
+  },
+  scheduleSub: {
     fontSize: 12,
     fontWeight: '600',
+    marginTop: 3,
   },
-  quickLinksGrid: {
+  emptyText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  twoColRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfCard: {
+    minHeight: 126,
+  },
+  halfTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  halfValue: {
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: -0.6,
+    marginTop: 8,
+  },
+  halfSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  miniTrack: {
+    height: 8,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 12,
+  },
+
+  taskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    gap: 12,
+  },
+  taskCourse: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  taskTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: -0.1,
+    marginTop: 3,
+  },
+  taskSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+  taskChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  taskChipText: {
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: -0.2,
+  },
+
+  actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
-  quickLinkCard: {
-    width: '31%',
-    aspectRatio: 1,
-    justifyContent: 'center',
+  actionTile: {
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  quickLinkIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
   },
-  quickLinkLabel: {
-    fontSize: 12,
+  actionLabel: {
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: -0.1,
+  },
+  actionSubtitle: {
+    fontSize: 11,
     fontWeight: '600',
-    textAlign: 'center',
+    marginTop: 3,
   },
+
   lastUpdatedContainer: {
     alignItems: 'center',
     paddingVertical: 20,

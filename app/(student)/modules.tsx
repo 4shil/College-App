@@ -48,15 +48,10 @@ export default function StudentModulesScreen() {
     // Keep parity with teacher: show everything except dock items.
     const exclude = new Set([
       'dashboard',
-      'attendance',
       'timetable',
       'materials',
-      'marks',
-      'assignments',
-      'library',
-      'notices',
-      'profile',
       'modules',
+      'settings',
     ]);
 
     const unlocked = allModules.filter((m) => m.implemented && !exclude.has(m.id));

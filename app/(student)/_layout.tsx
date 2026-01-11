@@ -215,15 +215,10 @@ export default function StudentLayout() {
 
   const studentNavItems: DockNavItem[] = [
     { id: 'dashboard', title: 'Home', icon: 'home', route: '/(student)/dashboard' },
-    { id: 'attendance', title: 'Attendance', icon: 'checkmark-circle', route: '/(student)/attendance', nestedRoutes: ['attendance'] },
-    { id: 'timetable', title: 'Schedule', icon: 'calendar', route: '/(student)/timetable', nestedRoutes: ['timetable'] },
+    { id: 'timetable', title: 'Timetable', icon: 'calendar', route: '/(student)/timetable', nestedRoutes: ['timetable'] },
     { id: 'materials', title: 'Materials', icon: 'book', route: '/(student)/materials', nestedRoutes: ['materials'] },
-    { id: 'marks', title: 'Marks', icon: 'stats-chart', route: '/(student)/marks', nestedRoutes: ['marks', 'exams'] },
-    { id: 'assignments', title: 'Tasks', icon: 'clipboard', route: '/(student)/assignments', nestedRoutes: ['assignments'] },
-    { id: 'library', title: 'Library', icon: 'library', route: '/(student)/library', nestedRoutes: ['library'] },
-    { id: 'notices', title: 'Updates', icon: 'notifications', route: '/(student)/notices', nestedRoutes: ['notices'] },
     { id: 'modules', title: 'Modules', icon: 'grid', route: '/(student)/modules', nestedRoutes: ['modules'] },
-    { id: 'profile', title: 'Profile', icon: 'person', route: '/(student)/profile' },
+    { id: 'settings', title: 'Settings', icon: 'settings', route: '/(student)/settings', nestedRoutes: ['settings'] },
   ];
 
   return (
