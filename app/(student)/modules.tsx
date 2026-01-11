@@ -26,7 +26,7 @@ export default function StudentModulesScreen() {
     const allModules: StudentModuleItem[] = [
       { id: 'dashboard', title: 'Home', icon: 'home', route: '/(student)/dashboard', implemented: true },
       { id: 'attendance', title: 'Attendance', icon: 'checkmark-circle', route: '/(student)/attendance', implemented: true },
-      { id: 'timetable', title: 'Schedule', icon: 'calendar', route: '/(student)/timetable', implemented: true },
+      { id: 'timetable', title: 'Timetable', icon: 'calendar', route: '/(student)/timetable', implemented: true },
       { id: 'materials', title: 'Materials', icon: 'book', route: '/(student)/materials', implemented: true },
       { id: 'marks', title: 'Marks', icon: 'stats-chart', route: '/(student)/marks', implemented: true },
       { id: 'exams', title: 'Exams', icon: 'school', route: '/(student)/exams', implemented: true },
