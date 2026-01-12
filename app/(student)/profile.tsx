@@ -1,24 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
 
-import { AnimatedBackground, Card } from '../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { withAlpha } from '../../theme/colorUtils';
-import { signOut } from '../../lib/supabase';
+import { signOut, supabase } from '../../lib/supabase';
 import { getStudentWithDetails } from '../../lib/database';
+import { uploadFileToBucket } from '../../lib/storage';
 
 export default function StudentProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colors } = useThemeStore();
-  const { user, profile, logout } = useAuthStore();
+  const { colors, isDark } = useThemeStore();
+  const { user, profile, setProfile, logout } = useAuthStore();
 
   const [studentDetails, setStudentDetails] = useState<any>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState(profile?.photo_url || '');
+
+  useEffect(() => {
+    setPhotoUrl(profile?.photo_url || '');
+  }, [profile?.photo_url]);
 
   useEffect(() => {
     if (user) {
@@ -27,6 +35,70 @@ export default function StudentProfileScreen() {
       });
     }
   }, [user]);
+
+  const canChangePhoto = useMemo(() => {
+    return Boolean(user?.id) && !uploadingPhoto;
+  }, [uploadingPhoto, user?.id]);
+
+  const handleChangePhoto = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'Not signed in');
+      return;
+    }
+
+    const result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true,
+      multiple: false,
+      type: ['image/*'],
+    });
+
+    if (result.canceled) return;
+    const file = result.assets?.[0];
+    if (!file?.uri) {
+      Alert.alert('Error', 'Failed to read selected image');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+
+      const fileName = file.name || 'avatar.jpg';
+      const ext = (fileName.split('.').pop() || 'jpg').toLowerCase();
+      const stablePath = `profiles/${user.id}/avatar.${ext}`;
+
+      const { publicUrl } = await uploadFileToBucket({
+        bucket: 'profile-photos',
+        prefix: `profiles/${user.id}`,
+        path: stablePath,
+        upsert: true,
+        uri: file.uri,
+        name: fileName,
+        mimeType: file.mimeType || 'image/jpeg',
+      });
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ photo_url: publicUrl })
+        .eq('id', user.id)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.log('Student profile photo update error:', error.message);
+        Alert.alert('Error', 'Failed to save profile photo');
+        return;
+      }
+
+      setProfile(data as any);
+      setPhotoUrl(publicUrl);
+      Alert.alert('Saved', 'Profile photo updated');
+    } catch (e: any) {
+      console.log('Student profile photo upload error:', e?.message || e);
+      Alert.alert('Error', 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -53,16 +125,34 @@ export default function StudentProfileScreen() {
         <Animated.View entering={FadeInDown.delay(100).duration(500)}>
           <Card>
             <View style={styles.profileSection}>
-              {profile?.photo_url ? (
-                <Image
-                  source={{ uri: profile.photo_url }}
-                  style={styles.profileImage}
-                />
-              ) : (
-                <View style={[styles.profileImage, { backgroundColor: colors.primary }]}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handleChangePhoto}
+                disabled={!canChangePhoto}
+                style={[styles.profileImage, { backgroundColor: photoUrl ? 'transparent' : colors.primary }]}
+              >
+                {photoUrl ? (
+                  <Image source={{ uri: photoUrl }} style={styles.profileImageInner} />
+                ) : (
                   <Ionicons name="person" size={56} color={colors.background} />
-                </View>
-              )}
+                )}
+                {uploadingPhoto ? (
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      StyleSheet.absoluteFillObject,
+                      {
+                        borderRadius: 40,
+                        backgroundColor: withAlpha(colors.background, isDark ? 0.55 : 0.4),
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      },
+                    ]}
+                  >
+                    <LoadingIndicator color={colors.primary} size="small" />
+                  </View>
+                ) : null}
+              </TouchableOpacity>
               <View style={styles.profileInfo}>
                 <Text style={[styles.profileName, { color: colors.textPrimary }]}>
                   {profile?.full_name || 'Student'}
@@ -189,6 +279,11 @@ const styles = StyleSheet.create({
     marginRight: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  profileImageInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   profileInfo: {
     flex: 1,
