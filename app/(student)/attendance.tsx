@@ -54,8 +54,17 @@ export default function StudentAttendanceScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
 
-  const [summary, setSummary] = useState({ total: 0, present: 0, absent: 0, late: 0, percentage: 0 });
+  const [summary, setSummary] = useState({ 
+    total: 0, 
+    present: 0, 
+    absent: 0, 
+    late: 0, 
+    percentage: 0,
+    approvedAbsences: 0,
+    unapprovedAbsences: 0 
+  });
   const [recent, setRecent] = useState<RecentAttendanceRow[]>([]);
+  const [absentDatesWithoutLeave, setAbsentDatesWithoutLeave] = useState<string[]>([]);
 
   const range = useMemo(() => {
     const now = new Date();
@@ -71,7 +80,55 @@ export default function StudentAttendanceScreen() {
 
   const fetchSummary = useCallback(async (sId: string) => {
     const data = await getAttendanceSummary(sId, range.startISO, range.endISO);
-    setSummary(data);
+    
+    // Fetch approved leaves to categorize absences
+    const { data: leaveData } = await supabase
+      .from('student_leave_applications')
+      .select('from_date, to_date')
+      .eq('student_id', sId)
+      .eq('status', 'approved')
+      .gte('to_date', range.startISO)
+      .lte('from_date', range.endISO);
+
+    const approvedLeaveDates = new Set<string>();
+    (leaveData || []).forEach((leave: any) => {
+      const start = new Date(leave.from_date);
+      const end = new Date(leave.to_date);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        approvedLeaveDates.add(formatISODate(d));
+      }
+    });
+
+    // Fetch all attendance records to check which absence dates have no leave
+    const { data: records } = await supabase
+      .from('attendance_records')
+      .select('status, attendance!inner(date)')
+      .eq('student_id', sId)
+      .eq('status', 'absent')
+      .gte('attendance.date', range.startISO)
+      .lte('attendance.date', range.endISO);
+
+    const absentDates = new Set<string>();
+    (records || []).forEach((r: any) => {
+      absentDates.add(r.attendance.date);
+    });
+
+    const unapprovedDates: string[] = [];
+    absentDates.forEach(date => {
+      if (!approvedLeaveDates.has(date)) {
+        unapprovedDates.push(date);
+      }
+    });
+
+    const approvedAbsences = data.absent - unapprovedDates.length;
+    const unapprovedAbsences = unapprovedDates.length;
+
+    setAbsentDatesWithoutLeave(unapprovedDates.sort().reverse());
+    setSummary({ 
+      ...data, 
+      approvedAbsences: Math.max(0, approvedAbsences),
+      unapprovedAbsences 
+    });
   }, [range.endISO, range.startISO]);
 
   const fetchRecent = useCallback(async (sId: string) => {
@@ -110,8 +167,9 @@ export default function StudentAttendanceScreen() {
     setStudentId(sId);
 
     if (!sId) {
-      setSummary({ total: 0, present: 0, absent: 0, late: 0, percentage: 0 });
+      setSummary({ total: 0, present: 0, absent: 0, late: 0, percentage: 0, approvedAbsences: 0, unapprovedAbsences: 0 });
       setRecent([]);
+      setAbsentDatesWithoutLeave([]);
       return;
     }
 
@@ -168,8 +226,7 @@ export default function StudentAttendanceScreen() {
                   style={{ marginBottom: 12 }}
                 >
                   <Card>
-                    <View style={styles.leaveRow}
-                      >
+                    <View style={styles.leaveRow}>
                       <View style={[styles.leaveIcon, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
                         <Ionicons name="document-text-outline" size={18} color={colors.primary} />
                       </View>
@@ -212,15 +269,23 @@ export default function StudentAttendanceScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <StatCard
-                      title="Absent"
-                      value={summary.absent}
-                      icon={{ family: 'ion', name: 'close-circle-outline' }}
-                      tone="error"
+                      title="Approved Leave"
+                      value={summary.approvedAbsences}
+                      icon={{ family: 'ion', name: 'checkmark-done-outline' }}
+                      tone="success"
                     />
                   </View>
                 </View>
 
                 <View style={styles.statsGrid}>
+                  <View style={{ flex: 1 }}>
+                    <StatCard
+                      title="No Permission"
+                      value={summary.unapprovedAbsences}
+                      icon={{ family: 'ion', name: 'alert-circle-outline' }}
+                      tone="error"
+                    />
+                  </View>
                   <View style={{ flex: 1 }}>
                     <StatCard
                       title="Late"
@@ -229,15 +294,32 @@ export default function StudentAttendanceScreen() {
                       tone="warning"
                     />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <StatCard
-                      title="From"
-                      value={formatShortDate(range.startISO)}
-                      icon={{ family: 'ion', name: 'arrow-back-outline' }}
-                      tone="neutral"
-                    />
-                  </View>
                 </View>
+
+                {absentDatesWithoutLeave.length > 0 && (
+                  <Animated.View entering={FadeInDown.duration(350)} style={{ marginTop: 12, marginBottom: 12 }}>
+                    <Card style={{ 
+                      borderWidth: 2, 
+                      borderColor: colors.error,
+                      backgroundColor: withAlpha(colors.error, isDark ? 0.08 : 0.05) 
+                    }}>
+                      <View style={styles.warningRow}>
+                        <Ionicons name="warning" size={22} color={colors.error} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.warningTitle, { color: colors.error }]}>NO PERMISSION</Text>
+                          <Text style={[styles.warningSub, { color: colors.textSecondary }]}>
+                            You have {absentDatesWithoutLeave.length} absent day(s) without approved leave
+                          </Text>
+                          <View style={{ height: 8 }} />
+                          <Text style={[styles.warningDates, { color: colors.textMuted }]}>
+                            {absentDatesWithoutLeave.slice(0, 5).map(d => formatShortDate(d)).join(', ')}
+                            {absentDatesWithoutLeave.length > 5 && ` +${absentDatesWithoutLeave.length - 5} more`}
+                          </Text>
+                        </View>
+                      </View>
+                    </Card>
+                  </Animated.View>
+                )}
 
                 <View style={{ marginTop: 14, marginBottom: 10 }}>
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent</Text>
@@ -274,10 +356,16 @@ export default function StudentAttendanceScreen() {
 
                     const courseLabel =
                       r.attendance?.courses?.short_name || r.attendance?.courses?.code || r.attendance?.courses?.name || 'Course';
+                    
+                    // Check if this absence date has approved leave
+                    const isAbsentWithoutLeave = r.status === 'absent' && absentDatesWithoutLeave.includes(r.attendance.date);
 
                     return (
                       <Animated.View key={r.id} entering={FadeInDown.delay(index * 25).duration(260)} style={{ marginBottom: 12 }}>
-                        <Card>
+                        <Card style={isAbsentWithoutLeave ? {
+                          borderLeftWidth: 4,
+                          borderLeftColor: colors.error,
+                        } : undefined}>
                           <View style={styles.rowTop}>
                             <View style={{ flex: 1 }}>
                               <Text style={[styles.rowTitle, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -287,6 +375,12 @@ export default function StudentAttendanceScreen() {
                                 {formatShortDate(r.attendance.date)} • Period {r.attendance.period}
                                 {r.status === 'late' && (r.late_minutes ?? 0) > 0 ? ` • ${r.late_minutes} min` : ''}
                               </Text>
+                              {isAbsentWithoutLeave && (
+                                <View style={styles.noPermissionBadge}>
+                                  <Ionicons name="alert-circle" size={12} color={colors.error} style={{ marginRight: 4 }} />
+                                  <Text style={[styles.noPermissionText, { color: colors.error }]}>NO PERMISSION</Text>
+                                </View>
+                              )}
                             </View>
                             <View style={[styles.chip, { backgroundColor: chipBg }]}>
                               <Text style={[styles.chipText, { color: chipText }]}>{String(r.status).toUpperCase()}</Text>
@@ -384,5 +478,32 @@ const styles = StyleSheet.create({
   emptySub: {
     marginTop: 6,
     fontSize: 13,
+  },
+  warningRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  warningTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  warningSub: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  warningDates: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  noPermissionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  noPermissionText: {
+    fontSize: 10,
+    fontWeight: '900',
   },
 });

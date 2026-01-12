@@ -550,7 +550,8 @@ export const getAttendanceSummary = async (
   const present = records.filter((r: any) => r.status === 'present').length;
   const absent = records.filter((r: any) => r.status === 'absent').length;
   const late = records.filter((r: any) => r.status === 'late').length;
-  const percentage = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+  // Count all absences as leave (approved or not) for percentage - warning encourages proper application
+  const percentage = total > 0 ? Math.round(((present + late + absent) / total) * 100) : 0;
 
   return { total, present, absent, late, percentage };
 };
