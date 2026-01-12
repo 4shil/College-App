@@ -65,6 +65,7 @@ export default function StudentAttendanceScreen() {
   });
   const [recent, setRecent] = useState<RecentAttendanceRow[]>([]);
   const [absentDatesWithoutLeave, setAbsentDatesWithoutLeave] = useState<string[]>([]);
+  const [alertCount, setAlertCount] = useState(0);
 
   const range = useMemo(() => {
     const now = new Date();
@@ -131,6 +132,18 @@ export default function StudentAttendanceScreen() {
     });
   }, [range.endISO, range.startISO]);
 
+  const fetchAlertCount = useCallback(async (sId: string) => {
+    const { count, error } = await supabase
+      .from('attendance_alerts')
+      .select('*', { count: 'exact', head: true })
+      .eq('student_id', sId)
+      .is('resolved_at', null);
+
+    if (!error && count !== null) {
+      setAlertCount(count);
+    }
+  }, []);
+
   const fetchRecent = useCallback(async (sId: string) => {
     const { data, error } = await supabase
       .from('attendance_records')
@@ -158,11 +171,12 @@ export default function StudentAttendanceScreen() {
     }
 
     setRecent((data || []) as any);
-  }, []);
+  }, [setAlertCount(0);
+      return;
+    }
 
-  const fetchAll = useCallback(async () => {
-    if (!user?.id) return;
-
+    await Promise.all([fetchSummary(sId), fetchRecent(sId), fetchAlertCount(sId)]);
+  }, [fetchAlertCount, 
     const sId = studentId || (await fetchStudentId());
     setStudentId(sId);
 
@@ -220,24 +234,55 @@ export default function StudentAttendanceScreen() {
               </Card>
             ) : (
               <>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => router.push('/(student)/attendance/leave' as any)}
-                  style={{ marginBottom: 12 }}
-                >
-                  <Card>
-                    <View style={styles.leaveRow}>
-                      <View style={[styles.leaveIcon, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
-                        <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+                <View style={styles.quickActionsRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => router.push('/(student)/attendance/leave' as any)}
+                    style={{ flex: 1 }}
+                  >
+                    <Card>
+                      <View style={styles.leaveRow}>
+                        <View style={[styles.leaveIcon, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
+                          <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.leaveTitle, { color: colors.textPrimary }]}>Leave application</Text>
+                          <Text style={[styles.leaveSub, { color: colors.textSecondary }]}>Request permission</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.leaveTitle, { color: colors.textPrimary }]}>Leave application</Text>
-                        <Text style={[styles.leaveSub, { color: colors.textSecondary }]}>Request permission from class teacher</Text>
+                    </Card>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => router.push('/(student)/attendance/alerts' as any)}
+                    style={{ flex: 1 }}
+                  >
+                    <Card style={alertCount > 0 ? {
+                      borderWidth: 2,
+                      borderColor: colors.error,
+                    } : undefined}>
+                      <View style={styles.leaveRow}>
+                        <View style={[styles.leaveIcon, { backgroundColor: withAlpha(colors.error, isDark ? 0.18 : 0.1) }]}>
+                          <Ionicons name="warning-outline" size={18} color={colors.error} />
+                          {alertCount > 0 && (
+                            <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                              <Text style={styles.badgeText}>{alertCount}</Text>
+                            </View>
+                          )}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.leaveTitle, { color: colors.textPrimary }]}>Alerts</Text>
+                          <Text style={[styles.leaveSub, { color: colors.textSecondary }]}>
+                            {alertCount > 0 ? `${alertCount} unresolved` : 'No alerts'}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                    </View>
-                  </Card>
-                </TouchableOpacity>
+                    </Card>
+                  </TouchableOpacity>
+                </View>
 
                 <View style={styles.statsGrid}>
                   <View style={{ flex: 1 }}>
@@ -389,6 +434,11 @@ export default function StudentAttendanceScreen() {
                         </Card>
                       </Animated.View>
                     );
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
                   })
                 )}
               </>
@@ -431,6 +481,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '900',
   },
   leaveTitle: {
     fontSize: 13,
