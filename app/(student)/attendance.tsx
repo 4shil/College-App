@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 
 import { AnimatedBackground, Card, LoadingIndicator, StatCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
@@ -44,6 +46,7 @@ function statusTone(status: string) {
 
 export default function StudentAttendanceScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { colors, isDark } = useThemeStore();
   const { user } = useAuthStore();
 
@@ -159,6 +162,26 @@ export default function StudentAttendanceScreen() {
               </Card>
             ) : (
               <>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => router.push('/(student)/attendance/leave' as any)}
+                  style={{ marginBottom: 12 }}
+                >
+                  <Card>
+                    <View style={styles.leaveRow}
+                      >
+                      <View style={[styles.leaveIcon, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
+                        <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.leaveTitle, { color: colors.textPrimary }]}>Leave application</Text>
+                        <Text style={[styles.leaveSub, { color: colors.textSecondary }]}>Request permission from class teacher</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                    </View>
+                  </Card>
+                </TouchableOpacity>
+
                 <View style={styles.statsGrid}>
                   <View style={{ flex: 1 }}>
                     <StatCard
@@ -302,6 +325,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginBottom: 12,
+  },
+  leaveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  leaveIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leaveTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  leaveSub: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '700',
   },
   sectionTitle: {
     fontSize: 16,

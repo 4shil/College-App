@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { AnimatedBackground, Card, LoadingIndicator } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
@@ -50,6 +52,7 @@ export default function TeacherClassToolsScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
   const { user } = useAuthStore();
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -259,6 +262,23 @@ export default function TeacherClassToolsScreen() {
               </Card>
             ) : (
               <>
+                <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(teacher)/class-tools/leaves' as any)}>
+                  <Card style={{ marginBottom: 12 }}>
+                    <View style={styles.actionRow}>
+                      <View style={[styles.actionIcon, { backgroundColor: colors.primary + '1A' }]}>
+                        <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>Leave Requests</Text>
+                        <Text style={[styles.actionSub, { color: colors.textSecondary }]}>Approve / reject student leave</Text>
+                      </View>
+
+                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                    </View>
+                  </Card>
+                </TouchableOpacity>
+
                 <Card>
                   <Text style={[styles.blockTitle, { color: colors.textPrimary }]}>Class summary (today)</Text>
                   <Text style={[styles.blockSub, { color: colors.textSecondary }]}>Quick status for your section</Text>
@@ -349,6 +369,10 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, textAlign: 'center' },
   blockTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center' },
   blockSub: { marginTop: 6, fontSize: 12, textAlign: 'center' },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  actionIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  actionTitle: { fontSize: 13, fontWeight: '900' },
+  actionSub: { marginTop: 4, fontSize: 12, fontWeight: '700' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
   summaryLabel: { fontSize: 13, fontWeight: '600' },
   summaryValue: { fontSize: 13, fontWeight: '800' },
