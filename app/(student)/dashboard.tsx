@@ -471,9 +471,37 @@ export default function StudentDashboard() {
               onPress={() => handleNavigate('/(student)/notices')}
             />
             <ActionTile
+              icon="restaurant"
+              label="Canteen"
+              subtitle={
+                summary
+                  ? summary.canteenMenuCount > 0
+                    ? `${summary.canteenMenuCount} items today${summary.myCanteenTokensCount ? ` · ${summary.myCanteenTokensCount} token(s)` : ''}`
+                    : 'No menu today'
+                  : 'Menu & tokens'
+              }
+              onPress={() => handleNavigate('/(student)/canteen')}
+            />
+            <ActionTile
+              icon="bus"
+              label="Bus"
+              subtitle={
+                summary
+                  ? summary.busSubscriptionStatus === 'none'
+                    ? 'No subscription'
+                    : `${summary.busSubscriptionStatus.toUpperCase()}${summary.busRouteLabel ? ` · ${summary.busRouteLabel}` : ''}`
+                  : 'Route & status'
+              }
+              onPress={() => handleNavigate('/(student)/bus')}
+            />
+            <ActionTile
               icon="library"
               label="Library"
-              subtitle="Books & issues"
+              subtitle={
+                summary
+                  ? `${summary.libraryActiveIssuesCount} active${summary.libraryFineDue > 0 ? ` · ₹${Math.round(summary.libraryFineDue)}` : ''}`
+                  : 'Books & issues'
+              }
               onPress={() => handleNavigate('/(student)/library')}
             />
             <ActionTile

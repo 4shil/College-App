@@ -65,6 +65,18 @@ export type StudentDashboardSummary = {
   // Quick links
   quickNoticesCount: number;
   unreadNoticesCount: number;
+
+  // Campus previews
+  canteenMenuCount: number;
+  canteenSoldOutCount: number;
+  myCanteenTokensCount: number;
+
+  busSubscriptionStatus: 'none' | 'pending' | 'approved' | 'rejected';
+  busRouteLabel: string | null;
+  busStopLabel: string | null;
+
+  libraryActiveIssuesCount: number;
+  libraryFineDue: number;
 };
 
 export const useStudentDashboard = () => {
@@ -113,11 +125,14 @@ export const useStudentDashboard = () => {
         setLoading(false);
         return;
       }
+
       const { data: academicYear } = await supabase
         .from('academic_years')
         .select('id')
         .eq('is_current', true)
         .single();
+
+      const academicYearId = academicYear?.id || student.academic_year_id || null;
 
       const todayDayOfWeek = (() => {
         const d = new Date();
@@ -127,7 +142,7 @@ export const useStudentDashboard = () => {
       })();
 
       const todayTimetable: TodayTimetableEntry[] = [];
-      if (academicYear?.id && student.section_id) {
+      if (academicYearId && student.section_id) {
         const { data: timetableRows } = await supabase
           .from('timetable_entries')
           .select(
@@ -141,7 +156,7 @@ export const useStudentDashboard = () => {
             `
           )
           .eq('section_id', student.section_id)
-          .eq('academic_year_id', academicYear.id)
+          .eq('academic_year_id', academicYearId)
           .eq('day_of_week', todayDayOfWeek)
           .eq('is_active', true)
           .order('period');
@@ -261,11 +276,77 @@ export const useStudentDashboard = () => {
         };
       }
 
+      // Campus previews
+      const canteenDate = toDateOnlyISO(new Date());
+      let canteenMenuCount = 0;
+      let canteenSoldOutCount = 0;
+      let myCanteenTokensCount = 0;
+
+      const { data: menuRows } = await supabase
+        .from('canteen_daily_menu')
+        .select('id, is_sold_out')
+        .eq('date', canteenDate)
+        .limit(50);
+
+      canteenMenuCount = (menuRows || []).length;
+      canteenSoldOutCount = (menuRows || []).filter((m: any) => Boolean(m?.is_sold_out)).length;
+
+      if (user?.id) {
+        const { data: tokenRows } = await supabase
+          .from('canteen_tokens')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('date', canteenDate)
+          .limit(50);
+        myCanteenTokensCount = (tokenRows || []).length;
+      }
+
+      let busSubscriptionStatus: 'none' | 'pending' | 'approved' | 'rejected' = 'none';
+      let busRouteLabel: string | null = null;
+      let busStopLabel: string | null = null;
+      if (academicYearId) {
+        const { data: sub } = await supabase
+          .from('bus_subscriptions')
+          .select(
+            'approval_status, routes:bus_routes(route_number, route_name), stops:bus_stops(stop_name)'
+          )
+          .eq('student_id', student.id)
+          .eq('academic_year_id', academicYearId)
+          .maybeSingle();
+
+        const statusRaw = String(sub?.approval_status || 'none');
+        if (statusRaw === 'pending' || statusRaw === 'approved' || statusRaw === 'rejected') {
+          busSubscriptionStatus = statusRaw as any;
+        }
+        if (sub?.routes?.route_number || sub?.routes?.route_name) {
+          busRouteLabel = `${sub.routes?.route_number || ''}${sub.routes?.route_name ? ` • ${sub.routes.route_name}` : ''}`.trim();
+        }
+        busStopLabel = sub?.stops?.stop_name ? String(sub.stops.stop_name) : null;
+      }
+
+      let libraryActiveIssuesCount = 0;
+      let libraryFineDue = 0;
+      if (user?.id) {
+        const { data: issueRows } = await supabase
+          .from('book_issues')
+          .select('status, fine_amount, fine_paid')
+          .eq('user_id', user.id)
+          .limit(50);
+
+        const activeIssues = (issueRows || []).filter((i: any) => String(i?.status || '').toLowerCase() !== 'returned');
+        libraryActiveIssuesCount = activeIssues.length;
+        libraryFineDue = activeIssues.reduce((sum: number, row: any) => {
+          const fine = Number(row?.fine_amount || 0);
+          const paid = Boolean(row?.fine_paid);
+          return sum + (!paid ? fine : 0);
+        }, 0);
+      }
+
       setSummary({
         cachedAt: Date.now(),
-        studentName: student.profiles?.full_name || 'Student',
+        studentName: student.profile?.full_name || 'Student',
         studentRollNumber: student.roll_number || 'N/A',
-        departmentName: student.departments?.name || 'Unknown',
+        departmentName: student.department?.name || 'Unknown',
         todayTimetable,
         nextClass,
         attendanceSummary,
@@ -273,6 +354,17 @@ export const useStudentDashboard = () => {
         upcomingAssignments,
         quickNoticesCount,
         unreadNoticesCount,
+
+        canteenMenuCount,
+        canteenSoldOutCount,
+        myCanteenTokensCount,
+
+        busSubscriptionStatus,
+        busRouteLabel,
+        busStopLabel,
+
+        libraryActiveIssuesCount,
+        libraryFineDue,
       });
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
