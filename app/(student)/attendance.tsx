@@ -432,11 +432,6 @@ export default function StudentAttendanceScreen() {
                         </Card>
                       </Animated.View>
                     );
-  quickActionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
                   })
                 )}
               </>
@@ -464,6 +459,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  quickActionsRow: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 12,
