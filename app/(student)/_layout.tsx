@@ -173,7 +173,7 @@ export default function StudentLayout() {
     { id: 'timetable', title: 'Timetable', icon: 'calendar', route: '/(student)/timetable', nestedRoutes: ['timetable'] },
     { id: 'materials', title: 'Materials', icon: 'book', route: '/(student)/materials', nestedRoutes: ['materials'] },
     { id: 'modules', title: 'Modules', icon: 'grid', route: '/(student)/modules', nestedRoutes: ['modules'] },
-    { id: 'settings', title: 'Profile', icon: 'person', route: '/(student)/settings', nestedRoutes: ['settings', 'profile'] },
+    { id: 'profile', title: 'Profile', icon: 'person', route: '/(student)/profile', nestedRoutes: ['profile', 'settings'] },
   ];
 
   return (
