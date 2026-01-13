@@ -1125,11 +1125,673 @@ flowchart TD
 
 ---
 
-## Row Level Security (RLS) Overview
+## RLS Policy Visualization
+
+### RLS Architecture Overview
+
+```mermaid
+graph TD
+    A[Database Query] --> B{RLS Enabled?}
+    B -->|Yes| C[Apply RLS Policies]
+    B -->|No| D[Direct Access - BLOCKED]
+    
+    C --> E{User Authenticated?}
+    E -->|No| F[Return 401 Unauthorized]
+    E -->|Yes| G[Get User Context]
+    
+    G --> H[Execute Policy Functions]
+    H --> I[is_admin]
+    H --> J[is_teacher]
+    H --> K[is_student]
+    H --> L[get_student_id]
+    H --> M[get_teacher_id]
+    
+    I --> N{Check Policies}
+    J --> N
+    K --> N
+    L --> N
+    M --> N
+    
+    N --> O{Any Policy Pass?}
+    O -->|Yes| P[Filter & Return Data]
+    O -->|No| Q[Return 403 Forbidden]
+    
+    style B fill:#FF9800
+    style C fill:#2196F3
+    style H fill:#9C27B0
+    style O fill:#FF9800
+    style P fill:#4CAF50
+    style Q fill:#F44336
+    style F fill:#F44336
+```
+
+### Policy Execution Flow by Role
+
+```mermaid
+stateDiagram-v2
+    [*] --> AuthCheck: Query Request
+    
+    AuthCheck --> GetUserRole: Authenticated
+    AuthCheck --> Reject: Not Authenticated
+    
+    GetUserRole --> SuperAdmin: Super Admin Role
+    GetUserRole --> Admin: Admin Role
+    GetUserRole --> Teacher: Teacher Role
+    GetUserRole --> Student: Student Role
+    
+    SuperAdmin --> FullAccess: All Tables/All Operations
+    Admin --> ScopedAccess: Department/Module Scope
+    Teacher --> TeacherAccess: Class/Course Scope
+    Student --> StudentAccess: Own Data Only
+    
+    FullAccess --> ExecuteQuery
+    ScopedAccess --> CheckDepartment
+    TeacherAccess --> CheckAssignment
+    StudentAccess --> CheckOwnership
+    
+    CheckDepartment --> ExecuteQuery: Department Match
+    CheckDepartment --> Reject: No Match
+    
+    CheckAssignment --> ExecuteQuery: Assigned to Class/Course
+    CheckAssignment --> Reject: Not Assigned
+    
+    CheckOwnership --> ExecuteQuery: Own Record
+    CheckOwnership --> Reject: Different User
+    
+    ExecuteQuery --> [*]: Return Filtered Data
+    Reject --> [*]: Return Error
+```
+
+### RLS Policy Layers
+
+```mermaid
+graph LR
+    subgraph "Layer 1: Authentication"
+        A1[Supabase Auth]
+        A2[Session Token]
+        A3[auth.uid]
+    end
+    
+    subgraph "Layer 2: User Context"
+        B1[Get Profile]
+        B2[Get Roles]
+        B3[Get Permissions]
+    end
+    
+    subgraph "Layer 3: Policy Functions"
+        C1[is_admin]
+        C2[is_teacher]
+        C3[is_student]
+        C4[get_student_id]
+        C5[get_teacher_id]
+    end
+    
+    subgraph "Layer 4: Table Policies"
+        D1[SELECT Policy]
+        D2[INSERT Policy]
+        D3[UPDATE Policy]
+        D4[DELETE Policy]
+    end
+    
+    subgraph "Layer 5: Data Filtering"
+        E1[Row Filter]
+        E2[Column Filter]
+        E3[Join Filter]
+    end
+    
+    A1 --> A2
+    A2 --> A3
+    A3 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 --> C1
+    B3 --> C2
+    B3 --> C3
+    B3 --> C4
+    B3 --> C5
+    C1 --> D1
+    C1 --> D2
+    C1 --> D3
+    C1 --> D4
+    C2 --> D1
+    C2 --> D2
+    C3 --> D1
+    D1 --> E1
+    D2 --> E1
+    D3 --> E1
+    D4 --> E1
+    E1 --> E2
+    E2 --> E3
+    
+    style A1 fill:#4CAF50
+    style B2 fill:#FF9800
+    style C1 fill:#2196F3
+    style C2 fill:#2196F3
+    style C3 fill:#2196F3
+    style D1 fill:#9C27B0
+    style D2 fill:#9C27B0
+    style D3 fill:#9C27B0
+    style D4 fill:#9C27B0
+    style E1 fill:#F44336
+```
+
+### Permission Hierarchy
+
+```mermaid
+graph TD
+    A[Permissions] --> B[Super Admin]
+    A --> C[Admin Roles]
+    A --> D[Teacher Roles]
+    A --> E[Student Role]
+    
+    B --> B1[full_system_access]
+    B --> B2[create_delete_admins]
+    B --> B3[manage_global_settings]
+    B --> B4[All Module Access]
+    
+    C --> C1[Principal]
+    C --> C2[Department Admin]
+    C --> C3[HOD]
+    C --> C4[Specialized Admins]
+    
+    C1 --> C1A[view_all_users]
+    C1 --> C1B[approve_planner_final]
+    C1 --> C1C[approve_diary_final]
+    
+    C2 --> C2A[view_dept_users]
+    C2 --> C2B[manage_dept_structure]
+    
+    C3 --> C3A[approve_planner_level_1]
+    C3 --> C3B[approve_diary_level_1]
+    C3 --> C3C[manage_timetable]
+    
+    C4 --> C4A[exam_cell_admin]
+    C4 --> C4B[library_admin]
+    C4 --> C4C[finance_admin]
+    C4 --> C4D[bus_admin]
+    C4 --> C4E[canteen_admin]
+    
+    D --> D1[Subject Teacher]
+    D --> D2[Class Teacher]
+    D --> D3[Mentor]
+    D --> D4[Coordinator]
+    
+    D1 --> D1A[mark_attendance]
+    D1 --> D1B[enter_marks]
+    D1 --> D1C[create_assignments]
+    
+    D2 --> D2A[approve_student_leaves]
+    D2 --> D2B[view_class_reports]
+    
+    D3 --> D3A[view_mentee_data]
+    
+    E --> E1[view_own_data]
+    E --> E2[submit_assignments]
+    E --> E3[apply_leave]
+    E --> E4[order_canteen]
+    
+    style B fill:#F44336
+    style C fill:#FF9800
+    style D fill:#4CAF50
+    style E fill:#2196F3
+```
+
+### RLS Policy Types
+
+```mermaid
+flowchart LR
+    subgraph "Policy Types"
+        A[RLS Policies]
+        A --> B[SELECT Policies]
+        A --> C[INSERT Policies]
+        A --> D[UPDATE Policies]
+        A --> E[DELETE Policies]
+    end
+    
+    subgraph "Policy Conditions"
+        B --> B1[Self-Access]
+        B --> B2[Role-Based]
+        B --> B3[Department-Scoped]
+        B --> B4[Time-Based]
+        B --> B5[Status-Based]
+        
+        C --> C1[Role Check]
+        C --> C2[Assignment Check]
+        C --> C3[Quota Check]
+        
+        D --> D1[Ownership Check]
+        D --> D2[Lock Check]
+        D --> D3[Approval Level]
+        
+        E --> E1[Admin Only]
+        E --> E2[Soft Delete]
+    end
+    
+    subgraph "Examples"
+        B1 -.->|Example| F1["student_id = auth.uid"]
+        B2 -.->|Example| F2["is_admin = true"]
+        B3 -.->|Example| F3["dept_id IN user_depts"]
+        B4 -.->|Example| F4["is_locked = false"]
+        C1 -.->|Example| F5["is_teacher AND assigned"]
+        D1 -.->|Example| F6["created_by = auth.uid"]
+        E1 -.->|Example| F7["is_super_admin"]
+    end
+    
+    style A fill:#9C27B0
+    style B fill:#2196F3
+    style C fill:#4CAF50
+    style D fill:#FF9800
+    style E fill:#F44336
+```
+
+---
+
+## Data Flow Diagrams
+
+### Complete Student Journey
+
+```mermaid
+flowchart TD
+    START[Student Registration] --> AUTH[Create Auth Account]
+    AUTH --> PROFILE[Create Profile]
+    PROFILE --> APPROVAL{Admin Approval}
+    APPROVAL -->|Pending| WAIT[Wait for Approval]
+    APPROVAL -->|Approved| STUDENT_REC[Create Student Record]
+    
+    STUDENT_REC --> ASSIGN[Assign to Section]
+    ASSIGN --> ENROLL[Enroll in Academic Year]
+    
+    ENROLL --> LOGIN[Student Logs In]
+    LOGIN --> DASHBOARD[View Dashboard]
+    
+    DASHBOARD --> TIMETABLE[Check Timetable]
+    DASHBOARD --> ATTENDANCE[View Attendance]
+    DASHBOARD --> MARKS[View Marks]
+    DASHBOARD --> ASSIGNMENTS[View Assignments]
+    DASHBOARD --> LIBRARY[Library Services]
+    DASHBOARD --> FEES[Fee Status]
+    DASHBOARD --> BUS[Bus Subscription]
+    DASHBOARD --> CANTEEN[Canteen Orders]
+    
+    TIMETABLE --> T1[Daily Schedule]
+    TIMETABLE --> T2[Substitutions]
+    
+    ATTENDANCE --> A1[Attendance %]
+    ATTENDANCE --> A2[Shortage Alerts]
+    ATTENDANCE --> A3[Apply Leave]
+    
+    MARKS --> M1[Internal Marks]
+    MARKS --> M2[External Results]
+    MARKS --> M3[SGPA/CGPA]
+    
+    ASSIGNMENTS --> AS1[Pending Assignments]
+    ASSIGNMENTS --> AS2[Submit Assignment]
+    ASSIGNMENTS --> AS3[View Grades]
+    
+    LIBRARY --> L1[Search Books]
+    LIBRARY --> L2[My Issues]
+    LIBRARY --> L3[Reserve Book]
+    
+    FEES --> F1[Fee Structure]
+    FEES --> F2[Payment History]
+    FEES --> F3[Pending Amount]
+    
+    BUS --> B1[View Routes]
+    BUS --> B2[Subscribe]
+    BUS --> B3[Track Bus]
+    
+    CANTEEN --> C1[View Menu]
+    CANTEEN --> C2[Order Token]
+    CANTEEN --> C3[My Orders]
+    
+    style START fill:#4CAF50
+    style APPROVAL fill:#FF9800
+    style LOGIN fill:#2196F3
+    style DASHBOARD fill:#9C27B0
+```
+
+### Complete Teacher Journey
+
+```mermaid
+flowchart TD
+    START[Teacher Account Creation] --> PROFILE[Create Profile]
+    PROFILE --> TEACHER_REC[Create Teacher Record]
+    TEACHER_REC --> ASSIGN_DEPT[Assign to Department]
+    ASSIGN_DEPT --> ASSIGN_ROLE[Assign Teacher Role]
+    
+    ASSIGN_ROLE --> ASSIGN_COURSES[Assign Courses]
+    ASSIGN_COURSES --> CREATE_TIMETABLE[Create Timetable]
+    
+    CREATE_TIMETABLE --> LOGIN[Teacher Logs In]
+    LOGIN --> DASHBOARD[View Dashboard]
+    
+    DASHBOARD --> TODAY[Today's Classes]
+    DASHBOARD --> ATTENDANCE[Mark Attendance]
+    DASHBOARD --> MARKS[Enter Marks]
+    DASHBOARD --> ASSIGNMENTS[Manage Assignments]
+    DASHBOARD --> MATERIALS[Upload Materials]
+    DASHBOARD --> PLANNER[Lesson Planner]
+    DASHBOARD --> DIARY[Work Diary]
+    DASHBOARD --> CLASS_TOOLS[Class Tools]
+    
+    TODAY --> T1[View Schedule]
+    TODAY --> T2[Request Substitution]
+    
+    ATTENDANCE --> AT1[Create Session]
+    AT1 --> AT2[Mark Students]
+    AT2 --> AT3[Submit Attendance]
+    AT3 --> AT4{Below 75%?}
+    AT4 -->|Yes| AT5[Generate Alert]
+    AT4 -->|No| AT6[Save]
+    
+    MARKS --> MK1[Select Exam]
+    MK1 --> MK2[Enter Marks]
+    MK2 --> MK3[Submit for Verification]
+    MK3 --> MK4{HOD Approves?}
+    MK4 -->|Yes| MK5[Publish to Students]
+    MK4 -->|No| MK6[Revise Marks]
+    
+    ASSIGNMENTS --> AS1[Create Assignment]
+    AS1 --> AS2[Set Due Date]
+    AS2 --> AS3[Publish to Section]
+    AS3 --> AS4[Review Submissions]
+    AS4 --> AS5[Grade & Feedback]
+    
+    MATERIALS --> MT1[Upload File]
+    MT1 --> MT2[Set Visibility]
+    MT2 --> MT3[Publish]
+    
+    PLANNER --> PL1[Create Plan]
+    PL1 --> PL2[Submit]
+    PL2 --> PL3{HOD Approval}
+    PL3 -->|Approved| PL4{Principal Approval}
+    PL3 -->|Rejected| PL5[Revise]
+    PL4 -->|Approved| PL6[Implement]
+    
+    DIARY --> DI1[Daily Entry]
+    DI1 --> DI2[Topics Covered]
+    DI2 --> DI3[Submit]
+    DI3 --> DI4[Approval Flow]
+    
+    CLASS_TOOLS --> CT1{Is Class Teacher?}
+    CT1 -->|Yes| CT2[Approve Leaves]
+    CT1 -->|Yes| CT3[Class Reports]
+    CT1 -->|No| CT4[Not Accessible]
+    
+    style START fill:#4CAF50
+    style LOGIN fill:#2196F3
+    style DASHBOARD fill:#9C27B0
+    style AT4 fill:#FF9800
+    style MK4 fill:#FF9800
+    style PL3 fill:#FF9800
+```
+
+### Complete Admin Journey
+
+```mermaid
+flowchart TD
+    START[Admin Login] --> VERIFY{Verify Admin Role}
+    VERIFY -->|Not Admin| REJECT[Access Denied]
+    VERIFY -->|Admin| CHECK_ROLE{Check Specific Role}
+    
+    CHECK_ROLE --> SUPER_ADMIN[Super Admin]
+    CHECK_ROLE --> PRINCIPAL[Principal]
+    CHECK_ROLE --> DEPT_ADMIN[Department Admin]
+    CHECK_ROLE --> HOD[HOD]
+    CHECK_ROLE --> SPECIALIZED[Specialized Admin]
+    
+    SUPER_ADMIN --> SA_MODULES[All Modules Access]
+    SA_MODULES --> SA1[User Management]
+    SA_MODULES --> SA2[Academic Structure]
+    SA_MODULES --> SA3[System Settings]
+    SA_MODULES --> SA4[All Reports]
+    
+    PRINCIPAL --> P_MODULES[Principal Modules]
+    P_MODULES --> P1[View All Users]
+    P_MODULES --> P2[Final Approvals]
+    P_MODULES --> P3[Global Notices]
+    P_MODULES --> P4[Analytics]
+    
+    DEPT_ADMIN --> DA_MODULES[Department Modules]
+    DA_MODULES --> DA1[Department Users]
+    DA_MODULES --> DA2[Department Structure]
+    DA_MODULES --> DA3[Department Reports]
+    
+    HOD --> HOD_MODULES[HOD Modules]
+    HOD_MODULES --> HOD1[L1 Approvals]
+    HOD_MODULES --> HOD2[Timetable Management]
+    HOD_MODULES --> HOD3[Attendance Reports]
+    HOD_MODULES --> HOD4[Leave Approvals]
+    
+    SPECIALIZED --> SPEC{Which Admin?}
+    SPEC --> EXAM[Exam Cell Admin]
+    SPEC --> LIB[Library Admin]
+    SPEC --> FIN[Finance Admin]
+    SPEC --> BUS[Bus Admin]
+    SPEC --> CANT[Canteen Admin]
+    SPEC --> RECEP[Reception Admin]
+    
+    EXAM --> EX1[Schedule Exams]
+    EXAM --> EX2[Verify Marks]
+    EXAM --> EX3[Publish Results]
+    
+    LIB --> LB1[Manage Books]
+    LIB --> LB2[Issue/Return]
+    LIB --> LB3[Fine Management]
+    
+    FIN --> FN1[Fee Structures]
+    FIN --> FN2[Payment Collection]
+    FIN --> FN3[Financial Reports]
+    
+    BUS --> BS1[Route Management]
+    BUS --> BS2[Vehicle Management]
+    BUS --> BS3[Subscription Approvals]
+    
+    CANT --> CN1[Menu Management]
+    CANT --> CN2[Token Management]
+    CANT --> CN3[Canteen Reports]
+    
+    RECEP --> RC1[Gate Passes]
+    RECEP --> RC2[Late Passes]
+    RECEP --> RC3[Daily Logs]
+    
+    style START fill:#4CAF50
+    style VERIFY fill:#FF9800
+    style SUPER_ADMIN fill:#F44336
+    style PRINCIPAL fill:#FF9800
+    style SPECIALIZED fill:#2196F3
+```
+
+### Data Synchronization Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Supabase
+    participant RLS
+    participant Database
+    participant Storage
+    participant Realtime
+    
+    Client->>Supabase: Query Request
+    Supabase->>RLS: Check Authentication
+    RLS->>RLS: Get auth.uid()
+    RLS->>Database: Execute Policy Functions
+    Database->>RLS: Return User Context
+    RLS->>Database: Apply Row Filters
+    Database->>RLS: Filtered Data
+    RLS->>Supabase: Authorized Data
+    Supabase->>Client: Response
+    
+    Note over Client,Realtime: Real-time Subscription
+    
+    Client->>Realtime: Subscribe to Table
+    Realtime->>RLS: Apply RLS Policies
+    Database->>Realtime: Data Change Event
+    Realtime->>RLS: Filter Event
+    RLS->>Realtime: Authorized Event
+    Realtime->>Client: Push Update
+    
+    Note over Client,Storage: File Upload
+    
+    Client->>Storage: Upload File
+    Storage->>RLS: Check Bucket Policy
+    RLS->>Storage: Authorize Upload
+    Storage->>Storage: Store File
+    Storage->>Database: Save Metadata
+    Database->>Client: File URL
+```
+
+### Approval Workflow System
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: Create Document
+    
+    Draft --> SubmittedL1: Submit for L1 Approval
+    Draft --> [*]: Cancel
+    
+    SubmittedL1 --> ReviewL1: HOD Reviews
+    
+    ReviewL1 --> ApprovedL1: HOD Approves
+    ReviewL1 --> RejectedL1: HOD Rejects
+    
+    RejectedL1 --> Draft: Revise
+    
+    ApprovedL1 --> SubmittedFinal: Forward to Principal
+    
+    SubmittedFinal --> ReviewFinal: Principal Reviews
+    
+    ReviewFinal --> ApprovedFinal: Principal Approves
+    ReviewFinal --> RejectedFinal: Principal Rejects
+    
+    RejectedFinal --> SubmittedL1: Send Back to HOD
+    
+    ApprovedFinal --> Implemented: In Effect
+    
+    Implemented --> Archived: Academic Year End
+    
+    Archived --> [*]
+    
+    note right of ReviewL1
+        RLS: Only HOD of
+        same department
+        can approve L1
+    end note
+    
+    note right of ReviewFinal
+        RLS: Only Principal
+        can approve final
+    end note
+```
+
+### Attendance Marking Flow
+
+```mermaid
+sequenceDiagram
+    participant Teacher
+    participant UI
+    participant TimetableAPI
+    participant AttendanceAPI
+    participant RLS
+    participant Database
+    participant AlertSystem
+    
+    Teacher->>UI: Open Today's Classes
+    UI->>TimetableAPI: Get Teacher's Schedule
+    TimetableAPI->>RLS: Check teacher_id
+    RLS->>Database: Filter by teacher_courses
+    Database->>TimetableAPI: Return Classes
+    TimetableAPI->>UI: Display Schedule
+    
+    Teacher->>UI: Select Class to Mark
+    UI->>AttendanceAPI: Create Session
+    AttendanceAPI->>RLS: Verify Teacher Assignment
+    RLS->>Database: Check teacher_course_id
+    
+    alt Teacher Assigned
+        Database->>AttendanceAPI: Authorized
+        AttendanceAPI->>Database: Create attendance record
+        Database->>AttendanceAPI: Session Created
+        AttendanceAPI->>UI: Load Student List
+        
+        Teacher->>UI: Mark Present/Absent
+        UI->>AttendanceAPI: Submit Attendance
+        AttendanceAPI->>Database: Insert attendance_records
+        
+        Database->>AlertSystem: Calculate Attendance %
+        
+        alt Below 75%
+            AlertSystem->>Database: Create attendance_alert
+            AlertSystem->>UI: Show Warning
+        end
+        
+        Database->>AttendanceAPI: Success
+        AttendanceAPI->>UI: Confirm Submission
+    else Not Assigned
+        Database->>RLS: Reject
+        RLS->>AttendanceAPI: 403 Forbidden
+        AttendanceAPI->>UI: Error: Not Your Class
+    end
+```
+
+---
 
 ### RLS Enabled Tables
 
 All tables in the database have RLS enabled for security.
+
+```mermaid
+graph TB
+    subgraph "Tables with RLS"
+        T1[profiles]
+        T2[user_roles]
+        T3[students]
+        T4[teachers]
+        T5[departments]
+        T6[courses]
+        T7[timetable_entries]
+        T8[attendance]
+        T9[attendance_records]
+        T10[exam_marks]
+        T11[external_marks]
+        T12[assignments]
+        T13[assignment_submissions]
+        T14[teaching_materials]
+        T15[books]
+        T16[book_issues]
+        T17[student_fees]
+        T18[fee_payments]
+        T19[bus_subscriptions]
+        T20[canteen_tokens]
+        T21[notices]
+        T22[events]
+        T23[lesson_planners]
+        T24[work_diary_entries]
+        T25[gate_passes]
+        T26[... 17 more tables]
+    end
+    
+    subgraph "RLS Status"
+        ENABLED[✓ RLS Enabled on ALL Tables]
+        POLICIES[150+ Active Policies]
+        FUNCTIONS[9 Security Functions]
+    end
+    
+    T1 --> ENABLED
+    T5 --> ENABLED
+    T10 --> ENABLED
+    T15 --> ENABLED
+    T20 --> ENABLED
+    T25 --> ENABLED
+    
+    ENABLED --> POLICIES
+    POLICIES --> FUNCTIONS
+    
+    style ENABLED fill:#4CAF50
+    style POLICIES fill:#2196F3
+    style FUNCTIONS fill:#FF9800
+```
 
 ### Common RLS Policies
 
