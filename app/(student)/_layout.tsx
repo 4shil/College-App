@@ -159,51 +159,6 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
           </Animated.View>
         </View>
       </Animated.View>
-
-      <View
-        style={{
-          position: 'absolute',
-          bottom: '100%',
-          right: 0,
-          marginBottom: 8,
-          opacity: expanded ? 1 : 0,
-          pointerEvents: expanded ? 'auto' : 'none',
-        }}
-      >
-        {navItems.map((item, index) => (
-          <TouchableOpacity
-            key={`label-${item.id}`}
-            onPress={() => {
-              onNavigate(item.route);
-              setExpanded(false);
-            }}
-            style={{
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 4,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: withAlpha(colors.background, 0.9),
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: colors.borderRadius,
-              }}
-            >
-              <Animated.Text
-                style={{
-                  color: colors.textPrimary,
-                  fontSize: 12,
-                  fontWeight: '600',
-                }}
-              >
-                {item.title}
-              </Animated.Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
     </View>
   );
 };
@@ -218,7 +173,7 @@ export default function StudentLayout() {
     { id: 'timetable', title: 'Timetable', icon: 'calendar', route: '/(student)/timetable', nestedRoutes: ['timetable'] },
     { id: 'materials', title: 'Materials', icon: 'book', route: '/(student)/materials', nestedRoutes: ['materials'] },
     { id: 'modules', title: 'Modules', icon: 'grid', route: '/(student)/modules', nestedRoutes: ['modules'] },
-    { id: 'settings', title: 'Settings', icon: 'settings', route: '/(student)/settings', nestedRoutes: ['settings'] },
+    { id: 'settings', title: 'Profile', icon: 'person', route: '/(student)/settings', nestedRoutes: ['settings', 'profile'] },
   ];
 
   return (
