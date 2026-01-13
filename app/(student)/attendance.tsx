@@ -171,12 +171,9 @@ export default function StudentAttendanceScreen() {
     }
 
     setRecent((data || []) as any);
-  }, [setAlertCount(0);
-      return;
-    }
+  }, []);
 
-    await Promise.all([fetchSummary(sId), fetchRecent(sId), fetchAlertCount(sId)]);
-  }, [fetchAlertCount, 
+  const fetchAll = useCallback(async () => {
     const sId = studentId || (await fetchStudentId());
     setStudentId(sId);
 
@@ -184,11 +181,12 @@ export default function StudentAttendanceScreen() {
       setSummary({ total: 0, present: 0, absent: 0, late: 0, percentage: 0, approvedAbsences: 0, unapprovedAbsences: 0 });
       setRecent([]);
       setAbsentDatesWithoutLeave([]);
+      setAlertCount(0);
       return;
     }
 
-    await Promise.all([fetchSummary(sId), fetchRecent(sId)]);
-  }, [fetchRecent, fetchStudentId, fetchSummary, studentId, user?.id]);
+    await Promise.all([fetchSummary(sId), fetchRecent(sId), fetchAlertCount(sId)]);
+  }, [fetchAlertCount, fetchRecent, fetchStudentId, fetchSummary, studentId]);
 
   useEffect(() => {
     const init = async () => {
