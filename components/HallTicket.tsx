@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { useThemeStore } from '../store/themeStore';
-import { Card } from '../ui';
+import { Card } from './ui';
 
 interface HallTicketData {
   studentName: string;
