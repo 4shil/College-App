@@ -140,8 +140,6 @@ export const Card: React.FC<CardProps> = ({
         styles.content,
         {
           backgroundColor: resolvedBackground,
-          borderColor: resolvedBorderColor,
-          borderWidth: colors.borderWidth,
           borderRadius: colors.borderRadius,
           padding: noPadding ? 0 : 18,
         },
@@ -161,6 +159,9 @@ export const Card: React.FC<CardProps> = ({
           borderRadius: colors.borderRadius,
           // Fill the wrapper to avoid corner artifacts on some devices.
           backgroundColor: resolvedBackground,
+          // Add border to wrapper to ensure it's fully visible
+          borderColor: resolvedBorderColor,
+          borderWidth: colors.borderWidth,
         },
         style,
       ]}

@@ -501,17 +501,6 @@ export default function StudentDashboard() {
             />
             <ActionTile
               index={5}
-              icon="library-outline"
-              label="Library"
-              subtitle={
-                summary
-                  ? `${summary.libraryActiveIssuesCount} active${summary.libraryFineDue > 0 ? ` · ₹${Math.round(summary.libraryFineDue)}` : ''}`
-                  : 'Books & issues'
-              }
-              onPress={() => handleNavigate('/(student)/library')}
-            />
-            <ActionTile
-              index={6}
               icon="grid-outline"
               label="All Modules"
               subtitle="Browse everything"
@@ -815,7 +804,6 @@ const styles = StyleSheet.create({
   },
   actionTile: {
     borderRadius: 16,
-    overflow: 'hidden',
   },
   actionTileInner: {
     flexDirection: 'row',
