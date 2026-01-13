@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   AnimatedBackground, GlassInput, PrimaryButton, LoadingIndicator, SolidButton } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
-import { supabase, sendOTP } from '../../lib/supabase';
+import { supabase, signUpWithEmail } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
 
 // Import DateTimePicker - works on iOS/Android, not on web
@@ -372,7 +372,23 @@ export default function RegisterScreen() {
     setError(null);
 
     try {
-      // Generate OTP and send to email
+      // Create user account with email confirmation
+      const { data, error: signUpError } = await signUpWithEmail(
+        formData.email.trim().toLowerCase(),
+        formData.password,
+        {
+          full_name: formData.full_name,
+          role: 'student',
+        }
+      );
+
+      if (signUpError) throw signUpError;
+
+      if (!data.user) {
+        throw new Error('Failed to create user account');
+      }
+
+      // Store registration data in profiles table
       const registrationData = {
         apaar_id: formData.apaar_id.toUpperCase(),
         full_name: formData.full_name,
@@ -387,25 +403,36 @@ export default function RegisterScreen() {
         admission_no: formData.admission_no,
       };
 
-      // Store registration data in database for later use
-      await supabase.rpc('generate_otp', {
-        p_email: formData.email.trim().toLowerCase(),
-        p_purpose: 'registration',
+      // Update profile with additional data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          phone: formData.phone,
+          primary_role: 'student',
+          status: 'pending',
+        })
+        .eq('id', data.user.id);
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+      }
+
+      // Store registration metadata
+      const { error: metadataError } = await supabase.rpc('store_registration_data', {
+        p_user_id: data.user.id,
         p_registration_data: registrationData,
       });
 
-      // Send OTP using Supabase Auth
-      const { error: otpError } = await sendOTP(formData.email.trim().toLowerCase());
+      if (metadataError) {
+        console.error('Metadata storage error:', metadataError);
+      }
 
-      if (otpError) throw otpError;
-
-      // Navigate to OTP verification screen
-      router.push({
-        pathname: '/(auth)/verify-otp',
+      // Show success message and redirect to login
+      router.replace({
+        pathname: '/(auth)/login',
         params: {
+          message: 'Registration successful! Please check your email to confirm your account, then login.',
           email: formData.email.trim().toLowerCase(),
-          password: formData.password,
-          apaar_id: formData.apaar_id.toUpperCase(),
         },
       });
     } catch (err: any) {
@@ -1120,7 +1147,7 @@ export default function RegisterScreen() {
             >
               <Ionicons name="mail" size={20} color={colors.success} />
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                An OTP will be sent to {formData.email} for verification.
+                A confirmation link will be sent to {formData.email}. Please verify your email before logging in.
               </Text>
             </View>
 

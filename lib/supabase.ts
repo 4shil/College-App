@@ -59,6 +59,7 @@ export const signUpWithEmail = async (
     password,
     options: {
       data: metadata,
+      emailRedirectTo: undefined, // Use default redirect from Supabase dashboard
     },
   });
   return { data, error };

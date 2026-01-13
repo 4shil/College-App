@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -31,6 +32,7 @@ type UserRoleCategory = 'student' | 'staff';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
   const { setSession, setAuthUser, setLoading } = useAuthStore();
@@ -41,6 +43,17 @@ export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<UserRoleCategory>('staff');
   const [loading, setLoadingState] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Show success message from registration
+  useEffect(() => {
+    if (params.message) {
+      setSuccessMessage(params.message as string);
+      if (params.email) {
+        setEmail(params.email as string);
+      }
+    }
+  }, [params.message, params.email]);
 
   // Only 2 login modes: Student and Staff (Teachers/Admins)
   const roles: { key: UserRoleCategory; label: string; icon: string; description: string }[] = [
@@ -67,7 +80,12 @@ export default function LoginScreen() {
       const { data, error: authError } = await signInWithEmail(email.trim(), password);
 
       if (authError) {
-        setError(authError.message);
+        // Check if email is not confirmed
+        if (authError.message.includes('Email not confirmed')) {
+          setError('Please confirm your email address before logging in. Check your inbox for the confirmation link.');
+        } else {
+          setError(authError.message);
+        }
         setLoadingState(false);
         setLoading(false);
         return;
@@ -230,6 +248,22 @@ export default function LoginScreen() {
 
             {/* Input Fields */}
             <View style={styles.inputsContainer}>
+              {/* Success Message */}
+              {successMessage && (
+                <Animated.View
+                  entering={FadeInDown.duration(300)}
+                  style={[
+                    styles.messageBox,
+                    { backgroundColor: withAlpha(colors.success, 0.1), borderColor: colors.success },
+                  ]}
+                >
+                  <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                  <Text style={[styles.messageText, { color: colors.success }]}>
+                    {successMessage}
+                  </Text>
+                </Animated.View>
+              )}
+
               <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Email / Username</Text>
               <GlassInput
                 icon="mail-outline"
@@ -396,6 +430,21 @@ const styles = StyleSheet.create({
     marginTop: 14,
     marginLeft: 4,
     fontWeight: '500',
+  },
+  messageBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  messageText: {
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+    lineHeight: 18,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
