@@ -114,7 +114,7 @@ export default function StudentDashboard() {
   if (loading && !summary) {
     return (
       <AnimatedBackground>
-        <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}>
+        <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100, justifyContent: 'center', alignItems: 'center' }]}>
           <LoadingIndicator />
         </View>
       </AnimatedBackground>

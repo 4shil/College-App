@@ -208,7 +208,7 @@ export default function TimetableScreen() {
   if (loading) {
     return (
       <AnimatedBackground>
-        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, justifyContent: 'center', alignItems: 'center' }]}>
           <LoadingIndicator />
         </View>
       </AnimatedBackground>

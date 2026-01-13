@@ -446,7 +446,9 @@ export default function TeacherAttendanceIndex() {
           }
         >
           {loading ? (
-            <LoadingIndicator size="large" color={colors.primary} style={{ marginTop: 60 }} />
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 60 }}>
+              <LoadingIndicator size="large" color={colors.primary} />
+            </View>
           ) : !teacherId ? (
             <View style={styles.emptyState}>
               <FontAwesome5 name="user-times" size={48} color={colors.textMuted} />

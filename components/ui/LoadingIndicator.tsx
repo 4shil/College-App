@@ -21,7 +21,7 @@ export function LoadingIndicator({ size, color, style }: LoadingIndicatorProps) 
   const px = toPx(size);
 
   return (
-    <View style={style}>
+    <View style={[{ alignItems: 'center', justifyContent: 'center' }, style]}>
       <TriangleLoader size={px} color={color} />
     </View>
   );

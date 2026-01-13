@@ -146,7 +146,7 @@ export default function TeacherProfileScreen() {
   if (!user) {
     return (
       <AnimatedBackground>
-        <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}>
+        <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100, justifyContent: 'center', alignItems: 'center' }]}>
           <LoadingIndicator color={colors.primary} />
         </View>
       </AnimatedBackground>
