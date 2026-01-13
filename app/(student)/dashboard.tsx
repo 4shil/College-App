@@ -2,11 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, SlideInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { AnimatedBackground, Card, LoadingIndicator, StatCard } from '../../components/ui';
+import { AnimatedBackground, Card, GlassCard, IconBadge, LoadingIndicator, StatCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
@@ -79,30 +79,36 @@ export default function StudentDashboard() {
     </View>
   );
 
-  const ActionTile: React.FC<{ icon: string; label: string; subtitle?: string; onPress: () => void }> = ({
+  const ActionTile: React.FC<{ icon: string; label: string; subtitle?: string; onPress: () => void; index: number }> = ({
     icon,
     label,
     subtitle,
     onPress,
+    index,
   }) => (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.82} style={{ flexBasis: '48%' }}>
-      <Card animated={false} style={styles.actionTile}>
-        <View style={[styles.actionIcon, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
-          <Ionicons name={icon as any} size={20} color={colors.primary} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.actionLabel, { color: colors.textPrimary }]} numberOfLines={1}>
-            {label}
-          </Text>
-          {!!subtitle && (
-            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          )}
-        </View>
-        <Ionicons name="chevron-forward" size={16} color={withAlpha(colors.textPrimary, 0.4)} />
-      </Card>
-    </TouchableOpacity>
+    <Animated.View
+      entering={SlideInRight.delay(450 + index * 50).duration(400).springify().damping(18)}
+      style={{ flexBasis: '48%' }}
+    >
+      <TouchableOpacity onPress={onPress} activeOpacity={0.75}>
+        <GlassCard intensity={18} noPadding style={styles.actionTile}>
+          <View style={styles.actionTileInner}>
+            <IconBadge family="ion" name={icon} tone="primary" size={22} style={styles.actionIconBadge} />
+            <View style={styles.actionContent}>
+              <Text style={[styles.actionLabel, { color: colors.textPrimary }]} numberOfLines={1}>
+                {label}
+              </Text>
+              {!!subtitle && (
+                <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {subtitle}
+                </Text>
+              )}
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={withAlpha(colors.textPrimary, 0.35)} />
+          </View>
+        </GlassCard>
+      </TouchableOpacity>
+    </Animated.View>
   );
 
   if (loading && !summary) {
@@ -442,36 +448,34 @@ export default function StudentDashboard() {
           </Animated.View>
         )}
 
-        {/* Quick access */}
-        <Animated.View entering={FadeInDown.delay(450).duration(450)} style={{ marginTop: 16 }}>
+        {/* Quick Access */}
+        <Animated.View entering={FadeInDown.delay(420).duration(450)} style={{ marginTop: 16 }}>
           <SectionHeader title="Quick Access" />
           <View style={styles.actionsGrid}>
             <ActionTile
-              icon="calendar"
+              index={0}
+              icon="calendar-outline"
               label="Timetable"
               subtitle={summary?.todayTimetable?.length ? `${summary.todayTimetable.length} periods today` : 'View schedule'}
               onPress={() => handleNavigate('/(student)/timetable')}
             />
             <ActionTile
-              icon="clipboard"
+              index={1}
+              icon="clipboard-outline"
               label="Assignments"
               subtitle={summary?.upcomingAssignments?.length ? `${summary.upcomingAssignments.length} upcoming` : 'View tasks'}
               onPress={() => handleNavigate('/(student)/assignments')}
             />
             <ActionTile
-              icon="book"
+              index={2}
+              icon="book-outline"
               label="Materials"
               subtitle="Notes & downloads"
               onPress={() => handleNavigate('/(student)/materials')}
             />
             <ActionTile
-              icon="notifications"
-              label="Notices"
-              subtitle={summary ? `${summary.unreadNoticesCount} unread` : 'Updates'}
-              onPress={() => handleNavigate('/(student)/notices')}
-            />
-            <ActionTile
-              icon="restaurant"
+              index={3}
+              icon="restaurant-outline"
               label="Canteen"
               subtitle={
                 summary
@@ -483,7 +487,8 @@ export default function StudentDashboard() {
               onPress={() => handleNavigate('/(student)/canteen')}
             />
             <ActionTile
-              icon="bus"
+              index={4}
+              icon="bus-outline"
               label="Bus"
               subtitle={
                 summary
@@ -495,7 +500,8 @@ export default function StudentDashboard() {
               onPress={() => handleNavigate('/(student)/bus')}
             />
             <ActionTile
-              icon="library"
+              index={5}
+              icon="library-outline"
               label="Library"
               subtitle={
                 summary
@@ -505,7 +511,8 @@ export default function StudentDashboard() {
               onPress={() => handleNavigate('/(student)/library')}
             />
             <ActionTile
-              icon="grid"
+              index={6}
+              icon="grid-outline"
               label="All Modules"
               subtitle="Browse everything"
               onPress={() => handleNavigate('/(student)/modules')}
@@ -807,29 +814,34 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionTile: {
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  actionTileInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 15,
     gap: 12,
   },
-  actionIcon: {
-    width: 40,
-    height: 40,
+  actionIconBadge: {
+    width: 46,
+    height: 46,
     borderRadius: 14,
-    alignItems: 'center',
+  },
+  actionContent: {
+    flex: 1,
     justifyContent: 'center',
   },
   actionLabel: {
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: -0.1,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
   actionSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
-    marginTop: 3,
+    marginTop: 2,
+    opacity: 0.85,
   },
 
   lastUpdatedContainer: {
