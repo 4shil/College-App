@@ -211,25 +211,6 @@ export default function StudentDashboard() {
                   </TouchableOpacity>
                 </View>
               </View>
-
-              <View style={styles.heroStatsRow}>
-                <StatCard
-                  title="Attendance"
-                  value={`${safePct(summary?.attendanceSummary?.percentage).toFixed(0)}%`}
-                  icon={{ family: 'ion', name: 'checkmark-circle' }}
-                  tone={summary?.attendanceSummary?.status === 'good' ? 'success' : summary?.attendanceSummary?.status === 'warning' ? 'warning' : summary?.attendanceSummary?.status === 'critical' ? 'error' : 'primary'}
-                  onPress={() => handleNavigate('/(student)/attendance')}
-                  style={styles.statCard}
-                />
-                <StatCard
-                  title="Marks"
-                  value={summary?.marksSnapshot ? `${safePct(summary.marksSnapshot.percentage).toFixed(0)}%` : '—'}
-                  icon={{ family: 'ion', name: 'stats-chart' }}
-                  tone="info"
-                  onPress={() => handleNavigate('/(student)/marks')}
-                  style={styles.statCard}
-                />
-              </View>
             </View>
           </Card>
         </Animated.View>

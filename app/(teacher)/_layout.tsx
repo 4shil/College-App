@@ -178,7 +178,7 @@ export default function TeacherLayout() {
   const dockNavItems: DockNavItem[] = isCoordinatorOnly
     ? [
         { id: 'coordinator', title: 'Coordinator', icon: 'swap-horizontal-outline', route: '/(teacher)/coordinator', nestedRoutes: ['coordinator'] },
-        { id: 'profile', title: 'Profile', icon: 'person-outline', route: '/(teacher)/profile', nestedRoutes: ['profile', 'settings', 'change-password'] },
+        { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
       ]
     : [
         { id: 'dashboard', title: 'Dashboard', icon: 'home-outline', route: '/(teacher)/dashboard' },
@@ -205,7 +205,7 @@ export default function TeacherLayout() {
             'session',
           ],
         },
-        { id: 'profile', title: 'Profile', icon: 'person-outline', route: '/(teacher)/profile', nestedRoutes: ['profile', 'settings', 'change-password'] },
+        { id: 'settings', title: 'Settings', icon: 'settings-outline', route: '/(teacher)/settings', nestedRoutes: ['settings', 'change-password'] },
       ];
 
   const isTeacherCapable = roles.some((r) =>

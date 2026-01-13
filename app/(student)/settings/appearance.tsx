@@ -1,79 +1,34 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, SettingsHeader, SettingsSection } from '../../../components/ui';
+import { AnimatedBackground, Card, IconBadge } from '../../../components/ui';
 import { useThemeStore } from '../../../store/themeStore';
 import { themeRegistry } from '../../../theme/registry';
-
-type ModeId = 'light' | 'dark' | 'system';
-
-function ChoiceRow(props: {
-  title: string;
-  subtitle?: string;
-  selected: boolean;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  onPress: () => void;
-}) {
-  const { colors } = useThemeStore();
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={props.onPress}
-      style={[
-        styles.choiceRow,
-        {
-          backgroundColor: props.selected ? colors.inputBackground : 'transparent',
-          borderColor: colors.cardBorder,
-          borderWidth: colors.borderWidth,
-        },
-      ]}
-    >
-      <View style={styles.choiceLeft}>
-        <View
-          style={[
-            styles.choiceIcon,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.inputBorder,
-              borderWidth: colors.borderWidth,
-            },
-          ]}
-        >
-          <Ionicons name={props.icon} size={18} color={props.selected ? colors.primary : colors.textMuted} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.choiceTitle, { color: colors.textPrimary }]}>{props.title}</Text>
-          {props.subtitle ? (
-            <Text style={[styles.choiceSubtitle, { color: colors.textSecondary }]}>{props.subtitle}</Text>
-          ) : null}
-        </View>
-      </View>
-
-      <Ionicons
-        name={props.selected ? 'checkmark-circle' : 'ellipse-outline'}
-        size={20}
-        color={props.selected ? colors.primary : colors.textMuted}
-      />
-    </TouchableOpacity>
-  );
-}
 
 export default function StudentAppearanceSettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
     colors,
-    mode,
-    setMode,
-    activeThemeId,
-    setActiveThemeId,
     animationsEnabled,
     toggleAnimations,
+    mode,
+    setMode,
     supportsAnimatedBackground,
+    capabilities,
+    activeThemeId,
+    setActiveThemeId,
     isDark,
   } = useThemeStore();
 
@@ -88,75 +43,173 @@ export default function StudentAppearanceSettingsScreen() {
     return Array.from(byId.values());
   }, []);
 
-  const modeOptions: Array<{ id: ModeId; title: string; subtitle: string; icon: React.ComponentProps<typeof Ionicons>['name'] }> = [
-    { id: 'light', title: 'Light', subtitle: 'Bright and clean', icon: 'sunny' },
-    { id: 'dark', title: 'Dark', subtitle: 'Easier on the eyes', icon: 'moon' },
-    { id: 'system', title: 'System', subtitle: 'Follow device appearance', icon: 'phone-portrait' },
+  const modeOptions: Array<{ id: 'light' | 'dark' | 'system'; title: string; icon: string }> = [
+    { id: 'light', title: 'Light', icon: 'sunny' },
+    { id: 'dark', title: 'Dark', icon: 'moon' },
+    { id: 'system', title: 'System', icon: 'phone-portrait' },
   ];
 
   return (
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: insets.bottom + 110, paddingHorizontal: 18 }}
+        contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: insets.bottom + 110, paddingHorizontal: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <SettingsHeader
-          title="Appearance"
-          subtitle="Theme mode, preset, and effects"
-          onBack={() => router.back()}
-        />
-
-        <SettingsSection title="Theme Mode">
-          <View style={styles.block}>
-            {modeOptions.map((opt) => (
-              <ChoiceRow
-                key={opt.id}
-                title={opt.title}
-                subtitle={opt.subtitle}
-                icon={opt.icon}
-                selected={mode === opt.id}
-                onPress={() => setMode(opt.id)}
-              />
-            ))}
+        <Animated.View entering={FadeInDown.duration(250)} style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            activeOpacity={0.85}
+            style={[
+              styles.backBtn,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.cardBorder,
+                borderWidth: colors.borderWidth,
+              },
+            ]}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Appearance</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Customize theme and animations</Text>
           </View>
-        </SettingsSection>
+        </Animated.View>
 
-        <SettingsSection title="Theme Preset">
-          <View style={styles.block}>
-            {themePresets.map((preset) => (
-              <ChoiceRow
-                key={preset.id}
-                title={preset.name}
-                subtitle={preset.id === activeThemeId ? 'Current preset' : undefined}
-                icon={preset.id === activeThemeId ? 'radio-button-on' : 'radio-button-off'}
-                selected={preset.id === activeThemeId}
-                onPress={() => setActiveThemeId(preset.id)}
-              />
-            ))}
-          </View>
-        </SettingsSection>
+        <Animated.View entering={FadeInDown.delay(80).duration(260)}>
+          <Card style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <IconBadge family="ion" name="color-palette" tone="primary" size={18} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Theme Mode</Text>
+                <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>Light, Dark, or System</Text>
+              </View>
+            </View>
+
+            <View style={{ height: 10 }} />
+
+            <Card noPadding animated={false}>
+              {modeOptions.map((opt, idx) => {
+                const selected = mode === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    activeOpacity={0.85}
+                    onPress={() => setMode(opt.id)}
+                    style={[
+                      styles.row,
+                      {
+                        backgroundColor: selected ? colors.inputBackground : 'transparent',
+                        borderBottomColor: colors.cardBorder,
+                        borderBottomWidth: idx === modeOptions.length - 1 ? 0 : colors.borderWidth,
+                      },
+                    ]}
+                  >
+                    <View style={styles.rowLeft}>
+                      <Ionicons name={opt.icon as any} size={18} color={selected ? colors.primary : colors.textMuted} />
+                      <Text style={[styles.rowTitle, { color: colors.textPrimary }]}>{opt.title}</Text>
+                    </View>
+                    <Ionicons
+                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={20}
+                      color={selected ? colors.primary : colors.textMuted}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </Card>
+          </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(140).duration(260)}>
+          <Card style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <IconBadge family="ion" name="layers" tone="primary" size={18} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Theme Preset</Text>
+                <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>Choose a preset</Text>
+              </View>
+            </View>
+
+            <View style={{ height: 10 }} />
+
+            <Card noPadding animated={false}>
+              {themePresets.map((preset, idx) => {
+                const selected = activeThemeId === preset.id;
+                return (
+                  <TouchableOpacity
+                    key={preset.id}
+                    activeOpacity={0.85}
+                    onPress={() => setActiveThemeId(preset.id)}
+                    style={[
+                      styles.row,
+                      {
+                        backgroundColor: selected ? colors.inputBackground : 'transparent',
+                        borderBottomColor: colors.cardBorder,
+                        borderBottomWidth: idx === themePresets.length - 1 ? 0 : colors.borderWidth,
+                      },
+                    ]}
+                  >
+                    <View style={styles.rowLeft}>
+                      <Ionicons
+                        name={selected ? 'radio-button-on' : 'radio-button-off'}
+                        size={18}
+                        color={selected ? colors.primary : colors.textMuted}
+                      />
+                      <Text style={[styles.rowTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                        {preset.name}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={20}
+                      color={selected ? colors.primary : colors.textMuted}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </Card>
+          </Card>
+        </Animated.View>
 
         {showAnimations ? (
-          <SettingsSection title="Effects">
-            <View style={styles.block}>
-              <ChoiceRow
-                title="Animations"
-                subtitle={animationsEnabled ? 'Enabled' : 'Disabled'}
-                icon={animationsEnabled ? 'sparkles' : 'sparkles-outline'}
-                selected={animationsEnabled}
-                onPress={toggleAnimations}
-              />
-            </View>
-          </SettingsSection>
-        ) : (
-          <View style={{ marginTop: 12, paddingHorizontal: 4 }}>
-            <Text style={[styles.note, { color: colors.textMuted }]}
-            >
-              Some themes disable animated backgrounds in dark mode for readability.
-            </Text>
-          </View>
-        )}
+          <Animated.View entering={FadeInDown.delay(200).duration(260)}>
+            <Card style={styles.sectionCard}>
+              <View style={styles.sectionHeader}>
+                <IconBadge family="ion" name="sparkles" tone="primary" size={18} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Animations</Text>
+                  <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>Enable UI effects</Text>
+                </View>
+              </View>
+
+              <View style={{ height: 10 }} />
+
+              <View
+                style={[
+                  styles.toggleRow,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.cardBorder,
+                    borderWidth: colors.borderWidth,
+                  },
+                ]}
+              >
+                <View style={styles.toggleLeft}>
+                  <Text style={[styles.toggleTitle, { color: colors.textPrimary }]}>Enable animations</Text>
+                  <Text style={[styles.toggleSubtitle, { color: colors.textSecondary }]}>Recommended</Text>
+                </View>
+                <Switch
+                  value={animationsEnabled}
+                  onValueChange={toggleAnimations}
+                  trackColor={{ false: colors.inputBorder, true: colors.primary }}
+                  thumbColor={animationsEnabled ? colors.primary : colors.cardBackground}
+                />
+              </View>
+            </Card>
+          </Animated.View>
+        ) : null}
       </ScrollView>
     </AnimatedBackground>
   );
@@ -164,14 +217,56 @@ export default function StudentAppearanceSettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  block: { padding: 12, gap: 10 },
-  choiceRow: {
-    padding: 12,
-    borderRadius: 14,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
   },
-  choiceLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  choiceIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  choiceTitle: { fontSize: 15, fontWeight: '800' },
-  choiceSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '600' },
-  note: { fontSize: 12, fontWeight: '600' },
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerContent: { flex: 1 },
+  title: { fontSize: 22, fontWeight: '800' },
+  subtitle: { marginTop: 3, fontSize: 13, fontWeight: '600' },
+
+  sectionCard: { marginBottom: 14 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sectionTitle: { fontSize: 16, fontWeight: '800' },
+  sectionDesc: { marginTop: 2, fontSize: 12, fontWeight: '600' },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  rowTitle: { fontSize: 14, fontWeight: '700', flex: 1 },
+
+  toggleRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toggleLeft: { flex: 1 },
+  toggleTitle: { fontSize: 14, fontWeight: '800' },
+  toggleSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '600' },
 });
