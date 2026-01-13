@@ -9,11 +9,237 @@
 
 ## Table of Contents
 
-1. [Entity Relationship Diagram](#entity-relationship-diagram)
-2. [Database Flow Architecture](#database-flow-architecture)
-3. [Row Level Security (RLS) Overview](#row-level-security-rls-overview)
-4. [Table Relationships](#table-relationships)
-5. [Security Functions](#security-functions)
+1. [Complete Database Schema Overview](#complete-database-schema-overview)
+2. [Entity Relationship Diagram](#entity-relationship-diagram)
+3. [Database Flow Architecture](#database-flow-architecture)
+4. [Row Level Security (RLS) Overview](#row-level-security-rls-overview)
+5. [RLS Policy Visualization](#rls-policy-visualization)
+6. [Data Flow Diagrams](#data-flow-diagrams)
+7. [Table Relationships](#table-relationships)
+8. [Security Functions](#security-functions)
+
+---
+
+## Complete Database Schema Overview
+
+### Database Architecture at a Glance
+
+```mermaid
+graph TB
+    subgraph "Authentication Layer"
+        AUTH[Supabase Auth]
+        PROFILES[profiles table]
+        AUTH --> PROFILES
+    end
+    
+    subgraph "Authorization Layer"
+        ROLES[roles table]
+        USER_ROLES[user_roles table]
+        RBAC[RBAC Functions]
+        PROFILES --> USER_ROLES
+        ROLES --> USER_ROLES
+        USER_ROLES --> RBAC
+    end
+    
+    subgraph "Core Academic"
+        DEPTS[departments]
+        YEARS[years]
+        SEMS[semesters]
+        SECTIONS[sections]
+        COURSES[courses]
+        ACAD_YEARS[academic_years]
+        
+        DEPTS --> SECTIONS
+        YEARS --> SEMS
+        YEARS --> SECTIONS
+        SEMS --> COURSES
+        DEPTS --> COURSES
+    end
+    
+    subgraph "User Management"
+        STUDENTS[students]
+        TEACHERS[teachers]
+        MENTOR[mentor_assignments]
+        TEACHER_COURSES[teacher_courses]
+        
+        PROFILES --> STUDENTS
+        PROFILES --> TEACHERS
+        STUDENTS --> SECTIONS
+        TEACHERS --> DEPTS
+        TEACHERS --> MENTOR
+        STUDENTS --> MENTOR
+        TEACHERS --> TEACHER_COURSES
+        COURSES --> TEACHER_COURSES
+    end
+    
+    subgraph "Timetable & Attendance"
+        TIMETABLE[timetable_entries]
+        ATTENDANCE[attendance]
+        ATT_RECORDS[attendance_records]
+        ATT_ALERTS[attendance_alerts]
+        SUBSTITUTIONS[substitutions]
+        LATE_PASSES[late_passes]
+        HOLIDAYS[holidays]
+        LEAVES[student_leave_applications]
+        
+        TEACHER_COURSES --> TIMETABLE
+        TIMETABLE --> ATTENDANCE
+        ATTENDANCE --> ATT_RECORDS
+        STUDENTS --> ATT_RECORDS
+        STUDENTS --> ATT_ALERTS
+        TIMETABLE --> SUBSTITUTIONS
+        STUDENTS --> LATE_PASSES
+        STUDENTS --> LEAVES
+    end
+    
+    subgraph "Examination System"
+        EXAMS[exams]
+        EXAM_SCHEDULES[exam_schedules]
+        EXAM_MARKS[exam_marks]
+        EXTERNAL_MARKS[external_marks]
+        
+        EXAMS --> EXAM_SCHEDULES
+        COURSES --> EXAM_SCHEDULES
+        EXAM_SCHEDULES --> EXAM_MARKS
+        STUDENTS --> EXAM_MARKS
+        STUDENTS --> EXTERNAL_MARKS
+    end
+    
+    subgraph "Assignments & Materials"
+        ASSIGNMENTS[assignments]
+        SUBMISSIONS[assignment_submissions]
+        MATERIALS[teaching_materials]
+        
+        TEACHERS --> ASSIGNMENTS
+        COURSES --> ASSIGNMENTS
+        ASSIGNMENTS --> SUBMISSIONS
+        STUDENTS --> SUBMISSIONS
+        TEACHERS --> MATERIALS
+        COURSES --> MATERIALS
+    end
+    
+    subgraph "Library System"
+        BOOKS[books]
+        BOOK_ISSUES[book_issues]
+        BOOK_RESERVATIONS[book_reservations]
+        
+        BOOKS --> BOOK_ISSUES
+        BOOKS --> BOOK_RESERVATIONS
+        STUDENTS --> BOOK_ISSUES
+        STUDENTS --> BOOK_RESERVATIONS
+    end
+    
+    subgraph "Financial System"
+        FEE_STRUCTURES[fee_structures]
+        STUDENT_FEES[student_fees]
+        FEE_PAYMENTS[fee_payments]
+        
+        FEE_STRUCTURES --> STUDENT_FEES
+        STUDENTS --> STUDENT_FEES
+        STUDENT_FEES --> FEE_PAYMENTS
+    end
+    
+    subgraph "Transport System"
+        BUS_ROUTES[bus_routes]
+        BUS_STOPS[bus_stops]
+        BUS_VEHICLES[bus_vehicles]
+        BUS_SUBS[bus_subscriptions]
+        BUS_ALERTS[bus_alerts]
+        
+        BUS_ROUTES --> BUS_STOPS
+        BUS_ROUTES --> BUS_VEHICLES
+        BUS_ROUTES --> BUS_SUBS
+        STUDENTS --> BUS_SUBS
+        BUS_VEHICLES --> BUS_ALERTS
+    end
+    
+    subgraph "Canteen System"
+        MENU_ITEMS[canteen_menu_items]
+        DAILY_MENU[canteen_daily_menu]
+        TOKENS[canteen_tokens]
+        
+        MENU_ITEMS --> DAILY_MENU
+        DAILY_MENU --> TOKENS
+        STUDENTS --> TOKENS
+    end
+    
+    subgraph "Communication"
+        NOTICES[notices]
+        NOTICE_READS[notice_reads]
+        EVENTS[events]
+        EVENT_CERTS[event_certificates]
+        FEEDBACK[feedback]
+        COMPLAINTS[complaints]
+        
+        NOTICES --> NOTICE_READS
+        PROFILES --> NOTICE_READS
+        EVENTS --> EVENT_CERTS
+        STUDENTS --> EVENT_CERTS
+        PROFILES --> FEEDBACK
+        PROFILES --> COMPLAINTS
+    end
+    
+    subgraph "Teacher Workflows"
+        LESSON_PLANNERS[lesson_planners]
+        WORK_DIARY[work_diary_entries]
+        
+        TEACHERS --> LESSON_PLANNERS
+        COURSES --> LESSON_PLANNERS
+        TEACHERS --> WORK_DIARY
+        COURSES --> WORK_DIARY
+    end
+    
+    subgraph "Reception"
+        GATE_PASSES[gate_passes]
+        
+        STUDENTS --> GATE_PASSES
+    end
+    
+    subgraph "Miscellaneous"
+        MINOR_SUBJECTS[minor_subjects]
+        STUDENT_MINORS[student_minor_registrations]
+        COLLEGE_INFO[college_info]
+        
+        MINOR_SUBJECTS --> STUDENT_MINORS
+        STUDENTS --> STUDENT_MINORS
+    end
+    
+    subgraph "Storage Buckets"
+        BUCKET_MATERIALS[teaching-materials]
+        BUCKET_SUBMISSIONS[assignment-submissions]
+        BUCKET_PROFILES[profile-photos]
+        BUCKET_DOCS[documents]
+    end
+    
+    MATERIALS -.-> BUCKET_MATERIALS
+    SUBMISSIONS -.-> BUCKET_SUBMISSIONS
+    PROFILES -.-> BUCKET_PROFILES
+    
+    style AUTH fill:#4CAF50
+    style PROFILES fill:#4CAF50
+    style RBAC fill:#2196F3
+    style ROLES fill:#FF9800
+    style USER_ROLES fill:#FF9800
+```
+
+### Table Categories
+
+```mermaid
+pie title "Database Tables by Category (42 Tables)"
+    "Core Academic" : 7
+    "User Management" : 5
+    "Timetable & Attendance" : 7
+    "Examination" : 4
+    "Assignments" : 3
+    "Library" : 3
+    "Financial" : 3
+    "Transport" : 5
+    "Canteen" : 3
+    "Communication" : 6
+    "Teacher Workflows" : 2
+    "Reception" : 2
+    "Miscellaneous" : 3
+```
 
 ---
 
