@@ -2030,6 +2030,263 @@ USING (
 
 ## Table Relationships
 
+### Complete Relationship Map
+
+```mermaid
+graph TB
+    subgraph "Core Identity"
+        AUTH_USERS[auth.users<br/>Supabase Managed]
+        PROFILES[profiles<br/>User Info]
+        USER_ROLES[user_roles<br/>Role Assignments]
+        ROLES[roles<br/>Role Definitions]
+    end
+    
+    subgraph "Student Domain"
+        STUDENTS[students<br/>Student Records]
+        ATT_RECORDS[attendance_records]
+        EXAM_MARKS[exam_marks]
+        SUBMISSIONS[assignment_submissions]
+        BOOK_ISSUES[book_issues]
+        STUDENT_FEES[student_fees]
+        BUS_SUBS[bus_subscriptions]
+        TOKENS[canteen_tokens]
+        GATE_PASSES[gate_passes]
+    end
+    
+    subgraph "Teacher Domain"
+        TEACHERS[teachers<br/>Teacher Records]
+        TEACHER_COURSES[teacher_courses<br/>Teaching Assignments]
+        TIMETABLE[timetable_entries]
+        ATTENDANCE[attendance]
+        ASSIGNMENTS[assignments]
+        MATERIALS[teaching_materials]
+        PLANNERS[lesson_planners]
+        DIARY[work_diary_entries]
+    end
+    
+    subgraph "Academic Structure"
+        DEPTS[departments]
+        YEARS[years]
+        SEMS[semesters]
+        SECTIONS[sections]
+        COURSES[courses]
+        ACAD_YEARS[academic_years]
+    end
+    
+    subgraph "Examination"
+        EXAMS[exams]
+        EXAM_SCHED[exam_schedules]
+        EXTERNAL[external_marks]
+    end
+    
+    subgraph "Services"
+        BOOKS[books]
+        FEE_STRUCT[fee_structures]
+        PAYMENTS[fee_payments]
+        BUS_ROUTES[bus_routes]
+        BUS_STOPS[bus_stops]
+        BUS_VEHICLES[bus_vehicles]
+        MENU[canteen_menu_items]
+        DAILY_MENU[canteen_daily_menu]
+    end
+    
+    subgraph "Communication"
+        NOTICES[notices]
+        NOTICE_READS[notice_reads]
+        EVENTS[events]
+        EVENT_CERTS[event_certificates]
+    end
+    
+    %% Core relationships
+    AUTH_USERS -->|1:1| PROFILES
+    PROFILES -->|1:N| USER_ROLES
+    ROLES -->|1:N| USER_ROLES
+    PROFILES -->|1:1| STUDENTS
+    PROFILES -->|1:1| TEACHERS
+    
+    %% Academic relationships
+    DEPTS -->|1:N| SECTIONS
+    DEPTS -->|1:N| COURSES
+    DEPTS -->|1:N| STUDENTS
+    DEPTS -->|1:N| TEACHERS
+    YEARS -->|1:N| SEMS
+    YEARS -->|1:N| SECTIONS
+    SEMS -->|1:N| COURSES
+    SECTIONS -->|1:N| STUDENTS
+    ACAD_YEARS -->|1:N| STUDENTS
+    
+    %% Teaching relationships
+    TEACHERS -->|1:N| TEACHER_COURSES
+    COURSES -->|1:N| TEACHER_COURSES
+    SECTIONS -->|1:N| TEACHER_COURSES
+    TEACHER_COURSES -->|1:N| TIMETABLE
+    TIMETABLE -->|1:N| ATTENDANCE
+    ATTENDANCE -->|1:N| ATT_RECORDS
+    STUDENTS -->|1:N| ATT_RECORDS
+    
+    %% Exam relationships
+    EXAMS -->|1:N| EXAM_SCHED
+    COURSES -->|1:N| EXAM_SCHED
+    EXAM_SCHED -->|1:N| EXAM_MARKS
+    STUDENTS -->|1:N| EXAM_MARKS
+    STUDENTS -->|1:N| EXTERNAL
+    
+    %% Assignment relationships
+    TEACHERS -->|1:N| ASSIGNMENTS
+    ASSIGNMENTS -->|1:N| SUBMISSIONS
+    STUDENTS -->|1:N| SUBMISSIONS
+    
+    %% Service relationships
+    BOOKS -->|1:N| BOOK_ISSUES
+    STUDENTS -->|1:N| BOOK_ISSUES
+    FEE_STRUCT -->|1:N| STUDENT_FEES
+    STUDENTS -->|1:N| STUDENT_FEES
+    STUDENT_FEES -->|1:N| PAYMENTS
+    BUS_ROUTES -->|1:N| BUS_SUBS
+    STUDENTS -->|1:N| BUS_SUBS
+    MENU -->|1:N| DAILY_MENU
+    DAILY_MENU -->|1:N| TOKENS
+    STUDENTS -->|1:N| TOKENS
+    
+    style AUTH_USERS fill:#4CAF50
+    style PROFILES fill:#4CAF50
+    style STUDENTS fill:#2196F3
+    style TEACHERS fill:#FF9800
+    style DEPTS fill:#9C27B0
+```
+
+### Cascade Delete Rules
+
+```mermaid
+graph TD
+    A[DELETE profiles] -->|CASCADE| B[DELETE students]
+    A -->|CASCADE| C[DELETE teachers]
+    A -->|CASCADE| D[DELETE user_roles]
+    
+    B -->|CASCADE| E[DELETE attendance_records]
+    B -->|CASCADE| F[DELETE exam_marks]
+    B -->|CASCADE| G[DELETE assignment_submissions]
+    B -->|CASCADE| H[DELETE book_issues]
+    B -->|CASCADE| I[DELETE student_fees]
+    
+    C -->|CASCADE| J[DELETE teacher_courses]
+    C -->|CASCADE| K[DELETE assignments]
+    C -->|CASCADE| L[DELETE teaching_materials]
+    
+    J -->|CASCADE| M[DELETE timetable_entries]
+    M -->|CASCADE| N[DELETE attendance]
+    N -->|CASCADE| O[DELETE attendance_records]
+    
+    P[DELETE departments] -->|SET NULL| Q[departments.hod_user_id]
+    P -->|SET NULL| R[students.department_id]
+    P -->|SET NULL| S[teachers.department_id]
+    
+    T[DELETE sections] -->|SET NULL| U[students.section_id]
+    T -->|SET NULL| V[sections.class_teacher_id]
+    
+    style A fill:#F44336
+    style B fill:#FF9800
+    style C fill:#FF9800
+    style P fill:#FF5722
+```
+
+### Database Indexes
+
+```mermaid
+graph LR
+    subgraph "Primary Indexes"
+        PK1[profiles.id]
+        PK2[students.id]
+        PK3[teachers.id]
+        PK4[attendance_records.id]
+        PK5[exam_marks.id]
+    end
+    
+    subgraph "Unique Indexes"
+        UK1[profiles.email]
+        UK2[students.registration_number]
+        UK3[teachers.employee_id]
+        UK4[books.isbn]
+        UK5[bus_vehicles.vehicle_number]
+    end
+    
+    subgraph "Foreign Key Indexes"
+        FK1[students.user_id]
+        FK2[students.section_id]
+        FK3[teachers.department_id]
+        FK4[attendance_records.student_id]
+        FK5[exam_marks.student_id]
+        FK6[user_roles.user_id]
+    end
+    
+    subgraph "Query Optimization Indexes"
+        QI1[attendance.session_date]
+        QI2[exam_marks.exam_schedule_id]
+        QI3[assignment_submissions.assignment_id]
+        QI4[notices.created_at]
+        QI5[fee_payments.payment_date]
+    end
+    
+    PK1 -.->|Ensures Uniqueness| DATA1[(Data)]
+    UK1 -.->|Prevents Duplicates| DATA1
+    FK1 -.->|Speeds up Joins| DATA1
+    QI1 -.->|Fast WHERE Clause| DATA1
+    
+    style PK1 fill:#4CAF50
+    style UK1 fill:#FF9800
+    style FK1 fill:#2196F3
+    style QI1 fill:#9C27B0
+```
+
+### Foreign Key Summary
+
+```mermaid
+erDiagram
+    PROFILES ||--o{ USER_ROLES : "has many"
+    PROFILES ||--o| STUDENTS : "is a"
+    PROFILES ||--o| TEACHERS : "is a"
+    
+    ROLES ||--o{ USER_ROLES : "assigned to"
+    DEPARTMENTS ||--o{ USER_ROLES : "scoped to"
+    
+    DEPARTMENTS ||--o{ STUDENTS : "enrolled in"
+    DEPARTMENTS ||--o{ TEACHERS : "works in"
+    DEPARTMENTS ||--o{ COURSES : "offers"
+    DEPARTMENTS ||--o{ SECTIONS : "owns"
+    
+    SECTIONS ||--o{ STUDENTS : "contains"
+    SECTIONS ||--|| TEACHERS : "class teacher"
+    
+    COURSES ||--o{ TEACHER_COURSES : "taught as"
+    TEACHERS ||--o{ TEACHER_COURSES : "teaches"
+    SECTIONS ||--o{ TEACHER_COURSES : "assigned to"
+    
+    TEACHER_COURSES ||--o{ TIMETABLE_ENTRIES : "scheduled in"
+    TIMETABLE_ENTRIES ||--o{ ATTENDANCE : "sessions"
+    ATTENDANCE ||--o{ ATTENDANCE_RECORDS : "contains"
+    STUDENTS ||--o{ ATTENDANCE_RECORDS : "marked for"
+    
+    EXAMS ||--o{ EXAM_SCHEDULES : "has schedule"
+    COURSES ||--o{ EXAM_SCHEDULES : "exam for"
+    EXAM_SCHEDULES ||--o{ EXAM_MARKS : "marks in"
+    STUDENTS ||--o{ EXAM_MARKS : "obtained by"
+    
+    STUDENTS ||--o{ EXTERNAL_MARKS : "university results"
+    STUDENTS ||--o{ ASSIGNMENT_SUBMISSIONS : "submits"
+    STUDENTS ||--o{ BOOK_ISSUES : "borrows"
+    STUDENTS ||--o{ STUDENT_FEES : "pays"
+    STUDENTS ||--o{ BUS_SUBSCRIPTIONS : "subscribes"
+    STUDENTS ||--o{ CANTEEN_TOKENS : "orders"
+    STUDENTS ||--o{ GATE_PASSES : "requests"
+    
+    TEACHERS ||--o{ ASSIGNMENTS : "creates"
+    TEACHERS ||--o{ TEACHING_MATERIALS : "uploads"
+    TEACHERS ||--o{ LESSON_PLANNERS : "plans"
+    TEACHERS ||--o{ WORK_DIARY_ENTRIES : "writes"
+```
+
+---
+
 ### Foreign Key Summary
 
 | Child Table | Parent Table | Relationship | Constraint |
