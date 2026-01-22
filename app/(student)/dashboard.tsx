@@ -141,53 +141,9 @@ export default function StudentDashboard() {
     return Math.max(0, Math.min(100, v));
   };
 
-  const SectionHeader: React.FC<{ title: string; actionText?: string; onPress?: () => void }> = ({
-    title,
-    actionText,
-    onPress,
-  }) => (
-    <View style={styles.sectionHeaderRow}>
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
-      {!!actionText && !!onPress && (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.sectionAction}>
-          <Text style={[styles.sectionActionText, { color: colors.primary }]}>{actionText}</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.primary} />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
-  const ActionTile: React.FC<{ icon: string; label: string; subtitle?: string; onPress: () => void; index: number }> = ({
-    icon,
-    label,
-    subtitle,
-    onPress,
-    index,
-  }) => (
-    <Animated.View
-      entering={SlideInRight.delay(450 + index * 50).duration(400).springify().damping(18)}
-      style={{ flexBasis: '48%' }}
-    >
-      <TouchableOpacity onPress={onPress} activeOpacity={0.75}>
-        <GlassCard intensity={18} noPadding style={styles.actionTile}>
-          <View style={styles.actionTileInner}>
-            <IconBadge family="ion" name={icon} tone="primary" size={22} style={styles.actionIconBadge} />
-            <View style={styles.actionContent}>
-              <Text style={[styles.actionLabel, { color: colors.textPrimary }]} numberOfLines={1}>
-                {label}
-              </Text>
-              {!!subtitle && (
-                <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {subtitle}
-                </Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={withAlpha(colors.textPrimary, 0.35)} />
-          </View>
-        </GlassCard>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+  // Colors object for memoized components
+  const sectionColors = useMemo(() => ({ textPrimary: colors.textPrimary, primary: colors.primary }), [colors.textPrimary, colors.primary]);
+  const tileColors = useMemo(() => ({ textPrimary: colors.textPrimary, textSecondary: colors.textSecondary }), [colors.textPrimary, colors.textSecondary]);
 
   if (loading && !summary) {
     return (
