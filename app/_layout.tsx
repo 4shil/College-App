@@ -5,8 +5,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Platform, useColorScheme } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { TriangleLoader } from '../components/ui/TriangleLoader';
-import { ThemedAlertProvider } from '../components/ui';
+import { ThemedAlertProvider, ErrorBoundary } from '../components/ui';
 import { installThemedAlertShim } from '../lib/themedAlert';
+import { useThemeStore } from '../store/themeStore';
 
 // Prevent splash auto-hide on native only
 if (Platform.OS !== 'web') {
@@ -18,7 +19,6 @@ export default function RootLayout() {
 
   // Read theme colors for the initial loading UI without hard-coded values.
   // The store has a default theme even before full hydration.
-  const { useThemeStore } = require('../store/themeStore');
   const { colors } = useThemeStore();
 
   useEffect(() => {
@@ -48,8 +48,6 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  // Import theme store here AFTER initial render
-  const { useThemeStore } = require('../store/themeStore');
   const { isDark, colors } = useThemeStore();
   const colorScheme = useColorScheme();
 
@@ -69,25 +67,26 @@ function RootLayoutNav() {
   }, [colorScheme]);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
-      <ThemedAlertProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade',
-            contentStyle: {
-              backgroundColor: colors.background,
-            },
-          }}
-        >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-          <Stack.Screen name="(teacher)" options={{ headerShown: false }} />
-          <Stack.Screen name="(student)" options={{ headerShown: false }} />
-        </Stack>
-      </ThemedAlertProvider>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <ThemedAlertProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'fade',
+              contentStyle: {
+                backgroundColor: colors.background,
+              },
+            }}
+          >
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+            <Stack.Screen name="(teacher)" options={{ headerShown: false }} />
+            <Stack.Screen name="(student)" options={{ headerShown: false }} />
+          </Stack>
+        </ThemedAlertProvider>
     </GestureHandlerRootView>
   );
 }
