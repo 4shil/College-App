@@ -1,16 +1,94 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, memo } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, SlideInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 import { AnimatedBackground, Card, GlassCard, IconBadge, LoadingIndicator, StatCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useAuthStore } from '../../store/authStore';
+
+// Constants for magic numbers
+const ANIMATION_DELAY_BASE = 450;
+const ANIMATION_DELAY_INCREMENT = 50;
+const MAX_SCHEDULE_ITEMS = 4;
+const MAX_ASSIGNMENT_ITEMS = 3;
+
+// Memoized SectionHeader component to prevent re-renders
+interface SectionHeaderProps {
+  title: string;
+  actionText?: string;
+  onPress?: () => void;
+  colors: { textPrimary: string; primary: string };
+}
+
+const SectionHeader = memo<SectionHeaderProps>(({ title, actionText, onPress, colors }) => (
+  <View style={styles.sectionHeaderRow}>
+    <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
+    {!!actionText && !!onPress && (
+      <TouchableOpacity 
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPress();
+        }} 
+        activeOpacity={0.8} 
+        style={styles.sectionAction}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Text style={[styles.sectionActionText, { color: colors.primary }]}>{actionText}</Text>
+        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+      </TouchableOpacity>
+    )}
+  </View>
+));
+
+// Memoized ActionTile component to prevent re-renders
+interface ActionTileProps {
+  icon: string;
+  label: string;
+  subtitle?: string;
+  onPress: () => void;
+  index: number;
+  colors: { textPrimary: string; textSecondary: string };
+}
+
+const ActionTile = memo<ActionTileProps>(({ icon, label, subtitle, onPress, index, colors }) => (
+  <Animated.View
+    entering={SlideInRight.delay(ANIMATION_DELAY_BASE + index * ANIMATION_DELAY_INCREMENT).duration(400).springify().damping(18)}
+    style={{ flexBasis: '48%' }}
+  >
+    <TouchableOpacity 
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+      }} 
+      activeOpacity={0.75}
+      style={{ minHeight: 44 }}
+    >
+      <GlassCard intensity={18} noPadding style={styles.actionTile}>
+        <View style={styles.actionTileInner}>
+          <IconBadge family="ion" name={icon} tone="primary" size={22} style={styles.actionIconBadge} />
+          <View style={styles.actionContent}>
+            <Text style={[styles.actionLabel, { color: colors.textPrimary }]} numberOfLines={1}>
+              {label}
+            </Text>
+            {!!subtitle && (
+              <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            )}
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={withAlpha(colors.textPrimary, 0.35)} />
+        </View>
+      </GlassCard>
+    </TouchableOpacity>
+  </Animated.View>
+));
 
 export default function StudentDashboard() {
   const insets = useSafeAreaInsets();
