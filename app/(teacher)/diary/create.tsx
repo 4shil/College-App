@@ -10,13 +10,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
-
-function toDateOnlyISO(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+import { toDateOnlyISO } from '../../../lib/dateUtils';
 
 type DayStatus = 'W' | 'H' | 'L';
 

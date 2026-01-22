@@ -10,6 +10,7 @@ import { useThemeStore } from '../../../../store/themeStore';
 import { useAuthStore } from '../../../../store/authStore';
 import { supabase } from '../../../../lib/supabase';
 import { withAlpha } from '../../../../theme/colorUtils';
+import { toDateOnlyISO } from '../../../../lib/dateUtils';
 
 type DiaryStatus = 'draft' | 'submitted' | 'hod_approved' | 'principal_approved' | 'rejected';
 
@@ -78,13 +79,6 @@ function countClasses(periods: Record<PeriodSlots, string | null>) {
 function monthLabel(month: number, year: number) {
   const date = new Date(year, Math.max(0, month - 1), 1);
   return date.toLocaleString(undefined, { month: 'long', year: 'numeric' });
-}
-
-function toDateOnlyISO(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
 }
 
 export default function TeacherEditDiaryScreen() {

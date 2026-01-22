@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 import type {
   Profile,
   Student,
@@ -31,7 +32,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
     .single();
 
   if (error) {
-    console.error('Error fetching profile:', error);
+    logger.error('Error fetching profile:', error);
     return null;
   }
   return data;
@@ -67,7 +68,7 @@ export const getUserRoles = async (userId: string): Promise<RoleName[]> => {
     .eq('is_active', true);
 
   if (error) {
-    console.error('Error fetching user roles:', error);
+    logger.error('Error fetching user roles:', error);
     return [];
   }
 
@@ -86,7 +87,7 @@ export const getUserRolesWithDetails = async (userId: string) => {
     .eq('is_active', true);
 
   if (error) {
-    console.error('Error fetching user roles:', error);
+    logger.error('Error fetching user roles:', error);
     return [];
   }
 
@@ -204,7 +205,7 @@ export const getStudentByUserId = async (userId: string): Promise<Student | null
     .single();
 
   if (error) {
-    console.error('Error fetching student:', error);
+    logger.error('Error fetching student:', error);
     return null;
   }
   return data;
@@ -225,7 +226,7 @@ export const getStudentWithDetails = async (userId: string) => {
     .single();
 
   if (error) {
-    console.error('Error fetching student details:', error);
+    logger.error('Error fetching student details:', error);
     return null;
   }
   return data;
@@ -243,7 +244,7 @@ export const getTeacherByUserId = async (userId: string): Promise<Teacher | null
     .single();
 
   if (error) {
-    console.error('Error fetching teacher:', error);
+    logger.error('Error fetching teacher:', error);
     return null;
   }
   return data;
@@ -266,7 +267,7 @@ export const getTeacherWithDetails = async (userId: string) => {
     .single();
 
   if (error) {
-    console.error('Error fetching teacher details:', error);
+    logger.error('Error fetching teacher details:', error);
     return null;
   }
   return data;
@@ -284,7 +285,7 @@ export const getAllDepartments = async (): Promise<Department[]> => {
     .order('name');
 
   if (error) {
-    console.error('Error fetching departments:', error);
+    logger.error('Error fetching departments:', error);
     return [];
   }
   return data || [];
@@ -302,7 +303,7 @@ export const getAllYears = async (): Promise<Year[]> => {
     .order('year_number');
 
   if (error) {
-    console.error('Error fetching years:', error);
+    logger.error('Error fetching years:', error);
     return [];
   }
   return data || [];
@@ -317,7 +318,7 @@ export const getSemestersByYear = async (yearId: string): Promise<Semester[]> =>
     .order('semester_number');
 
   if (error) {
-    console.error('Error fetching semesters:', error);
+    logger.error('Error fetching semesters:', error);
     return [];
   }
   return data || [];
@@ -336,7 +337,7 @@ export const getSectionsByDepartmentAndYear = async (
     .order('name');
 
   if (error) {
-    console.error('Error fetching sections:', error);
+    logger.error('Error fetching sections:', error);
     return [];
   }
   return data || [];
@@ -350,7 +351,7 @@ export const getCurrentAcademicYear = async (): Promise<AcademicYear | null> => 
     .single();
 
   if (error) {
-    console.error('Error fetching current academic year:', error);
+    logger.error('Error fetching current academic year:', error);
     return null;
   }
   return data;
@@ -369,7 +370,7 @@ export const getAllRoles = async (): Promise<Role[]> => {
     .order('name', { ascending: true });
 
   if (error) {
-    console.error('Error fetching roles:', error);
+    logger.error('Error fetching roles:', error);
     return [];
   }
   return data || [];
@@ -384,7 +385,7 @@ export const getRolesByCategory = async (category: 'admin' | 'teacher' | 'studen
     .order('name');
 
   if (error) {
-    console.error('Error fetching roles:', error);
+    logger.error('Error fetching roles:', error);
     return [];
   }
   return data || [];
@@ -403,7 +404,7 @@ export const getAllPrograms = async (): Promise<Program[]> => {
     .order('name');
 
   if (error) {
-    console.error('Error fetching programs:', error);
+    logger.error('Error fetching programs:', error);
     return [];
   }
   return data || [];
@@ -419,7 +420,7 @@ export const getProgramsByDepartment = async (departmentId: string): Promise<Pro
     .order('name');
 
   if (error) {
-    console.error('Error fetching programs:', error);
+    logger.error('Error fetching programs:', error);
     return [];
   }
   return data || [];
@@ -433,7 +434,7 @@ export const getProgramById = async (programId: string): Promise<Program | null>
     .single();
 
   if (error) {
-    console.error('Error fetching program:', error);
+    logger.error('Error fetching program:', error);
     return null;
   }
   return data;
@@ -464,7 +465,7 @@ export const getHolidays = async (
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching holidays:', error);
+    logger.error('Error fetching holidays:', error);
     return [];
   }
   return data || [];
@@ -512,7 +513,7 @@ export const getStudentLatePasses = async (
     .order('month', { ascending: false });
 
   if (error) {
-    console.error('Error fetching late passes:', error);
+    logger.error('Error fetching late passes:', error);
     return [];
   }
   return data || [];
@@ -541,7 +542,7 @@ export const getAttendanceSummary = async (
     .lte('attendance.date', endDate);
 
   if (error) {
-    console.error('Error fetching attendance summary:', error);
+    logger.error('Error fetching attendance summary:', error);
     return { total: 0, present: 0, absent: 0, late: 0, percentage: 0 };
   }
 

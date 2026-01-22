@@ -4,6 +4,7 @@ import { supabase, signInWithEmail, signOut as supabaseSignOut } from '../lib/su
 import { useAuthStore } from '../store/authStore';
 import type { RoleName } from '../types/database';
 import { ADMIN_ROLE_NAMES, TEACHER_ROLE_NAMES } from '../lib/rbac';
+import { logger } from '../lib/logger';
 
 function isInvalidRefreshTokenError(error: unknown): boolean {
   const message =
@@ -67,7 +68,7 @@ export const useAuth = () => {
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logger.error('Error fetching profile:', profileError);
         return null;
       }
 
@@ -83,7 +84,7 @@ export const useAuth = () => {
         .eq('is_active', true);
 
       if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
+        logger.error('Error fetching roles:', rolesError);
       }
 
       // Extract role names
@@ -126,7 +127,7 @@ export const useAuth = () => {
       setUserRole(userRoleCategory);
       return { profile: profileData, roles: roleNames, userRoleCategory };
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      logger.error('Error in fetchUserData:', error);
       return null;
     }
   }, [setProfile, setRoles, setUserRole]);
@@ -141,7 +142,7 @@ export const useAuth = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          logger.error('Error getting session:', error);
           if (isInvalidRefreshTokenError(error)) {
             await forceLocalSignOut();
           }
@@ -159,7 +160,7 @@ export const useAuth = () => {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        logger.error('Error initializing auth:', error);
         if (isInvalidRefreshTokenError(error)) {
           await forceLocalSignOut();
         }
@@ -179,7 +180,7 @@ export const useAuth = () => {
         if (authEvent === 'TOKEN_REFRESH_FAILED') {
           // This commonly occurs when a stale/corrupt refresh token exists in persisted storage.
           // Clear it and send user to login instead of looping and timing out.
-          console.warn('Supabase auth token refresh failed; signing out locally.');
+          logger.warn('Supabase auth token refresh failed; signing out locally.');
           await forceLocalSignOut();
           if (mounted) setLoading(false);
           return;

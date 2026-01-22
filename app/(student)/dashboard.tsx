@@ -39,6 +39,9 @@ const SectionHeader = memo<SectionHeaderProps>(({ title, actionText, onPress, co
         activeOpacity={0.8} 
         style={styles.sectionAction}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityRole="button"
+        accessibilityLabel={actionText}
+        accessibilityHint={`Navigate to ${title}`}
       >
         <Text style={[styles.sectionActionText, { color: colors.primary }]}>{actionText}</Text>
         <Ionicons name="chevron-forward" size={16} color={colors.primary} />
@@ -69,6 +72,9 @@ const ActionTile = memo<ActionTileProps>(({ icon, label, subtitle, onPress, inde
       }} 
       activeOpacity={0.75}
       style={{ minHeight: 44 }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={subtitle || `Navigate to ${label}`}
     >
       <GlassCard intensity={18} noPadding style={styles.actionTile}>
         <View style={styles.actionTileInner}>
@@ -391,7 +397,14 @@ export default function StudentDashboard() {
         <Animated.View entering={FadeInDown.delay(310).duration(450)} style={{ marginTop: 16 }}>
           <SectionHeader title="Highlights" colors={sectionColors} />
           <View style={styles.twoColRow}>
-            <TouchableOpacity onPress={() => handleNavigate('/(student)/attendance')} activeOpacity={0.85} style={{ flex: 1 }}>
+            <TouchableOpacity 
+              onPress={() => handleNavigate('/(student)/attendance')} 
+              activeOpacity={0.85} 
+              style={{ flex: 1 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Attendance ${safePct(summary?.attendanceSummary?.percentage).toFixed(0)} percent`}
+              accessibilityHint="View your attendance details"
+            >
               <Card animated={false} style={styles.halfCard}>
                 <Text style={[styles.halfTitle, { color: colors.textSecondary }]}>Attendance</Text>
                 <Text style={[styles.halfValue, { color: attendanceTone.color }]}>
@@ -415,7 +428,14 @@ export default function StudentDashboard() {
               </Card>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleNavigate('/(student)/marks')} activeOpacity={0.85} style={{ flex: 1 }}>
+            <TouchableOpacity 
+              onPress={() => handleNavigate('/(student)/marks')} 
+              activeOpacity={0.85} 
+              style={{ flex: 1 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Marks ${summary?.marksSnapshot ? safePct(summary.marksSnapshot.percentage).toFixed(0) + ' percent' : 'not available'}`}
+              accessibilityHint="View your marks and grades"
+            >
               <Card animated={false} style={styles.halfCard}>
                 <Text style={[styles.halfTitle, { color: colors.textSecondary }]}>Marks</Text>
                 <Text style={[styles.halfValue, { color: colors.primary }]}>

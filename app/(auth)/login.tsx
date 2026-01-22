@@ -28,6 +28,7 @@ import { signInWithEmail } from '../../lib/supabase';
 import { getAuthUser } from '../../lib/database';
 import { useAuthStore } from '../../store/authStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { isValidEmail } from '../../lib/validation';
 
 // Only 2 role categories: Student and Staff (Teachers + Admins)
 type UserRoleCategory = 'student' | 'staff';
@@ -98,8 +99,16 @@ export default function LoginScreen() {
       setError('Please enter your email');
       return;
     }
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
     if (!password.trim()) {
       setError('Please enter your password');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
 

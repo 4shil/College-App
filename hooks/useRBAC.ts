@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
 import {
   hasPermission,
   canAccessModule,
@@ -76,7 +77,7 @@ export function useRBAC(): UseRBACReturn {
       const roles = data?.map((item: any) => item.role?.name).filter(Boolean) || [];
       setUserRoles(roles);
     } catch (error) {
-      console.error('Error fetching user roles:', error);
+      logger.error('Error fetching user roles:', error);
       setUserRoles([]);
     } finally {
       setLoading(false);

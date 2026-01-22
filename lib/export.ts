@@ -2,6 +2,7 @@
 // Note: Full file system export is disabled until FileSystem API is properly configured
 
 import { Alert } from 'react-native';
+import { logger } from './logger';
 
 /**
  * Convert array of objects to CSV string
@@ -50,10 +51,10 @@ export const exportToCSV = async (
     }
 
     const csv = arrayToCSV(data, headers);
-    console.log(`CSV Export (${filename}):`, csv);
+    logger.log(`CSV Export (${filename}):`, csv);
     Alert.alert('Export Ready', `CSV data for ${filename} logged to console. File export coming soon!`);
   } catch (error) {
-    console.error('Error exporting CSV:', error);
+    logger.error('Error exporting CSV:', error);
     Alert.alert('Export Error', 'Failed to export CSV file');
   }
 };
@@ -70,7 +71,7 @@ export const exportReport = async (
   if (format === 'csv') {
     await exportToCSV(data, filename);
   } else {
-    console.log(`HTML Export for ${filename}:`, data);
+    logger.log(`HTML Export for ${filename}:`, data);
     Alert.alert('Export Ready', 'HTML export logged to console');
   }
 };
