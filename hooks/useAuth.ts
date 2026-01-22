@@ -3,6 +3,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { supabase, signInWithEmail, signOut as supabaseSignOut } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import type { RoleName } from '../types/database';
+import { ADMIN_ROLE_NAMES, TEACHER_ROLE_NAMES } from '../lib/rbac';
 
 function isInvalidRefreshTokenError(error: unknown): boolean {
   const message =
@@ -18,27 +19,6 @@ function isInvalidRefreshTokenError(error: unknown): boolean {
     message.includes('refresh_token')
   );
 }
-
-// Admin roles that should be redirected to admin dashboard
-const ADMIN_ROLES: RoleName[] = [
-  'super_admin',
-  'principal',
-  'department_admin',
-  'hod',
-  'exam_cell_admin',
-  'library_admin',
-  'bus_admin',
-  'canteen_admin',
-  'finance_admin',
-];
-
-// Teacher roles that should be redirected to teacher dashboard
-const TEACHER_ROLES: RoleName[] = [
-  'subject_teacher',
-  'class_teacher',
-  'mentor',
-  'coordinator',
-];
 
 export const useAuth = () => {
   const router = useRouter();
@@ -125,18 +105,18 @@ export const useAuth = () => {
       let userRoleCategory: 'admin' | 'teacher' | 'student' | null = null;
 
       if (primaryRole) {
-        if (ADMIN_ROLES.includes(primaryRole)) {
+        if (ADMIN_ROLE_NAMES.includes(primaryRole)) {
           userRoleCategory = 'admin';
-        } else if (TEACHER_ROLES.includes(primaryRole)) {
+        } else if (TEACHER_ROLE_NAMES.includes(primaryRole)) {
           userRoleCategory = 'teacher';
         } else if (primaryRole === 'student') {
           userRoleCategory = 'student';
         }
       } else if (roleNames.length > 0) {
         // Fallback to first role's category
-        if (roleNames.some(r => ADMIN_ROLES.includes(r))) {
+        if (roleNames.some(r => ADMIN_ROLE_NAMES.includes(r))) {
           userRoleCategory = 'admin';
-        } else if (roleNames.some(r => TEACHER_ROLES.includes(r))) {
+        } else if (roleNames.some(r => TEACHER_ROLE_NAMES.includes(r))) {
           userRoleCategory = 'teacher';
         } else if (roleNames.includes('student')) {
           userRoleCategory = 'student';
@@ -240,7 +220,7 @@ export const useAuth = () => {
     } else if (isAuthenticated && inAuthGroup) {
       // Redirect to appropriate dashboard based on role
       // Teacher-capable roles (including HOD) should default into Teacher module.
-      const shouldDefaultToTeacher = roles.some((r) => TEACHER_ROLES.includes(r)) || roles.includes('hod');
+      const shouldDefaultToTeacher = roles.some((r) => TEACHER_ROLE_NAMES.includes(r)) || roles.includes('hod');
       if (shouldDefaultToTeacher) {
         router.replace('/(teacher)/dashboard');
         return;

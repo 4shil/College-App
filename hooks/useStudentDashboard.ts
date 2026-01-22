@@ -4,13 +4,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { getAttendanceSummary, getStudentWithDetails } from '../lib/database';
+import { toDateOnlyISO } from '../lib/dateUtils';
 
 // Cache staleness time: 2 minutes
 const STALE_TIME_MS = 2 * 60 * 1000;
-
-function toDateOnlyISO(d: Date) {
-  return d.toISOString().split('T')[0];
-}
 
 export type AttendanceSummaryCard = {
   percentage: number;

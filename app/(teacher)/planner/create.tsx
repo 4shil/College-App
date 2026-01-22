@@ -11,6 +11,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
 import { withAlpha } from '../../../theme/colorUtils';
+import { toDateOnlyISO, parseISODate } from '../../../lib/dateUtils';
 
 type CourseOption = {
   id: string;
@@ -36,20 +37,10 @@ function addDays(date: Date, days: number) {
   return d;
 }
 
-function toDateOnlyISO(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
 function parseDateOnlyISO(value: string): Date | null {
   const v = value.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
-  const [yy, mm, dd] = v.split('-').map(Number);
-  const dt = new Date(yy, mm - 1, dd);
-  if (Number.isNaN(dt.getTime())) return null;
-  return dt;
+  return parseISODate(v);
 }
 
 function buildWeekPlan(start: Date, existing?: DayPlan[]): DayPlan[] {

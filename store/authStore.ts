@@ -67,8 +67,8 @@ export const useAuthStore = createStore<AuthState>((set, get) => ({
   setRoles: (roles) =>
     set({
       roles,
-      isAdmin: roles.some((role) => ADMIN_ROLES.includes(role)),
-      isTeacher: roles.some((role) => TEACHER_ROLES.includes(role)),
+      isAdmin: roles.some((role) => ADMIN_ROLE_NAMES.includes(role)),
+      isTeacher: roles.some((role) => TEACHER_ROLE_NAMES.includes(role)),
       isStudent: roles.includes('student'),
     }),
 

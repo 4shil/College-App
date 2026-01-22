@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
+import { toDateOnlyISO } from '../lib/dateUtils';
 
 const PERIOD_TIMINGS = [
   { period: 1, start: '9:40', end: '10:35' },
@@ -12,10 +13,6 @@ const PERIOD_TIMINGS = [
   { period: 4, start: '13:25', end: '14:15' },
   { period: 5, start: '14:20', end: '15:10' },
 ];
-
-function toDateOnlyISO(d: Date) {
-  return d.toISOString().split('T')[0];
-}
 
 function minutesSinceMidnight(d: Date) {
   return d.getHours() * 60 + d.getMinutes();
