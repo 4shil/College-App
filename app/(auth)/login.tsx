@@ -16,6 +16,8 @@ import Animated, {
   FadeInDown,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 
 import {
   AnimatedBackground,
@@ -30,6 +32,9 @@ import { withAlpha } from '../../theme/colorUtils';
 // Only 2 role categories: Student and Staff (Teachers + Admins)
 type UserRoleCategory = 'student' | 'staff';
 
+// Storage key for remembering last selected role
+const LAST_ROLE_KEY = '@login_last_role';
+
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -40,10 +45,36 @@ export default function LoginScreen() {
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRoleCategory>('staff');
+  const [selectedRole, setSelectedRole] = useState<UserRoleCategory>('student'); // Default to student (most common)
   const [loading, setLoadingState] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Load last selected role on mount
+  useEffect(() => {
+    const loadLastRole = async () => {
+      try {
+        const lastRole = await AsyncStorage.getItem(LAST_ROLE_KEY);
+        if (lastRole === 'student' || lastRole === 'staff') {
+          setSelectedRole(lastRole);
+        }
+      } catch {
+        // Ignore errors, use default
+      }
+    };
+    loadLastRole();
+  }, []);
+
+  // Save role when changed
+  const handleRoleChange = async (role: UserRoleCategory) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedRole(role);
+    try {
+      await AsyncStorage.setItem(LAST_ROLE_KEY, role);
+    } catch {
+      // Ignore errors
+    }
+  };
 
   // Show success message from registration
   useEffect(() => {
