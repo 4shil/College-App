@@ -87,6 +87,7 @@ function RootLayoutNav() {
             <Stack.Screen name="(student)" options={{ headerShown: false }} />
           </Stack>
         </ThemedAlertProvider>
-    </GestureHandlerRootView>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
