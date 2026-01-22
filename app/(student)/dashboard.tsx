@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
-import { AnimatedBackground, Card, GlassCard, IconBadge, LoadingIndicator, StatCard } from '../../components/ui';
+import { AnimatedBackground, Card, GlassCard, IconBadge, LoadingIndicator, StatCard, Skeleton, SkeletonCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
@@ -148,9 +148,37 @@ export default function StudentDashboard() {
   if (loading && !summary) {
     return (
       <AnimatedBackground>
-        <View style={[styles.container, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100, justifyContent: 'center', alignItems: 'center' }]}>
-          <LoadingIndicator />
-        </View>
+        <ScrollView 
+          style={styles.container}
+          contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: insets.bottom + 120, paddingHorizontal: 16 }}
+        >
+          {/* Skeleton for hero card */}
+          <SkeletonCard showAvatar lines={2} />
+          
+          {/* Skeleton for overview card */}
+          <View style={{ marginTop: 14 }}>
+            <SkeletonCard lines={3} />
+          </View>
+          
+          {/* Skeleton for schedule section */}
+          <View style={{ marginTop: 16 }}>
+            <Skeleton width={120} height={18} style={{ marginBottom: 12 }} />
+            <SkeletonCard lines={4} />
+          </View>
+          
+          {/* Skeleton for highlights */}
+          <View style={{ marginTop: 16 }}>
+            <Skeleton width={100} height={18} style={{ marginBottom: 12 }} />
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <SkeletonCard lines={3} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <SkeletonCard lines={3} />
+              </View>
+            </View>
+          </View>
+        </ScrollView>
       </AnimatedBackground>
     );
   }
