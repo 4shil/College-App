@@ -232,13 +232,14 @@ export default function LoginScreen() {
                 {roles.map((role) => (
                   <TouchableOpacity
                     key={role.key}
-                    onPress={() => setSelectedRole(role.key)}
+                    onPress={() => handleRoleChange(role.key)}
                     style={[
                       styles.roleButton,
                       { 
                         backgroundColor: colors.inputBackground,
                         borderColor: colors.inputBorder,
                         borderWidth: colors.borderWidth,
+                        minHeight: 44, // Accessibility: minimum touch target size
                       },
                       selectedRole === role.key && {
                         backgroundColor: withAlpha(colors.primary, 0.12),

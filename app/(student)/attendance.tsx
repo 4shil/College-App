@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { AnimatedBackground, Card, LoadingIndicator, StatCard } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
+import { logger } from '../../lib/logger';
 import { supabase } from '../../lib/supabase';
 import { getAttendanceSummary, getStudentByUserId } from '../../lib/database';
 import { withAlpha } from '../../theme/colorUtils';
@@ -165,7 +166,7 @@ export default function StudentAttendanceScreen() {
       .limit(20);
 
     if (error) {
-      console.log('Student attendance recent error:', error.message);
+      logger.tagged('Attendance', 'Recent records error:', error.message);
       setRecent([]);
       return;
     }
