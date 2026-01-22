@@ -315,6 +315,7 @@ export default function StudentDashboard() {
             title="Today's Schedule"
             actionText="View all"
             onPress={() => handleNavigate('/(student)/timetable')}
+            colors={sectionColors}
           />
           <Card>
             {summary?.todayTimetable && summary.todayTimetable.length > 0 ? (
@@ -360,7 +361,7 @@ export default function StudentDashboard() {
 
         {/* Spotlight cards */}
         <Animated.View entering={FadeInDown.delay(310).duration(450)} style={{ marginTop: 16 }}>
-          <SectionHeader title="Highlights" />
+          <SectionHeader title="Highlights" colors={sectionColors} />
           <View style={styles.twoColRow}>
             <TouchableOpacity onPress={() => handleNavigate('/(student)/attendance')} activeOpacity={0.85} style={{ flex: 1 }}>
               <Card animated={false} style={styles.halfCard}>
@@ -419,6 +420,7 @@ export default function StudentDashboard() {
               title="Pending Tasks"
               actionText="View all"
               onPress={() => handleNavigate('/(student)/assignments')}
+              colors={sectionColors}
             />
             <Card>
               {summary.upcomingAssignments.slice(0, 3).map((assignment, index) => {
@@ -465,7 +467,7 @@ export default function StudentDashboard() {
 
         {/* Quick Access */}
         <Animated.View entering={FadeInDown.delay(420).duration(450)} style={{ marginTop: 16 }}>
-          <SectionHeader title="Quick Access" />
+          <SectionHeader title="Quick Access" colors={sectionColors} />
           <View style={styles.actionsGrid}>
             <ActionTile
               index={0}
@@ -473,6 +475,7 @@ export default function StudentDashboard() {
               label="Timetable"
               subtitle={summary?.todayTimetable?.length ? `${summary.todayTimetable.length} periods today` : 'View schedule'}
               onPress={() => handleNavigate('/(student)/timetable')}
+              colors={tileColors}
             />
             <ActionTile
               index={1}
@@ -480,6 +483,7 @@ export default function StudentDashboard() {
               label="Assignments"
               subtitle={summary?.upcomingAssignments?.length ? `${summary.upcomingAssignments.length} upcoming` : 'View tasks'}
               onPress={() => handleNavigate('/(student)/assignments')}
+              colors={tileColors}
             />
             <ActionTile
               index={2}
@@ -487,6 +491,7 @@ export default function StudentDashboard() {
               label="Materials"
               subtitle="Notes & downloads"
               onPress={() => handleNavigate('/(student)/materials')}
+              colors={tileColors}
             />
             <ActionTile
               index={3}
@@ -500,6 +505,7 @@ export default function StudentDashboard() {
                   : 'Menu & tokens'
               }
               onPress={() => handleNavigate('/(student)/canteen')}
+              colors={tileColors}
             />
             <ActionTile
               index={4}
@@ -513,6 +519,7 @@ export default function StudentDashboard() {
                   : 'Route & status'
               }
               onPress={() => handleNavigate('/(student)/bus')}
+              colors={tileColors}
             />
             <ActionTile
               index={5}
@@ -520,6 +527,7 @@ export default function StudentDashboard() {
               label="All Modules"
               subtitle="Browse everything"
               onPress={() => handleNavigate('/(student)/modules')}
+              colors={tileColors}
             />
           </View>
         </Animated.View>

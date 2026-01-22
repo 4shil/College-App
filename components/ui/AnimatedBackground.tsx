@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Animated, {
@@ -11,6 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useThemeStore } from '../../store/themeStore';
+
+// Performance optimization: limit blur intensity on Android and low-end devices
+const MAX_BLUR_ANDROID = 40;
+const MAX_BLUR_IOS = 100;
 
 interface AnimatedBackgroundProps {
   children: React.ReactNode;
@@ -62,7 +66,9 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ children
     return { opacity, transform: [{ scale: layerScale }, { translateX }, { translateY }] };
   });
 
-  const blurIntensity = Math.max(0, Math.min(100, colors.blurIntensity));
+  // Optimize blur intensity based on platform
+  const maxBlur = Platform.OS === 'android' ? MAX_BLUR_ANDROID : MAX_BLUR_IOS;
+  const blurIntensity = Math.max(0, Math.min(maxBlur, colors.blurIntensity));
 
   const gradientA = [
     colors.backgroundGradientStart,
@@ -106,11 +112,14 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ children
           />
         </Animated.View>
 
-        <BlurView
-          intensity={reduceMotion ? 0 : blurIntensity}
-          tint="dark"
-          style={StyleSheet.absoluteFillObject}
-        />
+        {/* Only render blur on native platforms when enabled and not in reduced motion mode */}
+        {Platform.OS !== 'web' && !reduceMotion && blurIntensity > 0 && (
+          <BlurView
+            intensity={blurIntensity}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
+        )}
       </View>
       {children}
     </View>
