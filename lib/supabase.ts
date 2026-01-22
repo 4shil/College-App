@@ -4,15 +4,32 @@ import { createClient, SupabaseClientOptions } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// Supabase credentials - loaded from environment variables via app.config.js
-// Falls back to hardcoded values for development (should be removed in production)
+// Supabase credentials - MUST be set via environment variables
+// In development: Create .env file with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
+// In production: Set via EAS build secrets
 const SUPABASE_URL = Constants.expoConfig?.extra?.supabaseUrl || 
-  process.env.EXPO_PUBLIC_SUPABASE_URL || 
-  'https://celwfcflcofejjpkpgcq.supabase.co';
+  process.env.EXPO_PUBLIC_SUPABASE_URL;
 
 const SUPABASE_ANON_KEY = Constants.expoConfig?.extra?.supabaseAnonKey || 
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlbHdmY2ZsY29mZWpqcGtwZ2NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjEzNTQsImV4cCI6MjA3OTgzNzM1NH0.hDdQIjIy5fkmdXV2GjWlATujnXgVcXZD932_k1KvLwA';
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+// Validate configuration at startup
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  const errorMessage = `
+Missing Supabase configuration!
+Set the following environment variables:
+- EXPO_PUBLIC_SUPABASE_URL
+- EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+For development, create a .env file in the project root.
+For production, configure via EAS build secrets.
+  `.trim();
+  
+  if (__DEV__) {
+    console.error(errorMessage);
+  }
+  throw new Error('Missing Supabase configuration. See console for details.');
+}
 
 // Storage adapter that works on all platforms
 const storage = Platform.OS === 'web' 

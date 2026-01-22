@@ -73,7 +73,10 @@ export function persist<T extends object>(
           if (typeof window !== 'undefined' && window.localStorage) {
             return Promise.resolve(window.localStorage.getItem(key));
           }
-        } catch {}
+        } catch (err) {
+          // localStorage may be unavailable (SSR, private browsing)
+          if (__DEV__) console.warn('[persist] localStorage read failed:', err);
+        }
         return Promise.resolve(null);
       },
       setItem: (key: string, value: string) => {
@@ -81,7 +84,10 @@ export function persist<T extends object>(
           if (typeof window !== 'undefined' && window.localStorage) {
             window.localStorage.setItem(key, value);
           }
-        } catch {}
+        } catch (err) {
+          // localStorage may be unavailable or full
+          if (__DEV__) console.warn('[persist] localStorage write failed:', err);
+        }
         return Promise.resolve();
       },
     };
@@ -96,7 +102,10 @@ export function persist<T extends object>(
           const merged = options.merge ? options.merge(parsed, current) : parsed;
           set(merged);
         }
-      } catch {}
+      } catch (err) {
+        // Parsing or loading failed - start with fresh state
+        if (__DEV__) console.warn('[persist] Failed to load state for', options.name, err);
+      }
     };
 
     // Wrap set to persist on change
@@ -105,7 +114,10 @@ export function persist<T extends object>(
       try {
         const currentState = get();
         storage.setItem(options.name, JSON.stringify(currentState));
-      } catch {}
+      } catch (err) {
+        // Serialization or storage failed
+        if (__DEV__) console.warn('[persist] Failed to persist state for', options.name, err);
+      }
     };
 
     // Load on init

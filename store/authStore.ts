@@ -1,6 +1,7 @@
 import { createStore } from './createStore';
 import { Session, User } from '@supabase/supabase-js';
 import type { Profile, RoleName, AuthUser } from '../types/database';
+import { ADMIN_ROLE_NAMES, TEACHER_ROLE_NAMES } from '../lib/rbac';
 
 interface AuthState {
   // Supabase user
@@ -30,27 +31,6 @@ interface AuthState {
   setUserRole: (role: 'admin' | 'teacher' | 'student' | null) => void;
   logout: () => void;
 }
-
-const ADMIN_ROLES: RoleName[] = [
-  'super_admin',
-  'principal',
-  'department_admin',
-  'hod',
-  'exam_cell_admin',
-  'library_admin',
-  'bus_admin',
-  'canteen_admin',
-  'finance_admin',
-];
-
-const TEACHER_ROLES: RoleName[] = [
-  'subject_teacher',
-  'class_teacher',
-  'mentor',
-  'coordinator',
-  // HOD is admin-category in DB but should still be able to use teacher flows.
-  'hod',
-];
 
 export const useAuthStore = createStore<AuthState>((set, get) => ({
   user: null,

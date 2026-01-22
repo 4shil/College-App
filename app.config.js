@@ -49,9 +49,10 @@ module.exports = {
       eas: {
         projectId: "28170231-fe6a-494b-8fc3-49ce78ced287"
       },
-      // Supabase configuration - use environment variables in production
-      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || "https://celwfcflcofejjpkpgcq.supabase.co",
-      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlbHdmY2ZsY29mZWpqcGtwZ2NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjEzNTQsImV4cCI6MjA3OTgzNzM1NH0.hDdQIjIy5fkmdXV2GjWlATujnXgVcXZD932_k1KvLwA"
+      // Supabase configuration - MUST be set via environment variables
+      // Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env file
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
     },
     owner: "jpm-college-app"
   }

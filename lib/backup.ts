@@ -359,7 +359,9 @@ export const getBackupStats = async () => {
           .select('*', { count: 'exact', head: true });
 
         stats[tableName] = error ? 0 : (count || 0);
-      } catch {
+      } catch (err) {
+        // Individual table stats may fail, default to 0
+        console.warn(`[backup] Failed to get stats for ${tableName}:`, err);
         stats[tableName] = 0;
       }
     }

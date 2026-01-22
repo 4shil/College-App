@@ -3,6 +3,8 @@
  * Implements granular permissions for 9 admin roles
  */
 
+import type { RoleName } from '../types/database';
+
 // Admin role definitions based on PROJECT_PLAN.md
 export const ADMIN_ROLES = {
   SUPER_ADMIN: 'super_admin',
@@ -27,6 +29,41 @@ export const TEACHER_ROLES = {
 
 // Student role
 export const STUDENT_ROLE = 'student';
+
+// ============================================
+// Role Arrays for Checking (Single Source of Truth)
+// ============================================
+
+/** All admin role names as an array - use for isAdmin checks */
+export const ADMIN_ROLE_NAMES: RoleName[] = [
+  'super_admin',
+  'principal',
+  'department_admin',
+  'hod',
+  'exam_cell_admin',
+  'library_admin',
+  'bus_admin',
+  'canteen_admin',
+  'finance_admin',
+];
+
+/** All teacher role names as an array - use for isTeacher checks 
+ *  Note: HOD is included because HODs should also access teacher flows */
+export const TEACHER_ROLE_NAMES: RoleName[] = [
+  'subject_teacher',
+  'class_teacher',
+  'mentor',
+  'coordinator',
+  'hod', // HOD is admin-category but needs teacher flows
+];
+
+/** Check if a role is an admin role */
+export const isAdminRole = (role: RoleName): boolean => 
+  ADMIN_ROLE_NAMES.includes(role);
+
+/** Check if a role is a teacher role */
+export const isTeacherRole = (role: RoleName): boolean => 
+  TEACHER_ROLE_NAMES.includes(role);
 
 // Permission definitions
 export const PERMISSIONS = {
