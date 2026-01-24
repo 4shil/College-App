@@ -7,10 +7,14 @@ const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 );
 
+// SECURITY WARNING: These are default setup passwords for initial deployment.
+// IMMEDIATELY change these passwords in production after running this script!
+// You can override passwords via environment variables:
+// - ADMIN_SUPER_PASSWORD, ADMIN_PRINCIPAL_PASSWORD, etc.
 const adminUsers = [
   {
     email: 'superadmin@college.com',
-    password: 'Super@2024',
+    password: process.env.ADMIN_SUPER_PASSWORD || 'Super@2024',
     full_name: 'Robert Johnson',
     phone: '+1234567890',
     primary_role: 'super_admin',
@@ -18,7 +22,7 @@ const adminUsers = [
   },
   {
     email: 'principal@college.com',
-    password: 'Principal@2024',
+    password: process.env.ADMIN_PRINCIPAL_PASSWORD || 'Principal@2024',
     full_name: 'Dr. Sarah Williams',
     phone: '+1234567891',
     primary_role: 'principal',
@@ -26,7 +30,7 @@ const adminUsers = [
   },
   {
     email: 'examadmin@college.com',
-    password: 'Exam@2024',
+    password: process.env.ADMIN_EXAM_PASSWORD || 'Exam@2024',
     full_name: 'Michael Brown',
     phone: '+1234567892',
     primary_role: 'exam_cell_admin',
@@ -34,7 +38,7 @@ const adminUsers = [
   },
   {
     email: 'librarian@college.com',
-    password: 'Library@2024',
+    password: process.env.ADMIN_LIBRARY_PASSWORD || 'Library@2024',
     full_name: 'Emily Davis',
     phone: '+1234567893',
     primary_role: 'library_admin',

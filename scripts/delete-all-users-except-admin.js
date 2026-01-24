@@ -4,9 +4,20 @@ require('dotenv').config();
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
+// SECURITY: Admin credentials must be provided via environment variables
+const adminEmail = process.env.ADMIN_EMAIL;
+const adminPassword = process.env.ADMIN_PASSWORD;
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing Supabase credentials');
   console.error('Required: EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');
+  process.exit(1);
+}
+
+if (!adminEmail || !adminPassword) {
+  console.error('❌ Missing admin credentials');
+  console.error('Required: ADMIN_EMAIL and ADMIN_PASSWORD environment variables');
+  console.error('Set these with your admin account credentials to run this script.');
   process.exit(1);
 }
 
@@ -21,34 +32,23 @@ async function deleteAllUsersExceptAdmin() {
   try {
     console.log('🔑 Signing in as admin...');
     
-    // Try different admin accounts
-    let authData;
-    const adminAccounts = [
-      { email: 'admin@jpmcollege.edu', password: 'admin123' },
-      { email: 'superadmin@college.com', password: 'Super@2024' },
-      { email: 'principal@college.com', password: 'Principal@2024' }
-    ];
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword,
+    });
 
-    for (const account of adminAccounts) {
-      const { data, error } = await supabase.auth.signInWithPassword(account);
-      if (!error && data.user) {
-        authData = data;
-        console.log(`✓ Signed in as: ${data.user.email}`);
-        break;
-      }
-    }
-
-    if (!authData || !authData.user) {
-      console.error('❌ Failed to sign in with any admin account');
-      console.error('Available accounts to try:');
-      adminAccounts.forEach(acc => console.error(`  - ${acc.email}`));
+    if (authError || !authData?.user) {
+      console.error('❌ Failed to sign in with provided admin credentials');
+      console.error('Error:', authError?.message || 'Unknown error');
       process.exit(1);
     }
 
-    const adminId = authData.user.id;
-    const adminEmail = authData.user.email;
+    console.log(`✓ Signed in as: ${authData.user.email}`);
 
-    console.log(`🔍 Finding all users except ${adminEmail}...`);
+    const adminId = authData.user.id;
+    const adminEmailFromAuth = authData.user.email;
+
+    console.log(`🔍 Finding all users except ${adminEmailFromAuth}...`);
 
     // Get all other users
     const { data: allUsers, error: listError } = await supabase
@@ -106,7 +106,7 @@ async function deleteAllUsersExceptAdmin() {
     console.log('='.repeat(60));
     console.log(`✓ Successfully deleted: ${successCount} users`);
     console.log(`❌ Failed to delete: ${failCount} users`);
-    console.log(`✓ Admin preserved: admin@jpmcollege.edu`);
+    console.log(`✓ Admin preserved: ${adminEmailFromAuth}`);
     console.log('='.repeat(60));
 
     // Verify final count
@@ -115,7 +115,7 @@ async function deleteAllUsersExceptAdmin() {
       .select('id', { count: 'exact', head: true });
     
     console.log(`\n✓ Total users remaining in database: ${count}`);
-    console.log('   (Should be 1 - admin@jpmcollege.edu only)');
+    console.log(`   (Should be 1 - ${adminEmailFromAuth} only)`);
 
   } catch (error) {
     console.error('❌ Fatal error:', error);

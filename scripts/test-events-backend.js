@@ -7,11 +7,11 @@
  * Usage:
  *   node scripts/test-events-backend.js
  *
- * Env:
+ * Env (all required):
  *   EXPO_PUBLIC_SUPABASE_URL
  *   EXPO_PUBLIC_SUPABASE_ANON_KEY
- *   EVENTS_TEST_EMAIL (optional; defaults to superadmin@college.com)
- *   EVENTS_TEST_PASSWORD (optional; defaults to Super@2024)
+ *   EVENTS_TEST_EMAIL - Admin email for testing
+ *   EVENTS_TEST_PASSWORD - Admin password for testing
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -20,11 +20,17 @@ require('dotenv').config();
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-const email = process.env.EVENTS_TEST_EMAIL || 'superadmin@college.com';
-const password = process.env.EVENTS_TEST_PASSWORD || 'Super@2024';
+const email = process.env.EVENTS_TEST_EMAIL;
+const password = process.env.EVENTS_TEST_PASSWORD;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing Supabase env vars: EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY');
+  process.exit(1);
+}
+
+if (!email || !password) {
+  console.error('❌ Missing test credentials: EVENTS_TEST_EMAIL / EVENTS_TEST_PASSWORD');
+  console.error('   Set these environment variables with admin credentials to run this test.');
   process.exit(1);
 }
 

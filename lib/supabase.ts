@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient, SupabaseClientOptions } from '@supabase/supabase-js';
+import { createClient, SupabaseClientOptions, SupportedStorage } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
@@ -12,6 +12,22 @@ const SUPABASE_URL = Constants.expoConfig?.extra?.supabaseUrl ||
 
 const SUPABASE_ANON_KEY = Constants.expoConfig?.extra?.supabaseAnonKey || 
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+// SECURITY: Service role key should NEVER be accessible in client code
+// This check prevents accidental exposure
+const LEAKED_SERVICE_ROLE_KEY = 
+  process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (LEAKED_SERVICE_ROLE_KEY && __DEV__) {
+  console.error(`
+⚠️  SECURITY WARNING: SUPABASE_SERVICE_ROLE_KEY detected in client code!
+This key grants full database access and should NEVER be bundled in the app.
+Remove it from .env and use it only in:
+- Supabase Edge Functions (server-side)
+- Local scripts (not bundled in app)
+  `.trim());
+}
 
 // Validate configuration at startup
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -32,32 +48,34 @@ For production, configure via EAS build secrets.
 }
 
 // Storage adapter that works on all platforms
-const storage = Platform.OS === 'web' 
-  ? {
-      getItem: (key: string) => {
-        if (typeof window !== 'undefined') {
-          return Promise.resolve(window.localStorage.getItem(key));
-        }
-        return Promise.resolve(null);
-      },
-      setItem: (key: string, value: string) => {
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, value);
-        }
-        return Promise.resolve();
-      },
-      removeItem: (key: string) => {
-        if (typeof window !== 'undefined') {
-          window.localStorage.removeItem(key);
-        }
-        return Promise.resolve();
-      },
+// Properly typed to match Supabase's SupportedStorage interface
+const webStorage: SupportedStorage = {
+  getItem: (key: string): Promise<string | null> => {
+    if (typeof window !== 'undefined') {
+      return Promise.resolve(window.localStorage.getItem(key));
     }
-  : AsyncStorage;
+    return Promise.resolve(null);
+  },
+  setItem: (key: string, value: string): Promise<void> => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, value);
+    }
+    return Promise.resolve();
+  },
+  removeItem: (key: string): Promise<void> => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(key);
+    }
+    return Promise.resolve();
+  },
+};
+
+// AsyncStorage already implements SupportedStorage interface
+const storage: SupportedStorage = Platform.OS === 'web' ? webStorage : AsyncStorage;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: storage as any,
+    storage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: Platform.OS === 'web',

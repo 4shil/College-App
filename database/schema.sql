@@ -400,6 +400,16 @@ CREATE INDEX idx_teachers_department ON teachers(department_id);
 CREATE INDEX idx_courses_department ON courses(department_id);
 CREATE INDEX idx_courses_semester ON courses(semester_id);
 
+-- Composite indexes for frequently queried patterns
+-- Timetable entries are often filtered by teacher + academic year + day
+CREATE INDEX idx_timetable_teacher_year_day ON timetable_entries(teacher_id, academic_year_id, day_of_week);
+-- Lesson planner weeks by teacher + date range
+CREATE INDEX idx_lesson_planner_teacher_date ON lesson_planner_weeks(teacher_id, week_start_date);
+-- Attendance sessions by teacher + academic year + date
+CREATE INDEX idx_attendance_teacher_year_date ON attendance_sessions(teacher_id, academic_year_id, session_date);
+-- Assignments by teacher + due date for pending queries
+CREATE INDEX idx_assignments_teacher_due ON assignments(teacher_id, due_date);
+
 -- ============================================
 -- 18. ROW LEVEL SECURITY (RLS)
 -- ============================================

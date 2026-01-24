@@ -37,6 +37,41 @@ type OkResponse = {
   ok: true
 }
 
+// SECURITY: Rate limiting configuration
+// Maximum requests per user per minute
+const RATE_LIMIT_MAX_REQUESTS = 30;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+
+// In-memory rate limit store (resets on function cold start)
+// For production, consider using Redis or Supabase table for distributed rate limiting
+const rateLimitStore = new Map<string, { count: number; windowStart: number }>();
+
+function checkRateLimit(userId: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const record = rateLimitStore.get(userId);
+  
+  if (!record || (now - record.windowStart) > RATE_LIMIT_WINDOW_MS) {
+    // New window
+    rateLimitStore.set(userId, { count: 1, windowStart: now });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const resetIn = RATE_LIMIT_WINDOW_MS - (now - record.windowStart);
+    return { allowed: false, remaining: 0, resetIn };
+  }
+  
+  record.count++;
+  return { 
+    allowed: true, 
+    remaining: RATE_LIMIT_MAX_REQUESTS - record.count, 
+    resetIn: RATE_LIMIT_WINDOW_MS - (now - record.windowStart) 
+  };
+}
+
+// SECURITY: Admin role names that are allowed to access this function
+const ADMIN_ROLE_NAMES = ['super_admin', 'admin', 'principal', 'vice_principal', 'hod'];
+
 // SECURITY: Restrict CORS to specific origins in production
 // Add your production domain here
 const ALLOWED_ORIGINS = [
@@ -55,11 +90,24 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   };
 }
 
-function json(status: number, body: OkResponse | ErrorResponse, origin: string | null = null) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
-  })
+function json(
+  status: number, 
+  body: OkResponse | ErrorResponse, 
+  origin: string | null = null,
+  rateLimitInfo?: { remaining: number; resetIn: number }
+) {
+  const headers: Record<string, string> = { 
+    ...getCorsHeaders(origin), 
+    'Content-Type': 'application/json',
+  };
+  
+  if (rateLimitInfo) {
+    headers['X-RateLimit-Limit'] = String(RATE_LIMIT_MAX_REQUESTS);
+    headers['X-RateLimit-Remaining'] = String(rateLimitInfo.remaining);
+    headers['X-RateLimit-Reset'] = String(Math.ceil(rateLimitInfo.resetIn / 1000));
+  }
+  
+  return new Response(JSON.stringify(body), { status, headers });
 }
 
 Deno.serve(async (req) => {
@@ -107,10 +155,36 @@ Deno.serve(async (req) => {
 
   const callerId = callerData.user.id
 
+  // SECURITY: Rate limiting - check before any expensive operations
+  const rateLimit = checkRateLimit(callerId);
+  if (!rateLimit.allowed) {
+    return json(429, { error: `Rate limit exceeded. Try again in ${Math.ceil(rateLimit.resetIn / 1000)} seconds` }, origin, rateLimit);
+  }
+
   // Service client for privileged operations
   const service = createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: { persistSession: false },
   })
+
+  // SECURITY: Validate caller has an admin role before proceeding
+  const { data: callerRoles, error: rolesError } = await service
+    .from('user_roles')
+    .select('role:roles(name)')
+    .eq('user_id', callerId)
+    .eq('is_active', true);
+
+  if (rolesError) {
+    return json(500, { error: 'Failed to verify admin role' }, origin, rateLimit);
+  }
+
+  const userRoleNames = (callerRoles || [])
+    .map((r: any) => r.role?.name)
+    .filter(Boolean) as string[];
+
+  const isAdmin = userRoleNames.some(role => ADMIN_ROLE_NAMES.includes(role));
+  if (!isAdmin) {
+    return json(403, { error: 'Admin role required to access this function' }, origin, rateLimit);
+  }
 
   const targetUserId = (payload as any).target_user_id
   if (!targetUserId) {
