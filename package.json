@@ -50,6 +50,7 @@
   "devDependencies": {
     "@types/react": "~19.1.10",
     "@types/three": "^0.182.0",
+    "babel-plugin-module-resolver": "^5.0.2",
     "typescript": "~5.9.2"
   },
   "private": true

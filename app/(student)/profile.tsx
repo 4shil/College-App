@@ -13,6 +13,7 @@ import { withAlpha } from '../../theme/colorUtils';
 import { signOut, supabase } from '../../lib/supabase';
 import { getStudentWithDetails } from '../../lib/database';
 import { uploadFileToBucket } from '../../lib/storage';
+import { STUDENT_ROUTES } from '../../lib/routes';
 
 export default function StudentProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -162,7 +163,7 @@ export default function StudentProfileScreen() {
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={() => router.push('/(student)/settings' as any)}
+                onPress={() => router.push(STUDENT_ROUTES.SETTINGS as any)}
                 style={[styles.editButton, { borderColor: colors.primary }]}
               >
                 <Ionicons name="pencil" size={18} color={colors.primary} />
@@ -223,7 +224,7 @@ export default function StudentProfileScreen() {
           <Card>
             <TouchableOpacity
               style={[styles.settingItem, { borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}
-              onPress={() => router.push('/(student)/settings' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.SETTINGS as any)}
             >
               <Ionicons name="settings" size={20} color={colors.primary} />
               <Text style={[styles.settingText, { color: colors.textPrimary }]}>App Settings</Text>
@@ -232,7 +233,7 @@ export default function StudentProfileScreen() {
 
             <TouchableOpacity
               style={[styles.settingItem, { borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}
-              onPress={() => router.push('/(student)/support' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.SUPPORT as any)}
             >
               <Ionicons name="help-circle" size={20} color={colors.primary} />
               <Text style={[styles.settingText, { color: colors.textPrimary }]}>Support & Help</Text>

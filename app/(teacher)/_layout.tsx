@@ -8,6 +8,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { Restricted } from '../../components/Restricted';
 import { useAuthStore } from '../../store/authStore';
+import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
 
 type DockNavItem = {
   id: string;
@@ -232,8 +233,9 @@ export default function TeacherLayout() {
       showDeniedMessage
       deniedMessage="Teacher access required."
     >
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <Stack
+      <ErrorBoundary>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <Stack
           screenOptions={{
             headerShown: false,
             animation: 'fade',
@@ -275,7 +277,8 @@ export default function TeacherLayout() {
           <Stack.Screen name="department/index" />
         </Stack>
         <GlassDock activeRoute={pathname} onNavigate={handleNavigate} navItems={dockNavItems} />
-      </View>
+        </View>
+      </ErrorBoundary>
     </Restricted>
   );
 }

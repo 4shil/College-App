@@ -17,6 +17,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { supabase } from '../../../lib/supabase';
 import { useAppSettingsStore } from '../../../store/appSettingsStore';
+import { STUDENT_ROUTES, AUTH_ROUTES } from '../../../lib/routes';
 
 export default function StudentSettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -39,7 +40,7 @@ export default function StudentSettingsScreen() {
     }
 
     logout();
-    router.replace('/(auth)/login');
+    router.replace(AUTH_ROUTES.LOGIN);
   };
 
   const confirmLogout = () => {
@@ -79,7 +80,7 @@ export default function StudentSettingsScreen() {
               title="Profile"
               subtitle="View your details"
               icon="person"
-              onPress={() => router.push('/(student)/profile' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.PROFILE as any)}
             />
             <SettingsRow
               title="Sign out"
@@ -98,7 +99,7 @@ export default function StudentSettingsScreen() {
               title="Theme & effects"
               subtitle="Mode, preset, animations"
               icon="color-palette"
-              onPress={() => router.push('/(student)/settings/appearance' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.SETTINGS_APPEARANCE as any)}
             />
           </SettingsSection>
         </Animated.View>
@@ -109,7 +110,7 @@ export default function StudentSettingsScreen() {
               title="Notifications"
               subtitle={pushNotificationsEnabled ? 'Enabled' : 'Disabled'}
               icon="notifications"
-              onPress={() => router.push('/(student)/settings/notifications' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.SETTINGS_NOTIFICATIONS as any)}
             />
           </SettingsSection>
         </Animated.View>
@@ -120,7 +121,7 @@ export default function StudentSettingsScreen() {
               title="Privacy & security"
               subtitle="Data saver, analytics, lock"
               icon="shield-checkmark"
-              onPress={() => router.push('/(student)/settings/privacy' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.SETTINGS_PRIVACY as any)}
             />
           </SettingsSection>
         </Animated.View>
@@ -131,7 +132,7 @@ export default function StudentSettingsScreen() {
               title="About this app"
               subtitle={`Version ${String(version)}`}
               icon="information-circle"
-              onPress={() => router.push('/(student)/settings/about' as any)}
+              onPress={() => router.push(STUDENT_ROUTES.SETTINGS_ABOUT as any)}
             />
           </SettingsSection>
         </Animated.View>

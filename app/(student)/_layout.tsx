@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { Restricted } from '../../components/Restricted';
+import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
 
 type DockNavItem = {
   id: string;
@@ -178,8 +179,9 @@ export default function StudentLayout() {
 
   return (
     <Restricted roles={['student']}>
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <Stack
+      <ErrorBoundary>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <Stack
           screenOptions={{
             headerShown: false,
             contentStyle: {
@@ -207,7 +209,8 @@ export default function StudentLayout() {
           <Stack.Screen name="settings" />
         </Stack>
         <GlassDock activeRoute={pathname} onNavigate={(route) => router.push(route as any)} navItems={studentNavItems} />
-      </View>
+        </View>
+      </ErrorBoundary>
     </Restricted>
   );
 }

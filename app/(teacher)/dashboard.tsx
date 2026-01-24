@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { TEACHER_ROUTES } from '../../lib/routes';
 import { useTeacherDashboardSummary } from '../../hooks/useTeacherDashboardSummary';
 import { useAuthStore } from '../../store/authStore';
 
@@ -21,7 +22,7 @@ function titleCaseScope(scope: string) {
 }
 
 // Helper to navigate with haptic feedback
-function navigateWithHaptics(router: ReturnType<typeof useRouter>, route: string) {
+function navigateWithHaptics(router: ReturnType<typeof useRouter>, route: typeof TEACHER_ROUTES[keyof typeof TEACHER_ROUTES]) {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   router.push(route as any);
 }
@@ -62,14 +63,14 @@ export default function TeacherDashboard() {
     if (!alert) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (alert.kind === 'attendance') {
-      router.push('/(teacher)/attendance' as any);
+      router.push(TEACHER_ROUTES.ATTENDANCE as any);
       return;
     }
     if (alert.kind === 'marks') {
-      router.push('/(teacher)/results' as any);
+      router.push(TEACHER_ROUTES.RESULTS as any);
       return;
     }
-    router.push('/(teacher)/assignments' as any);
+    router.push(TEACHER_ROUTES.ASSIGNMENTS as any);
   };
 
   const alertBg = alert
@@ -111,7 +112,7 @@ export default function TeacherDashboard() {
           <View style={styles.heroTopRow}>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push('/(teacher)/modules' as any)}
+              onPress={() => router.push(TEACHER_ROUTES.MODULES as any)}
               style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
               <Ionicons name="grid-outline" size={20} color={colors.textPrimary} />
@@ -120,7 +121,7 @@ export default function TeacherDashboard() {
             <View style={styles.heroTopRight}>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={() => router.push('/(teacher)/profile' as any)}
+                onPress={() => router.push(TEACHER_ROUTES.PROFILE as any)}
                 style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
               >
                 {photoUrl ? (
@@ -140,7 +141,7 @@ export default function TeacherDashboard() {
           <View style={styles.heroActionsRow}>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push('/(teacher)/notices' as any)}
+              onPress={() => router.push(TEACHER_ROUTES.NOTICES as any)}
               style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
               <Ionicons name="notifications-outline" size={18} color={colors.textPrimary} />
@@ -183,7 +184,7 @@ export default function TeacherDashboard() {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tasks</Text>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push('/(teacher)/modules' as any)}
+              onPress={() => router.push(TEACHER_ROUTES.MODULES as any)}
               style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
               <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
@@ -194,7 +195,7 @@ export default function TeacherDashboard() {
           <View style={styles.tileGrid}>
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => navigateWithHaptics(router, '/(teacher)/attendance')}
+              onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.ATTENDANCE)}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -212,7 +213,7 @@ export default function TeacherDashboard() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => navigateWithHaptics(router, '/(teacher)/assignments')}
+              onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.ASSIGNMENTS)}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -230,7 +231,7 @@ export default function TeacherDashboard() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => navigateWithHaptics(router, '/(teacher)/results')}
+              onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.RESULTS)}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -248,7 +249,7 @@ export default function TeacherDashboard() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => navigateWithHaptics(router, '/(teacher)/notices')}
+              onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.NOTICES)}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -272,7 +273,7 @@ export default function TeacherDashboard() {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Classes</Text>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push('/(teacher)/timetable' as any)}
+              onPress={() => router.push(TEACHER_ROUTES.TIMETABLE as any)}
               style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
               <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
@@ -389,7 +390,7 @@ export default function TeacherDashboard() {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Important</Text>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push('/(teacher)/notices' as any)}
+              onPress={() => router.push(TEACHER_ROUTES.NOTICES as any)}
               style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
             >
               <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
@@ -409,7 +410,7 @@ export default function TeacherDashboard() {
                 <TouchableOpacity
                   key={n.id}
                   activeOpacity={0.9}
-                  onPress={() => router.push('/(teacher)/notices' as any)}
+                  onPress={() => router.push(TEACHER_ROUTES.NOTICES as any)}
                   style={styles.tileItem}
                 >
                   <Card style={styles.tileCard}>

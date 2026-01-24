@@ -12,6 +12,7 @@ import { logger } from '../../lib/logger';
 import { supabase } from '../../lib/supabase';
 import { getAttendanceSummary, getStudentByUserId } from '../../lib/database';
 import { withAlpha } from '../../theme/colorUtils';
+import { STUDENT_ROUTES } from '../../lib/routes';
 
 type RecentAttendanceRow = {
   id: string;
@@ -236,7 +237,7 @@ export default function StudentAttendanceScreen() {
                 <View style={styles.quickActionsRow}>
                   <TouchableOpacity
                     activeOpacity={0.9}
-                    onPress={() => router.push('/(student)/attendance/leave' as any)}
+                    onPress={() => router.push(STUDENT_ROUTES.ATTENDANCE_LEAVE as any)}
                     style={{ flex: 1 }}
                   >
                     <Card>
@@ -255,7 +256,7 @@ export default function StudentAttendanceScreen() {
 
                   <TouchableOpacity
                     activeOpacity={0.9}
-                    onPress={() => router.push('/(student)/attendance/alerts' as any)}
+                    onPress={() => router.push(STUDENT_ROUTES.ATTENDANCE_ALERTS as any)}
                     style={{ flex: 1 }}
                   >
                     <Card style={alertCount > 0 ? {

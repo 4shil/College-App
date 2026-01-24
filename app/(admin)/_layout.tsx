@@ -11,6 +11,7 @@ import Animated, {
 import { useRBAC } from '../../hooks/useRBAC';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
+import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
 
 // Configuration
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -193,8 +194,9 @@ export default function AdminLayout() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Stack
+    <ErrorBoundary>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack
         screenOptions={{
           headerShown: false,
           animation: 'fade',
@@ -233,7 +235,8 @@ export default function AdminLayout() {
       {!pathname.includes('college-info') && (
         <GlassDock activeRoute={pathname} onNavigate={handleNavigate} />
       )}
-    </View>
+      </View>
+    </ErrorBoundary>
   );
 }
 
