@@ -150,7 +150,7 @@ export const useStudentDashboard = () => {
         .from('academic_years')
         .select('id')
         .eq('is_current', true)
-        .single();
+        .maybeSingle();
 
       const academicYearId = academicYear?.id || student.academic_year_id || null;
 

@@ -37,26 +37,40 @@ type OkResponse = {
   ok: true
 }
 
-const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// SECURITY: Restrict CORS to specific origins in production
+// Add your production domain here
+const ALLOWED_ORIGINS = [
+  'http://localhost:8081',
+  'http://localhost:19006',
+  'https://jpmcollege.app',
+  'exp://localhost:8081',
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
 }
 
-function json(status: number, body: OkResponse | ErrorResponse) {
+function json(status: number, body: OkResponse | ErrorResponse, origin: string | null = null) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
   })
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getCorsHeaders(origin) })
   }
 
   if (req.method !== 'POST') {
-    return json(405, { error: 'Method not allowed' })
+    return json(405, { error: 'Method not allowed' }, origin)
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -64,20 +78,20 @@ Deno.serve(async (req) => {
   const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-    return json(500, { error: 'Server misconfigured' })
+    return json(500, { error: 'Server misconfigured' }, origin)
   }
 
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : null
   if (!token) {
-    return json(401, { error: 'Missing Authorization bearer token' })
+    return json(401, { error: 'Missing Authorization bearer token' }, origin)
   }
 
   let payload: RequestBody
   try {
     payload = (await req.json()) as RequestBody
   } catch {
-    return json(400, { error: 'Invalid JSON body' })
+    return json(400, { error: 'Invalid JSON body' }, origin)
   }
 
   // Client bound to caller JWT (authn)
@@ -88,7 +102,7 @@ Deno.serve(async (req) => {
 
   const { data: callerData, error: callerError } = await authedClient.auth.getUser()
   if (callerError || !callerData?.user) {
-    return json(401, { error: 'Unauthorized' })
+    return json(401, { error: 'Unauthorized' }, origin)
   }
 
   const callerId = callerData.user.id
@@ -100,11 +114,11 @@ Deno.serve(async (req) => {
 
   const targetUserId = (payload as any).target_user_id
   if (!targetUserId) {
-    return json(400, { error: 'target_user_id is required' })
+    return json(400, { error: 'target_user_id is required' }, origin)
   }
 
   if (targetUserId === callerId) {
-    return json(400, { error: 'Refusing to modify the currently signed-in user' })
+    return json(400, { error: 'Refusing to modify the currently signed-in user' }, origin)
   }
 
   // Fetch caller + target profile for dept-scoping decisions
@@ -115,13 +129,13 @@ Deno.serve(async (req) => {
     ])
 
   if (callerProfileErr) {
-    return json(500, { error: `Failed to load caller profile: ${callerProfileErr.message}` })
+    return json(500, { error: `Failed to load caller profile: ${callerProfileErr.message}` }, origin)
   }
   if (targetProfileErr) {
-    return json(500, { error: `Failed to load target profile: ${targetProfileErr.message}` })
+    return json(500, { error: `Failed to load target profile: ${targetProfileErr.message}` }, origin)
   }
   if (!targetProfile?.id) {
-    return json(404, { error: 'Target user not found' })
+    return json(404, { error: 'Target user not found' }, origin)
   }
 
   const callerDept = callerProfile?.department_id ?? null
@@ -155,18 +169,18 @@ Deno.serve(async (req) => {
     const status = payload.status
 
     const allCheck = await checkPermission('block_unblock_users')
-    if (allCheck.error) return json(500, { error: allCheck.error })
+    if (allCheck.error) return json(500, { error: allCheck.error }, origin)
 
     let allowed = allCheck.allowed
 
     if (!allowed) {
       const deptCheck = await checkPermission('block_dept_users')
-      if (deptCheck.error) return json(500, { error: deptCheck.error })
+      if (deptCheck.error) return json(500, { error: deptCheck.error }, origin)
       allowed = deptCheck.allowed && !!callerDept && callerDept === targetDept
     }
 
     if (!allowed) {
-      return json(403, { error: 'Forbidden' })
+      return json(403, { error: 'Forbidden' }, origin)
     }
 
     const oldValues = { status: targetProfile.status }
@@ -174,27 +188,27 @@ Deno.serve(async (req) => {
 
     const { error: updateError } = await service.from('profiles').update({ status }).eq('id', targetUserId)
     if (updateError) {
-      return json(500, { error: `Failed to update status: ${updateError.message}` })
+      return json(500, { error: `Failed to update status: ${updateError.message}` }, origin)
     }
 
     await insertAudit('update_status', 'profiles', targetUserId, oldValues, newValues)
 
-    return json(200, { ok: true })
+    return json(200, { ok: true }, origin)
   }
 
   if (payload.action === 'set_role') {
     const roleName = (payload.primary_role || '').trim()
     if (!roleName) {
-      return json(400, { error: 'primary_role is required' })
+      return json(400, { error: 'primary_role is required' }, origin)
     }
 
     const perm = await checkPermission('create_delete_admins')
-    if (perm.error) return json(500, { error: perm.error })
-    if (!perm.allowed) return json(403, { error: 'Forbidden' })
+    if (perm.error) return json(500, { error: perm.error }, origin)
+    if (!perm.allowed) return json(403, { error: 'Forbidden' }, origin)
 
     const { data: roleRow, error: roleErr } = await service.from('roles').select('id').eq('name', roleName).single()
     if (roleErr || !roleRow?.id) {
-      return json(400, { error: `Role not found: ${roleName}` })
+      return json(400, { error: `Role not found: ${roleName}` }, origin)
     }
 
     const oldValues = { primary_role: targetProfile.primary_role }
@@ -202,7 +216,7 @@ Deno.serve(async (req) => {
 
     const { error: profileError } = await service.from('profiles').update({ primary_role: roleName }).eq('id', targetUserId)
     if (profileError) {
-      return json(500, { error: `Failed to update primary_role: ${profileError.message}` })
+      return json(500, { error: `Failed to update primary_role: ${profileError.message}` }, origin)
     }
 
     // Ensure user has an active user_roles row for the role (global assignment with department_id NULL)
@@ -215,7 +229,7 @@ Deno.serve(async (req) => {
       .limit(1)
 
     if (existingErr) {
-      return json(500, { error: `Failed to check existing role assignment: ${existingErr.message}` })
+      return json(500, { error: `Failed to check existing role assignment: ${existingErr.message}` }, origin)
     }
 
     if (existing && existing.length > 0) {
@@ -225,7 +239,7 @@ Deno.serve(async (req) => {
         .eq('id', existing[0].id)
 
       if (updErr) {
-        return json(500, { error: `Failed to update role assignment: ${updErr.message}` })
+        return json(500, { error: `Failed to update role assignment: ${updErr.message}` }, origin)
       }
     } else {
       const { error: insErr } = await service.from('user_roles').insert({
@@ -237,28 +251,28 @@ Deno.serve(async (req) => {
       })
 
       if (insErr) {
-        return json(500, { error: `Failed to assign role: ${insErr.message}` })
+        return json(500, { error: `Failed to assign role: ${insErr.message}` }, origin)
       }
     }
 
     await insertAudit('update_role', 'profiles', targetUserId, oldValues, newValues)
 
-    return json(200, { ok: true })
+    return json(200, { ok: true }, origin)
   }
 
   if (payload.action === 'assign_role') {
     const roleId = (payload.role_id || '').trim()
     if (!roleId) {
-      return json(400, { error: 'role_id is required' })
+      return json(400, { error: 'role_id is required' }, origin)
     }
 
     const perm = await checkPermission('create_delete_admins')
-    if (perm.error) return json(500, { error: perm.error })
-    if (!perm.allowed) return json(403, { error: 'Forbidden' })
+    if (perm.error) return json(500, { error: perm.error }, origin)
+    if (!perm.allowed) return json(403, { error: 'Forbidden' }, origin)
 
     const { data: roleRow, error: roleErr } = await service.from('roles').select('id, name').eq('id', roleId).single()
     if (roleErr || !roleRow?.id) {
-      return json(400, { error: 'Role not found' })
+      return json(400, { error: 'Role not found' }, origin)
     }
 
     // Ensure an active user_roles row exists (global assignment with department_id NULL)
@@ -271,7 +285,7 @@ Deno.serve(async (req) => {
       .limit(1)
 
     if (existingErr) {
-      return json(500, { error: `Failed to check existing role assignment: ${existingErr.message}` })
+      return json(500, { error: `Failed to check existing role assignment: ${existingErr.message}` }, origin)
     }
 
     if (existing && existing.length > 0) {
@@ -284,7 +298,7 @@ Deno.serve(async (req) => {
         .eq('id', existing[0].id)
 
       if (updErr) {
-        return json(500, { error: `Failed to update role assignment: ${updErr.message}` })
+        return json(500, { error: `Failed to update role assignment: ${updErr.message}` }, origin)
       }
 
       await insertAudit('assign_role', 'user_roles', existing[0].id, oldValues, newValues)
@@ -302,33 +316,33 @@ Deno.serve(async (req) => {
         .single()
 
       if (insErr) {
-        return json(500, { error: `Failed to assign role: ${insErr.message}` })
+        return json(500, { error: `Failed to assign role: ${insErr.message}` }, origin)
       }
 
       await insertAudit('assign_role', 'user_roles', insData?.id ?? `${targetUserId}:${roleRow.id}`, null, { is_active: true })
     }
 
-    return json(200, { ok: true })
+    return json(200, { ok: true }, origin)
   }
 
   if (payload.action === 'revoke_role') {
     const roleId = (payload.role_id || '').trim()
     if (!roleId) {
-      return json(400, { error: 'role_id is required' })
+      return json(400, { error: 'role_id is required' }, origin)
     }
 
     const perm = await checkPermission('create_delete_admins')
-    if (perm.error) return json(500, { error: perm.error })
-    if (!perm.allowed) return json(403, { error: 'Forbidden' })
+    if (perm.error) return json(500, { error: perm.error }, origin)
+    if (!perm.allowed) return json(403, { error: 'Forbidden' }, origin)
 
     const { data: roleRow, error: roleErr } = await service.from('roles').select('id, name').eq('id', roleId).single()
     if (roleErr || !roleRow?.id) {
-      return json(400, { error: 'Role not found' })
+      return json(400, { error: 'Role not found' }, origin)
     }
 
     // Safety: don't revoke the role that is currently set as the user's primary_role
     if ((targetProfile.primary_role || '').trim() && targetProfile.primary_role === roleRow.name) {
-      return json(400, { error: 'Cannot revoke the user\'s primary role. Change primary role first.' })
+      return json(400, { error: 'Cannot revoke the user\'s primary role. Change primary role first.' }, origin)
     }
 
     const { data: existing, error: existingErr } = await service
@@ -340,11 +354,11 @@ Deno.serve(async (req) => {
       .limit(1)
 
     if (existingErr) {
-      return json(500, { error: `Failed to find role assignment: ${existingErr.message}` })
+      return json(500, { error: `Failed to find role assignment: ${existingErr.message}` }, origin)
     }
 
     if (!existing || existing.length === 0) {
-      return json(404, { error: 'Role assignment not found' })
+      return json(404, { error: 'Role assignment not found' }, origin)
     }
 
     const oldValues = { is_active: existing[0].is_active }
@@ -356,18 +370,18 @@ Deno.serve(async (req) => {
       .eq('id', existing[0].id)
 
     if (updErr) {
-      return json(500, { error: `Failed to revoke role: ${updErr.message}` })
+      return json(500, { error: `Failed to revoke role: ${updErr.message}` }, origin)
     }
 
     await insertAudit('revoke_role', 'user_roles', existing[0].id, oldValues, newValues)
 
-    return json(200, { ok: true })
+    return json(200, { ok: true }, origin)
   }
 
   if (payload.action === 'delete_user') {
     const perm = await checkPermission('create_delete_admins')
-    if (perm.error) return json(500, { error: perm.error })
-    if (!perm.allowed) return json(403, { error: 'Forbidden' })
+    if (perm.error) return json(500, { error: perm.error }, origin)
+    if (!perm.allowed) return json(403, { error: 'Forbidden' }, origin)
 
     // Capture some context before deleting
     const oldValues = {
@@ -377,13 +391,13 @@ Deno.serve(async (req) => {
 
     const { error: delErr } = await service.auth.admin.deleteUser(targetUserId)
     if (delErr) {
-      return json(500, { error: `Failed to delete user: ${delErr.message}` })
+      return json(500, { error: `Failed to delete user: ${delErr.message}` }, origin)
     }
 
     await insertAudit('delete_user', 'auth.users', targetUserId, oldValues, null)
 
-    return json(200, { ok: true })
+    return json(200, { ok: true }, origin)
   }
 
-  return json(400, { error: 'Unknown action' })
+  return json(400, { error: 'Unknown action' }, origin)
 })

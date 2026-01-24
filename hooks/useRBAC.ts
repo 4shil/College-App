@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
@@ -55,7 +55,7 @@ export function useRBAC(): UseRBACReturn {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserRoles = async () => {
+  const fetchUserRoles = useCallback(async () => {
     if (!user) {
       setUserRoles([]);
       setLoading(false);
@@ -82,11 +82,11 @@ export function useRBAC(): UseRBACReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchUserRoles();
-  }, [user?.id]);
+  }, [fetchUserRoles]);
 
   // Realtime: if an admin changes this user's roles, update permissions immediately.
   useEffect(() => {
@@ -111,7 +111,7 @@ export function useRBAC(): UseRBACReturn {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, fetchUserRoles]);
 
   // Computed values
   const highestRole = getHighestRole(userRoles);

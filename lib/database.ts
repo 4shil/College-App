@@ -29,7 +29,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching profile:', error);
@@ -105,7 +105,7 @@ export const assignRole = async (
     .from('roles')
     .select('id')
     .eq('name', roleName)
-    .single();
+    .maybeSingle();
 
   if (!role) {
     return { success: false, error: 'Role not found' };
@@ -129,10 +129,15 @@ export const assignRole = async (
 // ============================================
 
 export const getAuthUser = async (userId: string): Promise<AuthUser | null> => {
-  const profile = await getProfile(userId);
-  if (!profile) return null;
+  // Parallel fetch: profile, roles, teacher check, student check
+  const [profile, roles, teacherResult, studentResult] = await Promise.all([
+    getProfile(userId),
+    getUserRoles(userId),
+    supabase.from('teachers').select('id').eq('user_id', userId).maybeSingle(),
+    supabase.from('students').select('id').eq('user_id', userId).maybeSingle(),
+  ]);
 
-  const roles = await getUserRoles(userId);
+  if (!profile) return null;
 
   const isAdmin = roles.some((role) =>
     [
@@ -156,29 +161,13 @@ export const getAuthUser = async (userId: string): Promise<AuthUser | null> => {
   let isStudent = roles.includes('student');
 
   // Fallbacks when roles/primary_role are not yet configured correctly.
-  // This keeps UX sane (e.g., teacher accounts landing in teacher dashboard).
-  if (!isTeacher) {
-    const { data: teacherRow, error: teacherError } = await supabase
-      .from('teachers')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (!teacherError && teacherRow?.id) {
-      isTeacher = true;
-    }
+  // Use pre-fetched results from parallel queries
+  if (!isTeacher && !teacherResult.error && teacherResult.data?.id) {
+    isTeacher = true;
   }
 
-  if (!isStudent) {
-    const { data: studentRow, error: studentError } = await supabase
-      .from('students')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (!studentError && studentRow?.id) {
-      isStudent = true;
-    }
+  if (!isStudent && !studentResult.error && studentResult.data?.id) {
+    isStudent = true;
   }
 
   return {
@@ -202,7 +191,7 @@ export const getStudentByUserId = async (userId: string): Promise<Student | null
     .from('students')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching student:', error);
@@ -223,7 +212,7 @@ export const getStudentWithDetails = async (userId: string) => {
       section:sections(*)
     `)
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching student details:', error);
@@ -241,7 +230,7 @@ export const getTeacherByUserId = async (userId: string): Promise<Teacher | null
     .from('teachers')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching teacher:', error);
@@ -264,7 +253,7 @@ export const getTeacherWithDetails = async (userId: string) => {
       )
     `)
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching teacher details:', error);
@@ -348,7 +337,7 @@ export const getCurrentAcademicYear = async (): Promise<AcademicYear | null> => 
     .from('academic_years')
     .select('*')
     .eq('is_current', true)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching current academic year:', error);
@@ -431,7 +420,7 @@ export const getProgramById = async (programId: string): Promise<Program | null>
     .from('courses')
     .select('*')
     .eq('id', programId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error('Error fetching program:', error);

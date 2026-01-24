@@ -12,6 +12,7 @@ import {
 import { useThemeStore } from '../../store/themeStore';
 import { supabase, signUpWithEmail } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
+import { logger } from '../../lib/logger';
 
 // Import DateTimePicker - works on iOS/Android, not on web
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -222,7 +223,7 @@ export default function RegisterScreen() {
         }
         return;
       } catch (err2) {
-        console.error('Error fetching programs:', err2);
+        logger.error('Error fetching programs:', err2);
         setProgramsError('Unable to load programmes. Please try again.');
         setDegreePrograms([]);
       }
@@ -276,7 +277,7 @@ export default function RegisterScreen() {
         setCurrentStep(2);
       }
     } catch (err: any) {
-      console.error('APAAR verification error:', err);
+      logger.error('APAAR verification error:', err);
       setError('Verification failed. Please try again.');
     } finally {
       setVerifyingApaar(false);
@@ -414,7 +415,7 @@ export default function RegisterScreen() {
         .eq('id', data.user.id);
 
       if (profileError) {
-        console.error('Profile update error:', profileError);
+        logger.error('Profile update error:', profileError);
       }
 
       // Store registration metadata
@@ -424,7 +425,7 @@ export default function RegisterScreen() {
       });
 
       if (metadataError) {
-        console.error('Metadata storage error:', metadataError);
+        logger.error('Metadata storage error:', metadataError);
       }
 
       // Show success message and redirect to login
@@ -436,7 +437,7 @@ export default function RegisterScreen() {
         },
       });
     } catch (err: any) {
-      console.error('Registration error:', err);
+      logger.error('Registration error:', err);
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);

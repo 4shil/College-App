@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { toDateOnlyISO } from '../lib/dateUtils';
+import { logger } from '../lib/logger';
 
 const PERIOD_TIMINGS = [
   { period: 1, start: '9:40', end: '10:35' },
@@ -590,7 +591,8 @@ export function useTeacherDashboardSummary() {
           setSummary(next);
           setLoading(false);
           await persistCache(next);
-        } catch {
+        } catch (err) {
+          logger.error('Teacher dashboard fetch error:', err);
           setLoading(false);
         }
       })();
