@@ -5,9 +5,68 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { getAttendanceSummary, getStudentWithDetails } from '../lib/database';
 import { toDateOnlyISO } from '../lib/dateUtils';
+import type { PostgrestSingleResponse, PostgrestResponse } from '@supabase/supabase-js';
 
 // Cache staleness time: 2 minutes
 const STALE_TIME_MS = 2 * 60 * 1000;
+
+// ============================================
+// Query Result Types for Type-Safe Promise.all
+// ============================================
+
+type TimetableRow = {
+  id: string;
+  period: number;
+  start_time: string | null;
+  end_time: string | null;
+  room: string | null;
+  courses: { code: string | null; name: string; short_name: string | null } | null;
+};
+
+type AssignmentRow = {
+  id: string;
+  title: string;
+  due_date: string;
+  courses: { name: string } | null;
+};
+
+type NoticeRow = {
+  id: string;
+};
+
+type MarksRow = {
+  marks_obtained: number | null;
+  created_at: string | null;
+} | null;
+
+type CanteenMenuItem = {
+  id: string;
+  is_sold_out: boolean | null;
+};
+
+type CanteenToken = {
+  id: string;
+};
+
+type BusSubscription = {
+  approval_status: string | null;
+  routes: { route_number: string | null; route_name: string | null } | null;
+  stops: { stop_name: string | null } | null;
+} | null;
+
+type BookIssue = {
+  status: string | null;
+  fine_amount: number | null;
+  fine_paid: boolean | null;
+};
+
+type NoticeRead = {
+  notice_id: string;
+};
+
+// ============================================
+// Dashboard Types
+// ============================================
 
 export type AttendanceSummaryCard = {
   percentage: number;
@@ -154,11 +213,9 @@ export const useStudentDashboard = () => {
 
       const academicYearId = academicYear?.id || student.academic_year_id || null;
 
-      // Build all independent queries to run in parallel
-      const parallelQueries: Promise<any>[] = [];
-
+      // Build all independent queries to run in parallel with proper types
       // Query 1: Timetable (if conditions met)
-      const timetableQuery = (academicYearId && student.section_id)
+      const timetableQuery: Promise<{ data: TimetableRow[] | null }> = (academicYearId && student.section_id)
         ? supabase
             .from('timetable_entries')
             .select(`
@@ -173,9 +230,8 @@ export const useStudentDashboard = () => {
             .eq('academic_year_id', academicYearId)
             .eq('day_of_week', todayDayOfWeek)
             .eq('is_active', true)
-            .order('period')
+            .order('period') as unknown as Promise<{ data: TimetableRow[] | null }>
         : Promise.resolve({ data: [] });
-      parallelQueries.push(timetableQuery);
 
       // Query 2: Attendance summary
       const attendanceQuery = getAttendanceSummary(
@@ -183,10 +239,9 @@ export const useStudentDashboard = () => {
         toDateOnlyISO(start),
         toDateOnlyISO(end)
       );
-      parallelQueries.push(attendanceQuery);
 
       // Query 3: Assignments (if section_id exists)
-      const assignmentsQuery = student.section_id
+      const assignmentsQuery: Promise<{ data: AssignmentRow[] | null }> = student.section_id
         ? supabase
             .from('assignments')
             .select(`id, title, due_date, courses:courses(name)`)
@@ -195,73 +250,66 @@ export const useStudentDashboard = () => {
             .gte('due_date', todayIso)
             .lte('due_date', thirtyDaysFromNow)
             .order('due_date', { ascending: true })
-            .limit(5)
+            .limit(5) as unknown as Promise<{ data: AssignmentRow[] | null }>
         : Promise.resolve({ data: [] });
-      parallelQueries.push(assignmentsQuery);
 
       // Query 4: Notices
-      const noticesQuery = (student.section_id || student.department_id)
+      const noticesQuery: Promise<{ data: NoticeRow[] | null }> = (student.section_id || student.department_id)
         ? supabase
             .from('notices')
             .select('id')
             .eq('is_active', true)
             .or(`section_id.eq.${student.section_id},department_id.eq.${student.department_id},scope.eq.college`)
             .order('created_at', { ascending: false })
-            .limit(50)
+            .limit(50) as unknown as Promise<{ data: NoticeRow[] | null }>
         : Promise.resolve({ data: [] });
-      parallelQueries.push(noticesQuery);
 
       // Query 5: Marks
-      const marksQuery = supabase
+      const marksQuery: Promise<{ data: MarksRow }> = supabase
         .from('exam_marks')
         .select('marks_obtained, created_at')
         .eq('student_id', student.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
-      parallelQueries.push(marksQuery);
+        .maybeSingle() as unknown as Promise<{ data: MarksRow }>;
 
       // Query 6: Canteen menu
-      const canteenMenuQuery = supabase
+      const canteenMenuQuery: Promise<{ data: CanteenMenuItem[] | null }> = supabase
         .from('canteen_daily_menu')
         .select('id, is_sold_out')
         .eq('date', canteenDate)
-        .limit(50);
-      parallelQueries.push(canteenMenuQuery);
+        .limit(50) as unknown as Promise<{ data: CanteenMenuItem[] | null }>;
 
       // Query 7: Canteen tokens (if user exists)
-      const canteenTokensQuery = user?.id
+      const canteenTokensQuery: Promise<{ data: CanteenToken[] | null }> = user?.id
         ? supabase
             .from('canteen_tokens')
             .select('id')
             .eq('user_id', user.id)
             .eq('date', canteenDate)
-            .limit(50)
+            .limit(50) as unknown as Promise<{ data: CanteenToken[] | null }>
         : Promise.resolve({ data: [] });
-      parallelQueries.push(canteenTokensQuery);
 
       // Query 8: Bus subscription (if academic year exists)
-      const busSubQuery = academicYearId
+      const busSubQuery: Promise<{ data: BusSubscription }> = academicYearId
         ? supabase
             .from('bus_subscriptions')
             .select('approval_status, routes:bus_routes(route_number, route_name), stops:bus_stops(stop_name)')
             .eq('student_id', student.id)
             .eq('academic_year_id', academicYearId)
-            .maybeSingle()
+            .maybeSingle() as unknown as Promise<{ data: BusSubscription }>
         : Promise.resolve({ data: null });
-      parallelQueries.push(busSubQuery);
 
       // Query 9: Library issues (if user exists)
-      const libraryQuery = user?.id
+      const libraryQuery: Promise<{ data: BookIssue[] | null }> = user?.id
         ? supabase
             .from('book_issues')
             .select('status, fine_amount, fine_paid')
             .eq('user_id', user.id)
-            .limit(50)
+            .limit(50) as unknown as Promise<{ data: BookIssue[] | null }>
         : Promise.resolve({ data: [] });
-      parallelQueries.push(libraryQuery);
 
-      // Execute all queries in parallel
+      // Execute all queries in parallel with typed results
       const [
         timetableResult,
         attendanceAgg,
@@ -272,11 +320,21 @@ export const useStudentDashboard = () => {
         tokensResult,
         busSubResult,
         libraryResult,
-      ] = await Promise.all(parallelQueries);
+      ] = await Promise.all([
+        timetableQuery,
+        attendanceQuery,
+        assignmentsQuery,
+        noticesQuery,
+        marksQuery,
+        canteenMenuQuery,
+        canteenTokensQuery,
+        busSubQuery,
+        libraryQuery,
+      ]);
 
-      // Process timetable
+      // Process timetable with proper types
       const todayTimetable: TodayTimetableEntry[] = [];
-      ((timetableResult as any)?.data || []).forEach((row: any) => {
+      (timetableResult.data || []).forEach((row) => {
         todayTimetable.push({
           entryId: row.id,
           period: row.period,
@@ -298,9 +356,9 @@ export const useStudentDashboard = () => {
         status: attendanceAgg.percentage >= 80 ? 'good' : attendanceAgg.percentage >= 75 ? 'warning' : 'critical',
       };
 
-      // Process assignments
+      // Process assignments with proper types
       const upcomingAssignments: UpcomingAssignmentCard[] = [];
-      ((assignmentsResult as any)?.data || []).forEach((a: any) => {
+      (assignmentsResult.data || []).forEach((a) => {
         const dueDate = new Date(a.due_date);
         const now = new Date();
         const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -315,7 +373,7 @@ export const useStudentDashboard = () => {
       });
 
       // Process notices - need a second query for read status
-      const noticeIds: string[] = ((noticesResult as any)?.data || []).map((n: any) => String(n.id)).filter(Boolean);
+      const noticeIds: string[] = (noticesResult.data || []).map((n) => String(n.id)).filter(Boolean);
       const quickNoticesCount = noticeIds.length;
       let unreadNoticesCount = 0;
 
@@ -324,19 +382,19 @@ export const useStudentDashboard = () => {
           .from('notice_reads')
           .select('notice_id')
           .eq('user_id', user.id)
-          .in('notice_id', noticeIds);
+          .in('notice_id', noticeIds) as { data: NoticeRead[] | null };
 
         const readSet = new Set<string>();
-        (reads || []).forEach((r: any) => {
+        (reads || []).forEach((r) => {
           if (r?.notice_id) readSet.add(String(r.notice_id));
         });
 
         unreadNoticesCount = noticeIds.filter((id: string) => !readSet.has(String(id))).length;
       }
 
-      // Process marks
+      // Process marks with proper types
       let marksSnapshot: InternalMarksPreview | null = null;
-      const marksRow = (marksResult as any)?.data;
+      const marksRow = marksResult.data;
       if (marksRow?.marks_obtained != null) {
         const value = Number(marksRow.marks_obtained);
         marksSnapshot = {
@@ -347,21 +405,21 @@ export const useStudentDashboard = () => {
         };
       }
 
-      // Process canteen data
-      const menuRows = (menuResult as any)?.data || [];
+      // Process canteen data with proper types
+      const menuRows = menuResult.data || [];
       const canteenMenuCount = menuRows.length;
-      const canteenSoldOutCount = menuRows.filter((m: any) => Boolean(m?.is_sold_out)).length;
-      const myCanteenTokensCount = ((tokensResult as any)?.data || []).length;
+      const canteenSoldOutCount = menuRows.filter((m) => Boolean(m?.is_sold_out)).length;
+      const myCanteenTokensCount = (tokensResult.data || []).length;
 
-      // Process bus subscription
-      const sub = (busSubResult as any)?.data;
+      // Process bus subscription with proper types
+      const sub = busSubResult.data;
       let busSubscriptionStatus: 'none' | 'pending' | 'approved' | 'rejected' = 'none';
       let busRouteLabel: string | null = null;
       let busStopLabel: string | null = null;
       if (sub) {
         const statusRaw = String(sub?.approval_status || 'none');
         if (statusRaw === 'pending' || statusRaw === 'approved' || statusRaw === 'rejected') {
-          busSubscriptionStatus = statusRaw as any;
+          busSubscriptionStatus = statusRaw;
         }
         if (sub?.routes?.route_number || sub?.routes?.route_name) {
           busRouteLabel = `${sub.routes?.route_number || ''}${sub.routes?.route_name ? ` • ${sub.routes.route_name}` : ''}`.trim();
@@ -369,11 +427,11 @@ export const useStudentDashboard = () => {
         busStopLabel = sub?.stops?.stop_name ? String(sub.stops.stop_name) : null;
       }
 
-      // Process library data
-      const issueRows = (libraryResult as any)?.data || [];
-      const activeIssues = issueRows.filter((i: any) => String(i?.status || '').toLowerCase() !== 'returned');
+      // Process library data with proper types
+      const issueRows = libraryResult.data || [];
+      const activeIssues = issueRows.filter((i) => String(i?.status || '').toLowerCase() !== 'returned');
       const libraryActiveIssuesCount = activeIssues.length;
-      const libraryFineDue = activeIssues.reduce((sum: number, row: any) => {
+      const libraryFineDue = activeIssues.reduce((sum: number, row) => {
         const fine = Number(row?.fine_amount || 0);
         const paid = Boolean(row?.fine_paid);
         return sum + (!paid ? fine : 0);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRBAC } from '../hooks/useRBAC';
 import { useThemeStore } from '../store/themeStore';
 
@@ -17,6 +17,10 @@ interface RestrictedProps {
   deniedMessage?: string;
   /** Fallback component when access denied */
   fallback?: React.ReactNode;
+  /** Show loading indicator instead of null while checking permissions */
+  showLoadingIndicator?: boolean;
+  /** Custom loading component */
+  loadingComponent?: React.ReactNode;
 }
 
 /**
@@ -31,12 +35,24 @@ export function Restricted({
   showDeniedMessage = false,
   deniedMessage = 'You do not have permission to access this feature.',
   fallback,
+  showLoadingIndicator = true,
+  loadingComponent,
 }: RestrictedProps) {
   const { userRoles, hasPermission, canAccessModule, loading } = useRBAC();
   const { colors } = useThemeStore();
 
-  // Don't show anything while loading
+  // Show loading state instead of null to prevent flash
   if (loading) {
+    if (loadingComponent) {
+      return <>{loadingComponent}</>;
+    }
+    if (showLoadingIndicator) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      );
+    }
     return null;
   }
 
@@ -102,6 +118,11 @@ export function withRBAC<P extends object>(
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   deniedContainer: {
     padding: 20,
     margin: 20,

@@ -22,28 +22,63 @@ export function isValidPhone(phone: string): boolean {
 /**
  * Password strength validation
  * Returns validation result with message
+ * 
+ * Requirements:
+ * - Minimum 8 characters
+ * - At least 2 of: uppercase, lowercase, numbers, special characters
+ * - Cannot be a common password pattern
  */
 export function validatePassword(password: string): {
   isValid: boolean;
   message: string;
   strength: 'weak' | 'medium' | 'strong';
 } {
-  if (!password || password.length < 6) {
+  if (!password || password.length < 8) {
     return {
       isValid: false,
-      message: 'Password must be at least 6 characters',
+      message: 'Password must be at least 8 characters',
       strength: 'weak',
     };
+  }
+
+  // Check for common weak patterns
+  const commonPatterns = [
+    /^12345678$/,
+    /^password$/i,
+    /^qwerty/i,
+    /^abc123/i,
+    /^(.)\1+$/, // All same character
+    /^(012|123|234|345|456|567|678|789)+$/, // Sequential numbers
+    /^(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)+$/i, // Sequential letters
+  ];
+
+  for (const pattern of commonPatterns) {
+    if (pattern.test(password)) {
+      return {
+        isValid: false,
+        message: 'Password is too common or predictable',
+        strength: 'weak',
+      };
+    }
   }
 
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumbers = /\d/.test(password);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>\-_=+[\]\\;'/`~]/.test(password);
 
   const score = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar].filter(Boolean).length;
 
-  if (password.length >= 8 && score >= 3) {
+  // Require at least 2 character types for validity
+  if (score < 2) {
+    return {
+      isValid: false,
+      message: 'Password must include at least 2 of: uppercase, lowercase, numbers, special characters',
+      strength: 'weak',
+    };
+  }
+
+  if (password.length >= 12 && score >= 3) {
     return {
       isValid: true,
       message: 'Strong password',
@@ -51,18 +86,18 @@ export function validatePassword(password: string): {
     };
   }
 
-  if (password.length >= 6 && score >= 2) {
+  if (password.length >= 8 && score >= 3) {
     return {
       isValid: true,
-      message: 'Medium strength password',
+      message: 'Good password',
       strength: 'medium',
     };
   }
 
   return {
     isValid: true,
-    message: 'Weak password - consider adding uppercase, numbers, or special characters',
-    strength: 'weak',
+    message: 'Acceptable password - consider adding more character types for extra security',
+    strength: 'medium',
   };
 }
 

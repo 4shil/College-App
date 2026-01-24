@@ -76,8 +76,8 @@ export default function CreateTeacherScreen() {
       Alert.alert('Validation Error', 'Email is required');
       return false;
     }
-    if (!formData.password || formData.password.length < 6) {
-      Alert.alert('Validation Error', 'Password must be at least 6 characters');
+    if (!formData.password || formData.password.length < 8) {
+      Alert.alert('Validation Error', 'Password must be at least 8 characters');
       return false;
     }
     if (!formData.department_id) {

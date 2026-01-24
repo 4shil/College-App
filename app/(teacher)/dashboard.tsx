@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
@@ -17,6 +18,12 @@ function titleCaseScope(scope: string) {
   if (scope === 'department') return 'Department';
   if (scope === 'college') return 'Principal';
   return scope;
+}
+
+// Helper to navigate with haptic feedback
+function navigateWithHaptics(router: ReturnType<typeof useRouter>, route: string) {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  router.push(route as any);
 }
 
 export default function TeacherDashboard() {
@@ -46,12 +53,14 @@ export default function TeacherDashboard() {
   const stickyHeaderIndices = useMemo(() => (showAlert ? [1] : undefined), [showAlert]);
 
   const handleRefresh = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await refresh();
     setLastUpdatedAt(new Date());
   };
 
   const handleAlertCta = () => {
     if (!alert) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (alert.kind === 'attendance') {
       router.push('/(teacher)/attendance' as any);
       return;
@@ -185,7 +194,7 @@ export default function TeacherDashboard() {
           <View style={styles.tileGrid}>
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => router.push('/(teacher)/attendance' as any)}
+              onPress={() => navigateWithHaptics(router, '/(teacher)/attendance')}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -203,7 +212,7 @@ export default function TeacherDashboard() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => router.push('/(teacher)/assignments' as any)}
+              onPress={() => navigateWithHaptics(router, '/(teacher)/assignments')}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -221,7 +230,7 @@ export default function TeacherDashboard() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => router.push('/(teacher)/results' as any)}
+              onPress={() => navigateWithHaptics(router, '/(teacher)/results')}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>
@@ -239,7 +248,7 @@ export default function TeacherDashboard() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => router.push('/(teacher)/notices' as any)}
+              onPress={() => navigateWithHaptics(router, '/(teacher)/notices')}
               style={styles.tileItem}
             >
               <Card style={styles.tileCard}>

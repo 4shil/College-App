@@ -70,9 +70,9 @@ export default function TeacherCreateDiaryScreen() {
   const [saving, setSaving] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
-  const now = useMemo(() => new Date(), []);
-  const [month, setMonth] = useState(String(now.getMonth() + 1));
-  const [year, setYear] = useState(String(now.getFullYear()));
+  // Use a function for initial state to get current date at mount time
+  const [month, setMonth] = useState(() => String(new Date().getMonth() + 1));
+  const [year, setYear] = useState(() => String(new Date().getFullYear()));
 
   const [entries, setEntries] = useState<DailyEntry[]>([{
     date: toDateOnlyISO(new Date()),

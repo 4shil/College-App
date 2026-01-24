@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   TextInput,
@@ -8,6 +8,7 @@ import {
   StyleProp,
   ViewStyle,
   Platform,
+  Text,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +27,10 @@ interface GlassInputProps extends TextInputProps {
   isPassword?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
   error?: boolean;
+  /** Error message to display below the input */
+  errorMessage?: string;
+  /** Validate function called on blur - return error message or undefined */
+  onValidate?: (value: string) => string | undefined;
 }
 
 export const GlassInput: React.FC<GlassInputProps> = ({
@@ -33,11 +38,32 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   isPassword = false,
   containerStyle,
   error = false,
+  errorMessage,
+  onValidate,
+  onBlur: externalOnBlur,
   ...props
 }) => {
   const { colors, isDark, canAnimateBackground, capabilities } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [internalError, setInternalError] = useState<string | undefined>(undefined);
+
+  // Combine external error prop with internal validation error
+  const hasError = error || !!internalError;
+  const displayErrorMessage = errorMessage || internalError;
+
+  const handleBlur = useCallback((e: any) => {
+    setIsFocused(false);
+    
+    // Run validation on blur if provided
+    if (onValidate && props.value !== undefined) {
+      const validationError = onValidate(String(props.value));
+      setInternalError(validationError);
+    }
+    
+    // Call external onBlur if provided
+    externalOnBlur?.(e);
+  }, [onValidate, props.value, externalOnBlur]);
 
   const isMultiline = !!props.multiline;
   const editable = props.editable !== false;
@@ -59,7 +85,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   });
 
   const animatedBorderStyle = useAnimatedStyle(() => {
-    const borderColor = error
+    const borderColor = hasError
       ? colors.error
       : interpolateColor(
           focusProgress.value,
@@ -140,8 +166,12 @@ export const GlassInput: React.FC<GlassInputProps> = ({
             ]}
             placeholderTextColor={colors.placeholder}
             secureTextEntry={isPassword && !showPassword}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={() => {
+              setIsFocused(true);
+              // Clear error when user starts typing again
+              if (internalError) setInternalError(undefined);
+            }}
+            onBlur={handleBlur}
             autoCapitalize="none"
             selectionColor={colors.primary}
             editable={editable}
@@ -162,6 +192,11 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           )}
         </View>
       </Animated.View>
+      {displayErrorMessage && (
+        <Text style={[styles.errorMessage, { color: colors.error }]}>
+          {displayErrorMessage}
+        </Text>
+      )}
     </Animated.View>
   );
 };
@@ -201,6 +236,11 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: 6,
+  },
+  errorMessage: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 
