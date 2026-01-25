@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { logger } from './logger';
+import { withTimeout, getPaginationParams, type PaginationOptions } from './queryUtils';
 import type {
   Profile,
   Student,
@@ -266,12 +267,17 @@ export const getTeacherWithDetails = async (userId: string) => {
 // DEPARTMENT FUNCTIONS
 // ============================================
 
-export const getAllDepartments = async (): Promise<Department[]> => {
-  const { data, error } = await supabase
+export const getAllDepartments = async (options?: PaginationOptions): Promise<Department[]> => {
+  const { limit, offset } = getPaginationParams(options);
+  
+  const query = supabase
     .from('departments')
     .select('*')
     .eq('is_active', true)
-    .order('name');
+    .order('name')
+    .range(offset, offset + limit - 1);
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching departments timeout');
 
   if (error) {
     logger.error('Error fetching departments:', error);
@@ -285,11 +291,14 @@ export const getAllDepartments = async (): Promise<Department[]> => {
 // ============================================
 
 export const getAllYears = async (): Promise<Year[]> => {
-  const { data, error } = await supabase
+  const query = supabase
     .from('years')
     .select('*')
     .eq('is_active', true)
-    .order('year_number');
+    .order('year_number')
+    .limit(10); // Years are typically limited
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching years timeout');
 
   if (error) {
     logger.error('Error fetching years:', error);
@@ -299,12 +308,15 @@ export const getAllYears = async (): Promise<Year[]> => {
 };
 
 export const getSemestersByYear = async (yearId: string): Promise<Semester[]> => {
-  const { data, error } = await supabase
+  const query = supabase
     .from('semesters')
     .select('*')
     .eq('year_id', yearId)
     .eq('is_active', true)
-    .order('semester_number');
+    .order('semester_number')
+    .limit(10); // Semesters per year are limited
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching semesters timeout');
 
   if (error) {
     logger.error('Error fetching semesters:', error);
@@ -317,13 +329,16 @@ export const getSectionsByDepartmentAndYear = async (
   departmentId: string,
   yearId: string
 ): Promise<Section[]> => {
-  const { data, error } = await supabase
+  const query = supabase
     .from('sections')
     .select('*')
     .eq('department_id', departmentId)
     .eq('year_id', yearId)
     .eq('is_active', true)
-    .order('name');
+    .order('name')
+    .limit(50); // Reasonable limit for sections
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching sections timeout');
 
   if (error) {
     logger.error('Error fetching sections:', error);
@@ -351,12 +366,15 @@ export const getCurrentAcademicYear = async (): Promise<AcademicYear | null> => 
 // ============================================
 
 export const getAllRoles = async (): Promise<Role[]> => {
-  const { data, error } = await supabase
+  const query = supabase
     .from('roles')
     .select('*')
     .eq('is_active', true)
     .order('category', { ascending: true })
-    .order('name', { ascending: true });
+    .order('name', { ascending: true })
+    .limit(50); // Roles are typically limited
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching roles timeout');
 
   if (error) {
     logger.error('Error fetching roles:', error);
@@ -366,12 +384,15 @@ export const getAllRoles = async (): Promise<Role[]> => {
 };
 
 export const getRolesByCategory = async (category: 'admin' | 'teacher' | 'student'): Promise<Role[]> => {
-  const { data, error } = await supabase
+  const query = supabase
     .from('roles')
     .select('*')
     .eq('category', category)
     .eq('is_active', true)
-    .order('name');
+    .order('name')
+    .limit(20);
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching roles by category timeout');
 
   if (error) {
     logger.error('Error fetching roles:', error);
@@ -384,13 +405,18 @@ export const getRolesByCategory = async (category: 'admin' | 'teacher' | 'studen
 // PROGRAM FUNCTIONS (Using courses table with program_type)
 // ============================================
 
-export const getAllPrograms = async (): Promise<Program[]> => {
-  const { data, error } = await supabase
+export const getAllPrograms = async (options?: PaginationOptions): Promise<Program[]> => {
+  const { limit, offset } = getPaginationParams(options);
+  
+  const query = supabase
     .from('courses')
     .select('*')
     .not('program_type', 'is', null)
     .eq('is_active', true)
-    .order('name');
+    .order('name')
+    .range(offset, offset + limit - 1);
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching programs timeout');
 
   if (error) {
     logger.error('Error fetching programs:', error);
@@ -399,14 +425,19 @@ export const getAllPrograms = async (): Promise<Program[]> => {
   return data || [];
 };
 
-export const getProgramsByDepartment = async (departmentId: string): Promise<Program[]> => {
-  const { data, error } = await supabase
+export const getProgramsByDepartment = async (departmentId: string, options?: PaginationOptions): Promise<Program[]> => {
+  const { limit, offset } = getPaginationParams(options);
+  
+  const query = supabase
     .from('courses')
     .select('*')
     .eq('department_id', departmentId)
     .not('program_type', 'is', null)
     .eq('is_active', true)
-    .order('name');
+    .order('name')
+    .range(offset, offset + limit - 1);
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching programs by department timeout');
 
   if (error) {
     logger.error('Error fetching programs:', error);
@@ -491,15 +522,21 @@ export const deleteHoliday = async (holidayId: string): Promise<{ success: boole
 
 export const getStudentLatePasses = async (
   studentId: string,
-  academicYearId: string
+  academicYearId: string,
+  options?: PaginationOptions
 ): Promise<LatePass[]> => {
-  const { data, error } = await supabase
+  const { limit, offset } = getPaginationParams({ ...options, pageSize: options?.pageSize || 12 });
+  
+  const query = supabase
     .from('late_passes')
     .select('*')
     .eq('student_id', studentId)
     .eq('academic_year_id', academicYearId)
     .order('year', { ascending: false })
-    .order('month', { ascending: false });
+    .order('month', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  const { data, error } = await withTimeout(query, 5000, 'Fetching late passes timeout');
 
   if (error) {
     logger.error('Error fetching late passes:', error);

@@ -13,6 +13,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { supabase, signUpWithEmail } from '../../lib/supabase';
 import { withAlpha } from '../../theme/colorUtils';
 import { logger } from '../../lib/logger';
+import { sanitizePlainText, sanitizeEmail, sanitizePhone, sanitizeAlphanumeric } from '../../lib/sanitization';
 
 // Import DateTimePicker - works on iOS/Android, not on web
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -373,12 +374,25 @@ export default function RegisterScreen() {
     setError(null);
 
     try {
+      // Sanitize all user inputs before submission
+      const sanitizedEmail = sanitizeEmail(formData.email.trim());
+      const sanitizedFullName = sanitizePlainText(formData.full_name.trim());
+      const sanitizedPhone = sanitizePhone(formData.phone);
+      const sanitizedFatherName = sanitizePlainText(formData.father_name.trim());
+      const sanitizedApaarId = sanitizeAlphanumeric(formData.apaar_id.trim().toUpperCase());
+      const sanitizedRollNumber = sanitizeAlphanumeric(formData.roll_number.trim());
+      const sanitizedAdmissionNo = sanitizeAlphanumeric(formData.admission_no.trim());
+
+      if (!sanitizedEmail) {
+        throw new Error('Invalid email address');
+      }
+
       // Create user account with email confirmation
       const { data, error: signUpError } = await signUpWithEmail(
-        formData.email.trim().toLowerCase(),
+        sanitizedEmail,
         formData.password,
         {
-          full_name: formData.full_name,
+          full_name: sanitizedFullName,
           role: 'student',
         }
       );
@@ -391,24 +405,24 @@ export default function RegisterScreen() {
 
       // Store registration data in profiles table
       const registrationData = {
-        apaar_id: formData.apaar_id.toUpperCase(),
-        full_name: formData.full_name,
-        phone: formData.phone,
+        apaar_id: sanitizedApaarId,
+        full_name: sanitizedFullName,
+        phone: sanitizedPhone,
         date_of_birth: formData.date_of_birth.toISOString().split('T')[0],
-        father_name: formData.father_name,
+        father_name: sanitizedFatherName,
         gender: formData.gender,
         program_id: formData.program_id,
         year: formData.year,
         semester: formData.semester,
-        roll_number: formData.roll_number,
-        admission_no: formData.admission_no,
+        roll_number: sanitizedRollNumber,
+        admission_no: sanitizedAdmissionNo,
       };
 
       // Update profile with additional data
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          phone: formData.phone,
+          phone: sanitizedPhone,
           primary_role: 'student',
           status: 'pending',
         })
@@ -433,7 +447,7 @@ export default function RegisterScreen() {
         pathname: '/(auth)/login',
         params: {
           message: 'Registration successful! Please check your email to confirm your account, then login.',
-          email: formData.email.trim().toLowerCase(),
+          email: sanitizedEmail,
         },
       });
     } catch (err: any) {

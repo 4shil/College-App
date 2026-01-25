@@ -114,6 +114,9 @@ export default function TeacherDashboard() {
               activeOpacity={0.85}
               onPress={() => router.push(TEACHER_ROUTES.MODULES as any)}
               style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="Modules menu"
+              accessibilityHint="Opens the modules menu"
             >
               <Ionicons name="grid-outline" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -123,9 +126,12 @@ export default function TeacherDashboard() {
                 activeOpacity={0.85}
                 onPress={() => router.push(TEACHER_ROUTES.PROFILE as any)}
                 style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+                accessibilityRole="button"
+                accessibilityLabel="View profile"
+                accessibilityHint="Opens your profile page"
               >
                 {photoUrl ? (
-                  <Image source={{ uri: photoUrl }} style={styles.heroAvatarImage} />
+                  <Image source={{ uri: photoUrl }} style={styles.heroAvatarImage} accessibilityIgnoresInvertColors />
                 ) : (
                   <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
                 )}
@@ -133,16 +139,28 @@ export default function TeacherDashboard() {
             </View>
           </View>
 
-          <Text style={[styles.heroGreeting, { color: colors.textPrimary }]} numberOfLines={1}>
+          <Text 
+            style={[styles.heroGreeting, { color: colors.textPrimary }]} 
+            numberOfLines={1}
+            accessibilityRole="header"
+          >
             {hero.greetingText}
           </Text>
-          <Text style={[styles.heroTime, { color: colors.textPrimary }]}>{hero.timeText}</Text>
+          <Text 
+            style={[styles.heroTime, { color: colors.textPrimary }]}
+            accessibilityLabel={`Current time: ${hero.timeText}`}
+          >
+            {hero.timeText}
+          </Text>
 
           <View style={styles.heroActionsRow}>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => router.push(TEACHER_ROUTES.NOTICES as any)}
               style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="View notices"
+              accessibilityHint="Opens the notices screen"
             >
               <Ionicons name="notifications-outline" size={18} color={colors.textPrimary} />
               <Text style={[styles.heroActionText, { color: colors.textPrimary }]}>Notices</Text>
@@ -156,7 +174,11 @@ export default function TeacherDashboard() {
 
         {/* Critical Alert Strip (Conditional + Sticky) */}
         {showAlert ? (
-          <View style={[styles.alertStrip, { backgroundColor: alertBg, borderColor: withAlpha(alertText, 0.45) }]}>
+          <View 
+            style={[styles.alertStrip, { backgroundColor: alertBg, borderColor: withAlpha(alertText, 0.45) }]}
+            accessibilityRole="alert"
+            accessibilityLabel={`Alert: ${alert?.title}`}
+          >
             <View style={styles.alertLeft}>
               <View style={[styles.alertIcon, { backgroundColor: withAlpha(alertText, isDark ? 0.16 : 0.1) }]}>
                 <Ionicons name="alert-circle-outline" size={18} color={alertText} />
@@ -169,6 +191,9 @@ export default function TeacherDashboard() {
               activeOpacity={0.85}
               onPress={handleAlertCta}
               style={[styles.alertCta, { backgroundColor: withAlpha(alertText, isDark ? 0.18 : 0.12) }]}
+              accessibilityRole="button"
+              accessibilityLabel={alert?.ctaLabel || 'Take action'}
+              accessibilityHint="Navigates to resolve this alert"
             >
               <Text style={[styles.alertCtaText, { color: alertText }]} numberOfLines={1}>
                 {alert?.ctaLabel}
@@ -181,11 +206,18 @@ export default function TeacherDashboard() {
         {/* Tasks (Tile Grid) */}
         <View style={{ marginTop: showAlert ? 18 : 10 }}>
           <View style={styles.sectionRow}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tasks</Text>
+            <Text 
+              style={[styles.sectionTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              Tasks
+            </Text>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => router.push(TEACHER_ROUTES.MODULES as any)}
               style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="View all tasks"
             >
               <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
@@ -197,6 +229,9 @@ export default function TeacherDashboard() {
               activeOpacity={0.9}
               onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.ATTENDANCE)}
               style={styles.tileItem}
+              accessibilityRole="button"
+              accessibilityLabel={`Attendance. ${summary?.attendancePendingCount ?? 0} pending`}
+              accessibilityHint="Opens attendance management"
             >
               <Card style={styles.tileCard}>
                 <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
@@ -215,6 +250,9 @@ export default function TeacherDashboard() {
               activeOpacity={0.9}
               onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.ASSIGNMENTS)}
               style={styles.tileItem}
+              accessibilityRole="button"
+              accessibilityLabel={`Assignments. ${summary?.assignmentsToEvaluateCount ?? 0} to evaluate`}
+              accessibilityHint="Opens assignment management"
             >
               <Card style={styles.tileCard}>
                 <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
@@ -233,6 +271,9 @@ export default function TeacherDashboard() {
               activeOpacity={0.9}
               onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.RESULTS)}
               style={styles.tileItem}
+              accessibilityRole="button"
+              accessibilityLabel={`Internal Marks. ${summary?.internalMarksPendingCount ?? 0} pending`}
+              accessibilityHint="Opens internal marks management"
             >
               <Card style={styles.tileCard}>
                 <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
@@ -251,6 +292,9 @@ export default function TeacherDashboard() {
               activeOpacity={0.9}
               onPress={() => navigateWithHaptics(router, TEACHER_ROUTES.NOTICES)}
               style={styles.tileItem}
+              accessibilityRole="button"
+              accessibilityLabel={`Notices. ${summary?.noticesUnreadCount ?? 0} unread`}
+              accessibilityHint="Opens notices"
             >
               <Card style={styles.tileCard}>
                 <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
@@ -270,11 +314,19 @@ export default function TeacherDashboard() {
         {/* Classes (Inspired) */}
         <View style={{ marginTop: 20 }}>
           <View style={styles.sectionRow}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Classes</Text>
+            <Text 
+              style={[styles.sectionTitle, { color: colors.textPrimary }]}
+              accessibilityRole="header"
+            >
+              Classes
+            </Text>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => router.push(TEACHER_ROUTES.TIMETABLE as any)}
               style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="View all classes"
+              accessibilityHint="Opens the full timetable"
             >
               <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
@@ -282,8 +334,12 @@ export default function TeacherDashboard() {
           </View>
 
           {summary?.nextClass ? (
-            <Card style={styles.wideCard}>
-              <View style={styles.wideRow}>
+            <View
+              accessibilityLabel={`Next class: ${summary.nextClass.subjectLabel} in ${summary.nextClass.startsInMinutes} minutes. ${summary.nextClass.classLabel}${summary.nextClass.roomLabel ? ` in ${summary.nextClass.roomLabel}` : ''}`}
+              accessibilityRole="summary"
+            >
+              <Card style={styles.wideCard}>
+                <View style={styles.wideRow}>
                 <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
                   <Ionicons name="school-outline" size={20} color={colors.textPrimary} />
                 </View>
@@ -303,6 +359,7 @@ export default function TeacherDashboard() {
                 </View>
               </View>
             </Card>
+            </View>
           ) : null}
 
           {loading && !summary ? (

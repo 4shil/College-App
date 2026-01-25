@@ -7,13 +7,58 @@ import { useAuthStore } from '../store/authStore';
 import { toDateOnlyISO } from '../lib/dateUtils';
 import { logger } from '../lib/logger';
 
-const PERIOD_TIMINGS = [
+// Default period timings - used as fallback if database fetch fails
+const DEFAULT_PERIOD_TIMINGS = [
   { period: 1, start: '9:40', end: '10:35' },
   { period: 2, start: '10:50', end: '11:40' },
   { period: 3, start: '11:50', end: '12:45' },
   { period: 4, start: '13:25', end: '14:15' },
   { period: 5, start: '14:20', end: '15:10' },
 ];
+
+// Cache for period timings from database
+let cachedPeriodTimings: { period: number; start: string; end: string }[] | null = null;
+let periodTimingsCacheTime = 0;
+const PERIOD_TIMINGS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetches period timings from database with caching
+ * Falls back to default timings on error
+ */
+async function getPeriodTimings(departmentId?: string): Promise<{ period: number; start: string; end: string }[]> {
+  // Check cache
+  if (cachedPeriodTimings && Date.now() - periodTimingsCacheTime < PERIOD_TIMINGS_CACHE_TTL) {
+    return cachedPeriodTimings;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .rpc('get_period_timings', { p_department_id: departmentId || null });
+
+    if (error || !data || data.length === 0) {
+      logger.warn('Failed to fetch period timings from database, using defaults');
+      return DEFAULT_PERIOD_TIMINGS;
+    }
+
+    // Transform database format to expected format
+    const timings = data
+      .filter((t: any) => !t.is_break) // Exclude breaks
+      .map((t: any, idx: number) => ({
+        period: idx + 1,
+        start: t.start_time.substring(0, 5), // HH:MM from HH:MM:SS
+        end: t.end_time.substring(0, 5),
+      }));
+
+    // Cache the result
+    cachedPeriodTimings = timings.length > 0 ? timings : DEFAULT_PERIOD_TIMINGS;
+    periodTimingsCacheTime = Date.now();
+
+    return cachedPeriodTimings;
+  } catch (err) {
+    logger.error('Error fetching period timings:', err);
+    return DEFAULT_PERIOD_TIMINGS;
+  }
+}
 
 function minutesSinceMidnight(d: Date) {
   return d.getHours() * 60 + d.getMinutes();
@@ -236,6 +281,10 @@ export function useTeacherDashboardSummary() {
 
             const entryIds = entries.map((e) => e.id);
 
+            // Fetch period timings (use first entry's department for department-specific timings)
+            const firstDepartmentId = entries[0]?.courses?.department_id;
+            const periodTimings = await getPeriodTimings(firstDepartmentId);
+
             const attendanceRes = await supabase
               .from('attendance')
               .select('id, timetable_entry_id')
@@ -251,7 +300,7 @@ export function useTeacherDashboardSummary() {
 
             return entries
               .map((e) => {
-                const timing = PERIOD_TIMINGS.find((t) => t.period === e.period);
+                const timing = periodTimings.find((t) => t.period === e.period);
                 const startMin = timing ? parseHmToMinutes(timing.start) : null;
                 const endMin = timing ? parseHmToMinutes(timing.end) : null;
 
@@ -518,9 +567,12 @@ export function useTeacherDashboardSummary() {
             .filter((c) => c.status === 'Upcoming')
             .sort((a, b) => a.period - b.period)[0];
 
+          // Get period timings for next class calculation (use cached value from todayClasses fetch)
+          const periodTimings = await getPeriodTimings();
+          
           const nextClass: NextClassPreview | null = (() => {
             if (!nextUpcoming) return null;
-            const timing = PERIOD_TIMINGS.find((t) => t.period === nextUpcoming.period);
+            const timing = periodTimings.find((t) => t.period === nextUpcoming.period);
             const startMin = timing ? parseHmToMinutes(timing.start) : null;
             if (startMin == null) return null;
             const mins = startMin - minutesSinceMidnight(now);
