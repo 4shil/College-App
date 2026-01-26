@@ -86,7 +86,10 @@ export default function StudentModulesScreen() {
                 entering={FadeInDown.delay(60 + index * 25).duration(250)}
                 style={cardWidthStyle}
               >
-                <TouchableOpacity activeOpacity={0.85} onPress={() => router.push(m.route as any)}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => router.push(m.route as any)}
+                >
                   <Card>
                     <View
                       style={[

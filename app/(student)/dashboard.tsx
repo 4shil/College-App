@@ -1,100 +1,60 @@
-import React, { useMemo, useState, memo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, SlideInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
-import { AnimatedBackground, Card, GlassCard, IconBadge, LoadingIndicator, StatCard, Skeleton, SkeletonCard } from '../../components/ui';
+import { AnimatedBackground, Card, LoadingIndicator } from '../../components/ui';
 import { useThemeStore } from '../../store/themeStore';
 import { withAlpha } from '../../theme/colorUtils';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useAuthStore } from '../../store/authStore';
 
-// Constants for magic numbers
-const ANIMATION_DELAY_BASE = 450;
-const ANIMATION_DELAY_INCREMENT = 50;
-const MAX_SCHEDULE_ITEMS = 4;
-const MAX_ASSIGNMENT_ITEMS = 3;
+type TimetableEntry = {
+  entryId?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  period?: number | string | null;
+  courseName?: string | null;
+  roomLabel?: string | null;
+};
 
-// Memoized SectionHeader component to prevent re-renders
-interface SectionHeaderProps {
+type AssignmentItem = {
+  id: string;
   title: string;
-  actionText?: string;
-  onPress?: () => void;
-  colors: { textPrimary: string; primary: string };
+  courseName?: string | null;
+  dueDate?: string | null;
+  isOverdue?: boolean;
+  daysLeft?: number;
+};
+
+function navigateWithHaptics(router: ReturnType<typeof useRouter>, route: string) {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  router.push(route as any);
 }
 
-const SectionHeader = memo<SectionHeaderProps>(({ title, actionText, onPress, colors }) => (
-  <View style={styles.sectionHeaderRow}>
-    <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
-    {!!actionText && !!onPress && (
-      <TouchableOpacity 
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onPress();
-        }} 
-        activeOpacity={0.8} 
-        style={styles.sectionAction}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        accessibilityRole="button"
-        accessibilityLabel={actionText}
-        accessibilityHint={`Navigate to ${title}`}
-      >
-        <Text style={[styles.sectionActionText, { color: colors.primary }]}>{actionText}</Text>
-        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
-      </TouchableOpacity>
-    )}
-  </View>
-));
-
-// Memoized ActionTile component to prevent re-renders
-interface ActionTileProps {
-  icon: string;
-  label: string;
-  subtitle?: string;
-  onPress: () => void;
-  index: number;
-  colors: { textPrimary: string; textSecondary: string };
+function safePct(n: number | undefined | null) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(100, v));
 }
 
-const ActionTile = memo<ActionTileProps>(({ icon, label, subtitle, onPress, index, colors }) => (
-  <Animated.View
-    entering={SlideInRight.delay(ANIMATION_DELAY_BASE + index * ANIMATION_DELAY_INCREMENT).duration(400).springify().damping(18)}
-    style={{ flexBasis: '48%' }}
-  >
-    <TouchableOpacity 
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress();
-      }} 
-      activeOpacity={0.75}
-      style={{ minHeight: 44 }}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityHint={subtitle || `Navigate to ${label}`}
-    >
-      <GlassCard intensity={18} noPadding style={styles.actionTile}>
-        <View style={styles.actionTileInner}>
-          <IconBadge family="ion" name={icon} tone="primary" size={22} style={styles.actionIconBadge} />
-          <View style={styles.actionContent}>
-            <Text style={[styles.actionLabel, { color: colors.textPrimary }]} numberOfLines={1}>
-              {label}
-            </Text>
-            {!!subtitle && (
-              <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
-                {subtitle}
-              </Text>
-            )}
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={withAlpha(colors.textPrimary, 0.35)} />
-        </View>
-      </GlassCard>
-    </TouchableOpacity>
-  </Animated.View>
-));
+function formatRelative(d: Date) {
+  const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  return `${h}h ago`;
+}
+
+function formatTimeLabel(start?: string | null, end?: string | null) {
+  const startText = start ? String(start).slice(0, 5) : '—';
+  const endText = end ? String(end).slice(0, 5) : '—';
+  return `${startText} - ${endText}`;
+}
 
 export default function StudentDashboard() {
   const insets = useSafeAreaInsets();
@@ -103,491 +63,358 @@ export default function StudentDashboard() {
   const { profile } = useAuthStore();
   const { summary, loading, refreshing, refresh } = useStudentDashboard();
 
+  const [now, setNow] = useState(() => new Date());
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
-  const photoUrl = profile?.photo_url || '';
 
-  const displayName = useMemo(() => {
-    return summary?.studentName || profile?.full_name || 'Student';
-  }, [summary?.studentName, profile?.full_name]);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
+  const hero = useMemo(() => {
+    const hour = now.getHours();
+    const greetingText = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    const timeText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return { greetingText, timeText };
+  }, [now]);
+
+  const displayName = useMemo(() => summary?.studentName || profile?.full_name || 'Student', [summary?.studentName, profile?.full_name]);
   const firstName = useMemo(() => {
-    const n = String(displayName || 'Student').trim();
-    return n.split(/\s+/)[0] || 'Student';
+    const name = String(displayName || 'Student').trim();
+    return name.split(/\s+/)[0] || 'Student';
   }, [displayName]);
 
   const attendanceTone = useMemo(() => {
     const status = summary?.attendanceSummary?.status;
-    if (status === 'good') return { color: colors.success, bg: withAlpha(colors.success, isDark ? 0.18 : 0.12) };
-    if (status === 'warning') return { color: colors.warning, bg: withAlpha(colors.warning, isDark ? 0.18 : 0.12) };
-    if (status === 'critical') return { color: colors.error, bg: withAlpha(colors.error, isDark ? 0.18 : 0.12) };
-    return { color: colors.primary, bg: withAlpha(colors.primary, isDark ? 0.18 : 0.12) };
-  }, [summary?.attendanceSummary?.status, colors, isDark]);
+    if (status === 'warning') return { color: colors.warning, bg: withAlpha(colors.warning, isDark ? 0.22 : 0.12) };
+    if (status === 'critical') return { color: colors.error, bg: withAlpha(colors.error, isDark ? 0.22 : 0.12) };
+    return { color: colors.success, bg: withAlpha(colors.success, isDark ? 0.18 : 0.1) };
+  }, [summary?.attendanceSummary?.status, colors.warning, colors.error, colors.success, isDark]);
+
+  const assignments = summary?.upcomingAssignments ?? [];
+  const todayClasses: TimetableEntry[] = summary?.todayTimetable ?? [];
+  const nextClass = summary?.nextClass;
+  const unreadNotices = summary?.unreadNoticesCount ?? 0;
+  const photoUrl = profile?.photo_url || '';
+  const contentTopPadding = insets.top + 12;
 
   const handleRefresh = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await refresh();
     setLastUpdatedAt(new Date());
   };
 
-  const handleNavigate = (path: string) => {
-    router.push(path as any);
-  };
+  const renderClassTiles = () => {
+    if (loading && !todayClasses.length) {
+      return (
+        <Card style={styles.wideCard}>
+          <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+            <LoadingIndicator color={colors.primary} />
+          </View>
+        </Card>
+      );
+    }
 
-  const formatRelative = (d: Date) => {
-    const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
-    if (s < 60) return `${s}s ago`;
-    const m = Math.round(s / 60);
-    if (m < 60) return `${m}m ago`;
-    const h = Math.round(m / 60);
-    return `${h}h ago`;
-  };
+    if (!todayClasses.length) {
+      return (
+        <Card style={styles.wideCard}>
+          <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No classes today</Text>
+          <Text style={[styles.emptySub, { color: colors.textMuted }]}>Your timetable is clear for now.</Text>
+        </Card>
+      );
+    }
 
-  const safePct = (n: number | undefined | null) => {
-    const v = Number(n);
-    if (!Number.isFinite(v)) return 0;
-    return Math.max(0, Math.min(100, v));
-  };
-
-  // Colors object for memoized components
-  const sectionColors = useMemo(() => ({ textPrimary: colors.textPrimary, primary: colors.primary }), [colors.textPrimary, colors.primary]);
-  const tileColors = useMemo(() => ({ textPrimary: colors.textPrimary, textSecondary: colors.textSecondary }), [colors.textPrimary, colors.textSecondary]);
-
-  if (loading && !summary) {
     return (
-      <AnimatedBackground>
-        <ScrollView 
-          style={styles.container}
-          contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: insets.bottom + 120, paddingHorizontal: 16 }}
-        >
-          {/* Skeleton for hero card */}
-          <SkeletonCard showAvatar lines={2} />
-          
-          {/* Skeleton for overview card */}
-          <View style={{ marginTop: 14 }}>
-            <SkeletonCard lines={3} />
-          </View>
-          
-          {/* Skeleton for schedule section */}
-          <View style={{ marginTop: 16 }}>
-            <Skeleton width={120} height={18} style={{ marginBottom: 12 }} />
-            <SkeletonCard lines={4} />
-          </View>
-          
-          {/* Skeleton for highlights */}
-          <View style={{ marginTop: 16 }}>
-            <Skeleton width={100} height={18} style={{ marginBottom: 12 }} />
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <SkeletonCard lines={3} />
+      <View style={styles.tileGrid}>
+        {todayClasses.slice(0, 4).map((c, idx) => (
+          <Animated.View
+            key={c.entryId || `${c.courseName}-${idx}`}
+            entering={FadeInDown.delay(40 + idx * 25).duration(220)}
+            style={styles.tileItem}
+          >
+            <Card style={styles.tileCard}>
+              <View style={styles.classTileTop}>
+                <Text style={[styles.classTileTime, { color: colors.textMuted }]} numberOfLines={1}>
+                  {formatTimeLabel(c.startTime, c.endTime)}
+                </Text>
+                {!!c.roomLabel && (
+                  <View style={[styles.pill, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
+                    <Text style={[styles.pillText, { color: colors.textPrimary }]} numberOfLines={1}>
+                      {c.roomLabel}
+                    </Text>
+                  </View>
+                )}
               </View>
-              <View style={{ flex: 1 }}>
-                <SkeletonCard lines={3} />
-              </View>
-            </View>
-          </View>
-        </ScrollView>
-      </AnimatedBackground>
+              <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+                {c.courseName || 'Class'}
+              </Text>
+              <Text style={[styles.tileSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                {c.period ? `Period ${c.period}` : 'Upcoming period'}
+              </Text>
+            </Card>
+          </Animated.View>
+        ))}
+      </View>
     );
-  }
+  };
 
   return (
     <AnimatedBackground>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{
-          paddingTop: insets.top + 14,
-          paddingBottom: insets.bottom + 120,
-        }}
+        contentContainerStyle={{ paddingTop: contentTopPadding, paddingBottom: insets.bottom + 128 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
+        showsVerticalScrollIndicator={false}
       >
-        {/* Overview / Hero */}
-        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
-          <Card noPadding style={styles.heroCard}>
-            <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-              <LinearGradient
-                colors={[
-                  withAlpha(colors.primary, isDark ? 0.22 : 0.18),
-                  withAlpha(colors.secondary, isDark ? 0.18 : 0.14),
-                  withAlpha(colors.background, 0),
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
-              />
-            </View>
-
-            <View style={styles.heroInner}>
-              <View style={styles.heroTopRow}>
-                <View style={styles.heroLeft}>
-                  {photoUrl ? (
-                    <Image source={{ uri: photoUrl }} style={styles.profilePhoto} />
-                  ) : (
-                    <View style={[styles.profilePhoto, { backgroundColor: colors.primary }]}>
-                      <Ionicons name="person" size={22} color={colors.background} />
-                    </View>
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.heroKicker, { color: colors.textSecondary }]}>Have a good day!</Text>
-                    <Text style={[styles.heroName, { color: colors.textPrimary }]} numberOfLines={1}>
-                      {firstName}
-                    </Text>
-                    <View style={styles.heroMetaRow}>
-                      {!!summary?.studentRollNumber && (
-                        <View style={[styles.metaPill, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) }]}>
-                          <Ionicons name="id-card" size={14} color={withAlpha(colors.textPrimary, 0.7)} />
-                          <Text style={[styles.metaPillText, { color: colors.textPrimary }]} numberOfLines={1}>
-                            {summary.studentRollNumber}
-                          </Text>
-                        </View>
-                      )}
-                      {!!summary?.departmentName && (
-                        <View style={[styles.metaPill, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.08) }]}>
-                          <Ionicons name="school" size={14} color={withAlpha(colors.textPrimary, 0.7)} />
-                          <Text style={[styles.metaPillText, { color: colors.textPrimary }]} numberOfLines={1}>
-                            {summary.departmentName}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.heroIconRow}>
-                  <TouchableOpacity
-                    onPress={() => handleNavigate('/(student)/notices')}
-                    activeOpacity={0.85}
-                    style={[styles.heroIconButton, { backgroundColor: withAlpha(colors.background, isDark ? 0.18 : 0.45) }]}
-                  >
-                    <Ionicons name="notifications" size={18} color={colors.textPrimary} />
-                    {!!summary?.unreadNoticesCount && summary.unreadNoticesCount > 0 && (
-                      <View style={[styles.badgeDot, { backgroundColor: colors.primary }]} />
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => handleNavigate('/(student)/profile')}
-                    activeOpacity={0.85}
-                    style={[styles.heroIconButton, { backgroundColor: withAlpha(colors.background, isDark ? 0.18 : 0.45) }]}
-                  >
-                    <Ionicons name="settings" size={18} color={colors.textPrimary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Card>
-        </Animated.View>
-
-        {/* Next class + month attendance */}
-        <Animated.View entering={FadeInDown.delay(170).duration(450)} style={{ marginTop: 14 }}>
-          <Card>
-            <View style={styles.overviewRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.overviewTitle, { color: colors.textPrimary }]}>Today Overview</Text>
-                <Text style={[styles.overviewSubtitle, { color: colors.textSecondary }]}>
-                  {summary?.nextClass
-                    ? `Next: ${summary.nextClass.courseName} · ${summary.nextClass.startsInMinutes} min`
-                    : 'No upcoming class right now'}
-                </Text>
-              </View>
-              <View style={[styles.overviewChip, { backgroundColor: attendanceTone.bg }]}
-              >
-                <Text style={[styles.overviewChipValue, { color: attendanceTone.color }]}>
-                  {safePct(summary?.attendanceSummary?.percentage).toFixed(0)}%
-                </Text>
-                <Text style={[styles.overviewChipLabel, { color: withAlpha(attendanceTone.color, 0.85) }]}>
-                  This month
-                </Text>
-              </View>
-            </View>
-
-            <View style={[styles.progressTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${safePct(summary?.attendanceSummary?.percentage)}%`,
-                    backgroundColor: attendanceTone.color,
-                  },
-                ]}
-              />
-            </View>
-
-            <View style={styles.overviewFooterRow}>
-              <View style={styles.overviewFooterItem}>
-                <Text style={[styles.overviewFooterValue, { color: colors.textPrimary }]}>
-                  {summary?.attendanceSummary ? summary.attendanceSummary.present : '—'}
-                </Text>
-                <Text style={[styles.overviewFooterLabel, { color: colors.textSecondary }]}>Present</Text>
-              </View>
-              <View style={[styles.overviewFooterDivider, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1) }]} />
-              <View style={styles.overviewFooterItem}>
-                <Text style={[styles.overviewFooterValue, { color: colors.textPrimary }]}>
-                  {summary?.attendanceSummary ? summary.attendanceSummary.total : '—'}
-                </Text>
-                <Text style={[styles.overviewFooterLabel, { color: colors.textSecondary }]}>Total</Text>
-              </View>
-              <View style={[styles.overviewFooterDivider, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1) }]} />
-              <View style={styles.overviewFooterItem}>
-                <Text style={[styles.overviewFooterValue, { color: colors.textPrimary }]}>
-                  {summary ? summary.unreadNoticesCount : '—'}
-                </Text>
-                <Text style={[styles.overviewFooterLabel, { color: colors.textSecondary }]}>Unread</Text>
-              </View>
-            </View>
-          </Card>
-        </Animated.View>
-
-        {/* Today's classes */}
-        <Animated.View entering={FadeInDown.delay(240).duration(450)} style={{ marginTop: 16 }}>
-          <SectionHeader
-            title="Today's Schedule"
-            actionText="View all"
-            onPress={() => handleNavigate('/(student)/timetable')}
-            colors={sectionColors}
-          />
-          <Card>
-            {summary?.todayTimetable && summary.todayTimetable.length > 0 ? (
-              <>
-                {summary.todayTimetable.slice(0, 4).map((entry, index) => (
-                  <View
-                    key={entry.entryId}
-                    style={[
-                      styles.scheduleRow,
-                      index < Math.min(3, summary.todayTimetable.length - 1) && {
-                        borderBottomWidth: 1,
-                        borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1),
-                      },
-                    ]}
-                  >
-                    <View style={[styles.scheduleTime, { backgroundColor: withAlpha(colors.primary, isDark ? 0.18 : 0.1) }]}>
-                      <Text style={[styles.scheduleTimeText, { color: colors.primary }]}>
-                        {String(entry.startTime || '').slice(0, 5)}
-                      </Text>
-                      <Text style={[styles.scheduleTimeSub, { color: withAlpha(colors.textPrimary, 0.55) }]}>
-                        P{entry.period}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.scheduleTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-                        {entry.courseName}
-                      </Text>
-                      <Text style={[styles.scheduleSub, { color: colors.textSecondary }]} numberOfLines={1}>
-                        {String(entry.endTime || '').slice(0, 5)} · {entry.roomLabel || 'Room TBA'}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={withAlpha(colors.textPrimary, 0.4)} />
-                  </View>
-                ))}
-              </>
-            ) : (
-              <View style={{ paddingVertical: 10 }}>
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No classes scheduled for today.</Text>
-              </View>
-            )}
-          </Card>
-        </Animated.View>
-
-        {/* Spotlight cards */}
-        <Animated.View entering={FadeInDown.delay(310).duration(450)} style={{ marginTop: 16 }}>
-          <SectionHeader title="Highlights" colors={sectionColors} />
-          <View style={styles.twoColRow}>
-            <TouchableOpacity 
-              onPress={() => handleNavigate('/(student)/attendance')} 
-              activeOpacity={0.85} 
-              style={{ flex: 1 }}
+        <View style={styles.hero}>
+          <View style={styles.heroTopRow}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateWithHaptics(router, '/(student)/modules')}
+              style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
               accessibilityRole="button"
-              accessibilityLabel={`Attendance ${safePct(summary?.attendanceSummary?.percentage).toFixed(0)} percent`}
-              accessibilityHint="View your attendance details"
+              accessibilityLabel="Open modules"
             >
-              <Card animated={false} style={styles.halfCard}>
-                <Text style={[styles.halfTitle, { color: colors.textSecondary }]}>Attendance</Text>
-                <Text style={[styles.halfValue, { color: attendanceTone.color }]}>
-                  {safePct(summary?.attendanceSummary?.percentage).toFixed(0)}%
-                </Text>
-                <Text style={[styles.halfSub, { color: colors.textMuted }]} numberOfLines={1}>
-                  {summary?.attendanceSummary
-                    ? `${summary.attendanceSummary.present}/${summary.attendanceSummary.total} present`
-                    : '—'}
-                </Text>
-                <View style={[styles.miniTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
-                  <View
-                    style={{
-                      height: '100%',
-                      width: `${safePct(summary?.attendanceSummary?.percentage)}%`,
-                      borderRadius: 999,
-                      backgroundColor: attendanceTone.color,
-                    }}
-                  />
+              <Ionicons name="grid-outline" size={20} color={colors.textPrimary} />
+            </TouchableOpacity>
+
+            <View style={styles.heroTopRight}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => navigateWithHaptics(router, '/(student)/notices')}
+                style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+                accessibilityRole="button"
+                accessibilityLabel="View notices"
+              >
+                <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
+                {unreadNotices > 0 ? <View style={[styles.badgeDot, { backgroundColor: colors.primary }]} /> : null}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => navigateWithHaptics(router, '/(student)/profile')}
+                style={[styles.iconBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+                accessibilityRole="button"
+                accessibilityLabel="Open profile"
+              >
+                {photoUrl ? (
+                  <Image source={{ uri: photoUrl }} style={styles.heroAvatarImage} accessibilityIgnoresInvertColors />
+                ) : (
+                  <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={[styles.heroGreeting, { color: colors.textPrimary }]} numberOfLines={1}>
+            {hero.greetingText}, {firstName}
+          </Text>
+          <Text style={[styles.heroTime, { color: colors.textPrimary }]} accessibilityLabel={`Current time ${hero.timeText}`}>
+            {hero.timeText}
+          </Text>
+
+          <View style={styles.heroActionsRow}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateWithHaptics(router, '/(student)/timetable')}
+              style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="Open timetable"
+            >
+              <Ionicons name="calendar-outline" size={18} color={colors.textPrimary} />
+              <Text style={[styles.heroActionText, { color: colors.textPrimary }]}>Timetable</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateWithHaptics(router, '/(student)/assignments')}
+              style={[styles.heroActionBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="Open assignments"
+            >
+              <Ionicons name="clipboard-outline" size={18} color={colors.textPrimary} />
+              <Text style={[styles.heroActionText, { color: colors.textPrimary }]}>Assignments</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>
+            {lastUpdatedAt ? `Updated ${formatRelative(lastUpdatedAt)}` : 'Pull to refresh'}
+          </Text>
+        </View>
+
+        <View style={{ marginTop: 12 }}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tasks</Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateWithHaptics(router, '/(student)/modules')}
+              style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="View all modules"
+            >
+              <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.tileGrid}>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => navigateWithHaptics(router, '/(student)/attendance')} style={styles.tileItem}>
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="checkmark-done-outline" size={20} color={colors.textPrimary} />
                 </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Attendance
+                </Text>
+                <Text style={[styles.tileSub, { color: attendanceTone.color }]} numberOfLines={1}>
+                  {safePct(summary?.attendanceSummary?.percentage).toFixed(0)}% this month
+                </Text>
               </Card>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              onPress={() => handleNavigate('/(student)/marks')} 
-              activeOpacity={0.85} 
-              style={{ flex: 1 }}
-              accessibilityRole="button"
-              accessibilityLabel={`Marks ${summary?.marksSnapshot ? safePct(summary.marksSnapshot.percentage).toFixed(0) + ' percent' : 'not available'}`}
-              accessibilityHint="View your marks and grades"
-            >
-              <Card animated={false} style={styles.halfCard}>
-                <Text style={[styles.halfTitle, { color: colors.textSecondary }]}>Marks</Text>
-                <Text style={[styles.halfValue, { color: colors.primary }]}>
-                  {summary?.marksSnapshot ? `${safePct(summary.marksSnapshot.percentage).toFixed(0)}%` : '—'}
-                </Text>
-                <Text style={[styles.halfSub, { color: colors.textMuted }]} numberOfLines={1}>
-                  {summary?.marksSnapshot
-                    ? `${summary.marksSnapshot.obtainedMarks}/${summary.marksSnapshot.totalMarks} · ${summary.marksSnapshot.lastUpdated}`
-                    : 'No marks published yet'}
-                </Text>
-                <View style={[styles.miniTrack, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.12 : 0.08) }]}>
-                  <View
-                    style={{
-                      height: '100%',
-                      width: `${safePct(summary?.marksSnapshot?.percentage)}%`,
-                      borderRadius: 999,
-                      backgroundColor: colors.primary,
-                    }}
-                  />
+            <TouchableOpacity activeOpacity={0.9} onPress={() => navigateWithHaptics(router, '/(student)/assignments')} style={styles.tileItem}>
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="clipboard-outline" size={20} color={colors.textPrimary} />
                 </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Assignments
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {assignments.length ? `${assignments.length} pending` : 'All caught up'}
+                </Text>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity activeOpacity={0.9} onPress={() => navigateWithHaptics(router, '/(student)/marks')} style={styles.tileItem}>
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="stats-chart-outline" size={20} color={colors.textPrimary} />
+                </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Marks
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {summary?.marksSnapshot ? `${safePct(summary.marksSnapshot.percentage).toFixed(0)}% latest` : 'Awaiting results'}
+                </Text>
+              </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity activeOpacity={0.9} onPress={() => navigateWithHaptics(router, '/(student)/notices')} style={styles.tileItem}>
+              <Card style={styles.tileCard}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
+                </View>
+                <Text style={[styles.tileTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Notices
+                </Text>
+                <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                  {unreadNotices ? `${unreadNotices} unread` : 'All read'}
+                </Text>
               </Card>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
 
-        {/* Upcoming Assignments */}
-        {summary?.upcomingAssignments && summary.upcomingAssignments.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(380).duration(450)} style={{ marginTop: 16 }}>
-            <SectionHeader
-              title="Pending Tasks"
-              actionText="View all"
-              onPress={() => handleNavigate('/(student)/assignments')}
-              colors={sectionColors}
-            />
-            <Card>
-              {summary.upcomingAssignments.slice(0, 3).map((assignment, index) => {
-                const toneColor = assignment.isOverdue
-                  ? colors.error
-                  : assignment.daysLeft <= 3
-                  ? colors.warning
-                  : colors.success;
+        <View style={{ marginTop: 20 }}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Classes</Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateWithHaptics(router, '/(student)/timetable')}
+              style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="View all classes"
+            >
+              <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          {nextClass ? (
+            <Card style={styles.wideCard}>
+              <View style={styles.wideRow}>
+                <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                  <Ionicons name="school-outline" size={20} color={colors.textPrimary} />
+                </View>
+                <View style={{ flex: 1, paddingLeft: 12 }}>
+                  <Text style={[styles.wideTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {nextClass.courseName || 'Next class'}
+                  </Text>
+                  <Text style={[styles.wideSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                    {nextClass.roomLabel ? `${nextClass.roomLabel} • ` : ''}{nextClass.startsInMinutes} min
+                  </Text>
+                </View>
+                <View style={[styles.pill, { backgroundColor: withAlpha(colors.primary, isDark ? 0.22 : 0.12) }]}>
+                  <Text style={[styles.pillText, { color: colors.primary }]} numberOfLines={1}>
+                    {nextClass.startsInMinutes} min
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          ) : null}
+
+          {renderClassTiles()}
+        </View>
+
+        <View style={{ marginTop: 20 }}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Important</Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateWithHaptics(router, '/(student)/assignments')}
+              style={[styles.viewAllBtn, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.08 : 0.05) }]}
+              accessibilityRole="button"
+              accessibilityLabel="View all tasks"
+            >
+              <Text style={[styles.viewAllText, { color: colors.textPrimary }]}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          {assignments.length ? (
+            <View style={styles.tileGrid}>
+              {assignments.slice(0, 2).map((a: AssignmentItem) => {
+                const tone = a.isOverdue ? colors.error : (a.daysLeft ?? 0) <= 3 ? colors.warning : colors.primary;
+                const bgTone = withAlpha(tone, isDark ? 0.22 : 0.12);
                 return (
                   <TouchableOpacity
-                    key={assignment.id}
-                    onPress={() => handleNavigate('/(student)/assignments')}
-                    activeOpacity={0.85}
-                    style={[
-                      styles.taskRow,
-                      index < Math.min(2, summary.upcomingAssignments.length - 1) && {
-                        borderBottomWidth: 1,
-                        borderBottomColor: withAlpha(colors.textPrimary, isDark ? 0.14 : 0.1),
-                      },
-                    ]}
+                    key={a.id}
+                    activeOpacity={0.9}
+                    onPress={() => navigateWithHaptics(router, '/(student)/assignments')}
+                    style={styles.tileItem}
                   >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.taskCourse, { color: colors.textSecondary }]} numberOfLines={1}>
-                        {assignment.courseName}
+                    <Card style={styles.tileCard}>
+                      <View style={styles.noticeTileTop}>
+                        <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(colors.textPrimary, isDark ? 0.1 : 0.06) }]}>
+                          <Ionicons name="document-text-outline" size={20} color={colors.textPrimary} />
+                        </View>
+                        <View style={[styles.scopePill, { backgroundColor: bgTone }]}>
+                          <Text style={[styles.scopePillText, { color: tone }]}>
+                            {a.isOverdue ? 'Overdue' : `${a.daysLeft ?? 0}d`}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={[styles.noticeTileTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+                        {a.title}
                       </Text>
-                      <Text style={[styles.taskTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-                        {assignment.title}
+                      <Text style={[styles.tileSub, { color: colors.textMuted }]} numberOfLines={1}>
+                        {a.courseName || 'Course'}{a.dueDate ? ` • Due ${a.dueDate}` : ''}
                       </Text>
-                      <Text style={[styles.taskSub, { color: colors.textMuted }]} numberOfLines={1}>
-                        Due {assignment.dueDate}
-                      </Text>
-                    </View>
-                    <View style={[styles.taskChip, { backgroundColor: withAlpha(toneColor, isDark ? 0.18 : 0.12) }]}>
-                      <Text style={[styles.taskChipText, { color: toneColor }]}>
-                        {assignment.isOverdue ? 'Overdue' : `${assignment.daysLeft}d`}
-                      </Text>
-                    </View>
+                    </Card>
                   </TouchableOpacity>
                 );
               })}
+            </View>
+          ) : (
+            <Card style={styles.wideCard}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No pending tasks</Text>
+              <Text style={[styles.emptySub, { color: colors.textMuted }]}>Check back for new assignments or events.</Text>
             </Card>
-          </Animated.View>
-        )}
-
-        {/* Quick Access */}
-        <Animated.View entering={FadeInDown.delay(420).duration(450)} style={{ marginTop: 16 }}>
-          <SectionHeader title="Quick Access" colors={sectionColors} />
-          <View style={styles.actionsGrid}>
-            <ActionTile
-              index={0}
-              icon="calendar-outline"
-              label="Timetable"
-              subtitle={summary?.todayTimetable?.length ? `${summary.todayTimetable.length} periods today` : 'View schedule'}
-              onPress={() => handleNavigate('/(student)/timetable')}
-              colors={tileColors}
-            />
-            <ActionTile
-              index={1}
-              icon="clipboard-outline"
-              label="Assignments"
-              subtitle={summary?.upcomingAssignments?.length ? `${summary.upcomingAssignments.length} upcoming` : 'View tasks'}
-              onPress={() => handleNavigate('/(student)/assignments')}
-              colors={tileColors}
-            />
-            <ActionTile
-              index={2}
-              icon="book-outline"
-              label="Materials"
-              subtitle="Notes & downloads"
-              onPress={() => handleNavigate('/(student)/materials')}
-              colors={tileColors}
-            />
-            <ActionTile
-              index={3}
-              icon="restaurant-outline"
-              label="Canteen"
-              subtitle={
-                summary
-                  ? summary.canteenMenuCount > 0
-                    ? `${summary.canteenMenuCount} items today${summary.myCanteenTokensCount ? ` · ${summary.myCanteenTokensCount} token(s)` : ''}`
-                    : 'No menu today'
-                  : 'Menu & tokens'
-              }
-              onPress={() => handleNavigate('/(student)/canteen')}
-              colors={tileColors}
-            />
-            <ActionTile
-              index={4}
-              icon="bus-outline"
-              label="Bus"
-              subtitle={
-                summary
-                  ? summary.busSubscriptionStatus === 'none'
-                    ? 'No subscription'
-                    : `${summary.busSubscriptionStatus.toUpperCase()}${summary.busRouteLabel ? ` · ${summary.busRouteLabel}` : ''}`
-                  : 'Route & status'
-              }
-              onPress={() => handleNavigate('/(student)/bus')}
-              colors={tileColors}
-            />
-            <ActionTile
-              index={5}
-              icon="grid-outline"
-              label="All Modules"
-              subtitle="Browse everything"
-              onPress={() => handleNavigate('/(student)/modules')}
-              colors={tileColors}
-            />
-          </View>
-        </Animated.View>
-
-        {/* Last Updated */}
-        {lastUpdatedAt && (
-          <View style={styles.lastUpdatedContainer}>
-            <Text style={[styles.lastUpdatedText, { color: colors.textMuted }]}>
-              Updated {formatRelative(lastUpdatedAt)}
-            </Text>
-          </View>
-        )}
+          )}
+        </View>
       </ScrollView>
     </AnimatedBackground>
   );
@@ -596,318 +423,192 @@ export default function StudentDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
   },
-  heroCard: {
-    overflow: 'hidden',
-  },
-  heroInner: {
-    padding: 18,
-    gap: 14,
+  hero: {
+    paddingTop: 6,
+    paddingBottom: 14,
   },
   heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    marginBottom: 14,
   },
-  heroLeft: {
+  heroTopRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  profilePhoto: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  heroKicker: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  heroName: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  heroMetaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 10,
-  },
-  metaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  metaPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: -0.1,
-  },
-  heroIconRow: {
-    flexDirection: 'row',
     gap: 10,
   },
-  heroIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  heroGreeting: {
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  heroTime: {
+    marginTop: 8,
+    fontSize: 56,
+    fontWeight: '200',
+    letterSpacing: -1.2,
+  },
+  heroActionsRow: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  heroActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 18,
+  },
+  heroActionText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  iconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  heroAvatarImage: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    resizeMode: 'cover',
   },
   badgeDot: {
     position: 'absolute',
-    top: 10,
-    right: 12,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  heroStatsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-  },
-
-  overviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  overviewTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-  overviewSubtitle: {
+  lastUpdated: {
+    marginTop: 10,
     fontSize: 12,
     fontWeight: '600',
-    marginTop: 4,
   },
-  overviewChip: {
-    alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 14,
-  },
-  overviewChipValue: {
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  overviewChipLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  progressTrack: {
-    height: 10,
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginTop: 14,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
-  overviewFooterRow: {
+  sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 14,
+    gap: 12,
+    marginBottom: 12,
   },
-  overviewFooterItem: {
-    flex: 1,
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  tileGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  tileItem: {
+    width: '48%',
+  },
+  tileCard: {
+    minHeight: 132,
+  },
+  tileIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  tileTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  tileSub: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  wideCard: {
+    marginBottom: 12,
+  },
+  wideRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  overviewFooterDivider: {
-    width: 1,
-    height: 28,
-  },
-  overviewFooterValue: {
+  wideTitle: {
     fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: -0.2,
+    fontWeight: '900',
   },
-  overviewFooterLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 3,
+  wideSub: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
   },
-
-  sectionHeaderRow: {
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  pillText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  classTileTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: -0.2,
-  },
-  sectionAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  sectionActionText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  scheduleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-  },
-  scheduleTime: {
-    width: 64,
-    borderRadius: 14,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scheduleTimeText: {
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: -0.2,
-  },
-  scheduleTimeSub: {
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  scheduleTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: -0.1,
-  },
-  scheduleSub: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 3,
-  },
-  emptyText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  twoColRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfCard: {
-    minHeight: 126,
-  },
-  halfTitle: {
+  classTileTime: {
     fontSize: 12,
     fontWeight: '800',
+    flexShrink: 1,
   },
-  halfValue: {
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: -0.6,
-    marginTop: 8,
-  },
-  halfSub: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 6,
-  },
-  miniTrack: {
-    height: 8,
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginTop: 12,
-  },
-
-  taskRow: {
+  noticeTileTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    gap: 12,
+    gap: 10,
+    marginBottom: 8,
   },
-  taskCourse: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  taskTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: -0.1,
-    marginTop: 3,
-  },
-  taskSub: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 3,
-  },
-  taskChip: {
+  scopePill: {
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  taskChipText: {
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: -0.2,
-  },
-
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  actionTile: {
+    paddingVertical: 7,
     borderRadius: 16,
   },
-  actionTileInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    gap: 12,
+  scopePillText: {
+    fontSize: 11,
+    fontWeight: '900',
   },
-  actionIconBadge: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-  },
-  actionContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  actionLabel: {
+  noticeTileTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+    fontWeight: '900',
   },
-  actionSubtitle: {
-    fontSize: 12,
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  emptySub: {
+    marginTop: 6,
+    fontSize: 14,
     fontWeight: '600',
-    marginTop: 2,
-    opacity: 0.85,
-  },
-
-  lastUpdatedContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  lastUpdatedText: {
-    fontSize: 12,
   },
 });
