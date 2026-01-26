@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -70,6 +70,7 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
 }) => {
   const [expanded, setExpanded] = useState(false);
   const { colors, isDark, animationsEnabled } = useThemeStore();
+  const navigatingRef = useRef(false);
 
   const dockBlurIntensity = animationsEnabled ? Math.min(65, Math.round(colors.blurIntensity * 0.75)) : 0;
   const dockScrimColor = withAlpha(colors.background, isDark ? 0.12 : 0.1);
@@ -134,9 +135,11 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
               const isCurrentRoute =
                 item.id === 'dashboard'
                   ? (activeRoute === '/(student)/dashboard' || activeRoute.endsWith('/dashboard'))
-                  : ((item as any).nestedRoutes
-                      ? (activeRoute.includes(item.id) || (item as any).nestedRoutes.some((route: string) => activeRoute.includes(route)))
-                      : activeRoute.includes(item.id));
+                  : item.id === 'modules'
+                    ? activeRoute === '/(student)/modules' || activeRoute.endsWith('/modules')
+                    : ((item as any).nestedRoutes
+                        ? (activeRoute.includes(item.id) || (item as any).nestedRoutes.some((route: string) => activeRoute.includes(route)))
+                        : activeRoute.includes(item.id));
 
               return (
                 <DockItem
@@ -147,8 +150,16 @@ const GlassDock: React.FC<{ activeRoute: string; onNavigate: (route: string) => 
                     if (!expanded) {
                       setExpanded(true);
                     } else {
+                      // Prevent duplicate navigation
+                      if (navigatingRef.current) return;
+                      if (activeRoute === item.route || activeRoute.endsWith(item.route.split('/').pop() || '')) {
+                        setExpanded(false);
+                        return;
+                      }
+                      navigatingRef.current = true;
                       onNavigate(item.route);
                       setExpanded(false);
+                      setTimeout(() => { navigatingRef.current = false; }, 500);
                     }
                   }}
                   activeColor={activeIconColor}
