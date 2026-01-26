@@ -173,7 +173,7 @@ export default function StudentLayout() {
     { id: 'dashboard', title: 'Home', icon: 'home', route: '/(student)/dashboard' },
     { id: 'timetable', title: 'Timetable', icon: 'calendar', route: '/(student)/timetable', nestedRoutes: ['timetable'] },
     { id: 'materials', title: 'Materials', icon: 'book', route: '/(student)/materials', nestedRoutes: ['materials'] },
-    { id: 'modules', title: 'Modules', icon: 'grid', route: '/(student)/modules', nestedRoutes: ['modules'] },
+    { id: 'modules', title: 'Modules', icon: 'grid', route: '/(student)/modules' },
     { id: 'profile', title: 'Profile', icon: 'person', route: '/(student)/profile', nestedRoutes: ['profile', 'settings'] },
   ];
 
@@ -205,7 +205,7 @@ export default function StudentLayout() {
           <Stack.Screen name="events" />
           <Stack.Screen name="feedback" />
           <Stack.Screen name="honors" />
-          <Stack.Screen name="support" />
+          <Stack.Screen name="support/index" />
           <Stack.Screen name="settings" />
         </Stack>
         <GlassDock activeRoute={pathname} onNavigate={(route) => router.push(route as any)} navItems={studentNavItems} />

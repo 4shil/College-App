@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
@@ -21,6 +21,16 @@ export default function StudentModulesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, isDark } = useThemeStore();
+  const navigatingRef = useRef(false);
+
+  const handleNavigation = (route: string) => {
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    router.push(route as any);
+    setTimeout(() => {
+      navigatingRef.current = false;
+    }, 500);
+  };
 
   const modules = useMemo(() => {
     const allModules: StudentModuleItem[] = [
@@ -94,7 +104,7 @@ export default function StudentModulesScreen() {
               >
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => router.push(m.route as any)}
+                  onPress={() => handleNavigation(m.route)}
                 >
                   <Card>
                     <View
@@ -131,11 +141,11 @@ export default function StudentModulesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
   scrollView: {
     flex: 1,
   },
-  contentContainer: {orizontal: 16,
+  contentContainer: {
+    paddingHorizontal: 16,
   },
   header: {
     fontSize: 22,
