@@ -163,6 +163,14 @@ export function useRegistrationForm(): RegistrationFormState & RegistrationFormA
           setError('Passwords do not match');
           return false;
         }
+        if (!formData.acceptPrivacyPolicy) {
+          setError('Please accept the Privacy Policy to continue');
+          return false;
+        }
+        if (!formData.acceptTermsOfService) {
+          setError('Please accept the Terms of Service to continue');
+          return false;
+        }
         return true;
 
       default:

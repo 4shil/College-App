@@ -3,9 +3,10 @@
  */
 
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useThemeStore } from '@/store/themeStore';
 import { withAlpha } from '@/theme/colorUtils';
 import { GlassInput } from '@/components/ui/GlassInput';
@@ -143,6 +144,100 @@ export function FormStepPassword({
           email before logging in.
         </Text>
       </View>
+
+      {/* Privacy Policy Consent */}
+      <TouchableOpacity
+        style={[
+          styles.consentRow,
+          {
+            backgroundColor: isDark
+              ? withAlpha(colors.textInverse, 0.03)
+              : withAlpha(colors.shadowColor, 0.02),
+            borderColor: formData.acceptPrivacyPolicy ? colors.success : colors.glassBorder,
+          },
+        ]}
+        onPress={() => updateFormData('acceptPrivacyPolicy', !formData.acceptPrivacyPolicy)}
+        activeOpacity={0.7}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: formData.acceptPrivacyPolicy }}
+        accessibilityLabel="Accept Privacy Policy"
+      >
+        <View
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: formData.acceptPrivacyPolicy
+                ? colors.success
+                : 'transparent',
+              borderColor: formData.acceptPrivacyPolicy
+                ? colors.success
+                : colors.textMuted,
+            },
+          ]}
+        >
+          {formData.acceptPrivacyPolicy && (
+            <Ionicons name="checkmark" size={14} color={colors.textInverse} />
+          )}
+        </View>
+        <View style={styles.consentTextContainer}>
+          <Text style={[styles.consentText, { color: colors.textSecondary }]}>
+            I have read and agree to the{' '}
+            <Text
+              style={[styles.consentLink, { color: colors.primary }]}
+              onPress={() => router.push('/(auth)/privacy-policy')}
+            >
+              Privacy Policy
+            </Text>
+          </Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Terms of Service Consent */}
+      <TouchableOpacity
+        style={[
+          styles.consentRow,
+          {
+            backgroundColor: isDark
+              ? withAlpha(colors.textInverse, 0.03)
+              : withAlpha(colors.shadowColor, 0.02),
+            borderColor: formData.acceptTermsOfService ? colors.success : colors.glassBorder,
+          },
+        ]}
+        onPress={() => updateFormData('acceptTermsOfService', !formData.acceptTermsOfService)}
+        activeOpacity={0.7}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: formData.acceptTermsOfService }}
+        accessibilityLabel="Accept Terms of Service"
+      >
+        <View
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: formData.acceptTermsOfService
+                ? colors.success
+                : 'transparent',
+              borderColor: formData.acceptTermsOfService
+                ? colors.success
+                : colors.textMuted,
+            },
+          ]}
+        >
+          {formData.acceptTermsOfService && (
+            <Ionicons name="checkmark" size={14} color={colors.textInverse} />
+          )}
+        </View>
+        <View style={styles.consentTextContainer}>
+          <Text style={[styles.consentText, { color: colors.textSecondary }]}>
+            I agree to the{' '}
+            <Text
+              style={[styles.consentLink, { color: colors.primary }]}
+              onPress={() => router.push('/(auth)/terms-of-service')}
+            >
+              Terms of Service
+            </Text>
+          </Text>
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.stepButtonContainer}>
         <SolidButton

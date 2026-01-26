@@ -1,8 +1,8 @@
 import 'react-native-url-polyfill/auto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, SupabaseClientOptions, SupportedStorage } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { secureStorage, migrateToSecureStorage } from './secureStorage';
 
 // Supabase credentials - MUST be set via environment variables
 // In development: Create .env file with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
@@ -47,35 +47,15 @@ For production, configure via EAS build secrets.
   throw new Error('Missing Supabase configuration. See console for details.');
 }
 
-// Storage adapter that works on all platforms
-// Properly typed to match Supabase's SupportedStorage interface
-const webStorage: SupportedStorage = {
-  getItem: (key: string): Promise<string | null> => {
-    if (typeof window !== 'undefined') {
-      return Promise.resolve(window.localStorage.getItem(key));
-    }
-    return Promise.resolve(null);
-  },
-  setItem: (key: string, value: string): Promise<void> => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(key, value);
-    }
-    return Promise.resolve();
-  },
-  removeItem: (key: string): Promise<void> => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(key);
-    }
-    return Promise.resolve();
-  },
-};
-
-// AsyncStorage already implements SupportedStorage interface
-const storage: SupportedStorage = Platform.OS === 'web' ? webStorage : AsyncStorage;
+// Trigger migration from AsyncStorage to SecureStore on app start
+// This is safe to call multiple times - it only migrates once
+if (Platform.OS !== 'web') {
+  migrateToSecureStorage().catch(console.error);
+}
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage,
+    storage: secureStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: Platform.OS === 'web',

@@ -26,6 +26,9 @@ export interface FormData {
   admission_no: string;
   password: string;
   confirm_password: string;
+  // Consent fields
+  acceptPrivacyPolicy: boolean;
+  acceptTermsOfService: boolean;
 }
 
 export const initialFormData: FormData = {
@@ -42,6 +45,8 @@ export const initialFormData: FormData = {
   admission_no: '',
   password: '',
   confirm_password: '',
+  acceptPrivacyPolicy: false,
+  acceptTermsOfService: false,
 };
 
 export type ProgramType = 'ug' | 'pg';

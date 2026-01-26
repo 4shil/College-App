@@ -199,4 +199,34 @@ export const registrationStyles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 15,
   },
+  // Consent checkbox styles
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  consentTextContainer: {
+    flex: 1,
+  },
+  consentText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  consentLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
 });
