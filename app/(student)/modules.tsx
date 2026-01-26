@@ -72,15 +72,21 @@ export default function StudentModulesScreen() {
 
   return (
     <AnimatedBackground>
-      <View style={[styles.container, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 110 }]}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.contentContainer, 
+          { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 110 }
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View entering={FadeInRight.duration(350)} style={{ marginBottom: 16 }}>
           <Text style={[styles.header, { color: colors.textPrimary }]}>Modules</Text>
           <Text style={[styles.headerSub, { color: colors.textMuted }]}>All student tools in one place</Text>
         </Animated.View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.grid}>
-            {modules.map((m, index) => (
+        <View style={styles.grid}>
+          {modules.map((m, index) => (
               <Animated.View
                 key={m.id}
                 entering={FadeInDown.delay(60 + index * 25).duration(250)}
@@ -109,26 +115,27 @@ export default function StudentModulesScreen() {
                 </TouchableOpacity>
               </Animated.View>
             ))}
-          </View>
+        </View>
 
-          {modules.length === 0 ? (
-            <Card>
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No modules available</Text>
-              <Text style={[styles.emptySub, { color: colors.textMuted }]}>Contact admin if something is missing.</Text>
-            </Card>
-          ) : null}
+        {modules.length === 0 ? (
+          <Card>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No modules available</Text>
+            <Text style={[styles.emptySub, { color: colors.textMuted }]}>Contact admin if something is missing.</Text>
+          </Card>
+        ) : null}
 
-          <View style={{ height: 10 }} />
-        </ScrollView>
-      </View>
+        <View style={{ height: 10 }} />
+      </ScrollView>
     </AnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: 16,
+  },
+  contentContainer: {orizontal: 16,
   },
   header: {
     fontSize: 22,
