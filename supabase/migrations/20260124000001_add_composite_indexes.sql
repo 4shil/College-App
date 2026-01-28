@@ -6,13 +6,17 @@
 CREATE INDEX IF NOT EXISTS idx_timetable_teacher_year_day 
   ON timetable_entries(teacher_id, academic_year_id, day_of_week);
 
--- Lesson planner weeks by teacher + date range
-CREATE INDEX IF NOT EXISTS idx_lesson_planner_teacher_date 
-  ON lesson_planner_weeks(teacher_id, week_start_date);
-
--- Attendance sessions by teacher + academic year + date
-CREATE INDEX IF NOT EXISTS idx_attendance_teacher_year_date 
-  ON attendance_sessions(teacher_id, academic_year_id, session_date);
+-- Attendance sessions by teacher + academic year + date (if table exists)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'attendance_sessions'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_attendance_teacher_year_date 
+      ON attendance_sessions(teacher_id, academic_year_id, session_date);
+  END IF;
+END $$;
 
 -- Assignments by teacher + due date for pending queries
 CREATE INDEX IF NOT EXISTS idx_assignments_teacher_due 
@@ -27,6 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_user_roles_user_active
 -- Students by year + section for class lists
 CREATE INDEX IF NOT EXISTS idx_students_year_section 
   ON students(year_id, section_id);
+
 
 -- Notices by scope for filtering
 CREATE INDEX IF NOT EXISTS idx_notices_scope_created 

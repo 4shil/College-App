@@ -72,6 +72,13 @@ export default function ReceptionDashboardScreen() {
                   glowing={false}
                   icon={<FontAwesome5 name="bullhorn" size={16} color={colors.primary} />}
                 />
+                <PrimaryButton
+                  title="Attendance Overview"
+                  onPress={() => router.push('/(admin)/reception/attendance' as any)}
+                  variant="outline"
+                  glowing={false}
+                  icon={<FontAwesome5 name="calendar-check" size={16} color={colors.primary} />}
+                />
               </View>
             </Card>
           </Animated.View>

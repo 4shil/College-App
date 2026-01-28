@@ -57,7 +57,7 @@ CREATE POLICY attendance_alerts_select_admin ON public.attendance_alerts
   USING (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE id = auth.uid() AND primary_role = 'super_admin'
     )
   );
 
@@ -67,11 +67,11 @@ CREATE POLICY attendance_alerts_update_staff ON public.attendance_alerts
   USING (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'teacher')
+      WHERE id = auth.uid() AND (primary_role = 'super_admin' OR primary_role = 'teacher')
     )
     AND (
       EXISTS (
-        SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
+        SELECT 1 FROM public.profiles WHERE id = auth.uid() AND primary_role = 'super_admin'
       )
       OR section_id IN (
         SELECT id FROM public.sections WHERE class_teacher_id = auth.uid()
@@ -85,7 +85,7 @@ CREATE POLICY attendance_alerts_insert_admin ON public.attendance_alerts
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE id = auth.uid() AND primary_role = 'super_admin'
     )
   );
 
