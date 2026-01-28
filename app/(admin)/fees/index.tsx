@@ -5,8 +5,9 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { AnimatedBackground, LoadingIndicator } from '../../../components/ui';
+import { AnimatedBackground, LoadingIndicator, Card } from '../../../components/ui';
 import { IconBadge, type IconBadgeTone } from '../../../components/ui/IconBadge';
+import { Restricted } from '../../../components/Restricted';
 import { useThemeStore } from '../../../store/themeStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -84,34 +85,22 @@ export default function FeesIndexScreen() {
 
   const menuOptions = [
     {
-      title: 'Fee Structures',
-      subtitle: 'Manage fee categories',
-      icon: 'list-alt',
-      route: '/(admin)/fees/structures',
-    },
-    {
       title: 'Student Fees',
-      subtitle: 'View and track payments',
+      subtitle: 'View students and payments',
       icon: 'users',
       route: '/(admin)/fees/students',
-    },
-    {
-      title: 'Record Payment',
-      subtitle: 'Add new payment',
-      icon: 'rupee-sign',
-      route: '/(admin)/fees/payment',
-    },
-    {
-      title: 'Reports',
-      subtitle: 'Fee collection reports',
-      icon: 'chart-line',
-      route: '/(admin)/fees/reports',
     },
     {
       title: 'Defaulters',
       subtitle: 'Overdue payments',
       icon: 'exclamation-triangle',
       route: '/(admin)/fees/defaulters',
+    },
+    {
+      title: 'Reports',
+      subtitle: 'Fee collection reports',
+      icon: 'chart-line',
+      route: '/(admin)/fees/reports',
     },
   ];
 
@@ -126,19 +115,35 @@ export default function FeesIndexScreen() {
   }
 
   return (
-    <AnimatedBackground>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 110 }]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Fee Management</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Track and manage student fees
-          </Text>
-        </Animated.View>
+    <Restricted module="fees" showDeniedMessage deniedMessage="You do not have access to Fee module.">
+      <AnimatedBackground>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 110 }]}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Fee Management</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Read-only view for mobile app
+            </Text>
+          </Animated.View>
+
+          {/* Info Card */}
+          <Animated.View entering={FadeInDown.delay(150).springify()}>
+            <Card>
+              <View style={styles.infoHeader}>
+                <View style={[styles.infoIconContainer, { backgroundColor: colors.warning + '20' }]}>
+                  <FontAwesome5 name="info-circle" size={18} color={colors.warning} />
+                </View>
+                <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>Read-Only Access</Text>
+              </View>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                Fee management (creating structures, processing payments, etc.) is handled by the external web application. This app provides read-only access to view fee information and reports.
+              </Text>
+            </Card>
+          </Animated.View>
 
         {/* Stats Grid */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsGrid}>
@@ -210,6 +215,7 @@ export default function FeesIndexScreen() {
                     name={option.icon}
                     tone={getOptionTone(option.title)}
                     size={24}
+    </Restricted>
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuContent}>
@@ -310,5 +316,26 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: 14,
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  infoText: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
   },
 });

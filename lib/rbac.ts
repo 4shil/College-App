@@ -111,11 +111,12 @@ export const PERMISSIONS = {
   MANAGE_CANTEEN_MENU: 'manage_canteen_menu',
   MANAGE_CANTEEN_TOKENS: 'manage_canteen_tokens',
   
-  // Finance
-  MANAGE_FEES: 'manage_fees',
-  MANAGE_FEE_STRUCTURES: 'manage_fee_structures',
-  PROCESS_PAYMENTS: 'process_payments',
+  // Finance - READ ONLY (external web app handles modifications)
+  VIEW_FEES: 'view_fees',
+  VIEW_FEE_STRUCTURES: 'view_fee_structures',
+  VIEW_FEE_PAYMENTS: 'view_fee_payments',
   VIEW_FINANCIAL_REPORTS: 'view_financial_reports',
+  VIEW_FEE_REPORTS: 'view_fee_reports',
   
   // Notices & Communication
   POST_GLOBAL_NOTICES: 'post_global_notices',
@@ -163,7 +164,8 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.MANAGE_LIBRARY,
     PERMISSIONS.MANAGE_BUS,
     PERMISSIONS.MANAGE_CANTEEN,
-    PERMISSIONS.MANAGE_FEES,
+    PERMISSIONS.VIEW_FEES,
+    PERMISSIONS.VIEW_FEE_STRUCTURES,
     PERMISSIONS.POST_GLOBAL_NOTICES,
     PERMISSIONS.SEND_NOTIFICATIONS,
     PERMISSIONS.MANAGE_EVENTS,
@@ -228,12 +230,13 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.MANAGE_CANTEEN_TOKENS,
   ],
   
-  // Finance Admin - Fee Management
+  // Finance Admin - Read-only fee management
   [ADMIN_ROLES.FINANCE_ADMIN]: [
-    PERMISSIONS.MANAGE_FEES,
-    PERMISSIONS.MANAGE_FEE_STRUCTURES,
-    PERMISSIONS.PROCESS_PAYMENTS,
+    PERMISSIONS.VIEW_FEES,
+    PERMISSIONS.VIEW_FEE_STRUCTURES,
+    PERMISSIONS.VIEW_FEE_PAYMENTS,
     PERMISSIONS.VIEW_FINANCIAL_REPORTS,
+    PERMISSIONS.VIEW_FEE_REPORTS,
   ],
 
   // Reception Admin - execution-only front desk
